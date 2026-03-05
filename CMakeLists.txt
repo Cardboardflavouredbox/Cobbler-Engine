@@ -3,10 +3,13 @@ project(FPSthing)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# SDL2 패키지 찾기
-find_package(SDL2 REQUIRED)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
+
+# This assumes the SDL source is available in vendored/SDL
+add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 
 add_executable(FPSthing src/main.cpp)
 
 # SDL2 라이브러리 연결
-target_link_libraries(FPSthing PRIVATE SDL2::SDL2)
+target_link_libraries(FPSthing PRIVATE SDL3::SDL3)
