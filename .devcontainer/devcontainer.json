@@ -1,5 +1,7 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "features": {
     "ghcr.io/devcontainers/features/desktop-lite:1": {}
   },
@@ -7,6 +9,13 @@
   "portsAttributes": {
     "6080": {
       "label": "desktop"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools-extension-pack"
+      ]
     }
   }
 }
