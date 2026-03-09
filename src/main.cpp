@@ -3,7 +3,8 @@
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
 
-#include "global.hpp"
+#include "global.h"
+#include "render.h"
 /* We will use this renderer to draw into this window every frame. */
 
 bool init() {
@@ -13,6 +14,9 @@ bool init() {
   Global::GetGlobal().window = SDL_CreateWindow("SDL3 window", 320, 200, 0);
   Global::GetGlobal().renderer =
       SDL_CreateRenderer(Global::GetGlobal().window, NULL);
+  Global::GetGlobal().render_target =
+      SDL_CreateTexture(Global::GetGlobal().renderer, SDL_PIXELFORMAT_INDEX8,
+                        SDL_TEXTUREACCESS_TARGET, 320, 200);
   Global::GetGlobal().IsRunning = true;
   return true;
 }
@@ -35,10 +39,7 @@ void update() {
   }
 }
 
-void render() {
-  SDL_RenderClear(Global::GetGlobal().renderer);
-  SDL_RenderPresent(Global::GetGlobal().renderer);
-}
+
 
 int main(int argc, char* argv[]) {
   if (!init()) {

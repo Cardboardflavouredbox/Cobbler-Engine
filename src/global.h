@@ -12,6 +12,7 @@ struct Global {
  public:
   SDL_Window* window;
   SDL_Renderer* renderer;
+  SDL_Texture* render_target;
   bool IsRunning;
   static Global& GetGlobal() {
     static Global s;
