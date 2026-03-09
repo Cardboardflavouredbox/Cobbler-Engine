@@ -4,17 +4,22 @@
 #include <SDL3/SDL_video.h>
 #include <stdlib.h>
 
+#include "entity.h"
 #include "global.h"
 #include "render.h"
 /* We will use this renderer to draw into this window every frame. */
 GlobalClass* Global;
 SettingsClass* Settings;
+Entity* Camera;
 
 bool init() {
   Global = static_cast<GlobalClass*>(calloc(1, sizeof(GlobalClass)));
   Settings = static_cast<SettingsClass*>(calloc(1, sizeof(SettingsClass)));
   Settings->resolutionx = 320;
   Settings->resolutiony = 200;
+
+  Camera = static_cast<Entity*>(calloc(1, sizeof(Entity)));
+
   if (!SDL_SetAppMetadata("BoomerShooter", "0.1", "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
     return false;

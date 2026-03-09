@@ -13,4 +13,5 @@ struct GlobalClass {
 struct SettingsClass {
  public:
   uint16_t resolutionx, resolutiony;
+  int fov = 90;
 };
