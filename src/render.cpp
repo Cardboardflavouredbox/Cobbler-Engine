@@ -1,14 +1,22 @@
 #include "render.h"
 
 #include <SDL3/SDL.h>
+#include <math.h>
 
 #include "extern.h"
 #include "map.h"
 
-void drawWall(Quad q) {
-  Vector3 p1, p2;
-  p1 = q.p1 - Camera->position;
-  p2 = q.p2 - Camera->position;
+void drawPoint(Vector P) {
+  Vector3 p1;
+  p1 = P - Camera->position;
+  float ps = std::sin(Camera->dir * 3.14 / 180.0);
+  float pc = std::cos(Camera->dir * 3.14 / 180.0);
+
+  float tx = p1.x * pc + p1.y * ps;
+  float ty = p1.y * pc - p1.x * ps;
+
+  float screenX = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
+  float screenHeight = (1 * Settings->fov / ty);
 }
 
 void render() {
