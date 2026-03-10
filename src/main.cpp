@@ -13,6 +13,7 @@ GlobalClass* Global;
 SettingsClass* Settings;
 Entity* Camera;
 Inputs* P1Inputs;
+Uint32 lastTime;
 
 bool init() {
   Global = static_cast<GlobalClass*>(calloc(1, sizeof(GlobalClass)));
@@ -36,6 +37,7 @@ bool init() {
       Settings->resolutionx, Settings->resolutiony);
   Global->IsRunning = true;
   SDL_SetRenderVSync(Global->renderer, 1);
+  lastTime = SDL_GetTicks();
   return true;
 }
 void quit() {
@@ -46,6 +48,9 @@ void quit() {
 }
 
 void update() {
+  Uint32 currentTime = SDL_GetTicks();
+  Global->deltaTime = (currentTime - lastTime) / 1000.0f;
+  lastTime = currentTime;
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
@@ -54,11 +59,12 @@ void update() {
         break;
     }
   }
-  if (P1Inputs->A > 0) Camera->dir += 5;
-  if (P1Inputs->D > 0) Camera->dir -= 5;
+  if (P1Inputs->A > 0) Camera->dir += 32 * Global->deltaTime;
+  if (P1Inputs->D > 0) Camera->dir -= 32 * Global->deltaTime;
 
-  if (P1Inputs->W > 0) Camera->position.y += 5;
-  if (P1Inputs->S > 0) Camera->position.y -= 5;
+  if (P1Inputs->W > 0) Camera->position.y += 8 * Global->deltaTime;
+  if (P1Inputs->S > 0) Camera->position.y -= 8 * Global->deltaTime;
+  if (Camera->dir >= 360) Camera->dir -= 360;
 }
 
 int main(int argc, char* argv[]) {

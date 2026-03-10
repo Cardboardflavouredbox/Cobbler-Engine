@@ -8,6 +8,7 @@ struct GlobalClass {
   SDL_Renderer* renderer;
   SDL_Texture* render_target;
   bool IsRunning;
+  float deltaTime;
 };
 
 struct Inputs {

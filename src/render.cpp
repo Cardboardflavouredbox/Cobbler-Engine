@@ -30,11 +30,18 @@ void render() {
   Quad tempquad;
   tempquad.p1 = Vector3({-1, 1, -2});
   tempquad.p2 = Vector3({1, 1, -1});
-  Vector2 temp = drawPoint(tempquad.p1), temp2 = drawPoint(tempquad.p2);
+  tempquad.p3 = Vector3({1, 1, -2});
+  tempquad.p4 = Vector3({-1, 1, -1});
+  Vector2 temp = drawPoint(tempquad.p1), temp2 = drawPoint(tempquad.p2),
+          temp3 = drawPoint(tempquad.p3), temp4 = drawPoint(tempquad.p4);
   SDL_SetRenderDrawColorFloat(Global->renderer, 0, 1, 0, 1);
 
   SDL_RenderLine(Global->renderer, temp.x, temp.y, temp2.x, temp2.y);
-  // SDL_Log("%f %f %f %f", temp.x, temp.y, temp2.x, temp2.y);
+  SDL_RenderLine(Global->renderer, temp3.x, temp3.y, temp2.x, temp2.y);
+  SDL_RenderLine(Global->renderer, temp4.x, temp4.y, temp3.x, temp3.y);
+  SDL_RenderLine(Global->renderer, temp.x, temp.y, temp4.x, temp4.y);
+  SDL_RenderLine(Global->renderer, temp.x, temp.y, temp3.x, temp3.y);
+  SDL_RenderLine(Global->renderer, temp2.x, temp2.y, temp4.x, temp4.y);
 
   SDL_SetRenderTarget(Global->renderer, NULL);
   SDL_RenderTexture(Global->renderer, Global->render_target, NULL, NULL);
