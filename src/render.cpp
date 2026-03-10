@@ -41,8 +41,7 @@ void render() {
 
   uint32_t* pixels = static_cast<uint32_t*>(Global->render_target->pixels);
 
-  for (int i = temp.x; i <= temp2.x; i++)
-    pixels[i + (int(temp.y) * Global->render_target->pitch)];
+  for (int i = temp.x; i <= temp2.x; i++) pixels[i] = uint32_t(0);
   SDL_UnlockSurface(Global->render_target);
 
   int w, h;
