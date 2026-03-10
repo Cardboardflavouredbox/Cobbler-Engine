@@ -23,10 +23,19 @@ Vector2 drawPoint(Vector3 P) {
 }
 
 void render() {
+  SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
   SDL_RenderClear(Global->renderer);
   SDL_SetRenderTarget(Global->renderer, Global->render_target);
+
+  Quad tempquad;
+  tempquad.p1 = Vector3({-1, 1, -2});
+  tempquad.p2 = Vector3({1, 1, -1});
+  Vector2 temp = drawPoint(tempquad.p1), temp2 = drawPoint(tempquad.p2);
   SDL_SetRenderDrawColorFloat(Global->renderer, 0, 1, 0, 1);
-  SDL_RenderLine(Global->renderer, 0, 0, 1, 1);
+
+  SDL_RenderLine(Global->renderer, temp.x, temp.y, temp2.x, temp2.y);
+  // SDL_Log("%f %f %f %f", temp.x, temp.y, temp2.x, temp2.y);
+
   SDL_SetRenderTarget(Global->renderer, NULL);
   SDL_RenderTexture(Global->renderer, Global->render_target, NULL, NULL);
   SDL_RenderPresent(Global->renderer);

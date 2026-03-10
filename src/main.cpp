@@ -20,8 +20,10 @@ bool init() {
   P1Inputs = static_cast<Inputs*>(calloc(1, sizeof(Inputs)));
   Settings->resolutionx = 320;
   Settings->resolutiony = 200;
+  Settings->fov = 90;
 
   Camera = static_cast<Entity*>(calloc(1, sizeof(Entity)));
+  Camera->position = Vector3({0, 0, 0});
 
   if (!SDL_SetAppMetadata("BoomerShooter", "0.1", "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
@@ -52,6 +54,11 @@ void update() {
         break;
     }
   }
+  if (P1Inputs->A > 0) Camera->dir += 5;
+  if (P1Inputs->D > 0) Camera->dir -= 5;
+
+  if (P1Inputs->W > 0) Camera->position.y += 5;
+  if (P1Inputs->S > 0) Camera->position.y -= 5;
 }
 
 int main(int argc, char* argv[]) {
