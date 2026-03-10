@@ -18,7 +18,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(SDL3)
 
 
-add_executable(FPSthing src/main.cpp src/render.cpp)
+add_executable(FPSthing src/main.cpp src/render.cpp src/input.cpp)
 
 # SDL2 라이브러리 연결
 target_link_libraries(FPSthing PRIVATE SDL3::SDL3)

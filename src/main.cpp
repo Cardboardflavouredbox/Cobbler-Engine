@@ -6,15 +6,18 @@
 
 #include "entity.h"
 #include "global.h"
+#include "input.h"
 #include "render.h"
 /* We will use this renderer to draw into this window every frame. */
 GlobalClass* Global;
 SettingsClass* Settings;
 Entity* Camera;
+Inputs* P1Inputs;
 
 bool init() {
   Global = static_cast<GlobalClass*>(calloc(1, sizeof(GlobalClass)));
   Settings = static_cast<SettingsClass*>(calloc(1, sizeof(SettingsClass)));
+  P1Inputs = static_cast<Inputs*>(calloc(1, sizeof(Inputs)));
   Settings->resolutionx = 320;
   Settings->resolutiony = 200;
 
@@ -30,6 +33,7 @@ bool init() {
       Global->renderer, SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_TARGET,
       Settings->resolutionx, Settings->resolutiony);
   Global->IsRunning = true;
+  SDL_SetRenderVSync(Global->renderer, 1);
   return true;
 }
 void quit() {
@@ -38,7 +42,6 @@ void quit() {
   Global->IsRunning = false;
   SDL_Quit();
 }
-void input() {}
 
 void update() {
   SDL_Event event;

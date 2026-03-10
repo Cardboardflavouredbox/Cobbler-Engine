@@ -1,12 +1,13 @@
 #include "render.h"
 
 #include <SDL3/SDL.h>
-#include <math.h>
+
+#include <cmath>
 
 #include "extern.h"
 #include "map.h"
 
-void drawPoint(Vector P) {
+Vector2 drawPoint(Vector3 P) {
   Vector3 p1;
   p1 = P - Camera->position;
   float ps = std::sin(Camera->dir * 3.14 / 180.0);
@@ -15,8 +16,10 @@ void drawPoint(Vector P) {
   float tx = p1.x * pc + p1.y * ps;
   float ty = p1.y * pc - p1.x * ps;
 
-  float screenX = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
-  float screenHeight = (1 * Settings->fov / ty);
+  Vector2 screenpos;
+  screenpos.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
+  screenpos.y = (p1.z * Settings->fov / ty) + (Settings->resolutiony / 2);
+  return screenpos;
 }
 
 void render() {
