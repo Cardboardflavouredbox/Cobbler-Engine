@@ -1,14 +1,14 @@
 #pragma once
-struct Vector2 {
-  float x, y;
-};
-struct Vector3 {
-  float x, y, z;
-  Vector3 operator+(const Vector3& v) {
-    return Vector3({x + v.x, y + v.y, z + v.z});
-  }
+typedef union {
+  struct {
+    float x, y;
+  };
+  float v[2];
+} Vector2;
 
-  Vector3 operator-(const Vector3& v) {
-    return Vector3({x - v.x, y - v.y, z - v.z});
-  }
-};
+typedef union {
+  struct {
+    float x, y, z;
+  };
+  float v[3];
+} Vector3;

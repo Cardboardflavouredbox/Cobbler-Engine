@@ -4,6 +4,8 @@
 #include <SDL3/SDL_video.h>
 #include <stdlib.h>
 
+#include <string>
+
 #include "entity.h"
 #include "global.h"
 #include "input.h"
@@ -29,28 +31,52 @@ bool init() {
   if (!SDL_SetAppMetadata("BoomerShooter", "0.1", "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
-  Global->window = SDL_CreateWindow("SDL3 window", Settings->resolutionx,
-                                    Settings->resolutiony, 0);
+  Global->window =
+      SDL_CreateWindow("SDL3 window", Settings->resolutionx,
+                       Settings->resolutiony, SDL_WINDOW_RESIZABLE);
   Global->renderer = SDL_CreateRenderer(Global->window, NULL);
-  Global->render_target = SDL_CreateTexture(
-      Global->renderer, SDL_PIXELFORMAT_INDEX8, SDL_TEXTUREACCESS_TARGET,
-      Settings->resolutionx, Settings->resolutiony);
+
+  std::string tempstr = SDL_GetBasePath();
+  tempstr.append("/res/Color_palette.bmp");
+  SDL_Surface* surface = SDL_LoadBMP(tempstr.c_str());
+  surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_INDEX8);
+  SDL_Color my_palette_colors[256];
+  uint32_t* pixels = static_cast<uint32_t*>(surface->pixels);
+
+  for (int i = 0; i < 256; i++) {
+    SDL_Color tempcol;
+    tempcol.a = 255;
+    tempcol.r = (pixels[i] >> 16) & 0xFF;
+    tempcol.g = (pixels[i] >> 8) & 0xFF;
+    tempcol.b = pixels[i] & 0xFF;
+
+    my_palette_colors[i] = tempcol;
+  }
+  SDL_DestroySurface(surface);
+
+  SDL_Palette* palette = SDL_CreatePalette(256);
+  SDL_SetPaletteColors(palette, my_palette_colors, 0, 256);
+
+  Global->render_target = SDL_CreateSurfaceFrom(
+      Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8,
+      NULL, Settings->resolutionx * 4);
+  SDL_SetSurfacePalette(Global->render_target, palette);
+
   Global->IsRunning = true;
   SDL_SetRenderVSync(Global->renderer, 1);
   lastTime = SDL_GetTicks();
+  SDL_SetRenderTarget(Global->renderer, NULL);
   return true;
 }
 void quit() {
   SDL_DestroyRenderer(Global->renderer);
   SDL_DestroyWindow(Global->window);
+  SDL_DestroySurface(Global->render_target);
   Global->IsRunning = false;
   SDL_Quit();
 }
 
 void update() {
-  Uint32 currentTime = SDL_GetTicks();
-  Global->deltaTime = (currentTime - lastTime) / 1000.0f;
-  lastTime = currentTime;
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
@@ -59,9 +85,17 @@ void update() {
         break;
     }
   }
-  if (P1Inputs->A > 0) Camera->dir += 32 * Global->deltaTime;
-  if (P1Inputs->D > 0) Camera->dir -= 32 * Global->deltaTime;
+  Uint32 currentTime = SDL_GetTicks();
+  Global->deltaTime = (currentTime - lastTime) / 1000.0f;
+  lastTime = currentTime;
 
+  SDL_GetRelativeMouseState(&P1Inputs->Mouse.x, &P1Inputs->Mouse.y);
+  Camera->dir += -8 * P1Inputs->Mouse.x;
+  P1Inputs->Mouse.x = 0;
+  P1Inputs->Mouse.y = 0;
+
+  // if (P1Inputs->A > 0) Camera->dir += 32 * Global->deltaTime;
+  // if (P1Inputs->D > 0) Camera->dir -= 32 * Global->deltaTime;
   if (P1Inputs->W > 0) Camera->position.y += 8 * Global->deltaTime;
   if (P1Inputs->S > 0) Camera->position.y -= 8 * Global->deltaTime;
   if (Camera->dir >= 360) Camera->dir -= 360;
