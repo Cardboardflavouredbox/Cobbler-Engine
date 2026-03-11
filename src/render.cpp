@@ -68,7 +68,7 @@ void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
     DrawLine(pixels, pitch, color, temp);
   } else {
     Vector2 big[2], small[2];
-    if (vectors[0] - vectors[3] > vectors[1] - vectors[2]) {
+    if (vectors[0].y - vectors[3].y > vectors[1].y - vectors[2].y) {
       big[0] = vectors[3];
       big[1] = vectors[0];
       small[0] = vectors[1];
@@ -80,9 +80,14 @@ void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
       small[1] = vectors[0];
     }
     for (int i = big[0].y; i < big[1].y; i++) {
-      temp[0].y =
-          vectors[0].y + ((i - big[0].x) * (vectors[1].y - vectors[0].y) /
-                          (vectors[1].x - vectors[0].x));
+      temp[1].y = i;
+      temp[0].y = small[1].y - ((i - big[0].y) * (small[1].y - small[0].y) /
+                                (big[1].y - big[0].y));
+      temp[1].x = big[0].x + ((i - big[0].y) * (big[1].x - big[0].x) /
+                              (big[1].y - big[0].y));
+      temp[0].x = small[1].x - ((i - big[0].y) * (small[1].x - small[0].x) /
+                                (big[1].y - big[0].y));
+      DrawLine(pixels, pitch, color, temp);
     }
   }
 }
