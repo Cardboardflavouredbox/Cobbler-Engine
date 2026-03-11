@@ -79,7 +79,10 @@ void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
       small[0] = vectors[3];
       small[1] = vectors[0];
     }
-    for (int i = big[0]; i < big[1]; i++) {
+    for (int i = big[0].y; i < big[1].y; i++) {
+      temp[0].y =
+          vectors[0].y + ((i - big[0].x) * (vectors[1].y - vectors[0].y) /
+                          (vectors[1].x - vectors[0].x));
     }
   }
 }
