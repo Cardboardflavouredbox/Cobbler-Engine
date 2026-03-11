@@ -46,6 +46,24 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
   }
 }
 
+float sign(Vector2 p1, Vector2 p2, Vector2 p3) {
+  return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+}
+
+bool PointInTriangle(Vector2 pt, Vector2 v1, Vector2 v2, Vector2 v3) {
+  float d1, d2, d3;
+  bool has_neg, has_pos;
+
+  d1 = sign(pt, v1, v2);
+  d2 = sign(pt, v2, v3);
+  d3 = sign(pt, v3, v1);
+
+  has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+  has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+  return !(has_neg && has_pos);
+}
+
 void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
               Vector2 vectors[], bool wire) {
   Vector2 temp[2] = {vectors[0], vectors[1]};
@@ -67,27 +85,17 @@ void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
     temp[1] = vectors[1];
     DrawLine(pixels, pitch, color, temp);
   } else {
-    Vector2 big[2], small[2];
-    if (vectors[0].y - vectors[3].y > vectors[1].y - vectors[2].y) {
-      big[0] = vectors[3];
-      big[1] = vectors[0];
-      small[0] = vectors[1];
-      small[1] = vectors[2];
-    } else {
-      big[0] = vectors[1];
-      big[1] = vectors[2];
-      small[0] = vectors[3];
-      small[1] = vectors[0];
-    }
-    for (int i = big[0].y; i < big[1].y; i++) {
-      temp[1].y = i;
-      temp[0].y = small[1].y - ((i - big[0].y) * (small[1].y - small[0].y) /
-                                (big[1].y - big[0].y));
-      temp[1].x = big[0].x + ((i - big[0].y) * (big[1].x - big[0].x) /
-                              (big[1].y - big[0].y));
-      temp[0].x = small[1].x - ((i - big[0].y) * (small[1].x - small[0].x) /
-                                (big[1].y - big[0].y));
-      DrawLine(pixels, pitch, color, temp);
+    for (int i = vectors[0].x; i < vectors[2].x; i++) {
+      for (int j = vectors[0].y; j < vectors[2].y; j++) {
+        Vector2 temp;
+        temp.x = i;
+        temp.y = j;
+        if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
+            temp.y < Settings->resolutiony &&
+            (PointInTriangle(temp, vectors[0], vectors[1], vectors[2]) ||
+             PointInTriangle(temp, vectors[0], vectors[3], vectors[2])))
+          pixels[(int)temp.x + (int)temp.y * pitch] = color;
+      }
     }
   }
 }
