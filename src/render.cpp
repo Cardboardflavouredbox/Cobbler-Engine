@@ -47,24 +47,41 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
 }
 
 void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
-              Vector2 vectors[]) {
+              Vector2 vectors[], bool wire) {
   Vector2 temp[2] = {vectors[0], vectors[1]};
-  DrawLine(pixels, pitch, color, temp);
-  temp[0] = vectors[1];
-  temp[1] = vectors[2];
-  DrawLine(pixels, pitch, color, temp);
-  temp[0] = vectors[3];
-  temp[1] = vectors[2];
-  DrawLine(pixels, pitch, color, temp);
-  temp[0] = vectors[0];
-  temp[1] = vectors[3];
-  DrawLine(pixels, pitch, color, temp);
-  temp[0] = vectors[0];
-  temp[1] = vectors[2];
-  DrawLine(pixels, pitch, color, temp);
-  temp[0] = vectors[3];
-  temp[1] = vectors[1];
-  DrawLine(pixels, pitch, color, temp);
+  if (wire) {
+    DrawLine(pixels, pitch, color, temp);
+    temp[0] = vectors[1];
+    temp[1] = vectors[2];
+    DrawLine(pixels, pitch, color, temp);
+    temp[0] = vectors[3];
+    temp[1] = vectors[2];
+    DrawLine(pixels, pitch, color, temp);
+    temp[0] = vectors[0];
+    temp[1] = vectors[3];
+    DrawLine(pixels, pitch, color, temp);
+    temp[0] = vectors[0];
+    temp[1] = vectors[2];
+    DrawLine(pixels, pitch, color, temp);
+    temp[0] = vectors[3];
+    temp[1] = vectors[1];
+    DrawLine(pixels, pitch, color, temp);
+  } else {
+    Vector2 big[2], small[2];
+    if (vectors[0] - vectors[3] > vectors[1] - vectors[2]) {
+      big[0] = vectors[3];
+      big[1] = vectors[0];
+      small[0] = vectors[1];
+      small[1] = vectors[2];
+    } else {
+      big[0] = vectors[1];
+      big[1] = vectors[2];
+      small[0] = vectors[3];
+      small[1] = vectors[0];
+    }
+    for (int i = big[0]; i < big[1]; i++) {
+    }
+  }
 }
 
 void render() {
@@ -91,7 +108,7 @@ void render() {
   }
 
   unsigned char color = SDL_MapSurfaceRGB(Global->render_target, 0, 255, 0);
-  DrawQuad(pixels, pitch, color, temp);
+  DrawQuad(pixels, pitch, color, temp, false);
 
   SDL_UnlockSurface(Global->render_target);
 
