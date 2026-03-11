@@ -26,9 +26,50 @@ Vector2 drawPoint(Vector3 P) {
   return screenpos;
 }
 
+void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
+              Vector2 vectors[]) {
+  for (int i = vectors[0].x; i < vectors[1].x; i++) {
+    int y = vectors[0].y + ((i - vectors[0].x) * (vectors[1].y - vectors[0].y) /
+                            (vectors[1].x - vectors[0].x));
+    if (i >= 0 && y >= 0 && i < Settings->resolutionx &&
+        y < Settings->resolutiony) {
+      pixels[i + y * pitch] = color;
+    }
+  }
+  if (vectors[0].x == vectors[1].x) {
+    for (int i = vectors[0].y; i < vectors[1].y; i++) {
+      if (vectors[0].x >= 0 && i >= 0 && vectors[0].x < Settings->resolutionx &&
+          i < Settings->resolutiony) {
+        pixels[(int)vectors[0].x + i * pitch] = color;
+      }
+    }
+  }
+}
+
+void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
+              Vector2 vectors[]) {
+  Vector2 temp[2] = {vectors[0], vectors[1]};
+  DrawLine(pixels, pitch, color, temp);
+  temp[0] = vectors[1];
+  temp[1] = vectors[2];
+  DrawLine(pixels, pitch, color, temp);
+  temp[0] = vectors[3];
+  temp[1] = vectors[2];
+  DrawLine(pixels, pitch, color, temp);
+  temp[0] = vectors[0];
+  temp[1] = vectors[3];
+  DrawLine(pixels, pitch, color, temp);
+  temp[0] = vectors[0];
+  temp[1] = vectors[2];
+  DrawLine(pixels, pitch, color, temp);
+  temp[0] = vectors[3];
+  temp[1] = vectors[1];
+  DrawLine(pixels, pitch, color, temp);
+}
+
 void render() {
-  SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
-  SDL_RenderClear(Global->renderer);
+  // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
+  // SDL_RenderClear(Global->renderer);
   SDL_LockSurface(Global->render_target);
 
   Quad tempquad;
@@ -36,19 +77,22 @@ void render() {
   tempquad.p2 = Vector3({1, 1, 2});
   tempquad.p3 = Vector3({1, 1, -2});
   tempquad.p4 = Vector3({-1, 1, -2});
-  Vector2 temp = drawPoint(tempquad.p1), temp2 = drawPoint(tempquad.p2),
-          temp3 = drawPoint(tempquad.p3), temp4 = drawPoint(tempquad.p4);
+  Vector2 temp[4] = {drawPoint(tempquad.p1), drawPoint(tempquad.p2),
+                     drawPoint(tempquad.p3), drawPoint(tempquad.p4)};
 
   unsigned char* pixels =
       static_cast<unsigned char*>(Global->render_target->pixels);
   int pitch = Global->render_target->pitch;
-  for (int i = temp.x; i < temp2.x; i++) {
-    int y = (i * (temp2.y - temp.y) / temp.x);
-    if (i >= 0 && y >= 0 && i < Settings->resolutionx &&
-        y < Settings->resolutiony) {
-      pixels[i + y * pitch] = static_cast<unsigned char>(3);
+
+  for (int i = 0; i < Settings->resolutionx; i++) {
+    for (int j = 0; j < Settings->resolutiony; j++) {
+      pixels[i + j * pitch] = 0;
     }
   }
+
+  unsigned char color = SDL_MapSurfaceRGB(Global->render_target, 0, 255, 0);
+  DrawQuad(pixels, pitch, color, temp);
+
   SDL_UnlockSurface(Global->render_target);
 
   int w, h;
