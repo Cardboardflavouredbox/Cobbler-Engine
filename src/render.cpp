@@ -39,14 +39,20 @@ void render() {
   Vector2 temp = drawPoint(tempquad.p1), temp2 = drawPoint(tempquad.p2),
           temp3 = drawPoint(tempquad.p3), temp4 = drawPoint(tempquad.p4);
 
-  uint32_t* pixels = static_cast<uint32_t*>(Global->render_target->pixels);
-
-  for (int i = temp.x; i <= temp2.x; i++) pixels[i] = uint32_t(0);
+  unsigned char* pixels =
+      static_cast<unsigned char*>(Global->render_target->pixels);
+  int pitch = Global->render_target->pitch;
+  for (int i = temp.x; i < temp2.x; i++) {
+    int y = (i * (temp2.y - temp.y) / temp.x);
+    if (i >= 0 && y >= 0 && i < Settings->resolutionx &&
+        y < Settings->resolutiony) {
+      pixels[i + y * pitch] = static_cast<unsigned char>(3);
+    }
+  }
   SDL_UnlockSurface(Global->render_target);
 
   int w, h;
   SDL_GetWindowSizeInPixels(Global->window, &w, &h);
-  SDL_Log(SDL_GetError());
   w /= 2;
   h /= 2;
   w -= Global->render_target->w / 2;
@@ -57,10 +63,8 @@ void render() {
   temprect.h = Global->render_target->h;
   temprect.x = w;
   temprect.y = h;
-
-  SDL_RenderTexture(
-      Global->renderer,
-      SDL_CreateTextureFromSurface(Global->renderer, Global->render_target),
-      NULL, &temprect);
+  SDL_Texture* temptexture =
+      SDL_CreateTextureFromSurface(Global->renderer, Global->render_target);
+  SDL_RenderTexture(Global->renderer, temptexture, NULL, &temprect);
   SDL_RenderPresent(Global->renderer);
 }

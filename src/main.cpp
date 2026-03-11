@@ -57,9 +57,8 @@ bool init() {
   SDL_Palette* palette = SDL_CreatePalette(256);
   SDL_SetPaletteColors(palette, my_palette_colors, 0, 256);
 
-  Global->render_target = SDL_CreateSurfaceFrom(
-      Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8,
-      NULL, Settings->resolutionx * 4);
+  Global->render_target = SDL_CreateSurface(
+      Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
   SDL_SetSurfacePalette(Global->render_target, palette);
 
   Global->IsRunning = true;
