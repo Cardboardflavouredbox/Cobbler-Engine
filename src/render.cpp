@@ -46,22 +46,36 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
   }
 }
 
-float sign(Vector2 p1, Vector2 p2, Vector2 p3) {
-  return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
-}
+float slopething(Vector2 p, Vector2 p2) { return (p2.y - p.y) / (p2.x - p.x); }
 
-bool PointInTriangle(Vector2 pt, Vector2 v1, Vector2 v2, Vector2 v3) {
-  float d1, d2, d3;
-  bool has_neg, has_pos;
+bool Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
+  float N = slopething(p, v1), s1 = slopething(v1, v2), s2 = slopething(v1, v3);
+  if (s1 > s2) {
+    float temp = s1;
+    s1 = s2;
+    s2 = temp;
+  }
+  if (s1 > N || N > s2) return false;
+  N = slopething(p, v2);
+  s1 = slopething(v1, v2);
+  s2 = slopething(v2, v3);
+  if (s1 > s2) {
+    float temp = s1;
+    s1 = s2;
+    s2 = temp;
+  }
+  if (s1 > N || N > s2) return false;
+  N = slopething(p, v3);
+  s1 = slopething(v3, v2);
+  s2 = slopething(v1, v3);
+  if (s1 > s2) {
+    float temp = s1;
+    s1 = s2;
+    s2 = temp;
+  }
+  if (s1 > N || N > s2) return false;
 
-  d1 = sign(pt, v1, v2);
-  d2 = sign(pt, v2, v3);
-  d3 = sign(pt, v3, v1);
-
-  has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-  has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-
-  return !(has_neg && has_pos);
+  return true;
 }
 
 void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
@@ -97,7 +111,6 @@ void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
     if (x2 >= Settings->resolutionx) x2 = Settings->resolutionx - 1;
     if (y < 0) y = 0;
     if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony - 1;
-    SDL_Log("%d %d %d %d", x, y, x2, y2);
     for (int i = x; i < x2; i++) {
       for (int j = y; j < y2; j++) {
         Vector2 temp;
@@ -105,8 +118,8 @@ void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
         temp.y = j;
         if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
             temp.y < Settings->resolutiony &&
-            (PointInTriangle(temp, vectors[0], vectors[1], vectors[2]) ||
-             PointInTriangle(temp, vectors[0], vectors[3], vectors[2])))
+            (Vector2inTri(temp, vectors[0], vectors[1], vectors[2]) ||
+             Vector2inTri(temp, vectors[0], vectors[3], vectors[2])))
           pixels[(int)temp.x + (int)temp.y * pitch] = color;
       }
     }
