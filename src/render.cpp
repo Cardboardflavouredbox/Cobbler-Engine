@@ -31,43 +31,40 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
   for (int i = vectors[0].x; i < vectors[1].x; i++) {
     int y = vectors[0].y + ((i - vectors[0].x) * (vectors[1].y - vectors[0].y) /
                             (vectors[1].x - vectors[0].x));
-    if (i >= 0 && y >= 0 && i < Settings->resolutionx &&
-        y < Settings->resolutiony) {
+    if (i >= 0 && y >= 0 && i <= Settings->resolutionx &&
+        y <= Settings->resolutiony) {
       pixels[i + y * pitch] = color;
     }
   }
   if (vectors[0].x == vectors[1].x) {
     for (int i = vectors[0].y; i < vectors[1].y; i++) {
-      if (vectors[0].x >= 0 && i >= 0 && vectors[0].x < Settings->resolutionx &&
-          i < Settings->resolutiony) {
+      if (vectors[0].x >= 0 && i >= 0 &&
+          vectors[0].x <= Settings->resolutionx && i <= Settings->resolutiony) {
         pixels[(int)vectors[0].x + i * pitch] = color;
       }
     }
   }
 }
 
-float slopething(Vector2 p, Vector2 p2) { return (p2.y - p.y) / (p2.x - p.x); }
-
 bool Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
-  float N = slopething(p, v1), s1 = slopething(v1, v2), s2 = slopething(v1, v3);
+  float N = atan2f(p.y - v1.y, p.x - v1.x),
+        s1 = atan2f(v1.y - v2.y, v1.x - v2.x),
+        s2 = atan2f(v1.y - v3.y, v1.x - v3.x);
+  if (N < 0) N += 3.14f;
+  if (s1 < 0) s1 += 3.14f;
+  if (s2 < 0) s2 += 3.14f;
   if (s1 > s2) {
     float temp = s1;
     s1 = s2;
     s2 = temp;
   }
   if (s1 > N || N > s2) return false;
-  N = slopething(p, v2);
-  s1 = slopething(v1, v2);
-  s2 = slopething(v2, v3);
-  if (s1 > s2) {
-    float temp = s1;
-    s1 = s2;
-    s2 = temp;
-  }
-  if (s1 > N || N > s2) return false;
-  N = slopething(p, v3);
-  s1 = slopething(v3, v2);
-  s2 = slopething(v1, v3);
+  N = atan2f(p.y - v2.y, p.x - v2.x);
+  s1 = atan2f(v1.y - v2.y, v1.x - v2.x);
+  s2 = atan2f(v2.y - v3.y, v2.x - v3.x);
+  if (N < 0) N += 3.14f;
+  if (s1 < 0) s1 += 3.14f;
+  if (s2 < 0) s2 += 3.14f;
   if (s1 > s2) {
     float temp = s1;
     s1 = s2;
@@ -108,19 +105,19 @@ void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
       if (vectors[i].y > y2) y2 = vectors[i].y;
     }
     if (x < 0) x = 0;
-    if (x2 >= Settings->resolutionx) x2 = Settings->resolutionx - 1;
+    if (x2 >= Settings->resolutionx) x2 = Settings->resolutionx;
     if (y < 0) y = 0;
-    if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony - 1;
+    if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony;
     for (int i = x; i < x2; i++) {
       for (int j = y; j < y2; j++) {
         Vector2 temp;
         temp.x = i;
         temp.y = j;
-        if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
-            temp.y < Settings->resolutiony &&
+        if (temp.x >= 0 && temp.y >= 0 && temp.x <= Settings->resolutionx &&
+            temp.y <= Settings->resolutiony &&
             (Vector2inTri(temp, vectors[0], vectors[1], vectors[2]) ||
              Vector2inTri(temp, vectors[0], vectors[3], vectors[2])))
-          pixels[(int)temp.x + (int)temp.y * pitch] = color;
+          pixels[i + j * pitch] = color;
       }
     }
   }
@@ -154,20 +151,28 @@ void render() {
 
   SDL_UnlockSurface(Global->render_target);
 
-  int w, h;
+  int w, h, rtw = Global->render_target->w, rth = Global->render_target->h;
   SDL_GetWindowSizeInPixels(Global->window, &w, &h);
+
+  int size = w / rtw;
+  if (size > h / rth) size = h / rth;
+
+  rtw *= size;
+  rth *= size;
+
   w /= 2;
   h /= 2;
-  w -= Global->render_target->w / 2;
-  h -= Global->render_target->h / 2;
+  w -= rtw / 2;
+  h -= rth / 2;
 
   SDL_FRect temprect;
-  temprect.w = Global->render_target->w;
-  temprect.h = Global->render_target->h;
+  temprect.w = rtw;
+  temprect.h = rth;
   temprect.x = w;
   temprect.y = h;
   SDL_Texture* temptexture =
       SDL_CreateTextureFromSurface(Global->renderer, Global->render_target);
+  SDL_SetTextureScaleMode(temptexture, SDL_SCALEMODE_PIXELART);
   SDL_RenderTexture(Global->renderer, temptexture, NULL, &temprect);
   SDL_RenderPresent(Global->renderer);
 }
