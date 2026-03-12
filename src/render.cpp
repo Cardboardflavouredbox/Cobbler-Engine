@@ -66,8 +66,8 @@ bool PointInTriangle(Vector2 pt, Vector2 v1, Vector2 v2, Vector2 v3) {
 
 void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
               Vector2 vectors[], bool wire) {
-  Vector2 temp[2] = {vectors[0], vectors[1]};
   if (wire) {
+    Vector2 temp[2] = {vectors[0], vectors[1]};
     DrawLine(pixels, pitch, color, temp);
     temp[0] = vectors[1];
     temp[1] = vectors[2];
@@ -85,8 +85,21 @@ void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
     temp[1] = vectors[1];
     DrawLine(pixels, pitch, color, temp);
   } else {
-    for (int i = vectors[0].x; i < vectors[2].x; i++) {
-      for (int j = vectors[0].y; j < vectors[2].y; j++) {
+    int x = vectors[0].x, x2 = vectors[0].x, y = vectors[0].y,
+        y2 = vectors[0].y;
+    for (int i = 1; i < 4; i++) {
+      if (vectors[i].x < x) x = vectors[i].x;
+      if (vectors[i].x > x2) x2 = vectors[i].x;
+      if (vectors[i].y < y) y = vectors[i].y;
+      if (vectors[i].y > y2) y2 = vectors[i].y;
+    }
+    if (x < 0) x = 0;
+    if (x2 >= Settings->resolutionx) x2 = Settings->resolutionx - 1;
+    if (y < 0) y = 0;
+    if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony - 1;
+    SDL_Log("%d %d %d %d", x, y, x2, y2);
+    for (int i = x; i < x2; i++) {
+      for (int j = y; j < y2; j++) {
         Vector2 temp;
         temp.x = i;
         temp.y = j;
