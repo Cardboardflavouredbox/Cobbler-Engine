@@ -34,6 +34,33 @@ ScreenPoint drawPoint(Vector3 P) {
   return screenpos;
 }
 
+float Vector2Dot(Vector2 P1, Vector2 P2) {
+  float deltaX = P2.x - P1.x;
+  float deltaY = P2.y - P1.y;
+  return std::sqrt(deltaX * deltaX + deltaY * deltaY);
+}
+
+Vector3 GetUV(Vector2 P, Vector2 R1, Vector2 R2, Vector2 R3) {
+  Vector3 UV;
+  Vector2 v0, v1, v2;
+  v0.x = R2.x - R1.x;
+  v0.y = R2.y - R1.y;
+  v1.x = R3.x - R1.x;
+  v1.y = R3.y - R1.y;
+  v2.x = P.x - R1.x;
+  v2.y = P.y - R1.y;
+  float d00 = Vector2Dot(v0, v0);
+  float d01 = Vector2Dot(v0, v1);
+  float d11 = Vector2Dot(v1, v1);
+  float d20 = Vector2Dot(v2, v0);
+  float d21 = Vector2Dot(v2, v1);
+  float denom = d00 * d11 - d01 * d01;
+  UV.y = (d11 * d20 - d01 * d21) / denom;
+  UV.z = (d00 * d21 - d01 * d20) / denom;
+  UV.x = 1.0f - UV.y - UV.z;
+  return UV;
+}
+
 void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
               ScreenPoint vectors[]) {
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
@@ -102,12 +129,22 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
         temp.x = i;
         temp.y = j;
         if (temp.x >= 0 && temp.y >= 0 && temp.x <= Settings->resolutionx &&
-            temp.y <= Settings->resolutiony &&
-            (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p) ||
-             Vector2inTri(temp, vectors[0].p, vectors[2].p, vectors[3].p))) {
-          unsigned char color = static_cast<unsigned char*>(
-              Global->texturemap.at(texture)->pixels)[i + j * pitch];
-          pixels[i + j * pitch] = color;
+            temp.y <= Settings->resolutiony) {
+          if (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p)) {
+            Vector3 uvw = GetUV(temp, vectors[0].p, vectors[1].p, vectors[2].p);
+
+            unsigned char color = static_cast<unsigned char*>(
+                Global->texturemap.at(texture)
+                    ->pixels)[int(128 * uvw.x) + int(128 * uvw.y) * 128];
+            pixels[i + j * pitch] = color;
+          } else if (Vector2inTri(temp, vectors[0].p, vectors[2].p,
+                                  vectors[3].p)) {
+            Vector3 uvw = GetUV(temp, vectors[0].p, vectors[2].p, vectors[3].p);
+            unsigned char color = static_cast<unsigned char*>(
+                Global->texturemap.at(texture)
+                    ->pixels)[int(128 * (uvw.y)) + int(128 * (uvw.z)) * 128];
+            pixels[i + j * pitch] = color;
+          }
         }
       }
     }
