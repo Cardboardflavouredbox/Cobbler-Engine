@@ -17,6 +17,13 @@ FetchContent_Declare(
 # Make SDL3 available to your project
 FetchContent_MakeAvailable(SDL3)
 
+FetchContent_Declare(
+  glaze
+  GIT_REPOSITORY https://github.com/stephenberry/glaze.git
+  GIT_TAG main
+  GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(glaze)
 
 add_executable(FPSthing src/main.cpp src/render.cpp src/input.cpp)
 

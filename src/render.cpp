@@ -42,7 +42,6 @@ float Vector2Dot(Vector2 P1, Vector2 P2) {
 
 Vector3 GetUV(Vector2 P, Vector2 R1, Vector2 R2, Vector2 R3) {
   Vector3 UV;
-  Vector2 v0, v1, v2;
   float det = (R2.y - R3.y) * (R1.x - R3.x) + (R3.x - R2.x) * (R1.y - R3.y);
   float factor_alpha =
       (R2.y - R3.y) * (P.x - R3.x) + (R3.x - R2.x) * (P.y - R3.y);
@@ -52,6 +51,43 @@ Vector3 GetUV(Vector2 P, Vector2 R1, Vector2 R2, Vector2 R3) {
   UV.y = factor_beta / det;
   UV.z = 1.0 - UV.x - UV.y;
   return UV;
+}
+// by Inigo Quilez 2010
+Vector3 invBilinear(Vector2 p, Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
+  Vector3 res = Vector3({-1.0f, -1.0f});
+
+  Vector2 e = Vector2({b.x - a.x, b.y - a.y});
+  Vector2 f = Vector2({d.x - a.x, d.y - a.y});
+  Vector2 g = Vector2({a.x - b.x + c.x - d.x, a.y - b.y + c.y - d.y});
+  Vector2 h = Vector2({p.x - a.x, p.y - a.y});
+
+  float k2 = g.x * f.y - g.y * f.x;
+  float k1 = e.x * f.y - e.y * f.x + h.x * g.y - h.y * g.x;
+  float k0 = h.x * e.y - h.y * e.x;
+
+  // if edges are parallel, this is a linear equation
+  if (abs(k2) <= 0.25f) {
+    res = Vector3({(h.x * k1 + f.x * k0) / (e.x * k1 - g.x * k0), -k0 / k1});
+  }
+  // otherwise, it's a quadratic
+  else {
+    float w = k1 * k1 - 4.0 * k0 * k2;
+    if (w < 0.0) return Vector3({-1.0, -1.0});
+    w = sqrt(w);
+
+    float ik2 = 0.5 / k2;
+    float v = (-k1 - w) * ik2;
+    float u = (h.x - f.x * v) / (e.x + g.x * v);
+
+    if (u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) {
+      v = (-k1 + w) * ik2;
+      u = (h.x - f.x * v) / (e.x + g.x * v);
+    }
+    res = Vector3({u, v});
+  }
+  res.z = 1.0f - res.x - res.y;
+
+  return res;
 }
 
 void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
@@ -96,8 +132,8 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
   return (s1 + s2 + s3 > 360);
 }
 
-void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
-              ScreenPoint vectors[]) {
+void DrawTri(unsigned char* pixels, int pitch, std::string texture,
+             ScreenPoint vectors[]) {
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
       !vectors[2].isbehindcamera || !vectors[3].isbehindcamera) {
     int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
@@ -125,19 +161,52 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
             temp.y <= Settings->resolutiony) {
           if (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p)) {
             Vector3 uvw = GetUV(temp, vectors[0].p, vectors[1].p, vectors[2].p);
-
             unsigned char color = static_cast<unsigned char*>(
                 Global->texturemap.at(texture)
                     ->pixels)[int(128 * (uvw.z + uvw.y)) +
                               int(128 * (uvw.z)) * 128];
             pixels[i + j * pitch] = color;
-          } else if (Vector2inTri(temp, vectors[0].p, vectors[2].p,
-                                  vectors[3].p)) {
-            Vector3 uvw = GetUV(temp, vectors[0].p, vectors[2].p, vectors[3].p);
+          }
+        }
+      }
+    }
+  }
+}
+
+void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
+              ScreenPoint vectors[]) {
+  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
+      !vectors[2].isbehindcamera || !vectors[3].isbehindcamera) {
+    int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
+        y2 = vectors[0].p.y;
+    for (int i = 1; i < 4; i++) {
+      if (vectors[i].p.x < x) x = vectors[i].p.x;
+      if (vectors[i].p.x > x2) x2 = vectors[i].p.x;
+      if (vectors[i].p.y < y) y = vectors[i].p.y;
+      if (vectors[i].p.y > y2) y2 = vectors[i].p.y;
+    }
+    if (x < 0) x = 0;
+    if (x >= Settings->resolutionx) x = Settings->resolutionx;
+    if (x2 < 0) x2 = 0;
+    if (x2 >= Settings->resolutionx) x2 = Settings->resolutionx;
+    if (y < 0) y = 0;
+    if (y >= Settings->resolutiony) y = Settings->resolutiony;
+    if (y2 < 0) y2 = 0;
+    if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony;
+    for (int i = x; i < x2; i++) {
+      for (int j = y; j < y2; j++) {
+        Vector2 temp;
+        temp.x = i;
+        temp.y = j;
+        if (temp.x >= 0 && temp.y >= 0 && temp.x <= Settings->resolutionx &&
+            temp.y <= Settings->resolutiony) {
+          if (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p) ||
+              Vector2inTri(temp, vectors[0].p, vectors[2].p, vectors[3].p)) {
+            Vector3 uvw = invBilinear(temp, vectors[0].p, vectors[1].p,
+                                      vectors[2].p, vectors[3].p);
             unsigned char color = static_cast<unsigned char*>(
                 Global->texturemap.at(texture)
-                    ->pixels)[int(128 * (uvw.y)) +
-                              int(128 * (uvw.z + uvw.y)) * 128];
+                    ->pixels)[int(128 * (uvw.x)) + int(128 * (uvw.y)) * 128];
             pixels[i + j * pitch] = color;
           }
         }
@@ -207,10 +276,10 @@ void render() {
   SDL_LockSurface(Global->render_target);
 
   Quad tempquad;
-  tempquad.p1 = Vector3({-1, 1, 2});
-  tempquad.p2 = Vector3({1, 1, 2});
-  tempquad.p3 = Vector3({1, 1, -2});
-  tempquad.p4 = Vector3({-1, 1, -2});
+  tempquad.p1 = Vector3({-1.5f, 1, 2});
+  tempquad.p2 = Vector3({1.5f, 1, 2});
+  tempquad.p3 = Vector3({1.5f, 1, -2});
+  tempquad.p4 = Vector3({-1.5f, 1, -2});
   ScreenPoint temp[4] = {drawPoint(tempquad.p1), drawPoint(tempquad.p2),
                          drawPoint(tempquad.p3), drawPoint(tempquad.p4)};
 
