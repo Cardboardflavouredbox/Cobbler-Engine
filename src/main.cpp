@@ -89,7 +89,7 @@ void update() {
   lastTime = currentTime;
 
   SDL_GetRelativeMouseState(&P1Inputs->Mouse.x, &P1Inputs->Mouse.y);
-  Camera->dir += -8 * P1Inputs->Mouse.x;
+  Camera->dir.x += -8 * P1Inputs->Mouse.x;
   P1Inputs->Mouse.x = 0;
   P1Inputs->Mouse.y = 0;
 
@@ -97,7 +97,7 @@ void update() {
   // if (P1Inputs->D > 0) Camera->dir -= 32 * Global->deltaTime;
   if (P1Inputs->W > 0) Camera->position.y += 8 * Global->deltaTime;
   if (P1Inputs->S > 0) Camera->position.y -= 8 * Global->deltaTime;
-  if (Camera->dir >= 360) Camera->dir -= 360;
+  if (Camera->dir.x >= 360) Camera->dir.x -= 360;
 }
 
 int main(int argc, char* argv[]) {

@@ -3,6 +3,7 @@
 
 struct Entity {
  public:
-  float hp, dir;
+  float hp;
+  Vector2 dir;
   Vector3 position;
 };
