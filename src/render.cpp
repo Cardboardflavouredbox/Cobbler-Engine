@@ -46,42 +46,22 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
   }
 }
 
-float anglething(Vector2 p, Vector2 p2) { return (p.y - p2.y) / (p.x - p2.x); }
+float anglething(Vector2 a, Vector2 b, Vector2 c) {
+  Vector2 ab = Vector2({b.x - a.x, b.y - a.y});
+  Vector2 cb = Vector2({b.x - c.x, b.y - c.y});
 
-bool Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
-  int check = 0;
+  float dot = (ab.x * cb.x + ab.y * cb.y);
+  float cross = (ab.x * cb.y - ab.y * cb.x);
 
-  float N = anglething(v1, p), s1 = anglething(v1, v2), s2 = anglething(v1, v3);
+  float alpha = atan2f(cross, dot);
 
-  if (s1 > s2) {
-    float temp = s1;
-    s1 = s2;
-    s2 = temp;
-  }
-  if (s1 <= N && N <= s2) check++;
-  N = anglething(v2, p);
-  s1 = anglething(v2, v1);
-  s2 = anglething(v2, v3);
+  return alpha * 180.f / 3.14f + 0.5f;
+}
+float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
+  float s1 = anglething(v3, p, v1), s2 = anglething(v1, p, v2),
+        s3 = anglething(v2, p, v3);
 
-  if (s1 > s2) {
-    float temp = s1;
-    s1 = s2;
-    s2 = temp;
-  }
-  if (s1 <= N && N <= s2) check++;
-
-  N = anglething(v3, p);
-  s1 = anglething(v3, v1);
-  s2 = anglething(v3, v2);
-
-  if (s1 > s2) {
-    float temp = s1;
-    s1 = s2;
-    s2 = temp;
-  }
-  if (s1 <= N && N <= s2) check++;
-
-  return check > 1;
+  return (s1 + s2 + s3 > 360);
 }
 
 void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
@@ -114,8 +94,12 @@ void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
       if (vectors[i].y > y2) y2 = vectors[i].y;
     }
     if (x < 0) x = 0;
+    if (x >= Settings->resolutionx) x = Settings->resolutionx;
+    if (x2 < 0) x2 = 0;
     if (x2 >= Settings->resolutionx) x2 = Settings->resolutionx;
     if (y < 0) y = 0;
+    if (y >= Settings->resolutiony) y = Settings->resolutiony;
+    if (y2 < 0) y2 = 0;
     if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony;
     for (int i = x; i < x2; i++) {
       for (int j = y; j < y2; j++) {
@@ -125,7 +109,7 @@ void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
         if (temp.x >= 0 && temp.y >= 0 && temp.x <= Settings->resolutionx &&
             temp.y <= Settings->resolutiony &&
             (Vector2inTri(temp, vectors[0], vectors[1], vectors[2]) ||
-             Vector2inTri(temp, vectors[0], vectors[3], vectors[2])))
+             Vector2inTri(temp, vectors[0], vectors[2], vectors[3])))
           pixels[i + j * pitch] = color;
       }
     }
