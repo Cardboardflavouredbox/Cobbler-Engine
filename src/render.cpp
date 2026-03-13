@@ -43,21 +43,14 @@ float Vector2Dot(Vector2 P1, Vector2 P2) {
 Vector3 GetUV(Vector2 P, Vector2 R1, Vector2 R2, Vector2 R3) {
   Vector3 UV;
   Vector2 v0, v1, v2;
-  v0.x = R2.x - R1.x;
-  v0.y = R2.y - R1.y;
-  v1.x = R3.x - R1.x;
-  v1.y = R3.y - R1.y;
-  v2.x = P.x - R1.x;
-  v2.y = P.y - R1.y;
-  float d00 = Vector2Dot(v0, v0);
-  float d01 = Vector2Dot(v0, v1);
-  float d11 = Vector2Dot(v1, v1);
-  float d20 = Vector2Dot(v2, v0);
-  float d21 = Vector2Dot(v2, v1);
-  float denom = d00 * d11 - d01 * d01;
-  UV.y = (d11 * d20 - d01 * d21) / denom;
-  UV.z = (d00 * d21 - d01 * d20) / denom;
-  UV.x = 1.0f - UV.y - UV.z;
+  float det = (R2.y - R3.y) * (R1.x - R3.x) + (R3.x - R2.x) * (R1.y - R3.y);
+  float factor_alpha =
+      (R2.y - R3.y) * (P.x - R3.x) + (R3.x - R2.x) * (P.y - R3.y);
+  float factor_beta =
+      (R3.y - R1.y) * (P.x - R3.x) + (R1.x - R3.x) * (P.y - R3.y);
+  UV.x = factor_alpha / det;
+  UV.y = factor_beta / det;
+  UV.z = 1.0 - UV.x - UV.y;
   return UV;
 }
 
@@ -135,14 +128,16 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
 
             unsigned char color = static_cast<unsigned char*>(
                 Global->texturemap.at(texture)
-                    ->pixels)[int(128 * uvw.x) + int(128 * uvw.y) * 128];
+                    ->pixels)[int(128 * (uvw.z + uvw.y)) +
+                              int(128 * (uvw.z)) * 128];
             pixels[i + j * pitch] = color;
           } else if (Vector2inTri(temp, vectors[0].p, vectors[2].p,
                                   vectors[3].p)) {
             Vector3 uvw = GetUV(temp, vectors[0].p, vectors[2].p, vectors[3].p);
             unsigned char color = static_cast<unsigned char*>(
                 Global->texturemap.at(texture)
-                    ->pixels)[int(128 * (uvw.y)) + int(128 * (uvw.z)) * 128];
+                    ->pixels)[int(128 * (uvw.y)) +
+                              int(128 * (uvw.z + uvw.y)) * 128];
             pixels[i + j * pitch] = color;
           }
         }
