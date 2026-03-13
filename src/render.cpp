@@ -46,33 +46,42 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
   }
 }
 
-bool Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
-  float N = atan2f(p.y - v1.y, p.x - v1.x),
-        s1 = atan2f(v1.y - v2.y, v1.x - v2.x),
-        s2 = atan2f(v1.y - v3.y, v1.x - v3.x);
-  if (N < 0) N += 3.14f;
-  if (s1 < 0) s1 += 3.14f;
-  if (s2 < 0) s2 += 3.14f;
-  if (s1 > s2) {
-    float temp = s1;
-    s1 = s2;
-    s2 = temp;
-  }
-  if (s1 > N || N > s2) return false;
-  N = atan2f(p.y - v2.y, p.x - v2.x);
-  s1 = atan2f(v1.y - v2.y, v1.x - v2.x);
-  s2 = atan2f(v2.y - v3.y, v2.x - v3.x);
-  if (N < 0) N += 3.14f;
-  if (s1 < 0) s1 += 3.14f;
-  if (s2 < 0) s2 += 3.14f;
-  if (s1 > s2) {
-    float temp = s1;
-    s1 = s2;
-    s2 = temp;
-  }
-  if (s1 > N || N > s2) return false;
+float anglething(Vector2 p, Vector2 p2) { return (p.y - p2.y) / (p.x - p2.x); }
 
-  return true;
+bool Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
+  int check = 0;
+
+  float N = anglething(v1, p), s1 = anglething(v1, v2), s2 = anglething(v1, v3);
+
+  if (s1 > s2) {
+    float temp = s1;
+    s1 = s2;
+    s2 = temp;
+  }
+  if (s1 <= N && N <= s2) check++;
+  N = anglething(v2, p);
+  s1 = anglething(v2, v1);
+  s2 = anglething(v2, v3);
+
+  if (s1 > s2) {
+    float temp = s1;
+    s1 = s2;
+    s2 = temp;
+  }
+  if (s1 <= N && N <= s2) check++;
+
+  N = anglething(v3, p);
+  s1 = anglething(v3, v1);
+  s2 = anglething(v3, v2);
+
+  if (s1 > s2) {
+    float temp = s1;
+    s1 = s2;
+    s2 = temp;
+  }
+  if (s1 <= N && N <= s2) check++;
+
+  return check > 1;
 }
 
 void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
