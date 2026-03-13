@@ -106,7 +106,7 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
             (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p) ||
              Vector2inTri(temp, vectors[0].p, vectors[2].p, vectors[3].p))) {
           unsigned char color = static_cast<unsigned char*>(
-              Global->texturemap.at(texture)->pixels)[0];
+              Global->texturemap.at(texture)->pixels)[i + j * pitch];
           pixels[i + j * pitch] = color;
         }
       }
@@ -193,7 +193,7 @@ void render() {
   }
 
   unsigned char color = SDL_MapSurfaceRGB(Global->render_target, 0, 255, 0);
-  DrawQuad(pixels, pitch, "Fence", temp);
+  DrawQuad(pixels, pitch, "Wall", temp);
 
   SDL_UnlockSurface(Global->render_target);
 

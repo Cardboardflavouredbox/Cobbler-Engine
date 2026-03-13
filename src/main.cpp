@@ -65,11 +65,12 @@ bool init() {
   SDL_SetSurfacePalette(Global->render_target, palette);
 
   tempstr = basepath;
-  tempstr.append("/res/textures/Fence.bmp");
+  tempstr.append("/res/textures/Wall.bmp");
   surface = SDL_LoadBMP(tempstr.c_str());
-  surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_INDEX8);
+  surface = SDL_ConvertSurfaceAndColorspace(
+      surface, SDL_PIXELFORMAT_INDEX8, palette, SDL_COLORSPACE_RGB_DEFAULT, 0);
   SDL_SetSurfacePalette(surface, palette);
-  Global->texturemap.try_emplace("Fence", surface);
+  Global->texturemap.try_emplace("Wall", surface);
 
   Global->IsRunning = true;
   SDL_SetRenderVSync(Global->renderer, 1);
