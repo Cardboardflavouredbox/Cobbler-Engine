@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 #include <cmath>
+#include <string>
 
 #include "extern.h"
 #include "map.h"
@@ -35,21 +36,23 @@ ScreenPoint drawPoint(Vector3 P) {
 
 void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
               ScreenPoint vectors[]) {
-  for (int i = vectors[0].p.x; i < vectors[1].p.x; i++) {
-    int y = vectors[0].p.y +
-            ((i - vectors[0].p.x) * (vectors[1].p.y - vectors[0].p.y) /
-             (vectors[1].p.x - vectors[0].p.x));
-    if (i >= 0 && y >= 0 && i <= Settings->resolutionx &&
-        y <= Settings->resolutiony) {
-      pixels[i + y * pitch] = color;
+  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
+    for (int i = vectors[0].p.x; i < vectors[1].p.x; i++) {
+      int y = vectors[0].p.y +
+              ((i - vectors[0].p.x) * (vectors[1].p.y - vectors[0].p.y) /
+               (vectors[1].p.x - vectors[0].p.x));
+      if (i >= 0 && y >= 0 && i <= Settings->resolutionx &&
+          y <= Settings->resolutiony) {
+        pixels[i + y * pitch] = color;
+      }
     }
-  }
-  if (vectors[0].p.x == vectors[1].p.x) {
-    for (int i = vectors[0].p.y; i < vectors[1].p.y; i++) {
-      if (vectors[0].p.x >= 0 && i >= 0 &&
-          vectors[0].p.x <= Settings->resolutionx &&
-          i <= Settings->resolutiony) {
-        pixels[(int)vectors[0].p.x + i * pitch] = color;
+    if (vectors[0].p.x == vectors[1].p.x) {
+      for (int i = vectors[0].p.y; i < vectors[1].p.y; i++) {
+        if (vectors[0].p.x >= 0 && i >= 0 &&
+            vectors[0].p.x <= Settings->resolutionx &&
+            i <= Settings->resolutiony) {
+          pixels[(int)vectors[0].p.x + i * pitch] = color;
+        }
       }
     }
   }
@@ -73,11 +76,49 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
   return (s1 + s2 + s3 > 360);
 }
 
-void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
-              ScreenPoint vectors[], bool wire) {
+void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
+              ScreenPoint vectors[]) {
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
       !vectors[2].isbehindcamera || !vectors[3].isbehindcamera) {
-    if (wire) {
+    int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
+        y2 = vectors[0].p.y;
+    for (int i = 1; i < 4; i++) {
+      if (vectors[i].p.x < x) x = vectors[i].p.x;
+      if (vectors[i].p.x > x2) x2 = vectors[i].p.x;
+      if (vectors[i].p.y < y) y = vectors[i].p.y;
+      if (vectors[i].p.y > y2) y2 = vectors[i].p.y;
+    }
+    if (x < 0) x = 0;
+    if (x >= Settings->resolutionx) x = Settings->resolutionx;
+    if (x2 < 0) x2 = 0;
+    if (x2 >= Settings->resolutionx) x2 = Settings->resolutionx;
+    if (y < 0) y = 0;
+    if (y >= Settings->resolutiony) y = Settings->resolutiony;
+    if (y2 < 0) y2 = 0;
+    if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony;
+    for (int i = x; i < x2; i++) {
+      for (int j = y; j < y2; j++) {
+        Vector2 temp;
+        temp.x = i;
+        temp.y = j;
+        if (temp.x >= 0 && temp.y >= 0 && temp.x <= Settings->resolutionx &&
+            temp.y <= Settings->resolutiony &&
+            (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p) ||
+             Vector2inTri(temp, vectors[0].p, vectors[2].p, vectors[3].p))) {
+          unsigned char color = static_cast<unsigned char*>(
+              Global->texturemap.at(texture)->pixels)[0];
+          pixels[i + j * pitch] = color;
+        }
+      }
+    }
+  }
+}
+
+void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
+              ScreenPoint vectors[]) {
+  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
+      !vectors[2].isbehindcamera || !vectors[3].isbehindcamera) {
+    if (color == 255) {
       ScreenPoint temp[2] = {vectors[0], vectors[1]};
       DrawLine(pixels, pitch, color, temp);
       temp[0] = vectors[1];
@@ -152,7 +193,7 @@ void render() {
   }
 
   unsigned char color = SDL_MapSurfaceRGB(Global->render_target, 0, 255, 0);
-  DrawQuad(pixels, pitch, color, temp, false);
+  DrawQuad(pixels, pitch, "Fence", temp);
 
   SDL_UnlockSurface(Global->render_target);
 

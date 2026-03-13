@@ -2,13 +2,18 @@
 
 #include <SDL3/SDL_render.h>
 
+#include <unordered_map>
+
 struct GlobalClass {
  public:
   SDL_Window* window;
   SDL_Renderer* renderer;
   SDL_Surface* render_target;
+
   bool IsRunning;
   float deltaTime;
+
+  std::unordered_map<std::string, SDL_Surface*> texturemap;
 };
 
 struct Inputs {

@@ -25,6 +25,10 @@ bool init() {
   Settings->resolutiony = 200;
   Settings->fov = 90;
 
+  std::unordered_map<std::string, SDL_Surface*> tempmap;
+  Global->texturemap = tempmap;
+  Global->texturemap.reserve(32);
+
   Camera = static_cast<Entity*>(calloc(1, sizeof(Entity)));
   Camera->position = Vector3({0, 0, 0});
 
@@ -36,13 +40,12 @@ bool init() {
                        Settings->resolutiony, SDL_WINDOW_RESIZABLE);
   Global->renderer = SDL_CreateRenderer(Global->window, NULL);
 
-  std::string tempstr = SDL_GetBasePath();
-  tempstr.append("/res/Color_palette.bmp");
+  std::string basepath = SDL_GetBasePath(), tempstr = basepath;
+  tempstr.append("/res/textures/Color_palette.bmp");
   SDL_Surface* surface = SDL_LoadBMP(tempstr.c_str());
   surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_INDEX8);
   SDL_Color my_palette_colors[256];
   uint32_t* pixels = static_cast<uint32_t*>(surface->pixels);
-
   for (int i = 0; i < 256; i++) {
     SDL_Color tempcol;
     tempcol.a = 255;
@@ -61,6 +64,13 @@ bool init() {
       Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
   SDL_SetSurfacePalette(Global->render_target, palette);
 
+  tempstr = basepath;
+  tempstr.append("/res/textures/Fence.bmp");
+  surface = SDL_LoadBMP(tempstr.c_str());
+  surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_INDEX8);
+  SDL_SetSurfacePalette(surface, palette);
+  Global->texturemap.try_emplace("Fence", surface);
+
   Global->IsRunning = true;
   SDL_SetRenderVSync(Global->renderer, 1);
   lastTime = SDL_GetTicks();
@@ -71,6 +81,13 @@ void quit() {
   SDL_DestroyRenderer(Global->renderer);
   SDL_DestroyWindow(Global->window);
   SDL_DestroySurface(Global->render_target);
+  // for (const auto& i : Global->texturemap) {
+  //   SDL_DestroySurface(i.second);
+  // }
+  free(Global);
+  free(Settings);
+  free(Camera);
+  free(P1Inputs);
   Global->IsRunning = false;
   SDL_Quit();
 }
