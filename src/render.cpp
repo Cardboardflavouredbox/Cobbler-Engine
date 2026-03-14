@@ -10,6 +10,7 @@
 
 struct ScreenPoint {
   Vector2 p;
+  float dist;
   bool isbehindcamera = false;
 };
 
@@ -27,12 +28,13 @@ ScreenPoint drawPoint(Vector3 P) {
   float ty = p1.y * pc - p1.x * ps;
 
   ScreenPoint screenpos;
-  if (ty <= 0.f) {
+  if (ty <= 0.5f) {
     screenpos.isbehindcamera = true;
-    ty = 1.f / 64.f;
+    ty = 0.5f;
   }
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
   screenpos.p.y = (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2);
+  screenpos.dist = std::sqrt(p1.x * p1.x + p1.y * p1.y + p1.z * p1.z);
   return screenpos;
 }
 
@@ -74,7 +76,7 @@ Vector3 invBilinear(Vector2 p, Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
   // otherwise, it's a quadratic
   else {
     float w = k1 * k1 - 4.0 * k0 * k2;
-    if (w < 0.0) return Vector3({-1.0, -1.0});
+    if (w < 0.0) return Vector3({-1.0, -1.0, -1.0});
     w = sqrt(w);
 
     float ik2 = 0.5 / k2;
@@ -154,8 +156,8 @@ void DrawTri(unsigned char* pixels, int pitch, std::string texture,
     if (y >= Settings->resolutiony) y = Settings->resolutiony;
     if (y2 < 0) y2 = 0;
     if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony;
-    for (int i = x; i < x2; i++) {
-      for (int j = y; j < y2; j++) {
+    for (int i = x; i <= x2; i++) {
+      for (int j = y; j <= y2; j++) {
         Vector2 temp;
         temp.x = i;
         temp.y = j;
@@ -163,10 +165,20 @@ void DrawTri(unsigned char* pixels, int pitch, std::string texture,
             temp.y <= Settings->resolutiony) {
           if (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p)) {
             Vector3 uvw = GetUV(temp, vectors[0].p, vectors[1].p, vectors[2].p);
-            unsigned char color = static_cast<unsigned char*>(
+            Uint32 color = static_cast<Uint32*>(
                 Global->textures[0]->pixels)[int(128 * (uvw.z + uvw.y)) +
                                              int(128 * (uvw.z)) * 128];
-            pixels[i + j * pitch] = color;
+
+            uint8_t r = (color >> 0) & 0xFF;
+            uint8_t g = (color >> 8) & 0xFF;
+            uint8_t b = (color >> 16) & 0xFF;
+            uint8_t a = (color >> 24) & 0xFF;
+
+            r += uvw.x;
+            g += uvw.x;
+            b += uvw.x;
+            pixels[i + j * pitch] =
+                SDL_MapSurfaceRGB(Global->render_target, r, g, b);
           }
         }
       }
@@ -194,8 +206,8 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
     if (y >= Settings->resolutiony) y = Settings->resolutiony;
     if (y2 < 0) y2 = 0;
     if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony;
-    for (int i = x; i < x2; i++) {
-      for (int j = y; j < y2; j++) {
+    for (int i = x; i <= x2; i++) {
+      for (int j = y; j <= y2; j++) {
         Vector2 temp;
         temp.x = i;
         temp.y = j;
@@ -205,10 +217,28 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
               Vector2inTri(temp, vectors[0].p, vectors[2].p, vectors[3].p)) {
             Vector3 uvw = invBilinear(temp, vectors[0].p, vectors[1].p,
                                       vectors[2].p, vectors[3].p);
-            unsigned char color = static_cast<unsigned char*>(
+            Uint32 color = static_cast<Uint32*>(
                 Global->textures[0]
                     ->pixels)[int(128 * (uvw.x)) + int(128 * (uvw.y)) * 128];
-            pixels[i + j * pitch] = color;
+
+            int r = (color >> 0) & 0xFF;
+            int g = (color >> 8) & 0xFF;
+            int b = (color >> 16) & 0xFF;
+            int a = (color >> 24) & 0xFF;
+
+            float lerpthing = std::lerp(
+                std::lerp(vectors[0].dist, vectors[1].dist, uvw.x),
+                std::lerp(vectors[3].dist, vectors[2].dist, uvw.x), uvw.y);
+
+            r -= lerpthing * 16;
+            g -= lerpthing * 16;
+            b -= lerpthing * 16;
+            if (r < 0) r = 0;
+            if (g < 0) g = 0;
+            if (b < 0) b = 0;
+
+            pixels[i + j * pitch] =
+                SDL_MapSurfaceRGB(Global->render_target, r, g, b);
           }
         }
       }

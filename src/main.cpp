@@ -135,9 +135,7 @@ bool init() {
     tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
                    ".bmp");
     surface = SDL_LoadBMP(tempstr.c_str());
-    surface =
-        SDL_ConvertSurfaceAndColorspace(surface, SDL_PIXELFORMAT_INDEX8,
-                                        palette, SDL_COLORSPACE_RGB_DEFAULT, 0);
+    surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
     // SDL_SetSurfacePalette(surface, palette);
     Global->textures[i] = surface;
   }
