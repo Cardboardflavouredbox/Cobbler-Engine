@@ -168,14 +168,31 @@ void DrawTri(unsigned char* pixels, int pitch, std::string texture,
                 Global->textures[0]->pixels)[int(128 * (uvw.z + uvw.y)) +
                                              int(128 * (uvw.z)) * 128];
 
-            uint8_t r = (color >> 0) & 0xFF;
-            uint8_t g = (color >> 8) & 0xFF;
-            uint8_t b = (color >> 16) & 0xFF;
-            uint8_t a = (color >> 24) & 0xFF;
+            int r = (color >> 0) & 0xFF;
+            int g = (color >> 8) & 0xFF;
+            int b = (color >> 16) & 0xFF;
+            int a = (color >> 24) & 0xFF;
 
-            r += uvw.x;
-            g += uvw.x;
-            b += uvw.x;
+            Vector3 tempvec3;
+            tempvec3.x = rawvectors[0].x * uvw.x + rawvectors[1].x * uvw.y +
+                         rawvectors[2].x * uvw.z;
+            tempvec3.y = rawvectors[0].y * uvw.x + rawvectors[1].y * uvw.y +
+                         rawvectors[2].y * uvw.z;
+            tempvec3.z = rawvectors[0].z * uvw.x + rawvectors[1].z * uvw.y +
+                         rawvectors[2].z * uvw.z;
+
+            tempvec3.x -= Camera->position.x;
+            tempvec3.y -= Camera->position.y;
+            tempvec3.z -= Camera->position.z;
+            float dist =
+                std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
+                          tempvec3.z * tempvec3.z);
+            r -= dist * 4;
+            g -= dist * 4;
+            b -= dist * 4;
+            if (r < 0) r = 0;
+            if (g < 0) g = 0;
+            if (b < 0) b = 0;
             pixels[i + j * pitch] =
                 SDL_MapSurfaceRGB(Global->render_target, r, g, b);
           }
@@ -257,63 +274,6 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
             pixels[i + j * pitch] =
                 SDL_MapSurfaceRGB(Global->render_target, r, g, b);
           }
-        }
-      }
-    }
-  }
-}
-
-void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
-              Vector3 rawvectors[]) {
-  ScreenPoint vectors[4] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
-                            drawPoint(rawvectors[2]), drawPoint(rawvectors[3])};
-  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
-      !vectors[2].isbehindcamera || !vectors[3].isbehindcamera) {
-    if (color == 255) {
-      ScreenPoint temp[2] = {vectors[0], vectors[1]};
-      DrawLine(pixels, pitch, color, temp);
-      temp[0] = vectors[1];
-      temp[1] = vectors[2];
-      DrawLine(pixels, pitch, color, temp);
-      temp[0] = vectors[3];
-      temp[1] = vectors[2];
-      DrawLine(pixels, pitch, color, temp);
-      temp[0] = vectors[0];
-      temp[1] = vectors[3];
-      DrawLine(pixels, pitch, color, temp);
-      temp[0] = vectors[0];
-      temp[1] = vectors[2];
-      DrawLine(pixels, pitch, color, temp);
-      temp[0] = vectors[3];
-      temp[1] = vectors[1];
-      DrawLine(pixels, pitch, color, temp);
-    } else {
-      int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
-          y2 = vectors[0].p.y;
-      for (int i = 1; i < 4; i++) {
-        if (vectors[i].p.x < x) x = vectors[i].p.x;
-        if (vectors[i].p.x > x2) x2 = vectors[i].p.x;
-        if (vectors[i].p.y < y) y = vectors[i].p.y;
-        if (vectors[i].p.y > y2) y2 = vectors[i].p.y;
-      }
-      if (x < 0) x = 0;
-      if (x >= Settings->resolutionx) x = Settings->resolutionx;
-      if (x2 < 0) x2 = 0;
-      if (x2 >= Settings->resolutionx) x2 = Settings->resolutionx;
-      if (y < 0) y = 0;
-      if (y >= Settings->resolutiony) y = Settings->resolutiony;
-      if (y2 < 0) y2 = 0;
-      if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony;
-      for (int i = x; i < x2; i++) {
-        for (int j = y; j < y2; j++) {
-          Vector2 temp;
-          temp.x = i;
-          temp.y = j;
-          if (temp.x >= 0 && temp.y >= 0 && temp.x <= Settings->resolutionx &&
-              temp.y <= Settings->resolutiony &&
-              (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p) ||
-               Vector2inTri(temp, vectors[0].p, vectors[2].p, vectors[3].p)))
-            pixels[i + j * pitch] = color;
         }
       }
     }
