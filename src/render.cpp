@@ -10,7 +10,6 @@
 
 struct ScreenPoint {
   Vector2 p;
-  float dist;
   bool isbehindcamera = false;
 };
 
@@ -34,7 +33,6 @@ ScreenPoint drawPoint(Vector3 P) {
   }
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
   screenpos.p.y = (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2);
-  screenpos.dist = std::sqrt(p1.x * p1.x + p1.y * p1.y + p1.z * p1.z);
   return screenpos;
 }
 
@@ -57,8 +55,8 @@ Vector3 GetUV(Vector2 P, Vector2 R1, Vector2 R2, Vector2 R3) {
   return UV;
 }
 // by Inigo Quilez 2010
-Vector3 invBilinear(Vector2 p, Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
-  Vector3 res = Vector3({-1.0f, -1.0f});
+Vector2 invBilinear(Vector2 p, Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
+  Vector2 res = Vector2({-1.0f, -1.0f});
 
   Vector2 e = Vector2({b.x - a.x, b.y - a.y});
   Vector2 f = Vector2({d.x - a.x, d.y - a.y});
@@ -71,12 +69,12 @@ Vector3 invBilinear(Vector2 p, Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
 
   // if edges are parallel, this is a linear equation
   if (abs(k2) <= 0.25f) {
-    res = Vector3({(h.x * k1 + f.x * k0) / (e.x * k1 - g.x * k0), -k0 / k1});
+    res = Vector2({(h.x * k1 + f.x * k0) / (e.x * k1 - g.x * k0), -k0 / k1});
   }
   // otherwise, it's a quadratic
   else {
     float w = k1 * k1 - 4.0 * k0 * k2;
-    if (w < 0.0) return Vector3({-1.0, -1.0, -1.0});
+    if (w < 0.0) return Vector2({-1.0, -1.0});
     w = sqrt(w);
 
     float ik2 = 0.5 / k2;
@@ -87,9 +85,8 @@ Vector3 invBilinear(Vector2 p, Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
       v = (-k1 + w) * ik2;
       u = (h.x - f.x * v) / (e.x + g.x * v);
     }
-    res = Vector3({u, v});
+    res = Vector2({u, v});
   }
-  res.z = 1.0f - res.x - res.y;
 
   return res;
 }
@@ -137,9 +134,11 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
 }
 
 void DrawTri(unsigned char* pixels, int pitch, std::string texture,
-             ScreenPoint vectors[]) {
+             Vector3 rawvectors[]) {
+  ScreenPoint vectors[3] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
+                            drawPoint(rawvectors[2])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
-      !vectors[2].isbehindcamera || !vectors[3].isbehindcamera) {
+      !vectors[2].isbehindcamera) {
     int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
         y2 = vectors[0].p.y;
     for (int i = 1; i < 4; i++) {
@@ -187,7 +186,9 @@ void DrawTri(unsigned char* pixels, int pitch, std::string texture,
 }
 
 void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
-              ScreenPoint vectors[]) {
+              Vector3 rawvectors[]) {
+  ScreenPoint vectors[4] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
+                            drawPoint(rawvectors[2]), drawPoint(rawvectors[3])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
       !vectors[2].isbehindcamera || !vectors[3].isbehindcamera) {
     int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
@@ -215,7 +216,7 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
             temp.y <= Settings->resolutiony) {
           if (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p) ||
               Vector2inTri(temp, vectors[0].p, vectors[2].p, vectors[3].p)) {
-            Vector3 uvw = invBilinear(temp, vectors[0].p, vectors[1].p,
+            Vector2 uvw = invBilinear(temp, vectors[0].p, vectors[1].p,
                                       vectors[2].p, vectors[3].p);
             Uint32 color = static_cast<Uint32*>(
                 Global->textures[0]
@@ -226,13 +227,29 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
             int b = (color >> 16) & 0xFF;
             int a = (color >> 24) & 0xFF;
 
-            float lerpthing = std::lerp(
-                std::lerp(vectors[0].dist, vectors[1].dist, uvw.x),
-                std::lerp(vectors[3].dist, vectors[2].dist, uvw.x), uvw.y);
+            Vector3 tempvec3;
+            tempvec3.x = rawvectors[0].x * (1 - uvw.x) * (1 - uvw.y) +
+                         rawvectors[1].x * (uvw.x) * (1 - uvw.y) +
+                         rawvectors[2].x * (uvw.x) * (uvw.y) +
+                         rawvectors[3].x * (1 - uvw.x) * (uvw.y);
+            tempvec3.y = rawvectors[0].y * (1 - uvw.x) * (1 - uvw.y) +
+                         rawvectors[1].y * (uvw.x) * (1 - uvw.y) +
+                         rawvectors[2].y * (uvw.x) * (uvw.y) +
+                         rawvectors[3].y * (1 - uvw.x) * (uvw.y);
+            tempvec3.z = rawvectors[0].z * (1 - uvw.x) * (1 - uvw.y) +
+                         rawvectors[1].z * (uvw.x) * (1 - uvw.y) +
+                         rawvectors[2].z * (uvw.x) * (uvw.y) +
+                         rawvectors[3].z * (1 - uvw.x) * (uvw.y);
 
-            r -= lerpthing * 16;
-            g -= lerpthing * 16;
-            b -= lerpthing * 16;
+            tempvec3.x -= Camera->position.x;
+            tempvec3.y -= Camera->position.y;
+            tempvec3.z -= Camera->position.z;
+            float dist =
+                std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
+                          tempvec3.z * tempvec3.z);
+            r -= dist * 4;
+            g -= dist * 4;
+            b -= dist * 4;
             if (r < 0) r = 0;
             if (g < 0) g = 0;
             if (b < 0) b = 0;
@@ -247,7 +264,9 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
 }
 
 void DrawQuad(unsigned char* pixels, int pitch, unsigned char color,
-              ScreenPoint vectors[]) {
+              Vector3 rawvectors[]) {
+  ScreenPoint vectors[4] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
+                            drawPoint(rawvectors[2]), drawPoint(rawvectors[3])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
       !vectors[2].isbehindcamera || !vectors[3].isbehindcamera) {
     if (color == 255) {
@@ -317,17 +336,15 @@ void render() {
 
   for (int k = 0; k < Global->mapfaces.size(); k++) {
     if (Global->mapfaces[k].points.size() == 4) {
-      ScreenPoint temp[4] = {
-          drawPoint(Global->Points[Global->mapfaces[k].points[0]]),
-          drawPoint(Global->Points[Global->mapfaces[k].points[1]]),
-          drawPoint(Global->Points[Global->mapfaces[k].points[2]]),
-          drawPoint(Global->Points[Global->mapfaces[k].points[3]])};
+      Vector3 temp[4] = {Global->Points[Global->mapfaces[k].points[0]],
+                         Global->Points[Global->mapfaces[k].points[1]],
+                         Global->Points[Global->mapfaces[k].points[2]],
+                         Global->Points[Global->mapfaces[k].points[3]]};
       DrawQuad(pixels, pitch, "Wall", temp);
     } else {
-      ScreenPoint temp[3] = {
-          drawPoint(Global->Points[Global->mapfaces[k].points[0]]),
-          drawPoint(Global->Points[Global->mapfaces[k].points[1]]),
-          drawPoint(Global->Points[Global->mapfaces[k].points[2]])};
+      Vector3 temp[3] = {Global->Points[Global->mapfaces[k].points[0]],
+                         Global->Points[Global->mapfaces[k].points[1]],
+                         Global->Points[Global->mapfaces[k].points[2]]};
       DrawTri(pixels, pitch, "Wall", temp);
     }
   }

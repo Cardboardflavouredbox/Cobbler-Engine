@@ -38,15 +38,15 @@ bool init() {
     tempzipdata.stagenames.resize(1);
     tempzipdata.stagenames[0] = "test";
     tempzipdata.startlevel = "test";
-    error = glz::write_file_json(tempzipdata, "MapStuff/resources.json",
-                                 std::string{});
+    error = glz::write_file_json<glz::opts{.prettify = true}>(
+        tempzipdata, "MapStuff/resources.json", std::string{});
     if (error) return false;
   }
   LoadedData = &tempzipdata;
 
   Mapdata tempmapdata;
   error = glz::read_file_json(
-      tempmapdata, "MapStuff/map/+" + LoadedData->startlevel + ".json",
+      tempmapdata, "MapStuff/map/" + LoadedData->startlevel + ".json",
       std::string{});
   if (error) {
     tempmapdata.Points.resize(8);
@@ -84,7 +84,7 @@ bool init() {
     tempmapdata.mapfaces[3].points[1] = 5;
     tempmapdata.mapfaces[3].points[2] = 6;
     tempmapdata.mapfaces[3].points[3] = 2;
-    error = glz::write_file_json(
+    error = glz::write_file_json<glz::opts{.prettify = true}>(
         tempmapdata, "MapStuff/map/" + LoadedData->startlevel + ".json",
         std::string{});
     if (error) return false;
