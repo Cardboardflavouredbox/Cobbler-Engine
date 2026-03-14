@@ -11,6 +11,7 @@
 #include "global.h"
 #include "input.h"
 #include "render.h"
+#include "update.h"
 /* We will use this renderer to draw into this window every frame. */
 GlobalClass* Global;
 SettingsClass* Settings;
@@ -81,12 +82,13 @@ bool init() {
 
   for (int i = 0; i < LoadedData->texturenames.size(); i++) {
     tempstr = basepath;
-    tempstr.append("/res/textures/" + LoadedData->texturenames[i] + ".bmp");
+    tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
+                   ".bmp");
     surface = SDL_LoadBMP(tempstr.c_str());
     surface =
         SDL_ConvertSurfaceAndColorspace(surface, SDL_PIXELFORMAT_INDEX8,
                                         palette, SDL_COLORSPACE_RGB_DEFAULT, 0);
-    SDL_SetSurfacePalette(surface, palette);
+    // SDL_SetSurfacePalette(surface, palette);
     Global->textures[i] = surface;
   }
 
@@ -109,31 +111,6 @@ void quit() {
   free(P1Inputs);
   Global->IsRunning = false;
   SDL_Quit();
-}
-
-void update() {
-  SDL_Event event;
-  while (SDL_PollEvent(&event)) {
-    switch (event.type) {
-      case SDL_EVENT_QUIT:
-        Global->IsRunning = false;
-        break;
-    }
-  }
-  Uint32 currentTime = SDL_GetTicks();
-  Global->deltaTime = (currentTime - lastTime) / 1000.0f;
-  lastTime = currentTime;
-
-  SDL_GetRelativeMouseState(&P1Inputs->Mouse.x, &P1Inputs->Mouse.y);
-  Camera->dir.x += -8 * P1Inputs->Mouse.x;
-  P1Inputs->Mouse.x = 0;
-  P1Inputs->Mouse.y = 0;
-
-  // if (P1Inputs->A > 0) Camera->dir += 32 * Global->deltaTime;
-  // if (P1Inputs->D > 0) Camera->dir -= 32 * Global->deltaTime;
-  if (P1Inputs->W > 0) Camera->position.y += 8 * Global->deltaTime;
-  if (P1Inputs->S > 0) Camera->position.y -= 8 * Global->deltaTime;
-  if (Camera->dir.x >= 360) Camera->dir.x -= 360;
 }
 
 int main(int argc, char* argv[]) {
