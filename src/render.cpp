@@ -162,9 +162,8 @@ void DrawTri(unsigned char* pixels, int pitch, std::string texture,
           if (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p)) {
             Vector3 uvw = GetUV(temp, vectors[0].p, vectors[1].p, vectors[2].p);
             unsigned char color = static_cast<unsigned char*>(
-                Global->texturemap.at(texture)
-                    ->pixels)[int(128 * (uvw.z + uvw.y)) +
-                              int(128 * (uvw.z)) * 128];
+                Global->textures[0]->pixels)[int(128 * (uvw.z + uvw.y)) +
+                                             int(128 * (uvw.z)) * 128];
             pixels[i + j * pitch] = color;
           }
         }
@@ -205,7 +204,7 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
             Vector3 uvw = invBilinear(temp, vectors[0].p, vectors[1].p,
                                       vectors[2].p, vectors[3].p);
             unsigned char color = static_cast<unsigned char*>(
-                Global->texturemap.at(texture)
+                Global->textures[0]
                     ->pixels)[int(128 * (uvw.x)) + int(128 * (uvw.y)) * 128];
             pixels[i + j * pitch] = color;
           }

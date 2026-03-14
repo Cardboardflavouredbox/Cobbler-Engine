@@ -4,6 +4,7 @@
 #include <SDL3/SDL_video.h>
 #include <stdlib.h>
 
+#include <glaze/json.hpp>
 #include <string>
 
 #include "entity.h"
@@ -13,6 +14,7 @@
 /* We will use this renderer to draw into this window every frame. */
 GlobalClass* Global;
 SettingsClass* Settings;
+ZipData* LoadedData;
 Entity* Camera;
 Inputs* P1Inputs;
 Uint32 lastTime;
@@ -25,9 +27,22 @@ bool init() {
   Settings->resolutiony = 200;
   Settings->fov = 90;
 
-  std::unordered_map<std::string, SDL_Surface*> tempmap;
-  Global->texturemap = tempmap;
-  Global->texturemap.reserve(32);
+  ZipData tempdata;
+  auto error =
+      glz::read_file_json(tempdata, "MapStuff/resources.json", std::string{});
+  if (error) {
+    tempdata.texturenames.resize(8);
+    tempdata.texturenames[0] = "Wall";
+    tempdata.texturenames[1] = "Fence";
+    error = glz::write_file_json(tempdata, "MapStuff/resources.json",
+                                 std::string{});
+    if (error) return false;
+  }
+  LoadedData = &tempdata;
+
+  std::vector<SDL_Surface*> tempvector;
+  Global->textures = tempvector;
+  Global->textures.resize(32);
 
   Camera = static_cast<Entity*>(calloc(1, sizeof(Entity)));
   Camera->position = Vector3({0, 0, 0});
@@ -41,7 +56,7 @@ bool init() {
   Global->renderer = SDL_CreateRenderer(Global->window, NULL);
 
   std::string basepath = SDL_GetBasePath(), tempstr = basepath;
-  tempstr.append("/res/textures/Color_palette.bmp");
+  tempstr.append("/res/Color_palette.bmp");
   SDL_Surface* surface = SDL_LoadBMP(tempstr.c_str());
   surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_INDEX8);
   SDL_Color my_palette_colors[256];
@@ -64,13 +79,16 @@ bool init() {
       Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
   SDL_SetSurfacePalette(Global->render_target, palette);
 
-  tempstr = basepath;
-  tempstr.append("/res/textures/Wall.bmp");
-  surface = SDL_LoadBMP(tempstr.c_str());
-  surface = SDL_ConvertSurfaceAndColorspace(
-      surface, SDL_PIXELFORMAT_INDEX8, palette, SDL_COLORSPACE_RGB_DEFAULT, 0);
-  SDL_SetSurfacePalette(surface, palette);
-  Global->texturemap.try_emplace("Wall", surface);
+  for (int i = 0; i < LoadedData->texturenames.size(); i++) {
+    tempstr = basepath;
+    tempstr.append("/res/textures/" + LoadedData->texturenames[i] + ".bmp");
+    surface = SDL_LoadBMP(tempstr.c_str());
+    surface =
+        SDL_ConvertSurfaceAndColorspace(surface, SDL_PIXELFORMAT_INDEX8,
+                                        palette, SDL_COLORSPACE_RGB_DEFAULT, 0);
+    SDL_SetSurfacePalette(surface, palette);
+    Global->textures[i] = surface;
+  }
 
   Global->IsRunning = true;
   SDL_SetRenderVSync(Global->renderer, 1);

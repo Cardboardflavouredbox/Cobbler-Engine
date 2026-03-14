@@ -2,7 +2,7 @@
 
 #include <SDL3/SDL_render.h>
 
-#include <unordered_map>
+#include <vector>
 
 struct GlobalClass {
  public:
@@ -13,7 +13,11 @@ struct GlobalClass {
   bool IsRunning;
   float deltaTime;
 
-  std::unordered_map<std::string, SDL_Surface*> texturemap;
+  std::vector<SDL_Surface*> textures;
+};
+
+struct ZipData {
+  std::vector<std::string> texturenames;
 };
 
 struct Inputs {

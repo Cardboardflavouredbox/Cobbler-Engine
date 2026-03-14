@@ -28,8 +28,9 @@ FetchContent_MakeAvailable(glaze)
 add_executable(FPSthing src/main.cpp src/render.cpp src/input.cpp)
 
 # SDL2 라이브러리 연결
-target_link_libraries(FPSthing PRIVATE SDL3::SDL3)
+target_link_libraries(FPSthing PRIVATE SDL3::SDL3 glaze::glaze)
 
 target_include_directories(FPSthing PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 FILE(COPY res DESTINATION "${CMAKE_BINARY_DIR}/bin")
+FILE(COPY MapStuff DESTINATION "${CMAKE_BINARY_DIR}/bin")
