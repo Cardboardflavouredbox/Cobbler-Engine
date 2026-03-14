@@ -28,19 +28,69 @@ bool init() {
   Settings->resolutiony = 200;
   Settings->fov = 90;
 
-  ZipData tempdata;
-  auto error =
-      glz::read_file_json(tempdata, "MapStuff/resources.json", std::string{});
+  ZipData tempzipdata;
+  auto error = glz::read_file_json(tempzipdata, "MapStuff/resources.json",
+                                   std::string{});
   if (error) {
-    tempdata.texturenames.resize(8);
-    tempdata.texturenames[0] = "Wall";
-    tempdata.texturenames[1] = "Fence";
-    error = glz::write_file_json(tempdata, "MapStuff/resources.json",
+    tempzipdata.texturenames.resize(2);
+    tempzipdata.texturenames[0] = "Wall";
+    tempzipdata.texturenames[1] = "Fence";
+    tempzipdata.stagenames.resize(1);
+    tempzipdata.stagenames[0] = "test";
+    tempzipdata.startlevel = "test";
+    error = glz::write_file_json(tempzipdata, "MapStuff/resources.json",
                                  std::string{});
     if (error) return false;
   }
-  LoadedData = &tempdata;
+  LoadedData = &tempzipdata;
 
+  Mapdata tempmapdata;
+  error = glz::read_file_json(
+      tempmapdata, "MapStuff/map/+" + LoadedData->startlevel + ".json",
+      std::string{});
+  if (error) {
+    tempmapdata.Points.resize(8);
+    tempmapdata.Points[0] = Vector3({-1.5f, 1.5f, 2.f});
+    tempmapdata.Points[1] = Vector3({1.5f, 1.5f, 2.f});
+    tempmapdata.Points[2] = Vector3({1.5f, 1.5f, -1.f});
+    tempmapdata.Points[3] = Vector3({-1.5f, 1.5f, -1.f});
+
+    tempmapdata.Points[4] = Vector3({-1.5f, -1.5f, 2.f});
+    tempmapdata.Points[5] = Vector3({1.5f, -1.5f, 2.f});
+    tempmapdata.Points[6] = Vector3({1.5f, -1.5f, -1.f});
+    tempmapdata.Points[7] = Vector3({-1.5f, -1.5f, -1.f});
+
+    tempmapdata.mapfaces.resize(4);
+    tempmapdata.mapfaces[0].points.resize(4);
+    tempmapdata.mapfaces[0].points[0] = 0;
+    tempmapdata.mapfaces[0].points[1] = 1;
+    tempmapdata.mapfaces[0].points[2] = 2;
+    tempmapdata.mapfaces[0].points[3] = 3;
+
+    tempmapdata.mapfaces[1].points.resize(4);
+    tempmapdata.mapfaces[1].points[0] = 4;
+    tempmapdata.mapfaces[1].points[1] = 0;
+    tempmapdata.mapfaces[1].points[2] = 3;
+    tempmapdata.mapfaces[1].points[3] = 7;
+
+    tempmapdata.mapfaces[2].points.resize(4);
+    tempmapdata.mapfaces[2].points[0] = 5;
+    tempmapdata.mapfaces[2].points[1] = 4;
+    tempmapdata.mapfaces[2].points[2] = 7;
+    tempmapdata.mapfaces[2].points[3] = 6;
+
+    tempmapdata.mapfaces[3].points.resize(4);
+    tempmapdata.mapfaces[3].points[0] = 1;
+    tempmapdata.mapfaces[3].points[1] = 5;
+    tempmapdata.mapfaces[3].points[2] = 6;
+    tempmapdata.mapfaces[3].points[3] = 2;
+    error = glz::write_file_json(
+        tempmapdata, "MapStuff/map/" + LoadedData->startlevel + ".json",
+        std::string{});
+    if (error) return false;
+  }
+  Global->Points = tempmapdata.Points;
+  Global->mapfaces = tempmapdata.mapfaces;
   std::vector<SDL_Surface*> tempvector;
   Global->textures = tempvector;
   Global->textures.resize(32);

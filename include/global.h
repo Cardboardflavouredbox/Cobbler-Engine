@@ -4,6 +4,8 @@
 
 #include <vector>
 
+#include "map.h"
+
 struct GlobalClass {
  public:
   SDL_Window* window;
@@ -14,10 +16,19 @@ struct GlobalClass {
   float deltaTime;
 
   std::vector<SDL_Surface*> textures;
+  std::vector<Vector3> Points;
+  std::vector<Mapface> mapfaces;
 };
 
 struct ZipData {
+  std::string startlevel;
   std::vector<std::string> texturenames;
+  std::vector<std::string> stagenames;
+};
+
+struct Mapdata {
+  std::vector<Vector3> Points;
+  std::vector<Mapface> mapfaces;
 };
 
 struct Inputs {

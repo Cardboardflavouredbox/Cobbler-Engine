@@ -1,14 +1,8 @@
 #pragma once
-typedef union {
-  struct {
-    float x, y;
-  };
-  float v[2];
-} Vector2;
+struct Vector2 {
+  float x, y;
+};
 
-typedef union {
-  struct {
-    float x, y, z;
-  };
-  float v[3];
-} Vector3;
+struct Vector3 {
+  float x, y, z;
+};

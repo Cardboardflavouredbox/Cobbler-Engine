@@ -16,7 +16,9 @@ struct ScreenPoint {
 ScreenPoint drawPoint(Vector3 P) {
   Vector3 p1;
   for (int i = 0; i < 3; i++) {
-    p1.v[i] = P.v[i] - Camera->position.v[i];
+    p1.x = P.x - Camera->position.x;
+    p1.y = P.y - Camera->position.y;
+    p1.z = P.z - Camera->position.z;
   }
   float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
   float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
@@ -274,26 +276,31 @@ void render() {
   // SDL_RenderClear(Global->renderer);
   SDL_LockSurface(Global->render_target);
 
-  Quad tempquad;
-  tempquad.p1 = Vector3({-1.5f, 1, 2});
-  tempquad.p2 = Vector3({1.5f, 1, 2});
-  tempquad.p3 = Vector3({1.5f, 1, -2});
-  tempquad.p4 = Vector3({-1.5f, 1, -2});
-  ScreenPoint temp[4] = {drawPoint(tempquad.p1), drawPoint(tempquad.p2),
-                         drawPoint(tempquad.p3), drawPoint(tempquad.p4)};
-
   unsigned char* pixels =
       static_cast<unsigned char*>(Global->render_target->pixels);
   int pitch = Global->render_target->pitch;
-
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
       pixels[i + j * pitch] = 0;
     }
   }
 
-  unsigned char color = SDL_MapSurfaceRGB(Global->render_target, 0, 255, 0);
-  DrawQuad(pixels, pitch, "Wall", temp);
+  for (int k = 0; k < Global->mapfaces.size(); k++) {
+    if (Global->mapfaces[k].points.size() == 4) {
+      ScreenPoint temp[4] = {
+          drawPoint(Global->Points[Global->mapfaces[k].points[0]]),
+          drawPoint(Global->Points[Global->mapfaces[k].points[1]]),
+          drawPoint(Global->Points[Global->mapfaces[k].points[2]]),
+          drawPoint(Global->Points[Global->mapfaces[k].points[3]])};
+      DrawQuad(pixels, pitch, "Wall", temp);
+    } else {
+      ScreenPoint temp[3] = {
+          drawPoint(Global->Points[Global->mapfaces[k].points[0]]),
+          drawPoint(Global->Points[Global->mapfaces[k].points[1]]),
+          drawPoint(Global->Points[Global->mapfaces[k].points[2]])};
+      DrawTri(pixels, pitch, "Wall", temp);
+    }
+  }
 
   SDL_UnlockSurface(Global->render_target);
 

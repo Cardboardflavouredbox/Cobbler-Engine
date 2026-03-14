@@ -1,7 +1,10 @@
 #pragma once
+#include <vector>
+
 #include "types.h"
 
-struct Quad {
- public:
-  Vector3 p1, p2, p3, p4;
+struct Mapface {
+  bool doublesided = false;
+  int texture = 0;
+  std::vector<int> points;
 };
