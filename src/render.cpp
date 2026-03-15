@@ -203,7 +203,7 @@ void DrawTri(unsigned char* pixels, int pitch, std::string texture,
 }
 
 void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
-              Vector3 rawvectors[]) {
+              Vector3 rawvectors[], int xloop, int yloop) {
   ScreenPoint vectors[4] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
                             drawPoint(rawvectors[2]), drawPoint(rawvectors[3])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
@@ -236,8 +236,8 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
             Vector2 uvw = invBilinear(temp, vectors[0].p, vectors[1].p,
                                       vectors[2].p, vectors[3].p);
             Uint32 color = static_cast<Uint32*>(
-                Global->textures[0]
-                    ->pixels)[int(128 * (uvw.x)) + int(128 * (uvw.y)) * 128];
+                Global->textures[0]->pixels)[int(128 * (uvw.x)) * xloop +
+                                             int(128 * (uvw.y)) * yloop * 128];
 
             int r = (color >> 0) & 0xFF;
             int g = (color >> 8) & 0xFF;
@@ -300,7 +300,8 @@ void render() {
                          Global->Points[Global->mapfaces[k].points[1]],
                          Global->Points[Global->mapfaces[k].points[2]],
                          Global->Points[Global->mapfaces[k].points[3]]};
-      DrawQuad(pixels, pitch, "Wall", temp);
+      DrawQuad(pixels, pitch, "Wall", temp, Global->mapfaces[k].xloop,
+               Global->mapfaces[k].yloop);
     } else {
       Vector3 temp[3] = {Global->Points[Global->mapfaces[k].points[0]],
                          Global->Points[Global->mapfaces[k].points[1]],

@@ -50,15 +50,15 @@ bool init() {
       std::string{});
   if (error) {
     tempmapdata.Points.resize(8);
-    tempmapdata.Points[0] = Vector3({-1.5f, 1.5f, 2.f});
-    tempmapdata.Points[1] = Vector3({1.5f, 1.5f, 2.f});
-    tempmapdata.Points[2] = Vector3({1.5f, 1.5f, -1.f});
-    tempmapdata.Points[3] = Vector3({-1.5f, 1.5f, -1.f});
+    tempmapdata.Points[0] = Vector3({-15.f, 15.f, 2.f});
+    tempmapdata.Points[1] = Vector3({15.f, 15.f, 2.f});
+    tempmapdata.Points[2] = Vector3({15.f, 15.f, -1.f});
+    tempmapdata.Points[3] = Vector3({-15.f, 15.f, -1.f});
 
-    tempmapdata.Points[4] = Vector3({-1.5f, -1.5f, 2.f});
-    tempmapdata.Points[5] = Vector3({1.5f, -1.5f, 2.f});
-    tempmapdata.Points[6] = Vector3({1.5f, -1.5f, -1.f});
-    tempmapdata.Points[7] = Vector3({-1.5f, -1.5f, -1.f});
+    tempmapdata.Points[4] = Vector3({-15.f, -15.f, 2.f});
+    tempmapdata.Points[5] = Vector3({15.f, -15.f, 2.f});
+    tempmapdata.Points[6] = Vector3({15.f, -15.f, -1.f});
+    tempmapdata.Points[7] = Vector3({-15.f, -15.f, -1.f});
 
     tempmapdata.mapfaces.resize(4);
     tempmapdata.mapfaces[0].points.resize(4);
@@ -84,6 +84,10 @@ bool init() {
     tempmapdata.mapfaces[3].points[1] = 5;
     tempmapdata.mapfaces[3].points[2] = 6;
     tempmapdata.mapfaces[3].points[3] = 2;
+
+    for (int i = 0; i < 4; i++) {
+      tempmapdata.mapfaces[i].xloop = 8;
+    }
     error = glz::write_file_json<glz::opts{.prettify = true}>(
         tempmapdata, "MapStuff/map/" + LoadedData->startlevel + ".json",
         std::string{});

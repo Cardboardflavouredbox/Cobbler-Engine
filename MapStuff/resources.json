@@ -1,1 +1,10 @@
-{"texturenames":["Wall","Fence","","","","","",""]}
+{
+    "startlevel": "test",
+    "texturenames": [
+       "Wall",
+       "Fence"
+    ],
+    "stagenames": [
+       "test"
+    ]
+ }
