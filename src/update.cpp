@@ -23,7 +23,7 @@ void update() {
 
   SDL_GetRelativeMouseState(&P1Inputs->Mouse.x, &P1Inputs->Mouse.y);
   Camera->dir.x += -4 * P1Inputs->Mouse.x;
-  Camera->dir.y += -4 * P1Inputs->Mouse.y;
+  // Camera->dir.y += -4 * P1Inputs->Mouse.y;
   P1Inputs->Mouse.x = 0;
   P1Inputs->Mouse.y = 0;
 

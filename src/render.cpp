@@ -9,8 +9,8 @@
 #include "map.h"
 
 struct ScreenPoint {
-  Vector2 p;
-  float depth = 0;
+  Vector3 p;
+  bool isbehindcamera = false;
 };
 
 ScreenPoint drawPoint(Vector3 P) {
@@ -28,13 +28,14 @@ ScreenPoint drawPoint(Vector3 P) {
   float tz = 180 * what;
 
   ScreenPoint screenpos;
-  screenpos.depth = ty;
   if (ty <= 0.5f) {
+    screenpos.isbehindcamera = true;
     ty = 0.5f;
   }
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
   screenpos.p.y =
       (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2) + tz;
+  screenpos.p.z = ty;
   return screenpos;
 }
 
@@ -44,58 +45,30 @@ float Vector2Dot(Vector2 P1, Vector2 P2) {
   return std::sqrt(deltaX * deltaX + deltaY * deltaY);
 }
 
-Vector3 GetUV(Vector2 P, Vector2 R1, Vector2 R2, Vector2 R3) {
+Vector3 GetUV(Vector2 P, Vector3 R1, Vector3 R2, Vector3 R3) {
   Vector3 UV;
   float det = (R2.y - R3.y) * (R1.x - R3.x) + (R3.x - R2.x) * (R1.y - R3.y);
   float factor_alpha =
       (R2.y - R3.y) * (P.x - R3.x) + (R3.x - R2.x) * (P.y - R3.y);
   float factor_beta =
       (R3.y - R1.y) * (P.x - R3.x) + (R1.x - R3.x) * (P.y - R3.y);
-  UV.x = factor_alpha / det;
-  UV.y = factor_beta / det;
-  UV.z = 1.0 - UV.x - UV.y;
+  float factor_gamma =
+      (R1.y - R2.y) * (P.x - R3.x) + (R1.x - R2.x) * (P.y - R3.y);
+  UV.x = factor_alpha / det / R1.z;
+  UV.y = factor_beta / det / R2.z;
+  UV.z = factor_gamma / det / R3.z;
+
+  float lsum = UV.x + UV.y + UV.z;
+
+  UV.x /= lsum;
+  UV.y /= lsum;
+  UV.z /= lsum;
   return UV;
 }
-// by Inigo Quilez 2010
-Vector2 invBilinear(Vector2 p, Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
-  Vector2 res = Vector2({-1.0f, -1.0f});
-
-  Vector2 e = Vector2({b.x - a.x, b.y - a.y});
-  Vector2 f = Vector2({d.x - a.x, d.y - a.y});
-  Vector2 g = Vector2({a.x - b.x + c.x - d.x, a.y - b.y + c.y - d.y});
-  Vector2 h = Vector2({p.x - a.x, p.y - a.y});
-
-  float k2 = g.x * f.y - g.y * f.x;
-  float k1 = e.x * f.y - e.y * f.x + h.x * g.y - h.y * g.x;
-  float k0 = h.x * e.y - h.y * e.x;
-
-  // if edges are parallel, this is a linear equation
-  if (abs(k2) <= 0.25f) {
-    res = Vector2({(h.x * k1 + f.x * k0) / (e.x * k1 - g.x * k0), -k0 / k1});
-  }
-  // otherwise, it's a quadratic
-  else {
-    float w = k1 * k1 - 4.0 * k0 * k2;
-    if (w < 0.0) return Vector2({-1.0, -1.0});
-    w = sqrt(w);
-
-    float ik2 = 0.5 / k2;
-    float v = (-k1 - w) * ik2;
-    float u = (h.x - f.x * v) / (e.x + g.x * v);
-
-    if (u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) {
-      v = (-k1 + w) * ik2;
-      u = (h.x - f.x * v) / (e.x + g.x * v);
-    }
-    res = Vector2({u, v});
-  }
-
-  return res;
-}
-
 void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
-              ScreenPoint vectors[]) {
-  if (vectors[0].depth > 0.f || vectors[1].depth > 0.f) {
+              Vector3 rawvectors[]) {
+  ScreenPoint vectors[2] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1])};
+  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
     for (int i = vectors[0].p.x; i < vectors[1].p.x; i++) {
       int y = vectors[0].p.y +
               ((i - vectors[0].p.x) * (vectors[1].p.y - vectors[0].p.y) /
@@ -139,11 +112,11 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
              Vector3 rawvectors[], int xloop, int yloop) {
   ScreenPoint vectors[3] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
                             drawPoint(rawvectors[2])};
-  if (vectors[0].depth > 0.f || vectors[1].depth > 0.f ||
-      vectors[2].depth > 0.f) {
+  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
+      !vectors[2].isbehindcamera) {
     int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
         y2 = vectors[0].p.y;
-    for (int i = 1; i < 4; i++) {
+    for (int i = 1; i < 3; i++) {
       if (vectors[i].p.x < x) x = vectors[i].p.x;
       if (vectors[i].p.x > x2) x2 = vectors[i].p.x;
       if (vectors[i].p.y < y) y = vectors[i].p.y;
@@ -164,7 +137,9 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
         temp.y = j;
         if (temp.x >= 0 && temp.y >= 0 && temp.x <= Settings->resolutionx &&
             temp.y <= Settings->resolutiony) {
-          if (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p)) {
+          if (Vector2inTri(temp, Vector2({vectors[0].p.x, vectors[0].p.y}),
+                           Vector2({vectors[1].p.x, vectors[1].p.y}),
+                           Vector2({vectors[2].p.x, vectors[2].p.y}))) {
             Vector3 uvw = GetUV(temp, vectors[0].p, vectors[1].p, vectors[2].p);
             int uvxthing = (int(128 * (uvw.z + uvw.y)) * xloop) % 128;
             int uvything = (int(128 * (uvw.z)) * yloop) % 128;
@@ -205,86 +180,6 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
   }
 }
 
-void DrawQuad(unsigned char* pixels, int pitch, int texture,
-              Vector3 rawvectors[], int xloop, int yloop) {
-  ScreenPoint vectors[4] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
-                            drawPoint(rawvectors[2]), drawPoint(rawvectors[3])};
-  if (vectors[0].depth > 0.f || vectors[1].depth > 0.f ||
-      vectors[2].depth > 0.f || vectors[3].depth > 0.f) {
-    int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
-        y2 = vectors[0].p.y;
-    for (int i = 1; i < 4; i++) {
-      if (vectors[i].p.x < x) x = vectors[i].p.x;
-      if (vectors[i].p.x > x2) x2 = vectors[i].p.x;
-      if (vectors[i].p.y < y) y = vectors[i].p.y;
-      if (vectors[i].p.y > y2) y2 = vectors[i].p.y;
-    }
-    if (x < 0) x = 0;
-    if (x >= Settings->resolutionx - 1) x = Settings->resolutionx - 1;
-    if (x2 < 0) x2 = 0;
-    if (x2 >= Settings->resolutionx - 1) x2 = Settings->resolutionx - 1;
-    if (y < 0) y = 0;
-    if (y >= Settings->resolutiony - 1) y = Settings->resolutiony - 1;
-    if (y2 < 0) y2 = 0;
-    if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
-    for (int i = x; i <= x2; i++) {
-      for (int j = y; j <= y2; j++) {
-        Vector2 temp;
-        temp.x = i;
-        temp.y = j;
-        if (temp.x >= 0 && temp.y >= 0 && temp.x <= Settings->resolutionx &&
-            temp.y <= Settings->resolutiony) {
-          if (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p) ||
-              Vector2inTri(temp, vectors[0].p, vectors[2].p, vectors[3].p)) {
-            Vector2 uvw = invBilinear(temp, vectors[0].p, vectors[1].p,
-                                      vectors[2].p, vectors[3].p);
-
-            int uvxthing = (int(128 * (uvw.x)) * xloop) % 128;
-            int uvything = (int(128 * (uvw.y)) * yloop) % 128;
-            Uint32 color = static_cast<Uint32*>(
-                Global->textures[texture]->pixels)[uvxthing + uvything * 128];
-
-            int r = (color >> 0) & 0xFF;
-            int g = (color >> 8) & 0xFF;
-            int b = (color >> 16) & 0xFF;
-            int a = (color >> 24) & 0xFF;
-
-            Vector3 tempvec3;
-            tempvec3.x = rawvectors[0].x * (1 - uvw.x) * (1 - uvw.y) +
-                         rawvectors[1].x * (uvw.x) * (1 - uvw.y) +
-                         rawvectors[2].x * (uvw.x) * (uvw.y) +
-                         rawvectors[3].x * (1 - uvw.x) * (uvw.y);
-            tempvec3.y = rawvectors[0].y * (1 - uvw.x) * (1 - uvw.y) +
-                         rawvectors[1].y * (uvw.x) * (1 - uvw.y) +
-                         rawvectors[2].y * (uvw.x) * (uvw.y) +
-                         rawvectors[3].y * (1 - uvw.x) * (uvw.y);
-            tempvec3.z = rawvectors[0].z * (1 - uvw.x) * (1 - uvw.y) +
-                         rawvectors[1].z * (uvw.x) * (1 - uvw.y) +
-                         rawvectors[2].z * (uvw.x) * (uvw.y) +
-                         rawvectors[3].z * (1 - uvw.x) * (uvw.y);
-
-            tempvec3.x -= Camera->position.x;
-            tempvec3.y -= Camera->position.y;
-            tempvec3.z -= Camera->position.z;
-            float dist =
-                std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
-                          tempvec3.z * tempvec3.z);
-            r -= dist * 4;
-            g -= dist * 4;
-            b -= dist * 4;
-            if (r < 0) r = 0;
-            if (g < 0) g = 0;
-            if (b < 0) b = 0;
-
-            pixels[i + j * pitch] =
-                SDL_MapSurfaceRGB(Global->render_target, r, g, b);
-          }
-        }
-      }
-    }
-  }
-}
-
 void render() {
   // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
   // SDL_RenderClear(Global->renderer);
@@ -301,12 +196,16 @@ void render() {
 
   for (int k = 0; k < Global->mapfaces.size(); k++) {
     if (Global->mapfaces[k].points.size() == 4) {
-      Vector3 temp[4] = {Global->Points[Global->mapfaces[k].points[0]],
+      Vector3 temp[3] = {Global->Points[Global->mapfaces[k].points[0]],
                          Global->Points[Global->mapfaces[k].points[1]],
-                         Global->Points[Global->mapfaces[k].points[2]],
-                         Global->Points[Global->mapfaces[k].points[3]]};
-      DrawQuad(pixels, pitch, Global->mapfaces[k].texture, temp,
-               Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
+                         Global->Points[Global->mapfaces[k].points[2]]};
+      Vector3 temp2[3] = {Global->Points[Global->mapfaces[k].points[0]],
+                          Global->Points[Global->mapfaces[k].points[2]],
+                          Global->Points[Global->mapfaces[k].points[3]]};
+      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp,
+              Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
+      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp2,
+              Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
     } else {
       Vector3 temp[3] = {Global->Points[Global->mapfaces[k].points[0]],
                          Global->Points[Global->mapfaces[k].points[1]],
