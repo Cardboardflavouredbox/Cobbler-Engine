@@ -9,7 +9,7 @@
 #include "map.h"
 
 struct ScreenPoint {
-  Vector3 p;
+  Vector2 p;
   bool isbehindcamera = false;
 };
 
@@ -35,7 +35,7 @@ ScreenPoint drawPoint(Vector3 P) {
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
   screenpos.p.y =
       (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2) + tz;
-  screenpos.p.z = ty;
+  // screenpos.p.z = ty;
   return screenpos;
 }
 
@@ -45,24 +45,16 @@ float Vector2Dot(Vector2 P1, Vector2 P2) {
   return std::sqrt(deltaX * deltaX + deltaY * deltaY);
 }
 
-Vector3 GetUV(Vector2 P, Vector3 R1, Vector3 R2, Vector3 R3) {
+Vector3 GetUV(Vector2 P, Vector2 R1, Vector2 R2, Vector2 R3) {
   Vector3 UV;
   float det = (R2.y - R3.y) * (R1.x - R3.x) + (R3.x - R2.x) * (R1.y - R3.y);
   float factor_alpha =
       (R2.y - R3.y) * (P.x - R3.x) + (R3.x - R2.x) * (P.y - R3.y);
   float factor_beta =
       (R3.y - R1.y) * (P.x - R3.x) + (R1.x - R3.x) * (P.y - R3.y);
-  float factor_gamma =
-      (R1.y - R2.y) * (P.x - R3.x) + (R1.x - R2.x) * (P.y - R3.y);
-  UV.x = factor_alpha / det / R1.z;
-  UV.y = factor_beta / det / R2.z;
-  UV.z = factor_gamma / det / R3.z;
-
-  float lsum = UV.x + UV.y + UV.z;
-
-  UV.x /= lsum;
-  UV.y /= lsum;
-  UV.z /= lsum;
+  UV.x = factor_alpha / det;
+  UV.y = factor_beta / det;
+  UV.z = 1.0 - UV.x - UV.y;
   return UV;
 }
 void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
@@ -199,9 +191,9 @@ void render() {
       Vector3 temp[3] = {Global->Points[Global->mapfaces[k].points[0]],
                          Global->Points[Global->mapfaces[k].points[1]],
                          Global->Points[Global->mapfaces[k].points[2]]};
-      Vector3 temp2[3] = {Global->Points[Global->mapfaces[k].points[0]],
-                          Global->Points[Global->mapfaces[k].points[2]],
-                          Global->Points[Global->mapfaces[k].points[3]]};
+      Vector3 temp2[3] = {Global->Points[Global->mapfaces[k].points[2]],
+                          Global->Points[Global->mapfaces[k].points[3]],
+                          Global->Points[Global->mapfaces[k].points[0]]};
       DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp,
               Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
       DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp2,
