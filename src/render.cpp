@@ -10,7 +10,7 @@
 
 struct ScreenPoint {
   Vector2 p;
-  bool isbehindcamera = false;
+  float depth = 0;
 };
 
 ScreenPoint drawPoint(Vector3 P) {
@@ -28,8 +28,8 @@ ScreenPoint drawPoint(Vector3 P) {
   float tz = 180 * what;
 
   ScreenPoint screenpos;
+  screenpos.depth = ty;
   if (ty <= 0.5f) {
-    screenpos.isbehindcamera = true;
     ty = 0.5f;
   }
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
@@ -95,7 +95,7 @@ Vector2 invBilinear(Vector2 p, Vector2 a, Vector2 b, Vector2 c, Vector2 d) {
 
 void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
               ScreenPoint vectors[]) {
-  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
+  if (vectors[0].depth > 0.f || vectors[1].depth > 0.f) {
     for (int i = vectors[0].p.x; i < vectors[1].p.x; i++) {
       int y = vectors[0].p.y +
               ((i - vectors[0].p.x) * (vectors[1].p.y - vectors[0].p.y) /
@@ -135,12 +135,12 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
   return (s1 + s2 + s3 > 360);
 }
 
-void DrawTri(unsigned char* pixels, int pitch, std::string texture,
-             Vector3 rawvectors[]) {
+void DrawTri(unsigned char* pixels, int pitch, int texture,
+             Vector3 rawvectors[], int xloop, int yloop) {
   ScreenPoint vectors[3] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
                             drawPoint(rawvectors[2])};
-  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
-      !vectors[2].isbehindcamera) {
+  if (vectors[0].depth > 0.f || vectors[1].depth > 0.f ||
+      vectors[2].depth > 0.f) {
     int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
         y2 = vectors[0].p.y;
     for (int i = 1; i < 4; i++) {
@@ -166,9 +166,10 @@ void DrawTri(unsigned char* pixels, int pitch, std::string texture,
             temp.y <= Settings->resolutiony) {
           if (Vector2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p)) {
             Vector3 uvw = GetUV(temp, vectors[0].p, vectors[1].p, vectors[2].p);
+            int uvxthing = (int(128 * (uvw.z + uvw.y)) * xloop) % 128;
+            int uvything = (int(128 * (uvw.z)) * yloop) % 128;
             Uint32 color = static_cast<Uint32*>(
-                Global->textures[0]->pixels)[int(128 * (uvw.z + uvw.y)) +
-                                             int(128 * (uvw.z)) * 128];
+                Global->textures[texture]->pixels)[uvxthing + uvything * 128];
 
             int r = (color >> 0) & 0xFF;
             int g = (color >> 8) & 0xFF;
@@ -204,12 +205,12 @@ void DrawTri(unsigned char* pixels, int pitch, std::string texture,
   }
 }
 
-void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
+void DrawQuad(unsigned char* pixels, int pitch, int texture,
               Vector3 rawvectors[], int xloop, int yloop) {
   ScreenPoint vectors[4] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
                             drawPoint(rawvectors[2]), drawPoint(rawvectors[3])};
-  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
-      !vectors[2].isbehindcamera || !vectors[3].isbehindcamera) {
+  if (vectors[0].depth > 0.f || vectors[1].depth > 0.f ||
+      vectors[2].depth > 0.f || vectors[3].depth > 0.f) {
     int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
         y2 = vectors[0].p.y;
     for (int i = 1; i < 4; i++) {
@@ -237,9 +238,11 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
               Vector2inTri(temp, vectors[0].p, vectors[2].p, vectors[3].p)) {
             Vector2 uvw = invBilinear(temp, vectors[0].p, vectors[1].p,
                                       vectors[2].p, vectors[3].p);
+
+            int uvxthing = (int(128 * (uvw.x)) * xloop) % 128;
+            int uvything = (int(128 * (uvw.y)) * yloop) % 128;
             Uint32 color = static_cast<Uint32*>(
-                Global->textures[0]->pixels)[int(128 * (uvw.x)) * xloop +
-                                             int(128 * (uvw.y)) * yloop * 128];
+                Global->textures[texture]->pixels)[uvxthing + uvything * 128];
 
             int r = (color >> 0) & 0xFF;
             int g = (color >> 8) & 0xFF;
@@ -302,13 +305,14 @@ void render() {
                          Global->Points[Global->mapfaces[k].points[1]],
                          Global->Points[Global->mapfaces[k].points[2]],
                          Global->Points[Global->mapfaces[k].points[3]]};
-      DrawQuad(pixels, pitch, "Wall", temp, Global->mapfaces[k].xloop,
-               Global->mapfaces[k].yloop);
+      DrawQuad(pixels, pitch, Global->mapfaces[k].texture, temp,
+               Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
     } else {
       Vector3 temp[3] = {Global->Points[Global->mapfaces[k].points[0]],
                          Global->Points[Global->mapfaces[k].points[1]],
                          Global->Points[Global->mapfaces[k].points[2]]};
-      DrawTri(pixels, pitch, "Wall", temp);
+      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp,
+              Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
     }
   }
 

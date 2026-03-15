@@ -89,6 +89,18 @@
             6,
             2
          ]
+      },
+      {
+         "doublesided": false,
+         "texture": 2,
+         "xloop": 10,
+         "yloop": 10,
+         "points": [
+            3,
+            2,
+            6,
+            7
+         ]
       }
    ]
 }

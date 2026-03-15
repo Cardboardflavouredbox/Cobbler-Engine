@@ -2,7 +2,8 @@
     "startlevel": "test",
     "texturenames": [
        "Wall",
-       "Fence"
+       "Fence",
+       "Floor"
     ],
     "stagenames": [
        "test"
