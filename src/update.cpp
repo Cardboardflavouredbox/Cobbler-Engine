@@ -23,6 +23,7 @@ void update() {
 
   SDL_GetRelativeMouseState(&P1Inputs->Mouse.x, &P1Inputs->Mouse.y);
   Camera->dir.x += -4 * P1Inputs->Mouse.x;
+  Camera->dir.y += -4 * P1Inputs->Mouse.y;
   P1Inputs->Mouse.x = 0;
   P1Inputs->Mouse.y = 0;
 
@@ -50,4 +51,6 @@ void update() {
     Camera->position.y -= 8 * Global->deltaTime * pc;
   }
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;
+  if (Camera->dir.y >= 90) Camera->dir.y = 90;
+  if (Camera->dir.y <= -90) Camera->dir.y = -90;
 }

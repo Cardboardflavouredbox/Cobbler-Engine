@@ -15,16 +15,17 @@ struct ScreenPoint {
 
 ScreenPoint drawPoint(Vector3 P) {
   Vector3 p1;
-  for (int i = 0; i < 3; i++) {
-    p1.x = P.x - Camera->position.x;
-    p1.y = P.y - Camera->position.y;
-    p1.z = P.z - Camera->position.z;
-  }
-  float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
-  float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
+  p1.x = P.x - Camera->position.x;
+  p1.y = P.y - Camera->position.y;
+  p1.z = P.z - Camera->position.z;
+
+  float ps = std::sin(Camera->dir.x * 3.14 / 180.f);
+  float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
+  float what = std::sin(Camera->dir.y * 3.14 / 180.f);
 
   float tx = p1.x * pc + p1.y * ps;
-  float ty = p1.y * pc - p1.x * ps;
+  float ty = p1.y * pc - p1.x * ps + p1.z * what;
+  float tz = 180 * what;
 
   ScreenPoint screenpos;
   if (ty <= 0.5f) {
@@ -32,7 +33,8 @@ ScreenPoint drawPoint(Vector3 P) {
     ty = 0.5f;
   }
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
-  screenpos.p.y = (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2);
+  screenpos.p.y =
+      (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2) + tz;
   return screenpos;
 }
 
@@ -217,13 +219,13 @@ void DrawQuad(unsigned char* pixels, int pitch, std::string texture,
       if (vectors[i].p.y > y2) y2 = vectors[i].p.y;
     }
     if (x < 0) x = 0;
-    if (x >= Settings->resolutionx) x = Settings->resolutionx;
+    if (x >= Settings->resolutionx - 1) x = Settings->resolutionx - 1;
     if (x2 < 0) x2 = 0;
-    if (x2 >= Settings->resolutionx) x2 = Settings->resolutionx;
+    if (x2 >= Settings->resolutionx - 1) x2 = Settings->resolutionx - 1;
     if (y < 0) y = 0;
-    if (y >= Settings->resolutiony) y = Settings->resolutiony;
+    if (y >= Settings->resolutiony - 1) y = Settings->resolutiony - 1;
     if (y2 < 0) y2 = 0;
-    if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony;
+    if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
     for (int i = x; i <= x2; i++) {
       for (int j = y; j <= y2; j++) {
         Vector2 temp;
