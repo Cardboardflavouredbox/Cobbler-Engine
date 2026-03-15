@@ -9,7 +9,7 @@
 #include "map.h"
 
 struct ScreenPoint {
-  Vector2 p;
+  Vector3 p, uvw;
   bool isbehindcamera = false;
 };
 
@@ -45,8 +45,8 @@ float Vector2Dot(Vector2 P1, Vector2 P2) {
   return std::sqrt(deltaX * deltaX + deltaY * deltaY);
 }
 
-Vector3 GetUV(Vector2 P, Vector2 R1, Vector2 R2, Vector2 R3) {
-  Vector3 UV;
+Vector3 GetUV(Vector2 P, ScreenPoint R1, ScreenPoint R2, ScreenPoint R3) {
+    Vector3 UV;
   float det = (R2.y - R3.y) * (R1.x - R3.x) + (R3.x - R2.x) * (R1.y - R3.y);
   float factor_alpha =
       (R2.y - R3.y) * (P.x - R3.x) + (R3.x - R2.x) * (P.y - R3.y);
@@ -55,6 +55,17 @@ Vector3 GetUV(Vector2 P, Vector2 R1, Vector2 R2, Vector2 R3) {
   UV.x = factor_alpha / det;
   UV.y = factor_beta / det;
   UV.z = 1.0 - UV.x - UV.y;
+  uvw[0] /= R1.z;
+  uvw[1] /= R1.z;
+  uvw[2] /= R1.z;
+  uvw[0] /= R2.z;
+  uvw[1] /= R2.z;
+  uvw[2] /= R2.z;
+  uvw[0] /= R3.z;
+  uvw[1] /= R3.z;
+  uvw[2] /= R3.z;
+  // Pre-compute 1 over z
+  v0[2] = 1 / v0[2], v1[2] = 1 / v1[2], v2[2] = 1 / v2[2];
   return UV;
 }
 void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
