@@ -36,7 +36,7 @@ ScreenPoint drawPoint(Vector3 P) {
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
   screenpos.p.y =
       (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2) + tz;
-  screenpos.dist = ty;
+  screenpos.dist = 1.f / ty;
   return screenpos;
 }
 
@@ -139,7 +139,17 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
                            Vector2({vectors[1].p.x, vectors[1].p.y}),
                            Vector2({vectors[2].p.x, vectors[2].p.y}))) {
             Vector3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
-            Vector2 uvresult = Vector2({uvw.z + uvw.y, uvw.z});
+            Vector2 uvresult = addVec2(
+                addVec2(multiplyVec2(multiplyVec2(Vector2({0, 0}), uvw.x),
+                                     vectors[0].dist),
+                        multiplyVec2(multiplyVec2(Vector2({1, 0}), uvw.y),
+                                     vectors[1].dist)),
+                multiplyVec2(multiplyVec2(Vector2({1, 1}), uvw.z),
+                             vectors[2].dist));
+            uvresult = multiplyVec2(uvresult, (1 / (uvw.x * vectors[0].dist +
+                                                    uvw.y * vectors[1].dist +
+                                                    uvw.z * vectors[2].dist)));
+
             // https://en.wikibooks.org/wiki/Cg_Programming/Rasterization
             int uvxthing = (int(128 * (uvresult.x)) * xloop) % 128;
             int uvything = (int(128 * (uvresult.y)) * yloop) % 128;
