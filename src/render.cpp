@@ -224,19 +224,44 @@ void render() {
 
   for (int i = 0; i < tempmapfacedeque.size(); i++) {
     Mapface* tempmapface = &tempmapfacedeque[i];
-    float dist[3];
-    int allinvisiblecheck = 0;
+    float dist[3] = {};
+    std::deque<int> invisibledeque, visibledeque;
+    int allinvisiblecount = 0;
     for (int j = 0; j < 3; j++) {
       dist[j] = getdistancething(temppointsdeque[tempmapface->points[j]]);
-      if (dist[j] <= 0.5f) allinvisiblecheck++;
+      if (dist[j] <= 0.5f) {
+        allinvisiblecount++;
+        invisibledeque.push_back(j);
+      } else
+        visibledeque.push_back(j);
     }
-    switch (allinvisiblecheck) {
+    switch (allinvisiblecount) {
       case 3: {
         tempmapfacedeque.erase(tempmapfacedeque.begin() + i);
         i--;
         break;
       }
       case 2: {
+        for (int j = 0; j < 2; j++) {
+          Vector3 newvec3;
+          newvec3.x =
+              (temppointsdeque[tempmapface->points[invisibledeque[j]]].x +
+               temppointsdeque[tempmapface->points[visibledeque[0]]].x) /
+              2.f;
+          newvec3.y =
+              (temppointsdeque[tempmapface->points[invisibledeque[j]]].y +
+               temppointsdeque[tempmapface->points[visibledeque[0]]].y) /
+              2.f;
+          newvec3.z =
+              (temppointsdeque[tempmapface->points[invisibledeque[j]]].z +
+               temppointsdeque[tempmapface->points[visibledeque[0]]].z) /
+              2.f;
+          temppointsdeque.push_back(newvec3);
+          tempmapface->points[invisibledeque[j]] = temppointsdeque.size() - 1;
+        }
+        break;
+      }
+      case 1: {
         break;
       }
     }
