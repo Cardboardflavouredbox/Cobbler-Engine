@@ -205,6 +205,13 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
   }
 }
 
+Vector3 LineCutOffThing(Vector3 A, Vector3 B) {
+  float u = (-A.y + Camera->position.y) / (B.y - A.y);
+  Vector3 temp = Vector3(
+      {A.x + (B.x - A.x) * u, A.y + (B.y - A.y) * u, A.z + (B.z - A.z) * u});
+  return temp;
+}
+
 void render() {
   // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
   // SDL_RenderClear(Global->renderer);
@@ -243,19 +250,9 @@ void render() {
       }
       case 2: {
         for (int j = 0; j < 2; j++) {
-          Vector3 newvec3;
-          newvec3.x =
-              (temppointsdeque[tempmapface->points[invisibledeque[j]]].x +
-               temppointsdeque[tempmapface->points[visibledeque[0]]].x) /
-              2.f;
-          newvec3.y =
-              (temppointsdeque[tempmapface->points[invisibledeque[j]]].y +
-               temppointsdeque[tempmapface->points[visibledeque[0]]].y) /
-              2.f;
-          newvec3.z =
-              (temppointsdeque[tempmapface->points[invisibledeque[j]]].z +
-               temppointsdeque[tempmapface->points[visibledeque[0]]].z) /
-              2.f;
+          Vector3 newvec3 = LineCutOffThing(
+              temppointsdeque[tempmapface->points[visibledeque[0]]],
+              temppointsdeque[tempmapface->points[invisibledeque[j]]]);
           temppointsdeque.push_back(newvec3);
           tempmapface->points[invisibledeque[j]] = temppointsdeque.size() - 1;
         }
