@@ -9,7 +9,7 @@
 #include "map.h"
 
 struct ScreenPoint {
-  Vector2 p, uvw;
+  Vector2 p;
   float dist;
   bool isbehindcamera = false;
 };
@@ -98,8 +98,16 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
   return (s1 + s2 + s3 > 360);
 }
 
+Vector2 addVec2(Vector2 input1, Vector2 input2) {
+  return Vector2({input1.x + input2.x, input1.y + input2.y});
+}
+
+Vector2 multiplyVec2(Vector2 inputvec2, float multvalue) {
+  return Vector2({inputvec2.x * multvalue, inputvec2.y * multvalue});
+}
+
 void DrawTri(unsigned char* pixels, int pitch, int texture,
-             Vector3 rawvectors[], int xloop, int yloop) {
+             Vector3 rawvectors[], Vector2 vectorsUV[], int xloop, int yloop) {
   ScreenPoint vectors[3] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
                             drawPoint(rawvectors[2])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
@@ -131,6 +139,8 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
                            Vector2({vectors[1].p.x, vectors[1].p.y}),
                            Vector2({vectors[2].p.x, vectors[2].p.y}))) {
             Vector3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
+            Vector2 uvresult = multiplyVec2(vectorsUV[0], uvw.x);
+            // https://en.wikibooks.org/wiki/Cg_Programming/Rasterization
             int uvxthing = (int(128 * (uvw.z + uvw.y)) * xloop) % 128;
             int uvything = (int(128 * (uvw.z)) * yloop) % 128;
             Uint32 color = static_cast<Uint32*>(
@@ -192,15 +202,20 @@ void render() {
       Vector3 temp2[3] = {Global->Points[Global->mapfaces[k].points[2]],
                           Global->Points[Global->mapfaces[k].points[3]],
                           Global->Points[Global->mapfaces[k].points[0]]};
-      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp,
+      Vector2 temp3[3] = {Vector2({0, 0}), Vector2({1, 0}), Vector2({1, 1})};
+      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp, temp3,
               Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
-      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp2,
+      temp3[0] = Vector2({1, 1});
+      temp3[1] = Vector2({0, 1});
+      temp3[2] = Vector2({0, 0});
+      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp2, temp3,
               Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
     } else {
       Vector3 temp[3] = {Global->Points[Global->mapfaces[k].points[0]],
                          Global->Points[Global->mapfaces[k].points[1]],
                          Global->Points[Global->mapfaces[k].points[2]]};
-      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp,
+      Vector2 temp2[3] = {Vector2({0, 0}), Vector2({1, 0}), Vector2({1, 1})};
+      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp, temp2,
               Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
     }
   }
