@@ -139,10 +139,13 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
                            Vector2({vectors[1].p.x, vectors[1].p.y}),
                            Vector2({vectors[2].p.x, vectors[2].p.y}))) {
             Vector3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
-            Vector2 uvresult = multiplyVec2(vectorsUV[0], uvw.x);
+            Vector2 uvresult =
+                addVec2(addVec2(multiplyVec2(vectorsUV[0], uvw.x),
+                                multiplyVec2(vectorsUV[1], uvw.y)),
+                        multiplyVec2(vectorsUV[2], uvw.z));
             // https://en.wikibooks.org/wiki/Cg_Programming/Rasterization
-            int uvxthing = (int(128 * (uvw.z + uvw.y)) * xloop) % 128;
-            int uvything = (int(128 * (uvw.z)) * yloop) % 128;
+            int uvxthing = (int(128 * (uvresult.x)) * xloop) % 128;
+            int uvything = (int(128 * (uvresult.y)) * yloop) % 128;
             Uint32 color = static_cast<Uint32*>(
                 Global->textures[texture]->pixels)[uvxthing + uvything * 128];
 
