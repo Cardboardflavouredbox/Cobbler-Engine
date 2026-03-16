@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL_render.h>
 
+#include <string>
 #include <vector>
 
 #include "map.h"

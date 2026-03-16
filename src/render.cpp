@@ -9,7 +9,8 @@
 #include "map.h"
 
 struct ScreenPoint {
-  Vector3 p, uvw;
+  Vector2 p, uvw;
+  float dist;
   bool isbehindcamera = false;
 };
 
@@ -35,7 +36,7 @@ ScreenPoint drawPoint(Vector3 P) {
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
   screenpos.p.y =
       (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2) + tz;
-  // screenpos.p.z = ty;
+  screenpos.dist = ty;
   return screenpos;
 }
 
@@ -44,29 +45,15 @@ float Vector2Dot(Vector2 P1, Vector2 P2) {
   float deltaY = P2.y - P1.y;
   return std::sqrt(deltaX * deltaX + deltaY * deltaY);
 }
-
+float Areathing(Vector2 a, Vector2 b, Vector2 c) {
+  return (c.x - a.x) * (b.y - a.y) + (c.y - a.y) * (b.x - a.x);
+}
 Vector3 GetUV(Vector2 P, ScreenPoint R1, ScreenPoint R2, ScreenPoint R3) {
-    Vector3 UV;
-  float det = (R2.y - R3.y) * (R1.x - R3.x) + (R3.x - R2.x) * (R1.y - R3.y);
-  float factor_alpha =
-      (R2.y - R3.y) * (P.x - R3.x) + (R3.x - R2.x) * (P.y - R3.y);
-  float factor_beta =
-      (R3.y - R1.y) * (P.x - R3.x) + (R1.x - R3.x) * (P.y - R3.y);
-  UV.x = factor_alpha / det;
-  UV.y = factor_beta / det;
-  UV.z = 1.0 - UV.x - UV.y;
-  uvw[0] /= R1.z;
-  uvw[1] /= R1.z;
-  uvw[2] /= R1.z;
-  uvw[0] /= R2.z;
-  uvw[1] /= R2.z;
-  uvw[2] /= R2.z;
-  uvw[0] /= R3.z;
-  uvw[1] /= R3.z;
-  uvw[2] /= R3.z;
-  // Pre-compute 1 over z
-  v0[2] = 1 / v0[2], v1[2] = 1 / v1[2], v2[2] = 1 / v2[2];
-  return UV;
+  float det = Areathing(R3.p, R2.p, R1.p);
+  float a[3] = {Areathing(R2.p, R3.p, P), Areathing(R1.p, R3.p, P),
+                Areathing(R1.p, R2.p, P)};
+  for (int i = 0; i < 3; i++) a[i] /= det;
+  return Vector3({a[0], a[1], a[2]});
 }
 void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
               Vector3 rawvectors[]) {
@@ -126,13 +113,13 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
       if (vectors[i].p.y > y2) y2 = vectors[i].p.y;
     }
     if (x < 0) x = 0;
-    if (x >= Settings->resolutionx) x = Settings->resolutionx;
+    if (x >= Settings->resolutionx - 1) x = Settings->resolutionx - 1;
     if (x2 < 0) x2 = 0;
-    if (x2 >= Settings->resolutionx) x2 = Settings->resolutionx;
+    if (x2 >= Settings->resolutionx - 1) x2 = Settings->resolutionx - 1;
     if (y < 0) y = 0;
-    if (y >= Settings->resolutiony) y = Settings->resolutiony;
+    if (y >= Settings->resolutiony - 1) y = Settings->resolutiony - 1;
     if (y2 < 0) y2 = 0;
-    if (y2 >= Settings->resolutiony) y2 = Settings->resolutiony;
+    if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
     for (int i = x; i <= x2; i++) {
       for (int j = y; j <= y2; j++) {
         Vector2 temp;
@@ -143,7 +130,7 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
           if (Vector2inTri(temp, Vector2({vectors[0].p.x, vectors[0].p.y}),
                            Vector2({vectors[1].p.x, vectors[1].p.y}),
                            Vector2({vectors[2].p.x, vectors[2].p.y}))) {
-            Vector3 uvw = GetUV(temp, vectors[0].p, vectors[1].p, vectors[2].p);
+            Vector3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
             int uvxthing = (int(128 * (uvw.z + uvw.y)) * xloop) % 128;
             int uvything = (int(128 * (uvw.z)) * yloop) % 128;
             Uint32 color = static_cast<Uint32*>(
@@ -217,9 +204,7 @@ void render() {
               Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
     }
   }
-
   SDL_UnlockSurface(Global->render_target);
-
   int w, h, rtw = Global->render_target->w, rth = Global->render_target->h;
   SDL_GetWindowSizeInPixels(Global->window, &w, &h);
 
