@@ -46,11 +46,11 @@ float Vector2Dot(Vector2 P1, Vector2 P2) {
   return std::sqrt(deltaX * deltaX + deltaY * deltaY);
 }
 float Areathing(Vector2 a, Vector2 b, Vector2 c) {
-  return (c.x - a.x) * (b.y - a.y) + (c.y - a.y) * (b.x - a.x);
+  return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
 }
 Vector3 GetUV(Vector2 P, ScreenPoint R1, ScreenPoint R2, ScreenPoint R3) {
-  float det = Areathing(R3.p, R2.p, R1.p);
-  float a[3] = {Areathing(R2.p, R3.p, P), Areathing(R1.p, R3.p, P),
+  float det = Areathing(R1.p, R2.p, R3.p);
+  float a[3] = {Areathing(R2.p, R3.p, P), Areathing(R3.p, R1.p, P),
                 Areathing(R1.p, R2.p, P)};
   for (int i = 0; i < 3; i++) a[i] /= det;
   return Vector3({a[0], a[1], a[2]});
@@ -107,7 +107,7 @@ Vector2 multiplyVec2(Vector2 inputvec2, float multvalue) {
 }
 
 void DrawTri(unsigned char* pixels, int pitch, int texture,
-             Vector3 rawvectors[], Vector2 vectorsUV[], int xloop, int yloop) {
+             Vector3 rawvectors[], int xloop, int yloop) {
   ScreenPoint vectors[3] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
                             drawPoint(rawvectors[2])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
@@ -139,10 +139,7 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
                            Vector2({vectors[1].p.x, vectors[1].p.y}),
                            Vector2({vectors[2].p.x, vectors[2].p.y}))) {
             Vector3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
-            Vector2 uvresult =
-                addVec2(addVec2(multiplyVec2(vectorsUV[0], uvw.x),
-                                multiplyVec2(vectorsUV[1], uvw.y)),
-                        multiplyVec2(vectorsUV[2], uvw.z));
+            Vector2 uvresult = Vector2({uvw.z + uvw.y, uvw.z});
             // https://en.wikibooks.org/wiki/Cg_Programming/Rasterization
             int uvxthing = (int(128 * (uvresult.x)) * xloop) % 128;
             int uvything = (int(128 * (uvresult.y)) * yloop) % 128;
@@ -171,6 +168,9 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
             r -= dist * 4;
             g -= dist * 4;
             b -= dist * 4;
+            // r = uvresult.x * 255;
+            // g = uvresult.y * 255;
+            // b = 0;
             if (r < 0) r = 0;
             if (g < 0) g = 0;
             if (b < 0) b = 0;
@@ -205,20 +205,15 @@ void render() {
       Vector3 temp2[3] = {Global->Points[Global->mapfaces[k].points[2]],
                           Global->Points[Global->mapfaces[k].points[3]],
                           Global->Points[Global->mapfaces[k].points[0]]};
-      Vector2 temp3[3] = {Vector2({0, 0}), Vector2({1, 0}), Vector2({1, 1})};
-      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp, temp3,
+      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp,
               Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
-      temp3[0] = Vector2({1, 1});
-      temp3[1] = Vector2({0, 1});
-      temp3[2] = Vector2({0, 0});
-      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp2, temp3,
+      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp2,
               Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
     } else {
       Vector3 temp[3] = {Global->Points[Global->mapfaces[k].points[0]],
                          Global->Points[Global->mapfaces[k].points[1]],
                          Global->Points[Global->mapfaces[k].points[2]]};
-      Vector2 temp2[3] = {Vector2({0, 0}), Vector2({1, 0}), Vector2({1, 1})};
-      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp, temp2,
+      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp,
               Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
     }
   }
