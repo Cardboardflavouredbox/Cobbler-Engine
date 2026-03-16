@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 #include <cmath>
+#include <deque>
 #include <string>
 
 #include "extern.h"
@@ -13,6 +14,17 @@ struct ScreenPoint {
   float dist;
   bool isbehindcamera = false;
 };
+
+float getdistancething(Vector3 P) {
+  Vector3 p1;
+  p1.x = P.x - Camera->position.x;
+  p1.y = P.y - Camera->position.y;
+  p1.z = P.z - Camera->position.z;
+  float ps = std::sin(Camera->dir.x * 3.14 / 180.f);
+  float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
+  float what = std::sin(Camera->dir.y * 3.14 / 180.f);
+  return p1.y * pc - p1.x * ps + p1.z * what;
+}
 
 ScreenPoint drawPoint(Vector3 P) {
   Vector3 p1;
@@ -207,25 +219,35 @@ void render() {
     }
   }
 
-  for (int k = 0; k < Global->mapfaces.size(); k++) {
-    if (Global->mapfaces[k].points.size() == 4) {
-      Vector3 temp[3] = {Global->Points[Global->mapfaces[k].points[0]],
-                         Global->Points[Global->mapfaces[k].points[1]],
-                         Global->Points[Global->mapfaces[k].points[2]]};
-      Vector3 temp2[3] = {Global->Points[Global->mapfaces[k].points[2]],
-                          Global->Points[Global->mapfaces[k].points[3]],
-                          Global->Points[Global->mapfaces[k].points[0]]};
-      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp,
-              Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
-      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp2,
-              Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
-    } else {
-      Vector3 temp[3] = {Global->Points[Global->mapfaces[k].points[0]],
-                         Global->Points[Global->mapfaces[k].points[1]],
-                         Global->Points[Global->mapfaces[k].points[2]]};
-      DrawTri(pixels, pitch, Global->mapfaces[k].texture, temp,
-              Global->mapfaces[k].xloop, Global->mapfaces[k].yloop);
+  std::deque<Mapface> tempmapfacedeque = Global->mapfaces;
+  std::deque<Vector3> temppointsdeque = Global->Points;
+
+  for (int i = 0; i < tempmapfacedeque.size(); i++) {
+    Mapface* tempmapface = &tempmapfacedeque[i];
+    float dist[3];
+    int allinvisiblecheck = 0;
+    for (int j = 0; j < 3; j++) {
+      dist[j] = getdistancething(temppointsdeque[tempmapface->points[j]]);
+      if (dist[j] <= 0.5f) allinvisiblecheck++;
     }
+    switch (allinvisiblecheck) {
+      case 3: {
+        tempmapfacedeque.erase(tempmapfacedeque.begin() + i);
+        i--;
+        break;
+      }
+      case 2: {
+        break;
+      }
+    }
+  }
+
+  for (int k = 0; k < tempmapfacedeque.size(); k++) {
+    Vector3 temp[3] = {temppointsdeque[tempmapfacedeque[k].points[0]],
+                       temppointsdeque[tempmapfacedeque[k].points[1]],
+                       temppointsdeque[tempmapfacedeque[k].points[2]]};
+    DrawTri(pixels, pitch, tempmapfacedeque[k].texture, temp,
+            tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop);
   }
   SDL_UnlockSurface(Global->render_target);
   int w, h, rtw = Global->render_target->w, rth = Global->render_target->h;

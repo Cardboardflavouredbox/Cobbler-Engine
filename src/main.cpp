@@ -99,6 +99,29 @@ bool init() {
   Global->textures = tempvector;
   Global->textures.resize(32);
 
+  for (int i = 0; i < Global->mapfaces.size(); i++) {
+    if (Global->mapfaces[i].points.size() == 4) {
+      Mapface temp;
+      temp.doublesided = Global->mapfaces[i].doublesided;
+      temp.xloop = Global->mapfaces[i].xloop;
+      temp.yloop = Global->mapfaces[i].yloop;
+      temp.texture = Global->mapfaces[i].texture;
+      int temppoints[3] = {Global->mapfaces[i].points[0],
+                           Global->mapfaces[i].points[1],
+                           Global->mapfaces[i].points[2]};
+      temp.points.assign(temppoints, temppoints + 3);
+      Global->mapfaces.push_back(temp);
+
+      temp.points[0] = Global->mapfaces[i].points[2];
+      temp.points[1] = Global->mapfaces[i].points[3];
+      temp.points[2] = Global->mapfaces[i].points[0];
+      Global->mapfaces.push_back(temp);
+
+      Global->mapfaces.erase(Global->mapfaces.begin() + i);
+      i--;
+    }
+  }
+
   Camera = static_cast<Entity*>(calloc(1, sizeof(Entity)));
   Camera->position = Vector3({0, 0, 0});
 

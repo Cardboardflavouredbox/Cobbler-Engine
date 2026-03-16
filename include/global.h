@@ -2,8 +2,8 @@
 
 #include <SDL3/SDL_render.h>
 
+#include <deque>
 #include <string>
-#include <vector>
 
 #include "map.h"
 
@@ -17,19 +17,19 @@ struct GlobalClass {
   float deltaTime;
 
   std::vector<SDL_Surface*> textures;
-  std::vector<Vector3> Points;
-  std::vector<Mapface> mapfaces;
+  std::deque<Vector3> Points;
+  std::deque<Mapface> mapfaces;
 };
 
 struct ZipData {
   std::string startlevel;
-  std::vector<std::string> texturenames;
-  std::vector<std::string> stagenames;
+  std::deque<std::string> texturenames;
+  std::deque<std::string> stagenames;
 };
 
 struct Mapdata {
-  std::vector<Vector3> Points;
-  std::vector<Mapface> mapfaces;
+  std::deque<Vector3> Points;
+  std::deque<Mapface> mapfaces;
 };
 
 struct Inputs {
