@@ -57,6 +57,17 @@ float Vector2Dot(Vector2 P1, Vector2 P2) {
   float deltaY = P2.y - P1.y;
   return std::sqrt(deltaX * deltaX + deltaY * deltaY);
 }
+
+float Vector3Dot(Vector3 P1, Vector3 P2) {
+  return P1.x * P2.x + P1.y * P2.y + P1.z * P2.z;
+}
+
+Vector3 Vector3Normalize(Vector3 input) {
+  return multiplyVec3(
+      input,
+      1 / std::sqrt(input.x * input.x + input.y * input.y + input.z * input.z));
+}
+
 float Areathing(Vector2 a, Vector2 b, Vector2 c) {
   return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
 }
@@ -206,10 +217,24 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
 }
 
 Vector3 LineCutOffThing(Vector3 A, Vector3 B) {
-  float u = (-A.y + Camera->position.y) / (B.y - A.y);
+  float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
+  float u = (-A.y + pc * 0.5f + Camera->position.y) / (B.y - A.y);
   Vector3 temp = Vector3(
       {A.x + (B.x - A.x) * u, A.y + (B.y - A.y) * u, A.z + (B.z - A.z) * u});
   return temp;
+}
+
+Vector3 linePlaneIntersection(Vector3 ray, Vector3 rayOrigin, Vector3 normal,
+                              Vector3 coord) {
+  // get d value
+  float d = Vector3Dot(normal, coord);
+
+  // Compute the X value for the directed line ray intersecting the plane
+  float x = (d - Vector3Dot(normal, rayOrigin)) / Vector3Dot(normal, ray);
+
+  // output contact point
+  return rayOrigin +
+         normalize(ray) * x;  // Make sure your ray vector is normalized
 }
 
 void render() {
