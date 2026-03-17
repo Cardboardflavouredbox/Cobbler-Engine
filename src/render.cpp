@@ -15,6 +15,29 @@ struct ScreenPoint {
   bool isbehindcamera = false;
 };
 
+Vector2 addVec2(Vector2 input1, Vector2 input2) {
+  return Vector2({input1.x + input2.x, input1.y + input2.y});
+}
+
+Vector3 addVec3(Vector3 input1, Vector3 input2) {
+  return Vector3(
+      {input1.x + input2.x, input1.y + input2.y, input1.z + input2.z});
+}
+
+Vector3 subVec3(Vector3 input1, Vector3 input2) {
+  return Vector3(
+      {input1.x - input2.x, input1.y - input2.y, input1.z - input2.z});
+}
+
+Vector2 multiplyVec2(Vector2 inputvec2, float multvalue) {
+  return Vector2({inputvec2.x * multvalue, inputvec2.y * multvalue});
+}
+
+Vector3 multiplyVec3(Vector3 inputvec2, float multvalue) {
+  return Vector3({inputvec2.x * multvalue, inputvec2.y * multvalue,
+                  inputvec2.z * multvalue});
+}
+
 float getdistancething(Vector3 P) {
   Vector3 p1;
   p1.x = P.x - Camera->position.x;
@@ -121,14 +144,6 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
   return (s1 + s2 + s3 > 360);
 }
 
-Vector2 addVec2(Vector2 input1, Vector2 input2) {
-  return Vector2({input1.x + input2.x, input1.y + input2.y});
-}
-
-Vector2 multiplyVec2(Vector2 inputvec2, float multvalue) {
-  return Vector2({inputvec2.x * multvalue, inputvec2.y * multvalue});
-}
-
 void DrawTri(unsigned char* pixels, int pitch, int texture,
              Vector3 rawvectors[], int xloop, int yloop) {
   ScreenPoint vectors[3] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
@@ -216,14 +231,6 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
   }
 }
 
-Vector3 LineCutOffThing(Vector3 A, Vector3 B) {
-  float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
-  float u = (-A.y + pc * 0.5f + Camera->position.y) / (B.y - A.y);
-  Vector3 temp = Vector3(
-      {A.x + (B.x - A.x) * u, A.y + (B.y - A.y) * u, A.z + (B.z - A.z) * u});
-  return temp;
-}
-
 Vector3 linePlaneIntersection(Vector3 ray, Vector3 rayOrigin, Vector3 normal,
                               Vector3 coord) {
   // get d value
@@ -233,8 +240,9 @@ Vector3 linePlaneIntersection(Vector3 ray, Vector3 rayOrigin, Vector3 normal,
   float x = (d - Vector3Dot(normal, rayOrigin)) / Vector3Dot(normal, ray);
 
   // output contact point
-  return rayOrigin +
-         normalize(ray) * x;  // Make sure your ray vector is normalized
+  return addVec3(rayOrigin,
+                 multiplyVec3(Vector3Normalize(ray),
+                              x));  // Make sure your ray vector is normalized
 }
 
 void render() {
@@ -275,9 +283,16 @@ void render() {
       }
       case 2: {
         for (int j = 0; j < 2; j++) {
-          Vector3 newvec3 = LineCutOffThing(
-              temppointsdeque[tempmapface->points[visibledeque[0]]],
-              temppointsdeque[tempmapface->points[invisibledeque[j]]]);
+          Vector3 normal;
+          normal.x = std::cos(Camera->dir.x*3.14f/180.f) * std::sin(Camera->dir.y*3.14f/180.f);
+          normal.y = std::sin(Camera->dir.x*3.14f/180.f) * std::sin(Camera->dir.y*3.14f/180.f);
+          normal.z = std::cos(Camera->dir.y*3.14f/180.f);
+          normal = Vector3Normalize(normal);
+          Vector3 newvec3 = linePlaneIntersection(
+              subVec3(temppointsdeque[tempmapface->points[invisibledeque[j]]],
+                      temppointsdeque[tempmapface->points[visibledeque[0]]]),
+              temppointsdeque[tempmapface->points[visibledeque[0]]], normal,
+              Camera->position);
           temppointsdeque.push_back(newvec3);
           tempmapface->points[invisibledeque[j]] = temppointsdeque.size() - 1;
         }
