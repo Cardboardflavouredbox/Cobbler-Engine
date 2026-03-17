@@ -243,11 +243,12 @@ Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
   float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
   float what = std::sin(Camera->dir.y * 3.14 / 180.f);
 
-  float t = (0.5f + p1.x * ps - p1.z * what) / pc / (p2.y - p1.y);
+  float u = (p1.y * pc - p1.x * ps + p1.z * what - 0.5f) /
+            (-ps * (p1.x - p2.x) + pc * (p1.y - p2.y) + what * (p1.z - p2.z));
 
-  return Vector3({invisible.x + -t * (visible.x - invisible.x),
-                  invisible.y + -t * (visible.y - invisible.y),
-                  invisible.z + -t * (visible.z - invisible.z)});
+  Vector3 result =
+      addVec3(invisible, multiplyVec3(subVec3(visible, invisible), u));
+  return result;
 }
 
 void render() {
@@ -264,23 +265,23 @@ void render() {
     }
   }
 
-  std::deque<Mapface> tempmapfacedeque = Global->mapfaces;
+  std::deque<Mapface> tempmapfacedeque = Global->mapfaces, addlaterfacedeque;
   std::deque<Vector3> temppointsdeque = Global->Points;
 
   for (int i = 0; i < tempmapfacedeque.size(); i++) {
     Mapface* tempmapface = &tempmapfacedeque[i];
     float dist[3] = {};
     std::deque<int> invisibledeque, visibledeque;
-    int allinvisiblecount = 0;
+    int invisiblecount = 0;
     for (int j = 0; j < 3; j++) {
       dist[j] = getdistancething(temppointsdeque[tempmapface->points[j]]);
-      if (dist[j] <= 0.5f) {
-        allinvisiblecount++;
+      if (dist[j] < 0.5f) {
+        invisiblecount++;
         invisibledeque.push_back(j);
       } else
         visibledeque.push_back(j);
     }
-    switch (allinvisiblecount) {
+    switch (invisiblecount) {
       case 3: {
         tempmapfacedeque.erase(tempmapfacedeque.begin() + i);
         i--;
@@ -297,10 +298,32 @@ void render() {
         break;
       }
       case 1: {
-        break;
+        Mapface newface;
+        newface.texture = tempmapface->texture;
+        newface.xloop = tempmapface->xloop;
+        newface.yloop = tempmapface->yloop;
+        newface.points.resize(3);
+        newface.points[0] = tempmapface->points[visibledeque[0]];
+        Vector3 newvec3;
+        newvec3 = CutLinething(
+            temppointsdeque[tempmapface->points[invisibledeque[0]]],
+            temppointsdeque[tempmapface->points[visibledeque[0]]]);
+        temppointsdeque.push_back(newvec3);
+
+        newface.points[2] = temppointsdeque.size() - 1;
+        newvec3 = CutLinething(
+            temppointsdeque[tempmapface->points[invisibledeque[0]]],
+            temppointsdeque[tempmapface->points[visibledeque[1]]]);
+        temppointsdeque.push_back(newvec3);
+        tempmapface->points[invisibledeque[0]] = temppointsdeque.size() - 1;
+        newface.points[1] = temppointsdeque.size() - 1;
+        addlaterfacedeque.push_back(newface);
       }
     }
   }
+
+  tempmapfacedeque.insert(tempmapfacedeque.end(), addlaterfacedeque.begin(),
+                          addlaterfacedeque.end());
 
   for (int k = 0; k < tempmapfacedeque.size(); k++) {
     Vector3 temp[3] = {temppointsdeque[tempmapfacedeque[k].points[0]],
