@@ -231,18 +231,23 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
   }
 }
 
-Vector3 linePlaneIntersection(Vector3 ray, Vector3 rayOrigin, Vector3 normal,
-                              Vector3 coord) {
-  // get d value
-  float d = Vector3Dot(normal, coord);
+Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
+  Vector3 p1, p2;
+  p1.x = invisible.x - Camera->position.x;
+  p1.y = invisible.y - Camera->position.y;
+  p1.z = invisible.z - Camera->position.z;
+  p2.x = visible.x - Camera->position.x;
+  p2.y = visible.y - Camera->position.y;
+  p2.z = visible.z - Camera->position.z;
+  float ps = std::sin(Camera->dir.x * 3.14 / 180.f);
+  float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
+  float what = std::sin(Camera->dir.y * 3.14 / 180.f);
 
-  // Compute the X value for the directed line ray intersecting the plane
-  float x = (d - Vector3Dot(normal, rayOrigin)) / Vector3Dot(normal, ray);
+  float t = (0.5f + p1.x * ps - p1.z * what) / pc / (p2.y - p1.y);
 
-  // output contact point
-  return addVec3(rayOrigin,
-                 multiplyVec3(Vector3Normalize(ray),
-                              x));  // Make sure your ray vector is normalized
+  return Vector3({invisible.x + -t * (visible.x - invisible.x),
+                  invisible.y + -t * (visible.y - invisible.y),
+                  invisible.z + -t * (visible.z - invisible.z)});
 }
 
 void render() {
@@ -283,16 +288,9 @@ void render() {
       }
       case 2: {
         for (int j = 0; j < 2; j++) {
-          Vector3 normal;
-          normal.x = std::cos(Camera->dir.x*3.14f/180.f) * std::sin(Camera->dir.y*3.14f/180.f);
-          normal.y = std::sin(Camera->dir.x*3.14f/180.f) * std::sin(Camera->dir.y*3.14f/180.f);
-          normal.z = std::cos(Camera->dir.y*3.14f/180.f);
-          normal = Vector3Normalize(normal);
-          Vector3 newvec3 = linePlaneIntersection(
-              subVec3(temppointsdeque[tempmapface->points[invisibledeque[j]]],
-                      temppointsdeque[tempmapface->points[visibledeque[0]]]),
-              temppointsdeque[tempmapface->points[visibledeque[0]]], normal,
-              Camera->position);
+          Vector3 newvec3 = CutLinething(
+              temppointsdeque[tempmapface->points[invisibledeque[j]]],
+              temppointsdeque[tempmapface->points[visibledeque[0]]]);
           temppointsdeque.push_back(newvec3);
           tempmapface->points[invisibledeque[j]] = temppointsdeque.size() - 1;
         }
