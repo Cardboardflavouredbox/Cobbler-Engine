@@ -325,10 +325,11 @@ void render() {
         newface.texture = tempmapface->texture;
         newface.xloop = tempmapface->xloop;
         newface.yloop = tempmapface->yloop;
+        newface.doublesided = tempmapface->doublesided;
         newface.points.resize(3);
         newface.UVs.resize(3);
-        newface.points[0] = tempmapface->points[visibledeque[0]];
-        newface.UVs[0] = tempmapface->UVs[visibledeque[0]];
+        newface.points[visibledeque[0]] = tempmapface->points[visibledeque[0]];
+        newface.UVs[visibledeque[0]] = tempmapface->UVs[visibledeque[0]];
         Vector3 newvec3;
         newvec3 = CutLinething(
             temppointsdeque[tempmapface->points[invisibledeque[0]]],
@@ -338,13 +339,13 @@ void render() {
             temppointsdeque[tempmapface->points[invisibledeque[0]]], newvec3,
             temppointsdeque[tempmapface->points[visibledeque[0]]]);
 
-        newface.UVs[2] =
+        newface.UVs[invisibledeque[0]] =
             divisiontoVec2(tempmapface->UVs[invisibledeque[0]],
                            tempmapface->UVs[visibledeque[0]], internal);
 
         temppointsdeque.push_back(newvec3);
 
-        newface.points[2] = temppointsdeque.size() - 1;
+        newface.points[invisibledeque[0]] = temppointsdeque.size() - 1;
         newvec3 = CutLinething(
             temppointsdeque[tempmapface->points[invisibledeque[0]]],
             temppointsdeque[tempmapface->points[visibledeque[1]]]);
@@ -353,14 +354,14 @@ void render() {
             temppointsdeque[tempmapface->points[invisibledeque[0]]], newvec3,
             temppointsdeque[tempmapface->points[visibledeque[1]]]);
 
-        newface.UVs[1] =
+        newface.UVs[visibledeque[1]] =
             divisiontoVec2(tempmapface->UVs[invisibledeque[0]],
                            tempmapface->UVs[visibledeque[1]], internal);
 
         temppointsdeque.push_back(newvec3);
         tempmapface->points[invisibledeque[0]] = temppointsdeque.size() - 1;
-        tempmapface->UVs[invisibledeque[0]] = newface.UVs[1];
-        newface.points[1] = temppointsdeque.size() - 1;
+        tempmapface->UVs[invisibledeque[0]] = newface.UVs[visibledeque[1]];
+        newface.points[visibledeque[1]] = temppointsdeque.size() - 1;
         addlaterfacedeque.push_back(newface);
         break;
       }

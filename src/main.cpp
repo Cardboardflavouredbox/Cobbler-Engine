@@ -145,7 +145,7 @@ bool init() {
   }
 
   Camera = new Entity();
-  Camera->position = Vector3({0, 0, 0});
+  Camera->position = Vector3({0, 0, 1});
 
   if (!SDL_SetAppMetadata("BoomerShooter", "0.1", "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
