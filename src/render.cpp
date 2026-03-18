@@ -241,6 +241,10 @@ float getinternaldivisionthing(Vector3 p1, Vector3 d, Vector3 p2) {
   return dist1 / (dist1 + dist2);
 }
 
+Vector2 divisiontoVec2(Vector2 p1, Vector2 p2, float t) {
+  return Vector2({p2.x * t + p1.x * (1 - t), p2.y * t + p1.y * (1 - t)});
+}
+
 Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
   Vector3 p1, p2;
   p1.x = invisible.x - Camera->position.x;
@@ -324,6 +328,9 @@ void render() {
         float internal = getinternaldivisionthing(
             temppointsdeque[tempmapface->points[invisibledeque[0]]], newvec3,
             temppointsdeque[tempmapface->points[visibledeque[0]]]);
+
+        divisiontoVec2(tempmapface->UVs[invisibledeque[0]],
+                       tempmapface->UVs[visibledeque[0]], internal);
 
         temppointsdeque.push_back(newvec3);
 

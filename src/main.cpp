@@ -122,12 +122,21 @@ bool init() {
       int temppoints[3] = {Global->mapfaces[i].points[0],
                            Global->mapfaces[i].points[1],
                            Global->mapfaces[i].points[2]};
+      Vector2 tempUV[3] = {Global->mapfaces[i].UVs[0],
+                           Global->mapfaces[i].UVs[1],
+                           Global->mapfaces[i].UVs[2]};
       temp.points.assign(temppoints, temppoints + 3);
+      temp.UVs.assign(tempUV, tempUV + 3);
       Global->mapfaces.push_back(temp);
 
       temp.points[0] = Global->mapfaces[i].points[2];
       temp.points[1] = Global->mapfaces[i].points[3];
       temp.points[2] = Global->mapfaces[i].points[0];
+
+      temp.UVs[0] = Global->mapfaces[i].UVs[2];
+      temp.UVs[1] = Global->mapfaces[i].UVs[3];
+      temp.UVs[2] = Global->mapfaces[i].UVs[0];
+
       Global->mapfaces.push_back(temp);
 
       Global->mapfaces.erase(Global->mapfaces.begin() + i);
