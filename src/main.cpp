@@ -21,9 +21,9 @@ Inputs* P1Inputs;
 Uint32 lastTime;
 
 bool init() {
-  Global = static_cast<GlobalClass*>(calloc(1, sizeof(GlobalClass)));
-  Settings = static_cast<SettingsClass*>(calloc(1, sizeof(SettingsClass)));
-  P1Inputs = static_cast<Inputs*>(calloc(1, sizeof(Inputs)));
+  Global = new GlobalClass();
+  Settings = new SettingsClass();
+  P1Inputs = new Inputs();
   Settings->resolutionx = 320;
   Settings->resolutiony = 200;
   Settings->fov = 90;
@@ -93,11 +93,13 @@ bool init() {
         std::string{});
     if (error) return false;
   }
+  SDL_Log("Got this far1");
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
+  SDL_Log("Got this far2");
   std::vector<SDL_Surface*> tempvector;
+  tempvector.resize(32);
   Global->textures = tempvector;
-  Global->textures.resize(32);
 
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     if (Global->mapfaces[i].points.size() == 4) {
@@ -122,7 +124,7 @@ bool init() {
     }
   }
 
-  Camera = static_cast<Entity*>(calloc(1, sizeof(Entity)));
+  Camera = new Entity();
   Camera->position = Vector3({0, 0, 0});
 
   if (!SDL_SetAppMetadata("BoomerShooter", "0.1", "com.example.myapp") ||
@@ -177,13 +179,13 @@ void quit() {
   SDL_DestroyRenderer(Global->renderer);
   SDL_DestroyWindow(Global->window);
   SDL_DestroySurface(Global->render_target);
-  // for (const auto& i : Global->texturemap) {
-  //   SDL_DestroySurface(i.second);
-  // }
-  free(Global);
-  free(Settings);
-  free(Camera);
-  free(P1Inputs);
+  for (const auto& i : Global->textures) {
+    SDL_DestroySurface(i);
+  }
+  delete (Global);
+  delete (Settings);
+  delete (Camera);
+  delete (P1Inputs);
   Global->IsRunning = false;
   SDL_Quit();
 }

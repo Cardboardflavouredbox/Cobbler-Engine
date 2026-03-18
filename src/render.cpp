@@ -171,8 +171,8 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
         Vector2 temp;
         temp.x = i;
         temp.y = j;
-        if (temp.x >= 0 && temp.y >= 0 && temp.x <= Settings->resolutionx &&
-            temp.y <= Settings->resolutiony) {
+        if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
+            temp.y < Settings->resolutiony) {
           if (Vector2inTri(temp, Vector2({vectors[0].p.x, vectors[0].p.y}),
                            Vector2({vectors[1].p.x, vectors[1].p.y}),
                            Vector2({vectors[2].p.x, vectors[2].p.y}))) {
@@ -318,6 +318,7 @@ void render() {
         tempmapface->points[invisibledeque[0]] = temppointsdeque.size() - 1;
         newface.points[1] = temppointsdeque.size() - 1;
         addlaterfacedeque.push_back(newface);
+        break;
       }
     }
   }
