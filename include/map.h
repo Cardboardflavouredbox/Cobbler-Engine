@@ -8,4 +8,5 @@ struct Mapface {
   int texture = 0;
   int xloop = 1, yloop = 1;
   std::vector<int> points;
+  std::vector<Vector2> UVs;
 };

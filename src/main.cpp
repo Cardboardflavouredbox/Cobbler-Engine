@@ -60,7 +60,7 @@ bool init() {
     tempmapdata.Points[6] = Vector3({15.f, -15.f, -1.f});
     tempmapdata.Points[7] = Vector3({-15.f, -15.f, -1.f});
 
-    tempmapdata.mapfaces.resize(4);
+    tempmapdata.mapfaces.resize(5);
     tempmapdata.mapfaces[0].points.resize(4);
     tempmapdata.mapfaces[0].points[0] = 0;
     tempmapdata.mapfaces[0].points[1] = 1;
@@ -85,18 +85,29 @@ bool init() {
     tempmapdata.mapfaces[3].points[2] = 6;
     tempmapdata.mapfaces[3].points[3] = 2;
 
+    tempmapdata.mapfaces[4].points.resize(4);
+    tempmapdata.mapfaces[4].points[0] = 3;
+    tempmapdata.mapfaces[4].points[1] = 2;
+    tempmapdata.mapfaces[4].points[2] = 6;
+    tempmapdata.mapfaces[4].points[3] = 7;
+    tempmapdata.mapfaces[4].xloop = 10;
+    tempmapdata.mapfaces[4].yloop = 10;
+    tempmapdata.mapfaces[4].texture = 2;
+
     for (int i = 0; i < 4; i++) {
       tempmapdata.mapfaces[i].xloop = 8;
+    }
+    for (int i = 0; i < 5; i++) {
+      tempmapdata.mapfaces[i].UVs = {Vector2({0, 0}), Vector2({1, 0}),
+                                     Vector2({1, 1}), Vector2({0, 1})};
     }
     error = glz::write_file_json<glz::opts{.prettify = true}>(
         tempmapdata, "MapStuff/map/" + LoadedData->startlevel + ".json",
         std::string{});
     if (error) return false;
   }
-  SDL_Log("Got this far1");
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
-  SDL_Log("Got this far2");
   std::vector<SDL_Surface*> tempvector;
   tempvector.resize(32);
   Global->textures = tempvector;
