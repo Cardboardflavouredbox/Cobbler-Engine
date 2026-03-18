@@ -186,7 +186,6 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
                                                     uvw.y * vectors[1].dist +
                                                     uvw.z * vectors[2].dist)));
 
-            // https://en.wikibooks.org/wiki/Cg_Programming/Rasterization
             int uvxthing = (int(128 * (uvresult.x)) * xloop) % 128;
             int uvything = (int(128 * (uvresult.y)) * yloop) % 128;
             Uint32 color = static_cast<Uint32*>(

@@ -155,6 +155,8 @@ bool init() {
                        Settings->resolutiony, SDL_WINDOW_RESIZABLE);
   Global->renderer = SDL_CreateRenderer(Global->window, NULL);
 
+  SDL_SetWindowRelativeMouseMode(Global->window, true);
+
   std::string basepath = SDL_GetBasePath(), tempstr = basepath;
   tempstr.append("/res/Color_palette.bmp");
   SDL_Surface* surface = SDL_LoadBMP(tempstr.c_str());

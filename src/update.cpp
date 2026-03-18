@@ -8,22 +8,10 @@
 #include "extern.h"
 #include "global.h"
 
-void update() {
-  SDL_Event event;
-  while (SDL_PollEvent(&event)) {
-    switch (event.type) {
-      case SDL_EVENT_QUIT:
-        Global->IsRunning = false;
-        break;
-    }
-  }
-  Uint32 currentTime = SDL_GetTicks();
-  Global->deltaTime = (currentTime - lastTime) / 1000.0f;
-  lastTime = currentTime;
-
+void playermovement() {
   SDL_GetRelativeMouseState(&P1Inputs->Mouse.x, &P1Inputs->Mouse.y);
-  Camera->dir.x += -4 * P1Inputs->Mouse.x;
-  Camera->dir.y += -4 * P1Inputs->Mouse.y;
+  Camera->dir.x += -2 * P1Inputs->Mouse.x;
+  Camera->dir.y += -2 * P1Inputs->Mouse.y;
   P1Inputs->Mouse.x = 0;
   P1Inputs->Mouse.y = 0;
 
@@ -53,4 +41,26 @@ void update() {
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;
   if (Camera->dir.y >= 90) Camera->dir.y = 90;
   if (Camera->dir.y <= -90) Camera->dir.y = -90;
+}
+
+void update() {
+  SDL_Event event;
+  while (SDL_PollEvent(&event)) {
+    switch (event.type) {
+      case SDL_EVENT_QUIT:
+        Global->IsRunning = false;
+        break;
+    }
+  }
+  Uint32 currentTime = SDL_GetTicks();
+  Global->deltaTime = (currentTime - lastTime) / 1000.0f;
+  lastTime = currentTime;
+
+  if (P1Inputs->ESC == 2) {
+    Global->pause = !Global->pause;
+    SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);
+  }
+  if (!Global->pause) {
+    playermovement();
+  }
 }
