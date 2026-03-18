@@ -86,6 +86,9 @@ float Vector3Dot(Vector3 P1, Vector3 P2) {
 }
 
 Vector3 Vector3Normalize(Vector3 input) {
+  float temp =
+      std::sqrt(input.x * input.x + input.y * input.y + input.z * input.z);
+  if (temp == 0) return Vector3({0, 0, 0});
   return multiplyVec3(
       input,
       1 / std::sqrt(input.x * input.x + input.y * input.y + input.z * input.z));

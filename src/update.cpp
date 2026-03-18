@@ -18,26 +18,29 @@ void playermovement() {
   float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
   float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
 
+  Vector3 tempmove = Vector3({0, 0, 0});
   if (P1Inputs->A > 0) {
-    Camera->position.x -=
-        8 * Global->deltaTime * std::sin((Camera->dir.x + 90) * 3.14 / 180.0);
-    Camera->position.y +=
-        8 * Global->deltaTime * std::cos((Camera->dir.x + 90) * 3.14 / 180.0);
+    tempmove.x -= std::sin((Camera->dir.x + 90) * 3.14 / 180.0);
+    tempmove.y += std::cos((Camera->dir.x + 90) * 3.14 / 180.0);
   }
   if (P1Inputs->D > 0) {
-    Camera->position.x -=
-        8 * Global->deltaTime * std::sin((Camera->dir.x - 90) * 3.14 / 180.0);
-    Camera->position.y +=
-        8 * Global->deltaTime * std::cos((Camera->dir.x - 90) * 3.14 / 180.0);
+    tempmove.x -= std::sin((Camera->dir.x - 90) * 3.14 / 180.0);
+    tempmove.y += std::cos((Camera->dir.x - 90) * 3.14 / 180.0);
   }
   if (P1Inputs->W > 0) {
-    Camera->position.x -= 8 * Global->deltaTime * ps;
-    Camera->position.y += 8 * Global->deltaTime * pc;
+    tempmove.x -= ps;
+    tempmove.y += pc;
   }
   if (P1Inputs->S > 0) {
-    Camera->position.x += 8 * Global->deltaTime * ps;
-    Camera->position.y -= 8 * Global->deltaTime * pc;
+    tempmove.x += ps;
+    tempmove.y -= pc;
   }
+
+  tempmove = Vector3Normalize(tempmove);
+
+  Camera->moveVector3 =
+      multiplyVec3(multiplyVec3(tempmove, 8), Global->deltaTime);
+
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;
   if (Camera->dir.y >= 90) Camera->dir.y = 90;
   if (Camera->dir.y <= -90) Camera->dir.y = -90;
@@ -62,5 +65,10 @@ void update() {
   }
   if (!Global->pause) {
     playermovement();
+    for (int i = 0; i < Global->Entities.size(); i++) {
+      Entity* tempentity = Global->Entities[i];
+      tempentity->position =
+          addVec3(tempentity->position, tempentity->moveVector3);
+    }
   }
 }

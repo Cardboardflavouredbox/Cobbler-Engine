@@ -20,6 +20,7 @@ struct GlobalClass {
   std::vector<SDL_Surface*> textures;
   std::deque<Vector3> Points;
   std::deque<Mapface> mapfaces;
+  std::deque<Entity*> Entities;
 };
 
 struct ZipData {
