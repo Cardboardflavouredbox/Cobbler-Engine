@@ -206,6 +206,7 @@ int main(int argc, char* argv[]) {
     SDL_Log(SDL_GetError());
     return -1;
   }
+  SDL_Log("Init done");
   while (Global->IsRunning) {
     input();
     update();

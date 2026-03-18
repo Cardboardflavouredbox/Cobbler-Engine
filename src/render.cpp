@@ -145,7 +145,7 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
 }
 
 void DrawTri(unsigned char* pixels, int pitch, int texture,
-             Vector3 rawvectors[], int xloop, int yloop) {
+             Vector3 rawvectors[], Vector2 UVs[], int xloop, int yloop) {
   ScreenPoint vectors[3] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
                             drawPoint(rawvectors[2])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
@@ -178,12 +178,10 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
                            Vector2({vectors[2].p.x, vectors[2].p.y}))) {
             Vector3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
             Vector2 uvresult = addVec2(
-                addVec2(multiplyVec2(multiplyVec2(Vector2({0, 0}), uvw.x),
-                                     vectors[0].dist),
-                        multiplyVec2(multiplyVec2(Vector2({1, 0}), uvw.y),
-                                     vectors[1].dist)),
-                multiplyVec2(multiplyVec2(Vector2({1, 1}), uvw.z),
-                             vectors[2].dist));
+                addVec2(
+                    multiplyVec2(multiplyVec2(UVs[0], uvw.x), vectors[0].dist),
+                    multiplyVec2(multiplyVec2(UVs[1], uvw.y), vectors[1].dist)),
+                multiplyVec2(multiplyVec2(UVs[2], uvw.z), vectors[2].dist));
             uvresult = multiplyVec2(uvresult, (1 / (uvw.x * vectors[0].dist +
                                                     uvw.y * vectors[1].dist +
                                                     uvw.z * vectors[2].dist)));
@@ -229,6 +227,18 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
       }
     }
   }
+}
+
+float getVec3dist(Vector3 p1, Vector3 p2) {
+  float x = p2.x - p1.x;
+  float y = p2.y - p1.y;
+  float z = p2.z - p1.z;
+  return std::sqrt(x * x + y * y + z * z);
+}
+
+float getinternaldivisionthing(Vector3 p1, Vector3 d, Vector3 p2) {
+  float dist1 = getVec3dist(p1, d), dist2 = getVec3dist(d, p2);
+  return dist1 / (dist1 + dist2);
 }
 
 Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
@@ -303,20 +313,29 @@ void render() {
         newface.xloop = tempmapface->xloop;
         newface.yloop = tempmapface->yloop;
         newface.points.resize(3);
+        newface.UVs.resize(3);
         newface.points[0] = tempmapface->points[visibledeque[0]];
+        newface.UVs[0] = tempmapface->UVs[visibledeque[0]];
         Vector3 newvec3;
         newvec3 = CutLinething(
             temppointsdeque[tempmapface->points[invisibledeque[0]]],
             temppointsdeque[tempmapface->points[visibledeque[0]]]);
+
+        float internal = getinternaldivisionthing(
+            temppointsdeque[tempmapface->points[invisibledeque[0]]], newvec3,
+            temppointsdeque[tempmapface->points[visibledeque[0]]]);
+
         temppointsdeque.push_back(newvec3);
 
         newface.points[2] = temppointsdeque.size() - 1;
+        newface.UVs[2] = tempmapface->UVs[visibledeque[0]];
         newvec3 = CutLinething(
             temppointsdeque[tempmapface->points[invisibledeque[0]]],
             temppointsdeque[tempmapface->points[visibledeque[1]]]);
         temppointsdeque.push_back(newvec3);
         tempmapface->points[invisibledeque[0]] = temppointsdeque.size() - 1;
         newface.points[1] = temppointsdeque.size() - 1;
+        newface.UVs[1] = tempmapface->UVs[visibledeque[0]];
         addlaterfacedeque.push_back(newface);
         break;
       }
@@ -330,7 +349,9 @@ void render() {
     Vector3 temp[3] = {temppointsdeque[tempmapfacedeque[k].points[0]],
                        temppointsdeque[tempmapfacedeque[k].points[1]],
                        temppointsdeque[tempmapfacedeque[k].points[2]]};
-    DrawTri(pixels, pitch, tempmapfacedeque[k].texture, temp,
+    Vector2 temp2[3] = {tempmapfacedeque[k].UVs[0], tempmapfacedeque[k].UVs[1],
+                        tempmapfacedeque[k].UVs[2]};
+    DrawTri(pixels, pitch, tempmapfacedeque[k].texture, temp, temp2,
             tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop);
   }
   SDL_UnlockSurface(Global->render_target);
