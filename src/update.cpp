@@ -41,6 +41,9 @@ void playermovement() {
   Camera->moveVector3 =
       multiplyVec3(multiplyVec3(tempmove, 8), Global->deltaTime);
 
+  if (P1Inputs->Shift > 0)
+    Camera->moveVector3 = multiplyVec3(Camera->moveVector3, 1.75f);
+
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;
   if (Camera->dir.y >= 90) Camera->dir.y = 90;
   if (Camera->dir.y <= -90) Camera->dir.y = -90;
