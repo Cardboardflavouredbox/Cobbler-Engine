@@ -23,4 +23,6 @@ void input() {
   P1Inputs->ESC = haspressedkey(key_states[SDL_SCANCODE_ESCAPE], P1Inputs->ESC);
   P1Inputs->Shift =
       haspressedkey(key_states[SDL_SCANCODE_LSHIFT], P1Inputs->Shift);
+  P1Inputs->Space =
+      haspressedkey(key_states[SDL_SCANCODE_SPACE], P1Inputs->Space);
 }

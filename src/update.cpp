@@ -107,10 +107,12 @@ void playermovement() {
 
   tempmove = Vector3Normalize(tempmove);
 
-  Camera->moveVector3 = multiplyVec3(tempmove, 8);
+  Camera->moveVector3 = multiplyVec3(tempmove, Camera->walkspeed);
 
   if (P1Inputs->Shift > 0)
-    Camera->moveVector3 = multiplyVec3(Camera->moveVector3, 1.75f);
+    Camera->moveVector3 = multiplyVec3(Camera->moveVector3, Camera->runspeed);
+
+  if (P1Inputs->Space == 2) Camera->velocityVector3.z = Camera->jumpheight;
 
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;
   if (Camera->dir.y >= 90) Camera->dir.y = 90;
@@ -138,6 +140,7 @@ void update() {
     playermovement();
     for (int i = 0; i < Global->Entities.size(); i++) {
       Entity* tempentity = Global->Entities[i];
+      tempentity->velocityVector3.z -= tempentity->gravity * Global->deltaTime;
       Vector3 tempmove = multiplyVec3(
           addVec3(tempentity->moveVector3, tempentity->velocityVector3),
           Global->deltaTime);
@@ -155,6 +158,9 @@ void update() {
       tempposition.z += tempmove.z;
       if (!Capsulecollisioncheck(tempentity->hitbox, tempposition)) {
         tempentity->position.z += tempmove.z;
+      } else {
+        tempentity->IsGrounded = true;
+        tempentity->velocityVector3.z = -2.f;
       }
       tempentity->moveVector3 = Vector3({0, 0, 0});
     }

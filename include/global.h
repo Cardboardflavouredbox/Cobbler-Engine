@@ -36,7 +36,7 @@ struct Mapdata {
 
 struct Inputs {
  public:
-  unsigned char W = 0, A = 0, S = 0, D = 0, ESC = 0, Shift = 0;
+  unsigned char W = 0, A = 0, S = 0, D = 0, ESC = 0, Shift = 0, Space = 0;
   Vector2 Mouse;
 };
 
