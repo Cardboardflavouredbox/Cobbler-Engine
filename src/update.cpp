@@ -38,8 +38,7 @@ void playermovement() {
 
   tempmove = Vector3Normalize(tempmove);
 
-  Camera->moveVector3 =
-      multiplyVec3(multiplyVec3(tempmove, 8), Global->deltaTime);
+  Camera->moveVector3 = multiplyVec3(tempmove, 8);
 
   if (P1Inputs->Shift > 0)
     Camera->moveVector3 = multiplyVec3(Camera->moveVector3, 1.75f);
@@ -70,8 +69,11 @@ void update() {
     playermovement();
     for (int i = 0; i < Global->Entities.size(); i++) {
       Entity* tempentity = Global->Entities[i];
-      tempentity->position =
-          addVec3(tempentity->position, tempentity->moveVector3);
+      Vector3 tempmove = multiplyVec3(
+          addVec3(tempentity->moveVector3, tempentity->velocityVector3),
+          Global->deltaTime);
+      tempentity->position = addVec3(tempentity->position, tempmove);
+      tempentity->moveVector3 = Vector3({0, 0, 0});
     }
   }
 }
