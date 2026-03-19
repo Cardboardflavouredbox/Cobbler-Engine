@@ -7,6 +7,11 @@ struct Vector3 {
   float x, y, z;
 };
 
+struct Capsule {
+  Vector3 offset;
+  float radius, height, reduction;
+};
+
 Vector3 multiplyVec3(Vector3 inputvec2, float multvalue);
 
 Vector2 multiplyVec2(Vector2 inputvec2, float multvalue);

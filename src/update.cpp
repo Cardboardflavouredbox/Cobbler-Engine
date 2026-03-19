@@ -51,6 +51,32 @@ Vector3 closestPointTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c) {
   return addVec3(a, addVec3(multiplyVec3(ab, v), multiplyVec3(ac, w)));  // #0
 }
 
+bool Capsulecollisioncheck(Capsule hitbox, Vector3 position) {
+  for (int i = 0; i < Global->mapfaces.size(); i++) {
+    Vector3 spherecenter = addVec3(Vector3({0, 0, hitbox.radius}),
+                                   addVec3(position, hitbox.offset));
+    Vector3 closest = closestPointTriangle(
+        spherecenter, Global->Points[Global->mapfaces[i].points[0]],
+        Global->Points[Global->mapfaces[i].points[1]],
+        Global->Points[Global->mapfaces[i].points[2]]);
+    if (getVec3dist(spherecenter, closest) <=
+        hitbox.radius - hitbox.reduction) {
+      return true;
+    }
+    spherecenter = addVec3(Vector3({0, 0, hitbox.height + hitbox.radius}),
+                           addVec3(position, hitbox.offset));
+    closest = closestPointTriangle(
+        spherecenter, Global->Points[Global->mapfaces[i].points[0]],
+        Global->Points[Global->mapfaces[i].points[1]],
+        Global->Points[Global->mapfaces[i].points[2]]);
+    if (getVec3dist(spherecenter, closest) <=
+        hitbox.radius - hitbox.reduction) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void playermovement() {
   SDL_GetRelativeMouseState(&P1Inputs->Mouse.x, &P1Inputs->Mouse.y);
   Camera->dir.x += -2 * P1Inputs->Mouse.x;
@@ -115,7 +141,21 @@ void update() {
       Vector3 tempmove = multiplyVec3(
           addVec3(tempentity->moveVector3, tempentity->velocityVector3),
           Global->deltaTime);
-      tempentity->position = addVec3(tempentity->position, tempmove);
+      Vector3 tempposition = tempentity->position;
+      tempposition.x += tempmove.x;
+      if (!Capsulecollisioncheck(tempentity->hitbox, tempposition)) {
+        tempentity->position.x += tempmove.x;
+      }
+      tempposition = tempentity->position;
+      tempposition.y += tempmove.y;
+      if (!Capsulecollisioncheck(tempentity->hitbox, tempposition)) {
+        tempentity->position.y += tempmove.y;
+      }
+      tempposition = tempentity->position;
+      tempposition.z += tempmove.z;
+      if (!Capsulecollisioncheck(tempentity->hitbox, tempposition)) {
+        tempentity->position.z += tempmove.z;
+      }
       tempentity->moveVector3 = Vector3({0, 0, 0});
     }
   }

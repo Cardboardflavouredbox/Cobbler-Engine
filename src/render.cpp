@@ -41,9 +41,9 @@ ScreenPoint drawPoint(Vector3 P) {
   float tz = 180 * what;
 
   ScreenPoint screenpos;
-  if (ty <= 0.5f) {
+  if (ty <= 0.25f) {
     screenpos.isbehindcamera = true;
-    ty = 0.5f;
+    ty = 0.25f;
   }
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
   screenpos.p.y =
@@ -216,7 +216,7 @@ Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
   float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
   float what = std::sin(Camera->dir.y * 3.14 / 180.f);
 
-  float u = (p1.y * pc - p1.x * ps + p1.z * what - 0.5f) /
+  float u = (p1.y * pc - p1.x * ps + p1.z * what - 0.25f) /
             (-ps * (p1.x - p2.x) + pc * (p1.y - p2.y) + what * (p1.z - p2.z));
 
   Vector3 result =
@@ -248,7 +248,7 @@ void render() {
     int invisiblecount = 0;
     for (int j = 0; j < 3; j++) {
       dist[j] = getdistancething(temppointsdeque[tempmapface->points[j]]);
-      if (dist[j] < 0.5f) {
+      if (dist[j] < 0.25f) {
         invisiblecount++;
         invisibledeque.push_back(j);
       } else
