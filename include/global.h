@@ -17,6 +17,7 @@ struct GlobalClass {
   bool IsRunning;
   bool pause;
   float deltaTime;
+  int skybox;
 
   std::vector<SDL_Surface*> textures;
   std::deque<Vector3> Points;
@@ -33,6 +34,7 @@ struct ZipData {
 struct Mapdata {
   std::deque<Vector3> Points;
   std::deque<Mapface> mapfaces;
+  int skybox;
 };
 
 struct Inputs {

@@ -108,6 +108,7 @@ bool init() {
   }
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
+  Global->skybox = tempmapdata.skybox;
   std::vector<SDL_Surface*> tempvector;
   tempvector.resize(32);
   Global->textures = tempvector;

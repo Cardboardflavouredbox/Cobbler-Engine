@@ -10,5 +10,5 @@ struct Entity {
   float gravity = 9.81f * 8.f;
   float jumpheight = 24, walkspeed = 10.f, runspeed = 1.75f;
   Capsule hitbox;
-  bool IsGrounded = false;
+  bool IsGrounded;
 };

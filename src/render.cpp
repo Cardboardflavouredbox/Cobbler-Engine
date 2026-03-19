@@ -336,9 +336,16 @@ void render() {
   unsigned char* pixels =
       static_cast<unsigned char*>(Global->render_target->pixels);
   int pitch = Global->render_target->pitch;
+
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
-      pixels[i + j * pitch] = 0;
+      Uint32 color = static_cast<Uint32*>(
+          Global->textures[Global->skybox]->pixels)[i + j * 640];
+      int r = (color >> 0) & 0xFF;
+      int g = (color >> 8) & 0xFF;
+      int b = (color >> 16) & 0xFF;
+      int a = (color >> 24) & 0xFF;
+      pixels[i + j * pitch] = SDL_MapSurfaceRGB(Global->render_target, r, g, b);
     }
   }
 

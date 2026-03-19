@@ -51,7 +51,8 @@ Vector3 closestPointTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c) {
   return addVec3(a, addVec3(multiplyVec3(ab, v), multiplyVec3(ac, w)));  // #0
 }
 
-bool Capsulecollisioncheck(Capsule hitbox, Vector3 position) {
+float Capsulecollisioncheck(Capsule hitbox, Vector3 position) {
+  float dist = INFINITY;
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     Vector3 spherecenter = addVec3(Vector3({0, 0, hitbox.radius}),
                                    addVec3(position, hitbox.offset));
@@ -59,22 +60,18 @@ bool Capsulecollisioncheck(Capsule hitbox, Vector3 position) {
         spherecenter, Global->Points[Global->mapfaces[i].points[0]],
         Global->Points[Global->mapfaces[i].points[1]],
         Global->Points[Global->mapfaces[i].points[2]]);
-    if (getVec3dist(spherecenter, closest) <=
-        hitbox.radius - hitbox.reduction) {
-      return true;
-    }
+    float temp = getVec3dist(spherecenter, closest);
+    if (temp < dist) dist = temp;
     spherecenter = addVec3(Vector3({0, 0, hitbox.height + hitbox.radius}),
                            addVec3(position, hitbox.offset));
     closest = closestPointTriangle(
         spherecenter, Global->Points[Global->mapfaces[i].points[0]],
         Global->Points[Global->mapfaces[i].points[1]],
         Global->Points[Global->mapfaces[i].points[2]]);
-    if (getVec3dist(spherecenter, closest) <=
-        hitbox.radius - hitbox.reduction) {
-      return true;
-    }
+    temp = getVec3dist(spherecenter, closest);
+    if (temp < dist) dist = temp;
   }
-  return false;
+  return dist;
 }
 
 void playermovement() {
@@ -112,7 +109,8 @@ void playermovement() {
   if (P1Inputs->Shift > 0)
     Camera->moveVector3 = multiplyVec3(Camera->moveVector3, Camera->runspeed);
 
-  if (P1Inputs->Space == 2) Camera->velocityVector3.z = Camera->jumpheight;
+  if (P1Inputs->Space == 2 && Camera->IsGrounded)
+    Camera->velocityVector3.z = Camera->jumpheight;
 
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;
   if (Camera->dir.y >= 90) Camera->dir.y = 90;
@@ -146,17 +144,21 @@ void update() {
           Global->deltaTime);
       Vector3 tempposition = tempentity->position;
       tempposition.x += tempmove.x;
-      if (!Capsulecollisioncheck(tempentity->hitbox, tempposition)) {
+      float distance = Capsulecollisioncheck(tempentity->hitbox, tempposition);
+      if (distance > tempentity->hitbox.radius - tempentity->hitbox.reduction) {
         tempentity->position.x += tempmove.x;
       }
       tempposition = tempentity->position;
       tempposition.y += tempmove.y;
-      if (!Capsulecollisioncheck(tempentity->hitbox, tempposition)) {
+      distance = Capsulecollisioncheck(tempentity->hitbox, tempposition);
+      if (distance > tempentity->hitbox.radius - tempentity->hitbox.reduction) {
         tempentity->position.y += tempmove.y;
       }
       tempposition = tempentity->position;
       tempposition.z += tempmove.z;
-      if (!Capsulecollisioncheck(tempentity->hitbox, tempposition)) {
+      distance = Capsulecollisioncheck(tempentity->hitbox, tempposition);
+      if (distance > tempentity->hitbox.radius - tempentity->hitbox.reduction) {
+        tempentity->IsGrounded = false;
         tempentity->position.z += tempmove.z;
       } else {
         tempentity->IsGrounded = true;

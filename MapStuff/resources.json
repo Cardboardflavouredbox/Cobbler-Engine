@@ -3,7 +3,8 @@
     "texturenames": [
        "Wall",
        "Fence",
-       "Floor"
+       "Floor",
+       "Sky"
     ],
     "stagenames": [
        "test"
