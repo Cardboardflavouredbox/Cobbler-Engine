@@ -224,20 +224,7 @@ Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
   return result;
 }
 
-void render() {
-  // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
-  // SDL_RenderClear(Global->renderer);
-  SDL_LockSurface(Global->render_target);
-
-  unsigned char* pixels =
-      static_cast<unsigned char*>(Global->render_target->pixels);
-  int pitch = Global->render_target->pitch;
-  for (int i = 0; i < Settings->resolutionx; i++) {
-    for (int j = 0; j < Settings->resolutiony; j++) {
-      pixels[i + j * pitch] = 0;
-    }
-  }
-
+void rendergame(unsigned char* pixels, int pitch) {
   std::deque<Mapface> tempmapfacedeque = Global->mapfaces, addlaterfacedeque;
   std::deque<Vector3> temppointsdeque = Global->Points;
 
@@ -339,6 +326,44 @@ void render() {
     DrawTri(pixels, pitch, tempmapfacedeque[k].texture, temp, temp2,
             tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop);
   }
+}
+
+void render() {
+  // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
+  // SDL_RenderClear(Global->renderer);
+  SDL_LockSurface(Global->render_target);
+
+  unsigned char* pixels =
+      static_cast<unsigned char*>(Global->render_target->pixels);
+  int pitch = Global->render_target->pitch;
+  for (int i = 0; i < Settings->resolutionx; i++) {
+    for (int j = 0; j < Settings->resolutiony; j++) {
+      pixels[i + j * pitch] = 0;
+    }
+  }
+
+  rendergame(pixels, pitch);
+
+  if (Global->pause) {
+    for (int i = 0; i < Settings->resolutionx; i++) {
+      for (int j = 0; j < Settings->resolutiony; j++) {
+        Uint8 r, g, b;
+        SDL_GetRGB(pixels[i + j * pitch],
+                   SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_INDEX8),
+                   Global->palette, &r, &g, &b);
+        int r2 = r, g2 = g, b2 = b;
+        r2 -= 64;
+        g2 -= 64;
+        b2 -= 64;
+        if (r2 < 0) r2 = 0;
+        if (g2 < 0) g2 = 0;
+        if (b2 < 0) b2 = 0;
+        pixels[i + j * pitch] =
+            SDL_MapSurfaceRGB(Global->render_target, r2, g2, b2);
+      }
+    }
+  }
+
   SDL_UnlockSurface(Global->render_target);
   int w, h, rtw = Global->render_target->w, rth = Global->render_target->h;
   SDL_GetWindowSizeInPixels(Global->window, &w, &h);

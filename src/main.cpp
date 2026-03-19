@@ -180,12 +180,12 @@ bool init() {
   }
   SDL_DestroySurface(surface);
 
-  SDL_Palette* palette = SDL_CreatePalette(256);
-  SDL_SetPaletteColors(palette, my_palette_colors, 0, 256);
+  Global->palette = SDL_CreatePalette(256);
+  SDL_SetPaletteColors(Global->palette, my_palette_colors, 0, 256);
 
   Global->render_target = SDL_CreateSurface(
       Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
-  SDL_SetSurfacePalette(Global->render_target, palette);
+  SDL_SetSurfacePalette(Global->render_target, Global->palette);
 
   for (int i = 0; i < LoadedData->texturenames.size(); i++) {
     tempstr = basepath;

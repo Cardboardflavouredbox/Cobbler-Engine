@@ -12,6 +12,7 @@ struct GlobalClass {
   SDL_Window* window;
   SDL_Renderer* renderer;
   SDL_Surface* render_target;
+  SDL_Palette* palette;
 
   bool IsRunning;
   bool pause;
