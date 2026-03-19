@@ -25,7 +25,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glaze)
 
-add_executable(FPSthing src/main.cpp src/render.cpp src/input.cpp src/update.cpp)
+add_executable(FPSthing src/main.cpp src/render.cpp src/input.cpp src/update.cpp src/types.cpp)
 
 # SDL2 라이브러리 연결
 target_link_libraries(FPSthing PRIVATE SDL3::SDL3 glaze::glaze)
