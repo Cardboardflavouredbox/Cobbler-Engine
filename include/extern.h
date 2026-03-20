@@ -6,4 +6,5 @@ extern SettingsClass* Settings;
 extern Inputs* P1Inputs;
 extern Entity* Camera;
 extern ZipData* LoadedData;
-extern Uint32 lastTime;
+extern Uint64 lastTime;
+extern Uint64 currentTime;

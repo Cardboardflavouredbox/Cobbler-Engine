@@ -340,7 +340,11 @@ void render() {
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
       Uint32 color = static_cast<Uint32*>(
-          Global->textures[Global->skybox]->pixels)[i + j * 640];
+          Global->textures[Global->skybox]->pixels)
+          [(i + int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) % 640 +
+           (int((1 - (Camera->dir.y < 0 ? 0 : Camera->dir.y) / 90.f) * 200.f) +
+            j) *
+               640];
       int r = (color >> 0) & 0xFF;
       int g = (color >> 8) & 0xFF;
       int b = (color >> 16) & 0xFF;

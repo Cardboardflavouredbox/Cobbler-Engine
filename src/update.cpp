@@ -126,9 +126,10 @@ void update() {
         break;
     }
   }
-  Uint32 currentTime = SDL_GetTicks();
-  Global->deltaTime = (currentTime - lastTime) / 1000.0f;
   lastTime = currentTime;
+  currentTime = SDL_GetPerformanceCounter();
+  Global->deltaTime =
+      (currentTime - lastTime) / (double)SDL_GetPerformanceFrequency();
 
   if (P1Inputs->ESC == 2) {
     Global->pause = !Global->pause;

@@ -19,6 +19,7 @@ ZipData* LoadedData;
 Entity* Camera;
 Inputs* P1Inputs;
 Uint32 lastTime;
+Uint64 currentTime = SDL_GetPerformanceCounter();
 
 bool init() {
   Global = new GlobalClass();
@@ -146,7 +147,7 @@ bool init() {
   }
 
   Camera = new Entity();
-  Camera->position = Vector3({0, 0, 3});
+  Camera->position = Vector3({0, 0, 6});
   Camera->hitbox.offset = Vector3({0, 0, -3});
   Camera->hitbox.height = 1.5f;
   Camera->hitbox.radius = 0.75f;
@@ -167,7 +168,7 @@ bool init() {
   std::string basepath = SDL_GetBasePath(), tempstr = basepath;
   tempstr.append("/res/Color_palette.bmp");
   SDL_Surface* surface = SDL_LoadBMP(tempstr.c_str());
-  surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_INDEX8);
+  surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
   SDL_Color my_palette_colors[256];
   uint32_t* pixels = static_cast<uint32_t*>(surface->pixels);
   for (int i = 0; i < 256; i++) {
