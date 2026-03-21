@@ -44,3 +44,8 @@ float getVec3dist(Vector3 p1, Vector3 p2) {
   float z = p2.z - p1.z;
   return std::sqrt(x * x + y * y + z * z);
 }
+
+Vector3 Vector3Cross(Vector3 a, Vector3 b) {
+  return Vector3(
+      {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x});
+}

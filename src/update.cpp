@@ -8,6 +8,16 @@
 #include "extern.h"
 #include "global.h"
 
+Vector2 SATprojectionthing() { return Vector2({0, 0}); }
+
+bool SATcubetri(Vector3 aabb[], Vector3 tri[]) {
+  Vector3 normal[3] = {Vector3({1, 0, 0}), Vector3({0, 1, 0}),
+                       Vector3({0, 0, 1})};
+  for (int i = 0; i < 3; i++) {
+  }
+  return true;
+}
+
 Vector3 closestPointTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c) {
   const Vector3 ab = subVec3(b, a);
   const Vector3 ac = subVec3(c, a);
@@ -117,6 +127,41 @@ void playermovement() {
   if (Camera->dir.y <= -90) Camera->dir.y = -90;
 }
 
+void EntityMove(Entity* tempentity) {
+  tempentity->velocityVector3.z -= tempentity->gravity * Global->deltaTime;
+
+  Vector3 tempmove = multiplyVec3(
+      addVec3(tempentity->moveVector3, tempentity->velocityVector3),
+      Global->deltaTime);
+  Vector3 tempposition = tempentity->position, moveresult = Vector3({0, 0, 0});
+  tempposition.x += tempmove.x;
+  float distance = Capsulecollisioncheck(tempentity->hitbox, tempposition);
+  if (distance > tempentity->hitbox.radius - tempentity->hitbox.reduction) {
+    moveresult.x += tempmove.x;
+  }
+
+  tempposition = tempentity->position;
+  tempposition.y += tempmove.y;
+  distance = Capsulecollisioncheck(tempentity->hitbox, tempposition);
+  if (distance > tempentity->hitbox.radius - tempentity->hitbox.reduction) {
+    moveresult.y += tempmove.y;
+  }
+
+  tempposition = tempentity->position;
+  tempposition.z += tempmove.z;
+  distance = Capsulecollisioncheck(tempentity->hitbox, tempposition);
+  if (distance > tempentity->hitbox.radius - tempentity->hitbox.reduction) {
+    tempentity->IsGrounded = false;
+    moveresult.z += tempmove.z;
+  } else {
+    tempentity->IsGrounded = true;
+    tempentity->velocityVector3.z = -2.f;
+  }
+
+  tempentity->position = addVec3(tempentity->position, moveresult);
+  tempentity->moveVector3 = Vector3({0, 0, 0});
+}
+
 void update() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
@@ -138,34 +183,7 @@ void update() {
   if (!Global->pause) {
     playermovement();
     for (int i = 0; i < Global->Entities.size(); i++) {
-      Entity* tempentity = Global->Entities[i];
-      tempentity->velocityVector3.z -= tempentity->gravity * Global->deltaTime;
-      Vector3 tempmove = multiplyVec3(
-          addVec3(tempentity->moveVector3, tempentity->velocityVector3),
-          Global->deltaTime);
-      Vector3 tempposition = tempentity->position;
-      tempposition.x += tempmove.x;
-      float distance = Capsulecollisioncheck(tempentity->hitbox, tempposition);
-      if (distance > tempentity->hitbox.radius - tempentity->hitbox.reduction) {
-        tempentity->position.x += tempmove.x;
-      }
-      tempposition = tempentity->position;
-      tempposition.y += tempmove.y;
-      distance = Capsulecollisioncheck(tempentity->hitbox, tempposition);
-      if (distance > tempentity->hitbox.radius - tempentity->hitbox.reduction) {
-        tempentity->position.y += tempmove.y;
-      }
-      tempposition = tempentity->position;
-      tempposition.z += tempmove.z;
-      distance = Capsulecollisioncheck(tempentity->hitbox, tempposition);
-      if (distance > tempentity->hitbox.radius - tempentity->hitbox.reduction) {
-        tempentity->IsGrounded = false;
-        tempentity->position.z += tempmove.z;
-      } else {
-        tempentity->IsGrounded = true;
-        tempentity->velocityVector3.z = -2.f;
-      }
-      tempentity->moveVector3 = Vector3({0, 0, 0});
+      EntityMove(Global->Entities[i]);
     }
   }
 }

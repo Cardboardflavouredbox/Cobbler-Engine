@@ -29,3 +29,5 @@ Vector3 subVec3(Vector3 input1, Vector3 input2);
 Vector3 Vector3Normalize(Vector3 input);
 
 float getVec3dist(Vector3 p1, Vector3 p2);
+
+Vector3 Vector3Cross(Vector3 a, Vector3 b);
