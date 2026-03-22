@@ -20,7 +20,7 @@ Uint32 lastTime;
 Uint64 currentTime = SDL_GetPerformanceCounter();
 
 int main(int argc, char* argv[]) {
-  if (!init()) {
+  if (!init(true)) {
     SDL_Log(SDL_GetError());
     return -1;
   }

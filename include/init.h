@@ -1,3 +1,3 @@
-bool init();
+bool init(bool hidemouse);
 
 void quit();

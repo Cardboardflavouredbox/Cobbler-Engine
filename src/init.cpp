@@ -7,7 +7,7 @@
 #include "extern.h"
 #include "global.h"
 
-bool init() {
+bool init(bool hidemouse) {
   Global = new GlobalClass();
   Settings = new SettingsClass();
   P1Inputs = new Inputs();
@@ -145,7 +145,7 @@ bool init() {
                        Settings->resolutiony, SDL_WINDOW_RESIZABLE);
   Global->renderer = SDL_CreateRenderer(Global->window, NULL);
 
-  SDL_SetWindowRelativeMouseMode(Global->window, true);
+  SDL_SetWindowRelativeMouseMode(Global->window, hidemouse);
 
   std::string basepath = SDL_GetBasePath(), tempstr = basepath;
   tempstr.append("/res/Color_palette.bmp");

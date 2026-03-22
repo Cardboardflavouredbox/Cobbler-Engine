@@ -25,6 +25,10 @@ void events() {
           P1Inputs->rightclick = 0;
         }
         break;
+      case SDL_EVENT_MOUSE_WHEEL:
+        P1Inputs->MouseScroll.x = event.wheel.x;
+        P1Inputs->MouseScroll.y = event.wheel.y;
+        break;
     }
   }
 }

@@ -24,5 +24,5 @@ void input() {
       haspressedkey(key_states[SDL_SCANCODE_LSHIFT], P1Inputs->Shift);
   P1Inputs->Space =
       haspressedkey(key_states[SDL_SCANCODE_SPACE], P1Inputs->Space);
-  SDL_GetRelativeMouseState(&P1Inputs->Mouse.x, &P1Inputs->Mouse.y);
+  SDL_GetRelativeMouseState(&P1Inputs->MousePos.x, &P1Inputs->MousePos.y);
 }
