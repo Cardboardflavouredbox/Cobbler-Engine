@@ -135,23 +135,33 @@ float Capsulecollisioncheck(Capsule hitbox, Vector3 position) {
 
 bool movecollisioncheck(Capsule hitbox, Vector3 startposition,
                         Vector3 endposition) {  // true if collided
-  if (Capsulecollisioncheck(hitbox, startposition) >
-          hitbox.radius - hitbox.reduction ||
-      Capsulecollisioncheck(hitbox, endposition) >
-          hitbox.radius - hitbox.reduction)
+  if ((Capsulecollisioncheck(hitbox, startposition) <=
+       hitbox.radius - hitbox.reduction) ||
+      (Capsulecollisioncheck(hitbox, endposition) <=
+       hitbox.radius - hitbox.reduction))
     return true;
-  Vector3 aabb[2] = {
-      addVec3(startposition,
-              Vector3({hitbox.radius, hitbox.height / 2, hitbox.radius})),
-      addVec3(endposition,
-              Vector3({-hitbox.radius, -hitbox.height / 2, -hitbox.radius}))};
+
+  Vector3 aabb[2];
+
+  if (startposition.x != endposition.x) {
+    aabb[0] =
+        addVec3(startposition, Vector3({0, hitbox.radius, -hitbox.radius}));
+    aabb[1] = addVec3(addVec3(endposition, hitbox.offset),
+                      Vector3({0, -hitbox.radius, hitbox.radius}));
+  } else if (startposition.y != endposition.y) {
+    aabb[0] =
+        addVec3(startposition, Vector3({hitbox.radius, 0, -hitbox.radius}));
+    aabb[1] = addVec3(addVec3(endposition, hitbox.offset),
+                      Vector3({-hitbox.radius, 0, hitbox.radius}));
+  }
+
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     Vector3 triangle[3] = {Global->Points[Global->mapfaces[i].points[0]],
                            Global->Points[Global->mapfaces[i].points[1]],
                            Global->Points[Global->mapfaces[i].points[2]]};
-    if (SATcubetri(aabb, triangle)) return true;
+    if (!SATcubetri(aabb, triangle)) return false;
   }
-  return false;
+  return true;
 }
 
 void playermovement() {
@@ -230,6 +240,22 @@ void EntityMove(Entity* tempentity) {
 
   tempentity->position = addVec3(tempentity->position, moveresult);
   tempentity->moveVector3 = Vector3({0, 0, 0});
+
+  if (tempentity->velocityVector3.x > 0) {
+    tempentity->velocityVector3.x -= Global->deltaTime * 16;
+    if (tempentity->velocityVector3.x < 0) tempentity->velocityVector3.x = 0;
+  } else if (tempentity->velocityVector3.x < 0) {
+    tempentity->velocityVector3.x += Global->deltaTime * 16;
+    if (tempentity->velocityVector3.x > 0) tempentity->velocityVector3.x = 0;
+  }
+
+  if (tempentity->velocityVector3.y > 0) {
+    tempentity->velocityVector3.y -= Global->deltaTime * 16;
+    if (tempentity->velocityVector3.y < 0) tempentity->velocityVector3.y = 0;
+  } else if (tempentity->velocityVector3.y < 0) {
+    tempentity->velocityVector3.y += Global->deltaTime * 16;
+    if (tempentity->velocityVector3.y > 0) tempentity->velocityVector3.y = 0;
+  }
 }
 
 void update() {
