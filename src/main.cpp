@@ -147,11 +147,7 @@ bool init() {
   }
 
   Camera = new Entity();
-  Camera->position = Vector3({0, 0, 4});
-  Camera->hitbox.offset = Vector3({0, 0, -3});
-  Camera->hitbox.height = 1.5f;
-  Camera->hitbox.radius = 0.75f;
-  Camera->hitbox.reduction = 0.125f;
+  Camera->position = Vector3({0, 0, 3});
 
   Global->Entities.push_back(Camera);
 

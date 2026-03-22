@@ -7,9 +7,8 @@ struct Vector3 {
   float x, y, z;
 };
 
-struct Capsule {
-  Vector3 offset;
-  float radius, height, reduction;
+struct Hitbox {
+  Vector3 A = Vector3({-0.75f, -0.75f, -3}), B = Vector3({0.75f, 0.75f, 0});
 };
 
 Vector3 multiplyVec3(Vector3 inputvec2, float multvalue);
