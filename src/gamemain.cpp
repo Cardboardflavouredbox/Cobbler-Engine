@@ -26,6 +26,7 @@ int main(int argc, char* argv[]) {
   }
   SDL_Log("Init done");
   while (Global->IsRunning) {
+    events();
     input();
     update();
     render();
