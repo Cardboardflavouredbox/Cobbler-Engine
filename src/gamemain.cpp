@@ -9,8 +9,6 @@
 #include "entity.h"
 #include "global.h"
 #include "init.h"
-#include "input.h"
-#include "render.h"
 #include "update.h"
 
 GlobalClass* Global;

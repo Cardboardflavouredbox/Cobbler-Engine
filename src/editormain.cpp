@@ -9,8 +9,7 @@
 #include "entity.h"
 #include "global.h"
 #include "init.h"
-#include "input.h"
-#include "render.h"
+#include "update.h"
 
 GlobalClass* Global;
 SettingsClass* Settings;
@@ -28,7 +27,7 @@ int main(int argc, char* argv[]) {
   SDL_Log("Init done");
   while (Global->IsRunning) {
     input();
-
+    update();
     render();
   }
   quit();

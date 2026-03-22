@@ -89,7 +89,6 @@ bool movecollisioncheck(Hitbox hitbox, Vector3 startposition,
 }
 
 void playermovement() {
-  SDL_GetRelativeMouseState(&P1Inputs->Mouse.x, &P1Inputs->Mouse.y);
   Camera->dir.x += -2 * P1Inputs->Mouse.x;
   Camera->dir.y += -2 * P1Inputs->Mouse.y;
   P1Inputs->Mouse.x = 0;

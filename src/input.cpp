@@ -1,8 +1,7 @@
-#include "input.h"
-
 #include <SDL3/SDL.h>
 
 #include "extern.h"
+#include "update.h"
 
 unsigned char haspressedkey(bool keypressed, unsigned char previous) {
   if (keypressed) {
@@ -25,4 +24,5 @@ void input() {
       haspressedkey(key_states[SDL_SCANCODE_LSHIFT], P1Inputs->Shift);
   P1Inputs->Space =
       haspressedkey(key_states[SDL_SCANCODE_SPACE], P1Inputs->Space);
+  SDL_GetRelativeMouseState(&P1Inputs->Mouse.x, &P1Inputs->Mouse.y);
 }

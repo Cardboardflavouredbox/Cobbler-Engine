@@ -1,5 +1,3 @@
-#include "render.h"
-
 #include <SDL3/SDL.h>
 
 #include <cmath>
@@ -8,6 +6,7 @@
 
 #include "extern.h"
 #include "map.h"
+#include "update.h"
 
 struct ScreenPoint {
   Vector2 p;
