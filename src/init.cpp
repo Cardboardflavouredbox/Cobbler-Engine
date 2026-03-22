@@ -1,25 +1,11 @@
+#include "init.h"
+
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_video.h>
-#include <stdlib.h>
 
 #include <glaze/json.hpp>
-#include <string>
 
-#include "entity.h"
+#include "extern.h"
 #include "global.h"
-#include "input.h"
-#include "render.h"
-#include "update.h"
-/* We will use this renderer to draw into this window every frame. */
-GlobalClass* Global;
-SettingsClass* Settings;
-ZipData* LoadedData;
-Entity* Camera;
-Inputs* P1Inputs;
-Uint32 lastTime;
-Uint64 currentTime = SDL_GetPerformanceCounter();
 
 bool init() {
   Global = new GlobalClass();
@@ -151,11 +137,11 @@ bool init() {
 
   Global->Entities.push_back(Camera);
 
-  if (!SDL_SetAppMetadata("BoomerShooter", "0.1", "com.example.myapp") ||
+  if (!SDL_SetAppMetadata("CobblerEngine", "0.1", "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
   Global->window =
-      SDL_CreateWindow("SDL3 window", Settings->resolutionx,
+      SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
                        Settings->resolutiony, SDL_WINDOW_RESIZABLE);
   Global->renderer = SDL_CreateRenderer(Global->window, NULL);
 
@@ -214,19 +200,4 @@ void quit() {
   delete (P1Inputs);
   Global->IsRunning = false;
   SDL_Quit();
-}
-
-int main(int argc, char* argv[]) {
-  if (!init()) {
-    SDL_Log(SDL_GetError());
-    return -1;
-  }
-  SDL_Log("Init done");
-  while (Global->IsRunning) {
-    input();
-    update();
-    render();
-  }
-  quit();
-  return 0;
 }

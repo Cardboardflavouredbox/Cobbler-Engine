@@ -25,12 +25,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glaze)
 
-add_executable(FPSthing src/main.cpp src/render.cpp src/input.cpp src/update.cpp src/types.cpp)
+add_executable(FPSthing src/gamemain.cpp src/render.cpp src/input.cpp src/update.cpp src/types.cpp src/init.cpp)
+
+add_executable(FPSeditor src/editormain.cpp src/render.cpp src/input.cpp src/types.cpp src/init.cpp)
 
 # SDL2 라이브러리 연결
 target_link_libraries(FPSthing PRIVATE SDL3::SDL3 glaze::glaze)
+target_link_libraries(FPSeditor PRIVATE SDL3::SDL3 glaze::glaze)
 
 target_include_directories(FPSthing PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(FPSeditor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 FILE(COPY res DESTINATION "${CMAKE_BINARY_DIR}/bin")
 FILE(COPY MapStuff DESTINATION "${CMAKE_BINARY_DIR}/bin")

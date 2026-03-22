@@ -1,0 +1,3 @@
+bool init();
+
+void quit();
