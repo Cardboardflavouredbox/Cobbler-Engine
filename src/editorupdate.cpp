@@ -13,13 +13,16 @@ void movecamera() {
 
   float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
   float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
+  float whats = std::sin(Camera->dir.y * 3.14 / 180.0);
+  float whatc = std::cos(Camera->dir.y * 3.14 / 180.0);
 
   Camera->position.x -=
       P1Inputs->MouseScroll.x * std::sin((Camera->dir.x - 90) * 3.14 / 180.0);
   Camera->position.y +=
       P1Inputs->MouseScroll.x * std::cos((Camera->dir.x - 90) * 3.14 / 180.0);
-  Camera->position.x -= P1Inputs->MouseScroll.y * ps;
-  Camera->position.y += P1Inputs->MouseScroll.y * pc;
+  Camera->position.x -= P1Inputs->MouseScroll.y * ps * whatc;
+  Camera->position.y += P1Inputs->MouseScroll.y * pc * whatc;
+  Camera->position.z += P1Inputs->MouseScroll.y * whats;
 
   P1Inputs->MousePos.x = 0;
   P1Inputs->MousePos.y = 0;
