@@ -12,6 +12,12 @@ void movecamera() {
     Camera->dir.y += -0.5f * P1Inputs->MousePos.y;
   }
 
+  if (P1Inputs->numkeys[0] == 2) {
+    Global->rendermode = 0;
+  } else if (P1Inputs->numkeys[1] == 2) {
+    Global->rendermode = 1;
+  }
+
   float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
   float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
   float whats = std::sin(Camera->dir.y * 3.14 / 180.0);

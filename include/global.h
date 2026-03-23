@@ -41,7 +41,7 @@ struct Mapdata {
 struct Inputs {
  public:
   unsigned char W = 0, A = 0, S = 0, D = 0, ESC = 0, LCTRL = 0, Shift = 0,
-                Space = 0, leftclick = 0, rightclick = 0;
+                Space = 0, leftclick = 0, rightclick = 0, numkeys[10] = {};
   Vector2 MousePos, MouseScroll;
 };
 

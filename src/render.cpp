@@ -71,7 +71,13 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
               Vector3 rawvectors[]) {
   ScreenPoint vectors[2] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
-    for (int i = vectors[0].p.x; i < vectors[1].p.x; i++) {
+    float x = vectors[0].p.x, x2 = vectors[1].p.x;
+    if (vectors[0].p.x > vectors[1].p.x) {
+      x = vectors[1].p.x;
+      x2 = vectors[0].p.x;
+    }
+
+    for (int i = x; i <= x2; i++) {
       int y = vectors[0].p.y +
               ((i - vectors[0].p.x) * (vectors[1].p.y - vectors[0].p.y) /
                (vectors[1].p.x - vectors[0].p.x));
@@ -81,7 +87,12 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
       }
     }
     if (vectors[0].p.x == vectors[1].p.x) {
-      for (int i = vectors[0].p.y; i < vectors[1].p.y; i++) {
+      float y = vectors[0].p.y, y2 = vectors[1].p.y;
+      if (vectors[0].p.y > vectors[1].p.y) {
+        y = vectors[1].p.y;
+        y2 = vectors[0].p.y;
+      }
+      for (int i = y; i <= y2; i++) {
         if (vectors[0].p.x >= 0 && i >= 0 &&
             vectors[0].p.x <= Settings->resolutionx &&
             i <= Settings->resolutiony) {
@@ -316,14 +327,27 @@ void rendergame(unsigned char* pixels, int pitch) {
   tempmapfacedeque.insert(tempmapfacedeque.end(), addlaterfacedeque.begin(),
                           addlaterfacedeque.end());
 
-  for (int k = 0; k < tempmapfacedeque.size(); k++) {
-    Vector3 temp[3] = {temppointsdeque[tempmapfacedeque[k].points[0]],
-                       temppointsdeque[tempmapfacedeque[k].points[1]],
-                       temppointsdeque[tempmapfacedeque[k].points[2]]};
-    Vector2 temp2[3] = {tempmapfacedeque[k].UVs[0], tempmapfacedeque[k].UVs[1],
-                        tempmapfacedeque[k].UVs[2]};
-    DrawTri(pixels, pitch, tempmapfacedeque[k].texture, temp, temp2,
-            tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop);
+  if (Global->rendermode == 0) {
+    for (int k = 0; k < tempmapfacedeque.size(); k++) {
+      Vector3 temp[3] = {temppointsdeque[tempmapfacedeque[k].points[0]],
+                         temppointsdeque[tempmapfacedeque[k].points[1]],
+                         temppointsdeque[tempmapfacedeque[k].points[2]]};
+      Vector2 temp2[3] = {tempmapfacedeque[k].UVs[0],
+                          tempmapfacedeque[k].UVs[1],
+                          tempmapfacedeque[k].UVs[2]};
+      DrawTri(pixels, pitch, tempmapfacedeque[k].texture, temp, temp2,
+              tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop);
+    }
+  } else if (Global->rendermode == 1) {
+    for (int k = 0; k < tempmapfacedeque.size(); k++) {
+      Vector3 temp[2] = {temppointsdeque[tempmapfacedeque[k].points[0]],
+                         temppointsdeque[tempmapfacedeque[k].points[1]]};
+      DrawLine(pixels, pitch, 12, temp);
+      temp[1] = temppointsdeque[tempmapfacedeque[k].points[2]];
+      DrawLine(pixels, pitch, 12, temp);
+      temp[0] = temppointsdeque[tempmapfacedeque[k].points[1]];
+      DrawLine(pixels, pitch, 12, temp);
+    }
   }
 }
 
@@ -336,19 +360,30 @@ void render() {
       static_cast<unsigned char*>(Global->render_target->pixels);
   int pitch = Global->render_target->pitch;
 
-  for (int i = 0; i < Settings->resolutionx; i++) {
-    for (int j = 0; j < Settings->resolutiony; j++) {
-      Uint32 color = static_cast<Uint32*>(
-          Global->textures[Global->skybox]->pixels)
-          [(i + int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) % 640 +
-           (int((1 - (Camera->dir.y < 0 ? 0 : Camera->dir.y) / 90.f) * 200.f) +
-            j) *
-               640];
-      int r = (color >> 0) & 0xFF;
-      int g = (color >> 8) & 0xFF;
-      int b = (color >> 16) & 0xFF;
-      int a = (color >> 24) & 0xFF;
-      pixels[i + j * pitch] = SDL_MapSurfaceRGB(Global->render_target, r, g, b);
+  if (Global->rendermode == 0) {
+    for (int i = 0; i < Settings->resolutionx; i++) {
+      for (int j = 0; j < Settings->resolutiony; j++) {
+        Uint32 color =
+            static_cast<Uint32*>(Global->textures[Global->skybox]->pixels)
+                [(i + int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) %
+                     640 +
+                 (int((1 - (Camera->dir.y < 0 ? 0 : Camera->dir.y) / 90.f) *
+                      200.f) +
+                  j) *
+                     640];
+        int r = (color >> 0) & 0xFF;
+        int g = (color >> 8) & 0xFF;
+        int b = (color >> 16) & 0xFF;
+        int a = (color >> 24) & 0xFF;
+        pixels[i + j * pitch] =
+            SDL_MapSurfaceRGB(Global->render_target, r, g, b);
+      }
+    }
+  } else if (Global->rendermode == 1) {
+    for (int i = 0; i < Settings->resolutionx; i++) {
+      for (int j = 0; j < Settings->resolutiony; j++) {
+        pixels[i + j * pitch] = 2;
+      }
     }
   }
 
