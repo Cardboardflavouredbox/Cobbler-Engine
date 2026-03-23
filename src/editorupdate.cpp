@@ -73,8 +73,10 @@ void movecamera() {
 }
 
 void update() {
-  if (P1Inputs->ESC == 2) {
-    Global->pause = !Global->pause;
+  if (!Global->isopeningfile) {
+    if (P1Inputs->ESC == 2) {
+      Global->pause = !Global->pause;
+    }
+    if (!Global->pause) movecamera();
   }
-  if (!Global->pause) movecamera();
 }

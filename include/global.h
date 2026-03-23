@@ -15,7 +15,7 @@ struct GlobalClass {
   SDL_Palette* palette;
 
   bool IsRunning;
-  bool pause;
+  bool pause = false, isopeningfile = false;
   float deltaTime;
   int skybox;
   int rendermode = 0;  // 0==default, 1==wireframe and points

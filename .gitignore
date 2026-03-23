@@ -40,3 +40,8 @@
 # debug information files
 *.dwo
 build/
+
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store

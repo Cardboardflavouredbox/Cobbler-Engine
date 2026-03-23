@@ -361,6 +361,15 @@ void rendergame(unsigned char* pixels, int pitch) {
     for (int k = 0; k < Global->Points.size(); k++) {
       DrawCircle(pixels, pitch, (Global->editorselectedPoint == k ? 40 : 32),
                  Global->Points[k], 1);
+      if (Global->editorselectedPoint == k) {
+        Vector3 temp[2] = {Global->Points[k],
+                           addVec3(Global->Points[k], Vector3({0, 4, 0}))};
+        DrawLine(pixels, pitch, 40, temp);
+        temp[1] = addVec3(Global->Points[k], Vector3({4, 0, 0}));
+        DrawLine(pixels, pitch, 40, temp);
+        temp[1] = addVec3(Global->Points[k], Vector3({0, 0, 4}));
+        DrawLine(pixels, pitch, 40, temp);
+      }
     }
   }
 }
@@ -403,7 +412,7 @@ void render() {
 
   rendergame(pixels, pitch);
 
-  if (Global->pause) {
+  if (Global->pause || Global->isopeningfile) {
     for (int i = 0; i < Settings->resolutionx; i++) {
       for (int j = 0; j < Settings->resolutiony; j++) {
         Uint8 r, g, b;
@@ -424,6 +433,8 @@ void render() {
   }
 
   SDL_UnlockSurface(Global->render_target);
+
+  // Screen size and position stuff
   int w = Global->windowx, h = Global->windowy, rtw = Global->render_target->w,
       rth = Global->render_target->h;
   int size = w / rtw;

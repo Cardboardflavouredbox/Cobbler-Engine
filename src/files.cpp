@@ -13,6 +13,7 @@ static const SDL_DialogFileFilter filters[] = {{"JSON file", "json"},
 
 static void SDLCALL callback(void* userdata, const char* const* filelist,
                              int filter) {
+  Global->isopeningfile = false;
   if (!filelist) {
     SDL_Log("An error occured: %s", SDL_GetError());
     return;
@@ -50,6 +51,7 @@ static void SDLCALL callback(void* userdata, const char* const* filelist,
 }
 
 void savemap() {
+  Global->isopeningfile = true;
   SDL_ShowSaveFileDialog(callback, NULL, Global->window, filters,
                          SDL_arraysize(filters), NULL);
 }
