@@ -34,7 +34,7 @@ void movecamera() {
   if (Camera->dir.y >= 90) Camera->dir.y = 90;
   if (Camera->dir.y <= -90) Camera->dir.y = -90;
 
-  if (P1Inputs->S == 2) {
+  if (P1Inputs->LCTRL > 0 && P1Inputs->S == 2) {
     savemap();
   }
 }

@@ -1,4 +1,4 @@
-bool savemap();
+void savemap();
 
 bool init(bool hidemouse);
 

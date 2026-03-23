@@ -49,7 +49,7 @@ static void SDLCALL callback(void* userdata, const char* const* filelist,
   }
 }
 
-bool savemap() {
+void savemap() {
   SDL_ShowSaveFileDialog(callback, NULL, Global->window, filters,
                          SDL_arraysize(filters), NULL);
   return true;

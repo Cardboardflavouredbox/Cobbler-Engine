@@ -18,6 +18,7 @@ struct GlobalClass {
   bool pause;
   float deltaTime;
   int skybox;
+  int rendermode = 0;  // 0==default, 1==wireframe and points
 
   std::vector<SDL_Surface*> textures;
   std::deque<Vector3> Points;
@@ -39,8 +40,8 @@ struct Mapdata {
 
 struct Inputs {
  public:
-  unsigned char W = 0, A = 0, S = 0, D = 0, ESC = 0, Shift = 0, Space = 0,
-                leftclick = 0, rightclick = 0;
+  unsigned char W = 0, A = 0, S = 0, D = 0, ESC = 0, LCTRL = 0, Shift = 0,
+                Space = 0, leftclick = 0, rightclick = 0;
   Vector2 MousePos, MouseScroll;
 };
 
