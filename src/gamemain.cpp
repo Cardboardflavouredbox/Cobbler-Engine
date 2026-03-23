@@ -7,8 +7,8 @@
 #include <string>
 
 #include "entity.h"
+#include "files.h"
 #include "global.h"
-#include "init.h"
 #include "update.h"
 
 GlobalClass* Global;
@@ -21,7 +21,7 @@ Uint64 currentTime = SDL_GetPerformanceCounter();
 
 int main(int argc, char* argv[]) {
   if (!init(true)) {
-    SDL_Log(SDL_GetError());
+    SDL_Log("%s", SDL_GetError());
     return -1;
   }
   SDL_Log("Init done");

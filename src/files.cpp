@@ -1,11 +1,59 @@
-#include "init.h"
+#include "files.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_dialog.h>
 
 #include <glaze/json.hpp>
 
 #include "extern.h"
 #include "global.h"
+
+static const SDL_DialogFileFilter filters[] = {{"JSON file", "json"},
+                                               {"All files", "*"}};
+
+static void SDLCALL callback(void* userdata, const char* const* filelist,
+                             int filter) {
+  if (!filelist) {
+    SDL_Log("An error occured: %s", SDL_GetError());
+    return;
+  } else if (!*filelist) {
+    SDL_Log("The user did not select any file.");
+    SDL_Log("Most likely, the dialog was canceled.");
+    return;
+  }
+
+  while (*filelist) {
+    SDL_Log("Full path to selected file: '%s'", *filelist);
+    Mapdata tempmapdata;
+    tempmapdata.skybox = Global->skybox;
+    tempmapdata.Points = Global->Points;
+    tempmapdata.mapfaces = Global->mapfaces;
+    auto error = glz::write_file_json<glz::opts{.prettify = true}>(
+        tempmapdata, *filelist, std::string{});
+    if (error) {
+      return;
+    }
+    filelist++;
+  }
+
+  if (filter < 0) {
+    SDL_Log(
+        "The current platform does not support fetching "
+        "the selected filter, or the user did not select"
+        " any filter.");
+    return;
+  } else if (filter < SDL_arraysize(filters)) {
+    SDL_Log("The filter selected by the user is '%s' (%s).",
+            filters[filter].pattern, filters[filter].name);
+    return;
+  }
+}
+
+bool savemap() {
+  SDL_ShowSaveFileDialog(callback, NULL, Global->window, filters,
+                         SDL_arraysize(filters), NULL);
+  return true;
+}
 
 bool init(bool hidemouse) {
   Global = new GlobalClass();
