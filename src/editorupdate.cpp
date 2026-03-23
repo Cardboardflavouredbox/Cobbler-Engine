@@ -11,13 +11,25 @@ void movecamera() {
   if (P1Inputs->leftclick > 1) {
     for (int i = 0; i < Global->Points.size(); i++) {
       ScreenPoint ScreenSpacePoint = ToScreenSpace(Global->Points[i]);
-      // int size = Global->render_target->w;
-      if (std::abs(
-              (P1Inputs->MousePos.x * Global->windowx / Settings->resolutionx) -
-              ScreenSpacePoint.p.x) <= 4 &&
-          std::abs(
-              (P1Inputs->MousePos.y * Global->windowy / Settings->resolutiony) -
-              ScreenSpacePoint.p.y) <= 4) {
+
+      int x, y, w = Global->windowx, h = Global->windowy,
+                rtw = Global->render_target->w, rth = Global->render_target->h;
+      int size = w / rtw;
+      if (size > h / rth) size = h / rth;
+
+      rtw *= size;
+      rth *= size;
+
+      w /= 2;
+      h /= 2;
+      w -= rtw / 2;
+      h -= rth / 2;
+
+      x = (P1Inputs->MousePos.x - w) / size;
+      y = (P1Inputs->MousePos.y - h) / size;
+
+      if (std::abs(x - ScreenSpacePoint.p.x) <= 2 &&
+          std::abs(y - ScreenSpacePoint.p.y) <= 2) {
         Global->editorselectedPoint = i;
       }
     }
