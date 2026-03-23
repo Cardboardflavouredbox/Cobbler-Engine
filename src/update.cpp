@@ -89,10 +89,10 @@ bool movecollisioncheck(Hitbox hitbox, Vector3 startposition,
 }
 
 void playermovement() {
-  Camera->dir.x += -2 * P1Inputs->MousePos.x;
-  Camera->dir.y += -2 * P1Inputs->MousePos.y;
-  P1Inputs->MousePos.x = 0;
-  P1Inputs->MousePos.y = 0;
+  Camera->dir.x += -2 * P1Inputs->MouseDelta.x;
+  Camera->dir.y += -2 * P1Inputs->MouseDelta.y;
+  P1Inputs->MouseDelta.x = 0;
+  P1Inputs->MouseDelta.y = 0;
 
   float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
   float pc = std::cos(Camera->dir.x * 3.14 / 180.0);

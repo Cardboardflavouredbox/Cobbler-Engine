@@ -11,6 +11,10 @@ void events() {
       case SDL_EVENT_QUIT:
         Global->IsRunning = false;
         break;
+      case SDL_EVENT_WINDOW_RESIZED:
+        SDL_GetWindowSizeInPixels(Global->window, &Global->windowx,
+                                  &Global->windowy);
+        break;
       case SDL_EVENT_MOUSE_BUTTON_DOWN:
         if (event.button.button == SDL_BUTTON_LEFT) {
           P1Inputs->leftclick = 2;

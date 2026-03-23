@@ -4,12 +4,27 @@
 #include "extern.h"
 #include "files.h"
 #include "global.h"
+#include "screen.h"
 #include "update.h"
 
 void movecamera() {
+  if (P1Inputs->leftclick > 1) {
+    for (int i = 0; i < Global->Points.size(); i++) {
+      ScreenPoint ScreenSpacePoint = ToScreenSpace(Global->Points[i]);
+      // int size = Global->render_target->w;
+      if (std::abs(
+              (P1Inputs->MousePos.x * Global->windowx / Settings->resolutionx) -
+              ScreenSpacePoint.p.x) <= 4 &&
+          std::abs(
+              (P1Inputs->MousePos.y * Global->windowy / Settings->resolutiony) -
+              ScreenSpacePoint.p.y) <= 4) {
+        Global->editorselectedPoint = i;
+      }
+    }
+  }
   if (P1Inputs->rightclick > 0) {
-    Camera->dir.x += -0.5f * P1Inputs->MousePos.x;
-    Camera->dir.y += -0.5f * P1Inputs->MousePos.y;
+    Camera->dir.x += -0.5f * P1Inputs->MouseDelta.x;
+    Camera->dir.y += -0.5f * P1Inputs->MouseDelta.y;
   }
 
   if (P1Inputs->numkeys[0] == 2) {
@@ -31,8 +46,8 @@ void movecamera() {
   Camera->position.y += P1Inputs->MouseScroll.y * pc * whatc;
   Camera->position.z += P1Inputs->MouseScroll.y * whats;
 
-  P1Inputs->MousePos.x = 0;
-  P1Inputs->MousePos.y = 0;
+  P1Inputs->MouseDelta.x = 0;
+  P1Inputs->MouseDelta.y = 0;
   P1Inputs->MouseScroll.x = std::lerp(P1Inputs->MouseScroll.x, 0, 0.5f);
   P1Inputs->MouseScroll.y = std::lerp(P1Inputs->MouseScroll.y, 0, 0.5f);
   if (Camera->dir.x < 0) Camera->dir.x += 360;

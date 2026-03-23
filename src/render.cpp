@@ -6,13 +6,8 @@
 
 #include "extern.h"
 #include "map.h"
+#include "screen.h"
 #include "update.h"
-
-struct ScreenPoint {
-  Vector2 p;
-  float dist;
-  bool isbehindcamera = false;
-};
 
 float getdistancething(Vector3 P) {
   Vector3 p1;
@@ -25,7 +20,7 @@ float getdistancething(Vector3 P) {
   return p1.y * pc - p1.x * ps + p1.z * what;
 }
 
-ScreenPoint drawPoint(Vector3 P) {
+ScreenPoint ToScreenSpace(Vector3 P) {
   Vector3 p1;
   p1.x = P.x - Camera->position.x;
   p1.y = P.y - Camera->position.y;
@@ -69,7 +64,8 @@ Vector3 GetUV(Vector2 P, ScreenPoint R1, ScreenPoint R2, ScreenPoint R3) {
 }
 void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
               Vector3 rawvectors[]) {
-  ScreenPoint vectors[2] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1])};
+  ScreenPoint vectors[2] = {ToScreenSpace(rawvectors[0]),
+                            ToScreenSpace(rawvectors[1])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
     float x = vectors[0].p.x, x2 = vectors[1].p.x;
     if (vectors[0].p.x > vectors[1].p.x) {
@@ -86,7 +82,7 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
         pixels[i + y * pitch] = color;
       }
     }
-    if (vectors[0].p.x == vectors[1].p.x) {
+    if (int(vectors[0].p.x) == int(vectors[1].p.x)) {
       float y = vectors[0].p.y, y2 = vectors[1].p.y;
       if (vectors[0].p.y > vectors[1].p.y) {
         y = vectors[1].p.y;
@@ -101,6 +97,19 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
       }
     }
   }
+}
+
+void DrawCircle(unsigned char* pixels, int pitch, unsigned char color,
+                Vector3 rawpoint, int radius) {
+  ScreenPoint point = ToScreenSpace(rawpoint);
+  if (!point.isbehindcamera)
+    for (int i = point.p.x - radius; i <= point.p.x + radius; i++) {
+      for (int j = point.p.y - radius; j < point.p.y + radius; j++) {
+        if (i > -1 && i < Settings->resolutionx && j > -1 &&
+            j < Settings->resolutiony)
+          pixels[i + j * pitch] = color;
+      }
+    }
 }
 
 float anglething(Vector2 a, Vector2 b, Vector2 c) {
@@ -123,8 +132,9 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
 
 void DrawTri(unsigned char* pixels, int pitch, int texture,
              Vector3 rawvectors[], Vector2 UVs[], int xloop, int yloop) {
-  ScreenPoint vectors[3] = {drawPoint(rawvectors[0]), drawPoint(rawvectors[1]),
-                            drawPoint(rawvectors[2])};
+  ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
+                            ToScreenSpace(rawvectors[1]),
+                            ToScreenSpace(rawvectors[2])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
       !vectors[2].isbehindcamera) {
     int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
@@ -348,6 +358,10 @@ void rendergame(unsigned char* pixels, int pitch) {
       temp[0] = temppointsdeque[tempmapfacedeque[k].points[1]];
       DrawLine(pixels, pitch, 12, temp);
     }
+    for (int k = 0; k < Global->Points.size(); k++) {
+      DrawCircle(pixels, pitch, (Global->editorselectedPoint == k ? 40 : 32),
+                 Global->Points[k], 1);
+    }
   }
 }
 
@@ -410,9 +424,8 @@ void render() {
   }
 
   SDL_UnlockSurface(Global->render_target);
-  int w, h, rtw = Global->render_target->w, rth = Global->render_target->h;
-  SDL_GetWindowSizeInPixels(Global->window, &w, &h);
-
+  int w = Global->windowx, h = Global->windowy, rtw = Global->render_target->w,
+      rth = Global->render_target->h;
   int size = w / rtw;
   if (size > h / rth) size = h / rth;
 

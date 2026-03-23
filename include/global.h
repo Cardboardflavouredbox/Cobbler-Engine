@@ -19,6 +19,9 @@ struct GlobalClass {
   float deltaTime;
   int skybox;
   int rendermode = 0;  // 0==default, 1==wireframe and points
+  int editorselectedPoint = 0;
+
+  int windowx = 320, windowy = 200;
 
   std::vector<SDL_Surface*> textures;
   std::deque<Vector3> Points;
@@ -42,7 +45,7 @@ struct Inputs {
  public:
   unsigned char W = 0, A = 0, S = 0, D = 0, ESC = 0, LCTRL = 0, Shift = 0,
                 Space = 0, leftclick = 0, rightclick = 0, numkeys[10] = {};
-  Vector2 MousePos, MouseScroll;
+  Vector2 MouseDelta, MousePos, MouseScroll;
 };
 
 struct SettingsClass {

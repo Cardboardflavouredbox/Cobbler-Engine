@@ -30,5 +30,6 @@ void input() {
     P1Inputs->numkeys[i] =
         haspressedkey(key_states[SDL_SCANCODE_1 + i], P1Inputs->numkeys[i]);
   }
-  SDL_GetRelativeMouseState(&P1Inputs->MousePos.x, &P1Inputs->MousePos.y);
+  SDL_GetRelativeMouseState(&P1Inputs->MouseDelta.x, &P1Inputs->MouseDelta.y);
+  SDL_GetMouseState(&P1Inputs->MousePos.x, &P1Inputs->MousePos.y);
 }
