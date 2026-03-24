@@ -67,32 +67,36 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
   ScreenPoint vectors[2] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
-    float x = vectors[0].p.x, x2 = vectors[1].p.x;
-    if (vectors[0].p.x > vectors[1].p.x) {
-      x = vectors[1].p.x;
-      x2 = vectors[0].p.x;
-    }
+    int x = vectors[0].p.x, x2 = vectors[1].p.x;
 
-    for (int i = x; i <= x2; i++) {
-      int y = vectors[0].p.y +
-              ((i - vectors[0].p.x) * (vectors[1].p.y - vectors[0].p.y) /
-               (vectors[1].p.x - vectors[0].p.x));
-      if (i >= 0 && y >= 0 && i <= Settings->resolutionx &&
-          y <= Settings->resolutiony) {
-        pixels[i + y * pitch] = color;
+    int y = vectors[0].p.y, y2 = vectors[1].p.y;
+
+    if (std::abs(y2 - y) < std::abs(x2 - x)) {
+      if (x > x2) {
+        x = vectors[1].p.x;
+        x2 = vectors[0].p.x;
+        y = vectors[1].p.y;
+        y2 = vectors[0].p.y;
       }
-    }
-    if (int(vectors[0].p.x) == int(vectors[1].p.x)) {
-      float y = vectors[0].p.y, y2 = vectors[1].p.y;
-      if (vectors[0].p.y > vectors[1].p.y) {
+      for (int i = x; i <= x2; i++) {
+        int tempy = y + ((i - x) * (y2 - y) / (x2 - x));
+        if (i >= 0 && tempy >= 0 && i <= Settings->resolutionx &&
+            tempy <= Settings->resolutiony) {
+          pixels[i + tempy * pitch] = color;
+        }
+      }
+    } else {
+      if (y > y2) {
+        x = vectors[1].p.x;
+        x2 = vectors[0].p.x;
         y = vectors[1].p.y;
         y2 = vectors[0].p.y;
       }
       for (int i = y; i <= y2; i++) {
-        if (vectors[0].p.x >= 0 && i >= 0 &&
-            vectors[0].p.x <= Settings->resolutionx &&
+        int tempx = x + ((i - y) * (x2 - x) / (y2 - y));
+        if (tempx >= 0 && i >= 0 && tempx <= Settings->resolutionx &&
             i <= Settings->resolutiony) {
-          pixels[(int)vectors[0].p.x + i * pitch] = color;
+          pixels[tempx + i * pitch] = color;
         }
       }
     }
@@ -366,9 +370,9 @@ void rendergame(unsigned char* pixels, int pitch) {
                            addVec3(Global->Points[k], Vector3({0, 4, 0}))};
         DrawLine(pixels, pitch, 40, temp);
         temp[1] = addVec3(Global->Points[k], Vector3({4, 0, 0}));
-        DrawLine(pixels, pitch, 40, temp);
+        DrawLine(pixels, pitch, 20, temp);
         temp[1] = addVec3(Global->Points[k], Vector3({0, 0, 4}));
-        DrawLine(pixels, pitch, 40, temp);
+        DrawLine(pixels, pitch, 50, temp);
       }
     }
   }

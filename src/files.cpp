@@ -199,22 +199,8 @@ bool init(bool hidemouse) {
   std::string basepath = SDL_GetBasePath(), tempstr = basepath;
   tempstr.append("/res/Color_palette.bmp");
   SDL_Surface* surface = SDL_LoadBMP(tempstr.c_str());
-  surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
-  SDL_Color my_palette_colors[256];
-  uint32_t* pixels = static_cast<uint32_t*>(surface->pixels);
-  for (int i = 0; i < 256; i++) {
-    SDL_Color tempcol;
-    tempcol.a = 255;
-    tempcol.r = (pixels[i] >> 16) & 0xFF;
-    tempcol.g = (pixels[i] >> 8) & 0xFF;
-    tempcol.b = pixels[i] & 0xFF;
 
-    my_palette_colors[i] = tempcol;
-  }
-  SDL_DestroySurface(surface);
-
-  Global->palette = SDL_CreatePalette(256);
-  SDL_SetPaletteColors(Global->palette, my_palette_colors, 0, 256);
+  Global->palette = SDL_GetSurfacePalette(surface);
 
   Global->render_target = SDL_CreateSurface(
       Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
