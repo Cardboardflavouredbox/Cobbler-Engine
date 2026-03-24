@@ -28,11 +28,12 @@ ScreenPoint ToScreenSpace(Vector3 P) {
 
   float ps = std::sin(Camera->dir.x * 3.14 / 180.f);
   float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
-  float what = std::sin(Camera->dir.y * 3.14 / 180.f);
+  float whats = std::sin(Camera->dir.y * 3.14 / 180.f);
+  float whatc = std::cos(Camera->dir.y * 3.14 / 180.f);
 
   float tx = p1.x * pc + p1.y * ps;
-  float ty = p1.y * pc - p1.x * ps + p1.z * what;
-  float tz = 180 * what;
+  float ty = p1.y * pc - p1.x * ps + p1.z * whats;
+  float tz = 180 * whats;
 
   ScreenPoint screenpos;
   if (ty <= 0.25f) {
@@ -80,8 +81,8 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
       }
       for (int i = x; i <= x2; i++) {
         int tempy = y + ((i - x) * (y2 - y) / (x2 - x));
-        if (i >= 0 && tempy >= 0 && i <= Settings->resolutionx &&
-            tempy <= Settings->resolutiony) {
+        if (i >= 0 && tempy >= 0 && i < Settings->resolutionx &&
+            tempy < Settings->resolutiony) {
           pixels[i + tempy * pitch] = color;
         }
       }
@@ -94,8 +95,8 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
       }
       for (int i = y; i <= y2; i++) {
         int tempx = x + ((i - y) * (x2 - x) / (y2 - y));
-        if (tempx >= 0 && i >= 0 && tempx <= Settings->resolutionx &&
-            i <= Settings->resolutiony) {
+        if (tempx >= 0 && i >= 0 && tempx < Settings->resolutionx &&
+            i < Settings->resolutiony) {
           pixels[tempx + i * pitch] = color;
         }
       }
@@ -356,23 +357,26 @@ void rendergame(unsigned char* pixels, int pitch) {
     for (int k = 0; k < tempmapfacedeque.size(); k++) {
       Vector3 temp[2] = {temppointsdeque[tempmapfacedeque[k].points[0]],
                          temppointsdeque[tempmapfacedeque[k].points[1]]};
-      DrawLine(pixels, pitch, 12, temp);
+      DrawLine(pixels, pitch, 10, temp);
       temp[1] = temppointsdeque[tempmapfacedeque[k].points[2]];
-      DrawLine(pixels, pitch, 12, temp);
+      DrawLine(pixels, pitch, 10, temp);
       temp[0] = temppointsdeque[tempmapfacedeque[k].points[1]];
-      DrawLine(pixels, pitch, 12, temp);
+      DrawLine(pixels, pitch, 10, temp);
     }
     for (int k = 0; k < Global->Points.size(); k++) {
-      DrawCircle(pixels, pitch, (Global->editorselectedPoint == k ? 40 : 32),
+      DrawCircle(pixels, pitch, (Global->editorselectedPoint == k ? 32 : 37),
                  Global->Points[k], 1);
       if (Global->editorselectedPoint == k) {
         Vector3 temp[2] = {Global->Points[k],
                            addVec3(Global->Points[k], Vector3({0, 4, 0}))};
         DrawLine(pixels, pitch, 40, temp);
+        DrawCircle(pixels, pitch, 40, temp[1], 1);
         temp[1] = addVec3(Global->Points[k], Vector3({4, 0, 0}));
         DrawLine(pixels, pitch, 20, temp);
+        DrawCircle(pixels, pitch, 20, temp[1], 1);
         temp[1] = addVec3(Global->Points[k], Vector3({0, 0, 4}));
         DrawLine(pixels, pitch, 50, temp);
+        DrawCircle(pixels, pitch, 50, temp[1], 1);
       }
     }
   }
@@ -409,7 +413,7 @@ void render() {
   } else if (Global->rendermode == 1) {
     for (int i = 0; i < Settings->resolutionx; i++) {
       for (int j = 0; j < Settings->resolutiony; j++) {
-        pixels[i + j * pitch] = 2;
+        pixels[i + j * pitch] = 1;
       }
     }
   }
