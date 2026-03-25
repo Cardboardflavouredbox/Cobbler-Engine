@@ -21,10 +21,7 @@ float getdistancething(Vector3 P) {
 }
 
 ScreenPoint ToScreenSpace(Vector3 P) {
-  Vector3 p1;
-  p1.x = P.x - Camera->position.x;
-  p1.y = P.y - Camera->position.y;
-  p1.z = P.z - Camera->position.z;
+  Vector3 p1 = subVec3(P, Camera->position);
 
   float ps = std::sin(Camera->dir.x * 3.14 / 180.f);
   float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
@@ -128,6 +125,7 @@ float anglething(Vector2 a, Vector2 b, Vector2 c) {
 
   return alpha * 180.f / 3.14f + 0.5f;
 }
+
 float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
   float s1 = anglething(v3, p, v1), s2 = anglething(v1, p, v2),
         s3 = anglething(v2, p, v3);

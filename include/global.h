@@ -20,6 +20,7 @@ struct GlobalClass {
   int skybox;
   int rendermode = 0;  // 0==default, 1==wireframe and points
   int editorselectedPoint = 0;
+  int editordraggingaxis = -1;
 
   int windowx = 320, windowy = 200;
 
