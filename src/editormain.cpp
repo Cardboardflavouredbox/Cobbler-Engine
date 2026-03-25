@@ -26,10 +26,16 @@ int main(int argc, char* argv[]) {
   }
   SDL_Log("Init done");
   while (Global->IsRunning) {
+    Uint64 start = SDL_GetPerformanceCounter();
     events();
     input();
     update();
     render();
+    Uint64 result = (SDL_GetPerformanceCounter() - start);
+    if (result < 1000000000 / (double)Settings->fps) {
+      SDL_Log("%ld", result);
+      SDL_DelayNS(1000000000 / (double)Settings->fps - result);
+    }
   }
   quit();
   return 0;

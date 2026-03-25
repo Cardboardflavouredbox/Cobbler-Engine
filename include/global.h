@@ -52,4 +52,6 @@ struct SettingsClass {
  public:
   uint16_t resolutionx, resolutiony;
   int fov = 90;
+  int fps = 15;
+  bool vsync = true;
 };
