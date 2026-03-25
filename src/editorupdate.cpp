@@ -7,36 +7,79 @@
 #include "screen.h"
 #include "update.h"
 
-void movecamera() {
+bool ScreenPointMouseDetect(ScreenPoint SP) {
+  int x, y, w = Global->windowx, h = Global->windowy,
+            rtw = Global->render_target->w, rth = Global->render_target->h;
+  int size = w / rtw;
+  if (size > h / rth) size = h / rth;
+
+  rtw *= size;
+  rth *= size;
+
+  w /= 2;
+  h /= 2;
+  w -= rtw / 2;
+  h -= rth / 2;
+
+  x = (P1Inputs->MousePos.x - w) / size;
+  y = (P1Inputs->MousePos.y - h) / size;
+
+  if (std::abs(x - SP.p.x) <= 2 && std::abs(y - SP.p.y) <= 2) {
+    return true;
+  }
+  return false;
+}
+
+void noncamerastuff() {
   if (Global->rendermode == 1) {
-    if (P1Inputs->leftclick > 1) {
-      for (int i = 0; i < Global->Points.size(); i++) {
-        ScreenPoint ScreenSpacePoint = ToScreenSpace(Global->Points[i]);
+    if (P1Inputs->leftclick > 0) {
+      Vector3 *CurrentPoint = &Global->Points[Global->editorselectedPoint],
+              temp[3] = {Vector3({4, 0, 0}), Vector3({0, 4, 0}),
+                         Vector3({0, 0, 4})};
+      int x, y, w = Global->windowx, h = Global->windowy,
+                rtw = Global->render_target->w, rth = Global->render_target->h;
+      int size = w / rtw;
+      if (size > h / rth) size = h / rth;
 
-        int x, y, w = Global->windowx, h = Global->windowy,
-                  rtw = Global->render_target->w,
-                  rth = Global->render_target->h;
-        int size = w / rtw;
-        if (size > h / rth) size = h / rth;
+      rtw *= size;
+      rth *= size;
 
-        rtw *= size;
-        rth *= size;
+      w /= 2;
+      h /= 2;
+      w -= rtw / 2;
+      h -= rth / 2;
 
-        w /= 2;
-        h /= 2;
-        w -= rtw / 2;
-        h -= rth / 2;
-
-        x = (P1Inputs->MousePos.x - w) / size;
-        y = (P1Inputs->MousePos.y - h) / size;
-
-        if (std::abs(x - ScreenSpacePoint.p.x) <= 2 &&
-            std::abs(y - ScreenSpacePoint.p.y) <= 2) {
-          Global->editorselectedPoint = i;
+      x = (P1Inputs->MousePos.x - w) / size;
+      y = (P1Inputs->MousePos.y - h) / size;
+      for (int i = 0; i < 3; i++) {
+        if (ScreenPointMouseDetect(
+                ToScreenSpace(addVec3(*CurrentPoint, temp[i])))) {
+          CurrentPoint->x += 1 * P1Inputs->MouseDelta.x;
+          break;
+        }
+      }
+      if (P1Inputs->leftclick > 1) {
+        for (int i = 0; i < Global->Points.size(); i++) {
+          if (ScreenPointMouseDetect(ToScreenSpace(Global->Points[i]))) {
+            Global->editorselectedPoint = i;
+          }
         }
       }
     }
   }
+  if (P1Inputs->F == 2) {
+    Vector3 temp = Global->Points[Global->editorselectedPoint];
+
+    Camera->position = addVec3(
+        temp,
+        multiplyVec3(Vector3Normalize(subVec3(Camera->position, temp)), 4));
+  }
+  if (P1Inputs->LCTRL > 0 && P1Inputs->S == 2) {
+    savemap();
+  }
+}
+
+void movecamera() {
   if (P1Inputs->rightclick > 0) {
     Camera->dir.x += -0.5f * P1Inputs->MouseDelta.x;
     Camera->dir.y += -0.5f * P1Inputs->MouseDelta.y;
@@ -69,10 +112,6 @@ void movecamera() {
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;
   if (Camera->dir.y >= 90) Camera->dir.y = 90;
   if (Camera->dir.y <= -90) Camera->dir.y = -90;
-
-  if (P1Inputs->LCTRL > 0 && P1Inputs->S == 2) {
-    savemap();
-  }
 }
 
 void update() {
@@ -80,6 +119,9 @@ void update() {
     if (P1Inputs->ESC == 2) {
       Global->pause = !Global->pause;
     }
-    if (!Global->pause) movecamera();
+    if (!Global->pause) {
+      noncamerastuff();
+      movecamera();
+    }
   }
 }

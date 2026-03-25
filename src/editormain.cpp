@@ -33,7 +33,6 @@ int main(int argc, char* argv[]) {
     render();
     Uint64 result = (SDL_GetPerformanceCounter() - start);
     if (result < 1000000000 / (double)Settings->fps) {
-      SDL_Log("%ld", result);
       SDL_DelayNS(1000000000 / (double)Settings->fps - result);
     }
   }
