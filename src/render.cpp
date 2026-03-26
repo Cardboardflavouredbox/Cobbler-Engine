@@ -60,8 +60,8 @@ Vector3 GetUV(Vector2 P, ScreenPoint R1, ScreenPoint R2, ScreenPoint R3) {
   for (int i = 0; i < 3; i++) a[i] /= det;
   return Vector3({a[0], a[1], a[2]});
 }
-void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
-              Vector3 rawvectors[]) {
+void DrawLine(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
+              unsigned char color, Vector3 rawvectors[]) {
   ScreenPoint vectors[2] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
@@ -80,6 +80,7 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
         int tempy = y + ((i - x) * (y2 - y) / (x2 - x));
         if (i >= 0 && tempy >= 0 && i < Settings->resolutionx &&
             tempy < Settings->resolutiony) {
+          pixelsdepth[i + tempy * pitch] = 8;
           pixels[i + tempy * pitch] = color;
         }
       }
@@ -94,6 +95,7 @@ void DrawLine(unsigned char* pixels, int pitch, unsigned char color,
         int tempx = x + ((i - y) * (x2 - x) / (y2 - y));
         if (tempx >= 0 && i >= 0 && tempx < Settings->resolutionx &&
             i < Settings->resolutiony) {
+          pixelsdepth[tempx + i * pitch] = 8;
           pixels[tempx + i * pitch] = color;
         }
       }
@@ -133,8 +135,9 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
   return (s1 + s2 + s3 > 360);
 }
 
-void DrawTri(unsigned char* pixels, int pitch, int texture,
-             Vector3 rawvectors[], Vector2 UVs[], int xloop, int yloop) {
+void DrawTri(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
+             int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
+             int yloop) {
   ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1]),
                             ToScreenSpace(rawvectors[2])};
@@ -193,24 +196,27 @@ void DrawTri(unsigned char* pixels, int pitch, int texture,
                          rawvectors[2].y * uvw.z;
             tempvec3.z = rawvectors[0].z * uvw.x + rawvectors[1].z * uvw.y +
                          rawvectors[2].z * uvw.z;
-
             tempvec3.x -= Camera->position.x;
             tempvec3.y -= Camera->position.y;
             tempvec3.z -= Camera->position.z;
             float dist =
                 std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
                           tempvec3.z * tempvec3.z);
-            r -= dist * 4;
-            g -= dist * 4;
-            b -= dist * 4;
-            // r = uvresult.x * 255;
-            // g = uvresult.y * 255;
-            // b = 0;
-            if (r < 0) r = 0;
-            if (g < 0) g = 0;
-            if (b < 0) b = 0;
-            pixels[i + j * pitch] =
-                SDL_MapSurfaceRGB(Global->render_target, r, g, b);
+            if (pixelsdepth[i + j * pitch] > dist * 4) {
+              r -= dist * 4;
+              g -= dist * 4;
+              b -= dist * 4;
+              // r = uvresult.x * 255;
+              // g = uvresult.y * 255;
+              // b = 0;
+              if (r < 0) r = 0;
+              if (g < 0) g = 0;
+              if (b < 0) b = 0;
+              pixels[i + j * pitch] =
+                  SDL_MapSurfaceRGB(Global->render_target, r, g, b);
+              if (dist < 0) dist = 0;
+              pixelsdepth[i + j * pitch] = (unsigned char)dist * 4;
+            }
           }
         }
       }
@@ -247,7 +253,7 @@ Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
   return result;
 }
 
-void rendergame(unsigned char* pixels, int pitch) {
+void rendergame(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
   std::deque<Mapface> tempmapfacedeque = Global->mapfaces, addlaterfacedeque;
   std::deque<Vector3> temppointsdeque = Global->Points;
 
@@ -348,18 +354,18 @@ void rendergame(unsigned char* pixels, int pitch) {
       Vector2 temp2[3] = {tempmapfacedeque[k].UVs[0],
                           tempmapfacedeque[k].UVs[1],
                           tempmapfacedeque[k].UVs[2]};
-      DrawTri(pixels, pitch, tempmapfacedeque[k].texture, temp, temp2,
-              tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop);
+      DrawTri(pixels, pixelsdepth, pitch, tempmapfacedeque[k].texture, temp,
+              temp2, tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop);
     }
   } else if (Global->rendermode == 1) {
     for (int k = 0; k < tempmapfacedeque.size(); k++) {
       Vector3 temp[2] = {temppointsdeque[tempmapfacedeque[k].points[0]],
                          temppointsdeque[tempmapfacedeque[k].points[1]]};
-      DrawLine(pixels, pitch, 10, temp);
+      DrawLine(pixels, pixelsdepth, pitch, 10, temp);
       temp[1] = temppointsdeque[tempmapfacedeque[k].points[2]];
-      DrawLine(pixels, pitch, 10, temp);
+      DrawLine(pixels, pixelsdepth, pitch, 10, temp);
       temp[0] = temppointsdeque[tempmapfacedeque[k].points[1]];
-      DrawLine(pixels, pitch, 10, temp);
+      DrawLine(pixels, pixelsdepth, pitch, 10, temp);
     }
     for (int k = 0; k < Global->Points.size(); k++) {
       DrawCircle(pixels, pitch, (Global->editorselectedPoint == k ? 32 : 37),
@@ -367,18 +373,20 @@ void rendergame(unsigned char* pixels, int pitch) {
       if (Global->editorselectedPoint == k) {
         Vector3 temp[2] = {Global->Points[k],
                            addVec3(Global->Points[k], Vector3({0, 4, 0}))};
-        DrawLine(pixels, pitch, 40, temp);
+        DrawLine(pixels, pixelsdepth, pitch, 40, temp);
         DrawCircle(pixels, pitch, 40, temp[1], 1);
         temp[1] = addVec3(Global->Points[k], Vector3({4, 0, 0}));
-        DrawLine(pixels, pitch, 20, temp);
+        DrawLine(pixels, pixelsdepth, pitch, 20, temp);
         DrawCircle(pixels, pitch, 20, temp[1], 1);
         temp[1] = addVec3(Global->Points[k], Vector3({0, 0, 4}));
-        DrawLine(pixels, pitch, 50, temp);
+        DrawLine(pixels, pixelsdepth, pitch, 50, temp);
         DrawCircle(pixels, pitch, 50, temp[1], 1);
       }
     }
   }
 }
+
+void renderUI() {}
 
 void render() {
   // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
@@ -388,35 +396,46 @@ void render() {
   unsigned char* pixels =
       static_cast<unsigned char*>(Global->render_target->pixels);
   int pitch = Global->render_target->pitch;
+  unsigned char pixelsdepth[Settings->resolutionx * Settings->resolutiony];
+
+  for (int i = 0; i < Settings->resolutionx; i++) {
+    for (int j = 0; j < Settings->resolutiony; j++) {
+      pixelsdepth[i + j * pitch] = 255;
+    }
+  }
+  renderUI();
+  rendergame(pixels, pixelsdepth, pitch);
 
   if (Global->rendermode == 0) {
     for (int i = 0; i < Settings->resolutionx; i++) {
       for (int j = 0; j < Settings->resolutiony; j++) {
-        Uint32 color =
-            static_cast<Uint32*>(Global->textures[Global->skybox]->pixels)
-                [(i + int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) %
-                     640 +
-                 (int((1 - (Camera->dir.y < 0 ? 0 : Camera->dir.y) / 90.f) *
-                      200.f) +
-                  j) *
-                     640];
-        int r = (color >> 0) & 0xFF;
-        int g = (color >> 8) & 0xFF;
-        int b = (color >> 16) & 0xFF;
-        int a = (color >> 24) & 0xFF;
-        pixels[i + j * pitch] =
-            SDL_MapSurfaceRGB(Global->render_target, r, g, b);
+        if (pixelsdepth[i + j * pitch] == 255) {
+          Uint32 color = static_cast<Uint32*>(
+              Global->textures[Global->skybox]->pixels)
+              [(i + int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) %
+                   640 +
+               (int((1 - (Camera->dir.y < 0 ? 0 : Camera->dir.y) / 90.f) *
+                    200.f) +
+                j) *
+                   640];
+          int r = (color >> 0) & 0xFF;
+          int g = (color >> 8) & 0xFF;
+          int b = (color >> 16) & 0xFF;
+          int a = (color >> 24) & 0xFF;
+          pixels[i + j * pitch] =
+              SDL_MapSurfaceRGB(Global->render_target, r, g, b);
+        }
       }
     }
   } else if (Global->rendermode == 1) {
     for (int i = 0; i < Settings->resolutionx; i++) {
       for (int j = 0; j < Settings->resolutiony; j++) {
-        pixels[i + j * pitch] = 1;
+        if (pixelsdepth[i + j * pitch] == 255) {
+          pixels[i + j * pitch] = 1;
+        }
       }
     }
   }
-
-  rendergame(pixels, pitch);
 
   if (Global->pause || Global->isopeningfile) {
     for (int i = 0; i < Settings->resolutionx; i++) {
