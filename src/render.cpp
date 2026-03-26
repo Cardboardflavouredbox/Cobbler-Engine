@@ -80,8 +80,10 @@ void DrawLine(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
         int tempy = y + ((i - x) * (y2 - y) / (x2 - x));
         if (i >= 0 && tempy >= 0 && i < Settings->resolutionx &&
             tempy < Settings->resolutiony) {
-          pixelsdepth[i + tempy * pitch] = 8;
-          pixels[i + tempy * pitch] = color;
+          if (pixelsdepth[i + tempy * pitch] >= 8) {
+            pixelsdepth[i + tempy * pitch] = 8;
+            pixels[i + tempy * pitch] = color;
+          }
         }
       }
     } else {
@@ -95,23 +97,29 @@ void DrawLine(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
         int tempx = x + ((i - y) * (x2 - x) / (y2 - y));
         if (tempx >= 0 && i >= 0 && tempx < Settings->resolutionx &&
             i < Settings->resolutiony) {
-          pixelsdepth[tempx + i * pitch] = 8;
-          pixels[tempx + i * pitch] = color;
+          if (pixelsdepth[tempx + i * pitch] >= 8) {
+            pixelsdepth[tempx + i * pitch] = 8;
+            pixels[tempx + i * pitch] = color;
+          }
         }
       }
     }
   }
 }
 
-void DrawCircle(unsigned char* pixels, int pitch, unsigned char color,
-                Vector3 rawpoint, int radius) {
+void DrawCircle(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
+                unsigned char color, Vector3 rawpoint, int radius) {
   ScreenPoint point = ToScreenSpace(rawpoint);
   if (!point.isbehindcamera)
     for (int i = point.p.x - radius; i <= point.p.x + radius; i++) {
       for (int j = point.p.y - radius; j < point.p.y + radius; j++) {
         if (i > -1 && i < Settings->resolutionx && j > -1 &&
-            j < Settings->resolutiony)
-          pixels[i + j * pitch] = color;
+            j < Settings->resolutiony) {
+          if (pixelsdepth[i + j * pitch] >= 9) {
+            pixelsdepth[i + j * pitch] = 9;
+            pixels[i + j * pitch] = color;
+          }
+        }
       }
     }
 }
@@ -368,25 +376,39 @@ void rendergame(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
       DrawLine(pixels, pixelsdepth, pitch, 10, temp);
     }
     for (int k = 0; k < Global->Points.size(); k++) {
-      DrawCircle(pixels, pitch, (Global->editorselectedPoint == k ? 32 : 37),
+      DrawCircle(pixels, pixelsdepth, pitch,
+                 (Global->editorselectedPoint == k ? 32 : 37),
                  Global->Points[k], 1);
       if (Global->editorselectedPoint == k) {
         Vector3 temp[2] = {Global->Points[k],
                            addVec3(Global->Points[k], Vector3({0, 4, 0}))};
         DrawLine(pixels, pixelsdepth, pitch, 40, temp);
-        DrawCircle(pixels, pitch, 40, temp[1], 1);
+        DrawCircle(pixels, pixelsdepth, pitch, 40, temp[1], 1);
         temp[1] = addVec3(Global->Points[k], Vector3({4, 0, 0}));
         DrawLine(pixels, pixelsdepth, pitch, 20, temp);
-        DrawCircle(pixels, pitch, 20, temp[1], 1);
+        DrawCircle(pixels, pixelsdepth, pitch, 20, temp[1], 1);
         temp[1] = addVec3(Global->Points[k], Vector3({0, 0, 4}));
         DrawLine(pixels, pixelsdepth, pitch, 50, temp);
-        DrawCircle(pixels, pitch, 50, temp[1], 1);
+        DrawCircle(pixels, pixelsdepth, pitch, 50, temp[1], 1);
       }
     }
   }
 }
 
-void renderUI() {}
+void drawUIsquare(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
+                  Vector2 points[], unsigned char color) {
+  for (int i = points[0].x; i < points[1].x; i++) {
+    for (int j = points[0].y; j < points[1].y; j++) {
+      pixelsdepth[i + j * pitch] = 0;
+      pixels[i + j * pitch] = color;
+    }
+  }
+}
+
+void renderUI(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
+  Vector2 temp[2] = {Vector2({4, 4}), Vector2({68, 68})};
+  drawUIsquare(pixels, pixelsdepth, pitch, temp, 7);
+}
 
 void render() {
   // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
@@ -403,7 +425,7 @@ void render() {
       pixelsdepth[i + j * pitch] = 255;
     }
   }
-  renderUI();
+  renderUI(pixels, pixelsdepth, pitch);
   rendergame(pixels, pixelsdepth, pitch);
 
   if (Global->rendermode == 0) {
