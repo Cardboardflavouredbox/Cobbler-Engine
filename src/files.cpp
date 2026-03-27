@@ -2,6 +2,8 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_dialog.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 #include <glaze/json.hpp>
 
@@ -216,6 +218,15 @@ bool init(bool hidemouse) {
     Global->textures[i] = surface;
   }
 
+  if (FT_Init_FreeType(&(Global->FTlibrary))) return false;
+
+  tempstr = basepath;
+  tempstr.append("/res/Galmuri11.bdf");
+  if (FT_New_Face(Global->FTlibrary, tempstr.c_str(), 0, &(Global->FTface)))
+    return false;
+
+  FT_Set_Pixel_Sizes(Global->FTface, 0, 12);
+
   Global->IsRunning = true;
   SDL_SetRenderVSync(Global->renderer, 1);
   lastTime = SDL_GetTicks();
@@ -233,6 +244,10 @@ void quit() {
   delete (Settings);
   delete (Camera);
   delete (P1Inputs);
+
+  FT_Done_Face(Global->FTface);
+  FT_Done_FreeType(Global->FTlibrary);
+
   Global->IsRunning = false;
   SDL_Quit();
 }

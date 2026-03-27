@@ -1,11 +1,13 @@
 #pragma once
 
 #include <SDL3/SDL_render.h>
+#include <ft2build.h>
 
 #include <deque>
 #include <string>
 
 #include "map.h"
+#include FT_FREETYPE_H
 
 struct GlobalClass {
  public:
@@ -28,6 +30,9 @@ struct GlobalClass {
   std::deque<Vector3> Points;
   std::deque<Mapface> mapfaces;
   std::deque<Entity*> Entities;
+
+  FT_Library FTlibrary;
+  FT_Face FTface;
 };
 
 struct ZipData {
