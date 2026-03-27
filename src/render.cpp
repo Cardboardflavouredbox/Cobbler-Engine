@@ -405,6 +405,13 @@ void drawUIsquare(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
   }
 }
 
+void renderStringUI(unsigned char* pixels, unsigned char pixelsdepth[],
+                    int pitch, std::string string) {
+  for (int i = 0; i < string.length(); i++) {
+    Global->FTglyphs[string[i]];
+  }
+}
+
 void renderUI(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
   Vector2 temp[2] = {Vector2({4, 4}), Vector2({68, 68})};
   drawUIsquare(pixels, pixelsdepth, pitch, temp, 7);

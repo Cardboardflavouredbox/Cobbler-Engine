@@ -58,6 +58,8 @@ void savemap() {
                          SDL_arraysize(filters), NULL);
 }
 
+CustomGlyphthing CreateGlyph() {}
+
 bool init(bool hidemouse) {
   Global = new GlobalClass();
   Settings = new SettingsClass();
@@ -226,6 +228,14 @@ bool init(bool hidemouse) {
     return false;
 
   FT_Set_Pixel_Sizes(Global->FTface, 0, 12);
+
+  for (int i = 0; i < 128; i++) {
+    FT_UInt glyph_index = FT_Get_Char_Index(Global->FTface, i);
+    FT_Load_Glyph(Global->FTface, glyph_index, FT_LOAD_DEFAULT);
+    FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_NORMAL);
+
+    Global->FTglyphs[glyph_index] = CreateGlyph();
+  }
 
   Global->IsRunning = true;
   SDL_SetRenderVSync(Global->renderer, 1);

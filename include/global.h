@@ -5,9 +5,14 @@
 
 #include <deque>
 #include <string>
+#include <unordered_map>
 
 #include "map.h"
 #include FT_FREETYPE_H
+
+struct CustomGlyphthing {};
+
+CustomGlyphthing CreateGlyph();
 
 struct GlobalClass {
  public:
@@ -33,6 +38,7 @@ struct GlobalClass {
 
   FT_Library FTlibrary;
   FT_Face FTface;
+  std::unordered_map<uint32_t, CustomGlyphthing> FTglyphs;
 };
 
 struct ZipData {
