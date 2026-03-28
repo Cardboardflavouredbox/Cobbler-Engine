@@ -406,8 +406,9 @@ void drawUIsquare(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
 }
 
 void renderStringUI(unsigned char* pixels, unsigned char pixelsdepth[],
-                    int pitch, std::u32string string) {
-  int x = 0, y = 0;
+                    int pitch, std::string string, Vector2 coord,
+                    unsigned char color) {
+  int x = coord.x, y = coord.y;
   for (int i = 0; i < string.length(); i++) {
     FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
     if (!Global->Glyphmap.contains(temp)) {
@@ -420,9 +421,11 @@ void renderStringUI(unsigned char* pixels, unsigned char pixelsdepth[],
     int x2 = glyph.width, y2 = glyph.height;
     for (int j = 0; j < y2; j++) {
       for (int k = 0; k < x2; k++) {
-        if (((glyph.pixels[k / 8 + j * glyph.pitch]) >> (7 - k % 8) & 0x01)) {
+        if (k > -1 && k < Settings->resolutionx && j > -1 &&
+            j < Settings->resolutiony &&
+            ((glyph.pixels[k / 8 + j * glyph.pitch]) >> (7 - k % 8) & 0x01)) {
           pixelsdepth[(k + x) + (j + y + 12 - glyph.offsety) * pitch] = 0;
-          pixels[(k + x) + (j + y + 12 - glyph.offsety) * pitch] = 0;
+          pixels[(k + x) + (j + y + 12 - glyph.offsety) * pitch] = color;
         }
       }
     }
@@ -434,7 +437,25 @@ void renderStringUI(unsigned char* pixels, unsigned char pixelsdepth[],
 void renderUI(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
   Vector2 temp[2] = {Vector2({4, 4}), Vector2({68, 68})};
   drawUIsquare(pixels, pixelsdepth, pitch, temp, 7);
-  renderStringUI(pixels, pixelsdepth, pitch, U"Water");
+
+  std::string tempstr = "Point";
+  tempstr += std::to_string(Global->editorselectedPoint);
+  renderStringUI(pixels, pixelsdepth, pitch, tempstr, Vector2({12, 8}), 11);
+
+  tempstr = "X: ";
+  tempstr += std::to_string(Global->Points[Global->editorselectedPoint].x);
+  for (int i = 0; i < 4; i++) tempstr.pop_back();
+  renderStringUI(pixels, pixelsdepth, pitch, tempstr, Vector2({8, 20}), 11);
+
+  tempstr = "Y: ";
+  tempstr += std::to_string(Global->Points[Global->editorselectedPoint].y);
+  for (int i = 0; i < 4; i++) tempstr.pop_back();
+  renderStringUI(pixels, pixelsdepth, pitch, tempstr, Vector2({8, 32}), 11);
+
+  tempstr = "Z: ";
+  tempstr += std::to_string(Global->Points[Global->editorselectedPoint].z);
+  for (int i = 0; i < 4; i++) tempstr.pop_back();
+  renderStringUI(pixels, pixelsdepth, pitch, tempstr, Vector2({8, 44}), 11);
 }
 
 void render() {
