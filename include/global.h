@@ -12,7 +12,7 @@
 
 struct CustomGlyphthing {
   unsigned char* pixels;
-  int width, height, pitch, offsetx, offsety;
+  int width, height, pitch, offsetx, offsety, advancex, advancey;
 };
 
 CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);

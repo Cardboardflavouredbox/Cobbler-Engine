@@ -63,14 +63,14 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
   temp.width = glyph->bitmap.width;
   temp.height = glyph->bitmap.rows;
   temp.pitch = glyph->bitmap.pitch;
-  temp.offsetx = glyph->advance.x;
-  temp.offsety = glyph->advance.y;
+  temp.advancex = glyph->advance.x / 64;
+  temp.advancey = glyph->advance.y / 64;
+  temp.offsetx = glyph->bitmap_left;
+  temp.offsety = glyph->bitmap_top;
+
   temp.pixels = new unsigned char[temp.width * temp.height];
-  for (int x = 0; x < temp.width; x++) {
-    for (int y = 0; y < temp.height; y++) {
-      temp.pixels[x + y * temp.pitch] =
-          glyph->bitmap.buffer[x + y * temp.pitch];
-    }
+  for (int i = 0; i < temp.width * temp.height; i++) {
+    temp.pixels[i] = glyph->bitmap.buffer[i];
   }
   return temp;
 }
@@ -246,8 +246,8 @@ bool init(bool hidemouse) {
 
   for (int i = 0; i < 128; i++) {
     FT_UInt glyph_index = FT_Get_Char_Index(Global->FTface, i);
-    FT_Load_Glyph(Global->FTface, glyph_index, FT_LOAD_DEFAULT);
-    FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_NORMAL);
+    FT_Load_Glyph(Global->FTface, glyph_index, FT_LOAD_MONOCHROME);
+    FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_MONO);
 
     Global->Glyphmap[glyph_index] = CreateGlyph(Global->FTface->glyph);
   }
