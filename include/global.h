@@ -10,9 +10,12 @@
 #include "map.h"
 #include FT_FREETYPE_H
 
-struct CustomGlyphthing {};
+struct CustomGlyphthing {
+  unsigned char* pixels;
+  int width, height, pitch, offsetx, offsety;
+};
 
-CustomGlyphthing CreateGlyph();
+CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
 
 struct GlobalClass {
  public:
@@ -38,7 +41,7 @@ struct GlobalClass {
 
   FT_Library FTlibrary;
   FT_Face FTface;
-  std::unordered_map<uint32_t, CustomGlyphthing> FTglyphs;
+  std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 };
 
 struct ZipData {

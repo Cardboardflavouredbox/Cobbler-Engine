@@ -406,15 +406,32 @@ void drawUIsquare(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
 }
 
 void renderStringUI(unsigned char* pixels, unsigned char pixelsdepth[],
-                    int pitch, std::string string) {
+                    int pitch, std::u8string string) {
   for (int i = 0; i < string.length(); i++) {
-    Global->FTglyphs[string[i]];
+    uint8_t temp = string[i];
+    if (!Global->Glyphmap.contains(temp)) {
+      FT_Load_Glyph(Global->FTface, temp, FT_LOAD_DEFAULT);
+      FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_NORMAL);
+      Global->Glyphmap[temp] = CreateGlyph(Global->FTface->glyph);
+    }
+    int x = Global->Glyphmap[temp].offsetx, y = Global->Glyphmap[temp].offsety,
+        x2 = Global->Glyphmap[temp].width, y2 = Global->Glyphmap[temp].height;
+    for (int j = 0; j < y2; j++) {
+      for (int k = x; k < x2; k++) {
+        if (Global->Glyphmap[temp]
+                .pixels[k + j * Global->Glyphmap[temp].pitch]) {
+          pixelsdepth[(k + x) + (j + y) * pitch] = 0;
+          pixels[(k + x) + (j + y) * pitch] = 24;
+        }
+      }
+    }
   }
 }
 
 void renderUI(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
   Vector2 temp[2] = {Vector2({4, 4}), Vector2({68, 68})};
   drawUIsquare(pixels, pixelsdepth, pitch, temp, 7);
+  renderStringUI(pixels, pixelsdepth, pitch, u8"TEST");
 }
 
 void render() {

@@ -58,7 +58,22 @@ void savemap() {
                          SDL_arraysize(filters), NULL);
 }
 
-CustomGlyphthing CreateGlyph() {}
+CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
+  CustomGlyphthing temp;
+  temp.width = glyph->bitmap.width;
+  temp.height = glyph->bitmap.rows;
+  temp.pitch = glyph->bitmap.pitch;
+  temp.offsetx = glyph->advance.x;
+  temp.offsety = glyph->advance.y;
+  temp.pixels = new unsigned char[temp.width * temp.height];
+  for (int x = 0; x < temp.width; x++) {
+    for (int y = 0; y < temp.height; y++) {
+      temp.pixels[x + y * temp.pitch] =
+          glyph->bitmap.buffer[x + y * temp.pitch];
+    }
+  }
+  return temp;
+}
 
 bool init(bool hidemouse) {
   Global = new GlobalClass();
@@ -234,7 +249,7 @@ bool init(bool hidemouse) {
     FT_Load_Glyph(Global->FTface, glyph_index, FT_LOAD_DEFAULT);
     FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_NORMAL);
 
-    Global->FTglyphs[glyph_index] = CreateGlyph();
+    Global->Glyphmap[glyph_index] = CreateGlyph(Global->FTface->glyph);
   }
 
   Global->IsRunning = true;
