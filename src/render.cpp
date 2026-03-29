@@ -115,8 +115,8 @@ void DrawCircle(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
       for (int j = point.p.y - radius; j < point.p.y + radius; j++) {
         if (i > -1 && i < Settings->resolutionx && j > -1 &&
             j < Settings->resolutiony) {
-          if (pixelsdepth[i + j * pitch] >= 9) {
-            pixelsdepth[i + j * pitch] = 9;
+          if (pixelsdepth[i + j * pitch] >= 7) {
+            pixelsdepth[i + j * pitch] = 7;
             pixels[i + j * pitch] = color;
           }
         }
@@ -434,29 +434,7 @@ void renderStringUI(unsigned char* pixels, unsigned char pixelsdepth[],
   }
 }
 
-void renderUI(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
-  Vector2 temp[2] = {Vector2({4, 4}), Vector2({68, 68})};
-  drawUIsquare(pixels, pixelsdepth, pitch, temp, 7);
-
-  std::string tempstr = "Point";
-  tempstr += std::to_string(Global->editorselectedPoint);
-  renderStringUI(pixels, pixelsdepth, pitch, tempstr, Vector2({12, 8}), 11);
-
-  tempstr = "X: ";
-  tempstr += std::to_string(Global->Points[Global->editorselectedPoint].x);
-  for (int i = 0; i < 4; i++) tempstr.pop_back();
-  renderStringUI(pixels, pixelsdepth, pitch, tempstr, Vector2({8, 20}), 11);
-
-  tempstr = "Y: ";
-  tempstr += std::to_string(Global->Points[Global->editorselectedPoint].y);
-  for (int i = 0; i < 4; i++) tempstr.pop_back();
-  renderStringUI(pixels, pixelsdepth, pitch, tempstr, Vector2({8, 32}), 11);
-
-  tempstr = "Z: ";
-  tempstr += std::to_string(Global->Points[Global->editorselectedPoint].z);
-  for (int i = 0; i < 4; i++) tempstr.pop_back();
-  renderStringUI(pixels, pixelsdepth, pitch, tempstr, Vector2({8, 44}), 11);
-}
+void renderUI(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {}
 
 void render() {
   // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);

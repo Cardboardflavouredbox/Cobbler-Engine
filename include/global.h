@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "map.h"
+#include "ui.h"
 #include FT_FREETYPE_H
 
 struct CustomGlyphthing {
@@ -30,6 +31,7 @@ struct GlobalClass {
   int skybox;
   int rendermode = 0;  // 0==default, 1==wireframe and points
   int editorselectedPoint = 0;
+  int editorselectedFace = 0;
   int editordraggingaxis = -1;
 
   int windowx = 320, windowy = 200;
@@ -42,6 +44,8 @@ struct GlobalClass {
   FT_Library FTlibrary;
   FT_Face FTface;
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
+
+  std::unordered_map<int, std::deque<UIthing>> UImap;
 };
 
 struct ZipData {

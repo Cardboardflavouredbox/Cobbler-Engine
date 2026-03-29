@@ -31,9 +31,9 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(freetype)
 
 
-add_executable(Cobbler-Engine src/gamemain.cpp src/render.cpp src/input.cpp src/update.cpp src/types.cpp src/files.cpp src/events.cpp)
+add_executable(Cobbler-Engine src/gamemain.cpp src/render.cpp src/input.cpp src/update.cpp src/types.cpp src/files.cpp src/events.cpp src/ui.cpp)
 
-add_executable(Cobbler-Engine-Editor src/editormain.cpp src/render.cpp src/input.cpp src/editorupdate.cpp src/types.cpp src/files.cpp src/events.cpp)
+add_executable(Cobbler-Engine-Editor src/editormain.cpp src/render.cpp src/input.cpp src/editorupdate.cpp src/types.cpp src/files.cpp src/events.cpp src/ui.cpp)
 
 target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glaze::glaze freetype)
 target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glaze::glaze freetype)
