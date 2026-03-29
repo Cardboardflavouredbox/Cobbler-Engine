@@ -19,8 +19,19 @@ Inputs* P1Inputs;
 Uint32 lastTime;
 Uint64 currentTime = SDL_GetPerformanceCounter();
 
+bool editorinit() {
+  std::deque<UIthing> tempdeque;
+  UIbox temp;
+  temp.color = 12;
+  temp.pos = Vector2({4, 4});
+  temp.size = Vector2({16, 64});
+  tempdeque.push_back(temp);
+  Global->UImap[0] = tempdeque;
+  return true;
+}
+
 int main(int argc, char* argv[]) {
-  if (!init(false)) {
+  if (!init(false) || !editorinit()) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }

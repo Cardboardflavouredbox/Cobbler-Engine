@@ -12,7 +12,6 @@ struct UIthing {
 struct UIbox : public UIthing {
   unsigned char color;
   Vector2 size;
-  void update() override;
-  void render(unsigned char* pixels, unsigned char pixelsdepth[],
-              int pitch) override;
+  void update();
+  void render(unsigned char* pixels, unsigned char pixelsdepth[], int pitch);
 };
