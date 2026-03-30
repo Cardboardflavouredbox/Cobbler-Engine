@@ -256,6 +256,7 @@ bool init(bool hidemouse) {
   SDL_SetRenderTarget(Global->renderer, NULL);
 
   SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
+  Global->pixelsdepth.resize(Settings->resolutionx * Settings->resolutiony);
 
   return true;
 }

@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "components.h"
 #include "entity.h"
 #include "extern.h"
 #include "global.h"
@@ -193,9 +194,11 @@ void update() {
     SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);
   }
   if (!Global->pause) {
+    componentsupdate();
     playermovement();
     for (int i = 0; i < Global->Entities.size(); i++) {
       EntityMove(Global->Entities[i]);
     }
+    componentsupdatelate();
   }
 }

@@ -14,6 +14,8 @@ void events() {
       case SDL_EVENT_WINDOW_RESIZED:
         SDL_GetWindowSizeInPixels(Global->window, &Global->windowx,
                                   &Global->windowy);
+        Global->pixelsdepth.resize(Settings->resolutionx *
+                                   Settings->resolutiony);
         break;
       case SDL_EVENT_MOUSE_BUTTON_DOWN:
         if (event.button.button == SDL_BUTTON_LEFT) {

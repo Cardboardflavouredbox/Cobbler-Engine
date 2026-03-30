@@ -1,5 +1,6 @@
 #include <cmath>
 
+#include "components.h"
 #include "entity.h"
 #include "extern.h"
 #include "files.h"
@@ -158,6 +159,7 @@ void update() {
     if (!Global->pause) {
       noncamerastuff();
       movecamera();
+      componentsupdatelate();
     }
   }
 }

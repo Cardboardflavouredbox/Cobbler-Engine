@@ -41,6 +41,10 @@ struct GlobalClass {
   std::deque<Mapface> mapfaces;
   std::deque<Entity*> Entities;
 
+  unsigned char* pixels;
+  int pitch;
+  std::vector<unsigned short> pixelsdepth;
+
   FT_Library FTlibrary;
   FT_Face FTface;
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
@@ -70,7 +74,7 @@ struct Inputs {
 
 struct SettingsClass {
  public:
-  uint16_t resolutionx = 640, resolutiony = 400;
+  uint16_t resolutionx = 320, resolutiony = 200;
   int fov = 90;
   int fps = 60;
   bool vsync = true;

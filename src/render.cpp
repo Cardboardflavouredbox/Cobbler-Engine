@@ -60,8 +60,7 @@ Vector3 GetUV(Vector2 P, ScreenPoint R1, ScreenPoint R2, ScreenPoint R3) {
   for (int i = 0; i < 3; i++) a[i] /= det;
   return Vector3({a[0], a[1], a[2]});
 }
-void DrawLine(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
-              unsigned char color, Vector3 rawvectors[]) {
+void DrawLine(unsigned char color, Vector3 rawvectors[]) {
   ScreenPoint vectors[2] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
@@ -80,9 +79,9 @@ void DrawLine(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
         int tempy = y + ((i - x) * (y2 - y) / (x2 - x));
         if (i >= 0 && tempy >= 0 && i < Settings->resolutionx &&
             tempy < Settings->resolutiony) {
-          if (pixelsdepth[i + tempy * pitch] >= 8) {
-            pixelsdepth[i + tempy * pitch] = 8;
-            pixels[i + tempy * pitch] = color;
+          if (Global->pixelsdepth[i + tempy * Global->pitch] >= 8) {
+            Global->pixelsdepth[i + tempy * Global->pitch] = 8;
+            Global->pixels[i + tempy * Global->pitch] = color;
           }
         }
       }
@@ -97,9 +96,9 @@ void DrawLine(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
         int tempx = x + ((i - y) * (x2 - x) / (y2 - y));
         if (tempx >= 0 && i >= 0 && tempx < Settings->resolutionx &&
             i < Settings->resolutiony) {
-          if (pixelsdepth[tempx + i * pitch] >= 8) {
-            pixelsdepth[tempx + i * pitch] = 8;
-            pixels[tempx + i * pitch] = color;
+          if (Global->pixelsdepth[tempx + i * Global->pitch] >= 8) {
+            Global->pixelsdepth[tempx + i * Global->pitch] = 8;
+            Global->pixels[tempx + i * Global->pitch] = color;
           }
         }
       }
@@ -107,17 +106,16 @@ void DrawLine(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
   }
 }
 
-void DrawCircle(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
-                unsigned char color, Vector3 rawpoint, int radius) {
+void DrawCircle(unsigned char color, Vector3 rawpoint, int radius) {
   ScreenPoint point = ToScreenSpace(rawpoint);
   if (!point.isbehindcamera)
     for (int i = point.p.x - radius; i <= point.p.x + radius; i++) {
       for (int j = point.p.y - radius; j < point.p.y + radius; j++) {
         if (i > -1 && i < Settings->resolutionx && j > -1 &&
             j < Settings->resolutiony) {
-          if (pixelsdepth[i + j * pitch] >= 7) {
-            pixelsdepth[i + j * pitch] = 7;
-            pixels[i + j * pitch] = color;
+          if (Global->pixelsdepth[i + j * Global->pitch] >= 7) {
+            Global->pixelsdepth[i + j * Global->pitch] = 7;
+            Global->pixels[i + j * Global->pitch] = color;
           }
         }
       }
@@ -143,8 +141,7 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
   return (s1 + s2 + s3 > 360);
 }
 
-void DrawTri(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
-             int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
+void DrawTri(int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
              int yloop) {
   ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1]),
@@ -210,20 +207,21 @@ void DrawTri(unsigned char* pixels, unsigned char pixelsdepth[], int pitch,
             float dist =
                 std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
                           tempvec3.z * tempvec3.z);
-            if (pixelsdepth[i + j * pitch] > dist * 4) {
-              r -= dist * 4;
-              g -= dist * 4;
-              b -= dist * 4;
+            if (Global->pixelsdepth[i + j * Global->pitch] > dist * 3) {
+              r -= dist * 3;
+              g -= dist * 3;
+              b -= dist * 3;
               // r = uvresult.x * 255;
               // g = uvresult.y * 255;
               // b = 0;
               if (r < 0) r = 0;
               if (g < 0) g = 0;
               if (b < 0) b = 0;
-              pixels[i + j * pitch] =
+              Global->pixels[i + j * Global->pitch] =
                   SDL_MapSurfaceRGB(Global->render_target, r, g, b);
               if (dist < 0) dist = 0;
-              pixelsdepth[i + j * pitch] = (unsigned char)dist * 4;
+              Global->pixelsdepth[i + j * Global->pitch] =
+                  (unsigned char)dist * 4;
             }
           }
         }
@@ -261,7 +259,7 @@ Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
   return result;
 }
 
-void rendergame(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
+void rendergame() {
   std::deque<Mapface> tempmapfacedeque = Global->mapfaces, addlaterfacedeque;
   std::deque<Vector3> temppointsdeque = Global->Points;
 
@@ -362,44 +360,78 @@ void rendergame(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
       Vector2 temp2[3] = {tempmapfacedeque[k].UVs[0],
                           tempmapfacedeque[k].UVs[1],
                           tempmapfacedeque[k].UVs[2]};
-      DrawTri(pixels, pixelsdepth, pitch, tempmapfacedeque[k].texture, temp,
-              temp2, tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop);
+      DrawTri(tempmapfacedeque[k].texture, temp, temp2,
+              tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop);
     }
   } else if (Global->rendermode == 1) {
     for (int k = 0; k < tempmapfacedeque.size(); k++) {
       Vector3 temp[2] = {temppointsdeque[tempmapfacedeque[k].points[0]],
                          temppointsdeque[tempmapfacedeque[k].points[1]]};
-      DrawLine(pixels, pixelsdepth, pitch, 10, temp);
+      DrawLine(10, temp);
       temp[1] = temppointsdeque[tempmapfacedeque[k].points[2]];
-      DrawLine(pixels, pixelsdepth, pitch, 10, temp);
+      DrawLine(10, temp);
       temp[0] = temppointsdeque[tempmapfacedeque[k].points[1]];
-      DrawLine(pixels, pixelsdepth, pitch, 10, temp);
+      DrawLine(10, temp);
     }
     for (int k = 0; k < Global->Points.size(); k++) {
-      DrawCircle(pixels, pixelsdepth, pitch,
-                 (Global->editorselectedPoint == k ? 32 : 37),
+      DrawCircle((Global->editorselectedPoint == k ? 32 : 37),
                  Global->Points[k], 1);
       if (Global->editorselectedPoint == k) {
         Vector3 temp[2] = {Global->Points[k],
                            addVec3(Global->Points[k], Vector3({0, 4, 0}))};
-        DrawLine(pixels, pixelsdepth, pitch, 40, temp);
-        DrawCircle(pixels, pixelsdepth, pitch, 40, temp[1], 1);
+        DrawLine(40, temp);
+        DrawCircle(40, temp[1], 1);
         temp[1] = addVec3(Global->Points[k], Vector3({4, 0, 0}));
-        DrawLine(pixels, pixelsdepth, pitch, 20, temp);
-        DrawCircle(pixels, pixelsdepth, pitch, 20, temp[1], 1);
+        DrawLine(20, temp);
+        DrawCircle(20, temp[1], 1);
         temp[1] = addVec3(Global->Points[k], Vector3({0, 0, 4}));
-        DrawLine(pixels, pixelsdepth, pitch, 50, temp);
-        DrawCircle(pixels, pixelsdepth, pitch, 50, temp[1], 1);
+        DrawLine(50, temp);
+        DrawCircle(50, temp[1], 1);
       }
     }
   }
 }
 
-void renderUI(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
+void renderUI() {
   std::deque<UIthing*>* tempdeque = &Global->UImap[0];
   int len = tempdeque->size();
   for (int i = 0; i < len; i++) {
-    tempdeque->at(i)->render(pixels, pixelsdepth, pitch);
+    tempdeque->at(i)->render();
+  }
+}
+
+void renderbackground() {
+  if (Global->rendermode == 0) {
+    int x = Settings->resolutionx, y = Settings->resolutiony;
+    for (int i = 0; i < x; i++) {
+      for (int j = 0; j < y; j++) {
+        if (Global->pixelsdepth[i + j * Global->pitch] == 65535) {
+          Uint32 color =
+              static_cast<Uint32*>(Global->textures[Global->skybox]->pixels)
+                  [(int(i * 320.f / x) +
+                    int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) %
+                       640 +
+                   (int((1 - (Camera->dir.y < 0 ? 0 : Camera->dir.y) / 90.f) *
+                        200.f) +
+                    int(j * 200.f / y)) *
+                       640];
+          int r = (color >> 0) & 0xFF;
+          int g = (color >> 8) & 0xFF;
+          int b = (color >> 16) & 0xFF;
+          int a = (color >> 24) & 0xFF;
+          Global->pixels[i + j * Global->pitch] =
+              SDL_MapSurfaceRGB(Global->render_target, r, g, b);
+        }
+      }
+    }
+  } else if (Global->rendermode == 1) {
+    for (int i = 0; i < Settings->resolutionx; i++) {
+      for (int j = 0; j < Settings->resolutiony; j++) {
+        if (Global->pixelsdepth[i + j * Global->pitch] == 65535) {
+          Global->pixels[i + j * Global->pitch] = 1;
+        }
+      }
+    }
   }
 }
 
@@ -408,55 +440,24 @@ void render() {
   // SDL_RenderClear(Global->renderer);
   SDL_LockSurface(Global->render_target);
 
-  unsigned char* pixels =
-      static_cast<unsigned char*>(Global->render_target->pixels);
-  int pitch = Global->render_target->pitch;
-  unsigned char pixelsdepth[Settings->resolutionx * Settings->resolutiony];
+  Global->pixels = static_cast<unsigned char*>(Global->render_target->pixels);
+  Global->pitch = Global->render_target->pitch;
 
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
-      pixelsdepth[i + j * pitch] = 255;
+      Global->pixelsdepth[i + j * Global->pitch] = 65535;
     }
   }
-  renderUI(pixels, pixelsdepth, pitch);
-  rendergame(pixels, pixelsdepth, pitch);
+  renderUI();
+  rendergame();
 
-  if (Global->rendermode == 0) {
-    for (int i = 0; i < Settings->resolutionx; i++) {
-      for (int j = 0; j < Settings->resolutiony; j++) {
-        if (pixelsdepth[i + j * pitch] == 255) {
-          Uint32 color = static_cast<Uint32*>(
-              Global->textures[Global->skybox]->pixels)
-              [(i + int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) %
-                   640 +
-               (int((1 - (Camera->dir.y < 0 ? 0 : Camera->dir.y) / 90.f) *
-                    200.f) +
-                j) *
-                   640];
-          int r = (color >> 0) & 0xFF;
-          int g = (color >> 8) & 0xFF;
-          int b = (color >> 16) & 0xFF;
-          int a = (color >> 24) & 0xFF;
-          pixels[i + j * pitch] =
-              SDL_MapSurfaceRGB(Global->render_target, r, g, b);
-        }
-      }
-    }
-  } else if (Global->rendermode == 1) {
-    for (int i = 0; i < Settings->resolutionx; i++) {
-      for (int j = 0; j < Settings->resolutiony; j++) {
-        if (pixelsdepth[i + j * pitch] == 255) {
-          pixels[i + j * pitch] = 1;
-        }
-      }
-    }
-  }
+  renderbackground();
 
   if (Global->pause || Global->isopeningfile) {
     for (int i = 0; i < Settings->resolutionx; i++) {
       for (int j = 0; j < Settings->resolutiony; j++) {
         Uint8 r, g, b;
-        SDL_GetRGB(pixels[i + j * pitch],
+        SDL_GetRGB(Global->pixels[i + j * Global->pitch],
                    SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_INDEX8),
                    Global->palette, &r, &g, &b);
         int r2 = r, g2 = g, b2 = b;
@@ -466,7 +467,7 @@ void render() {
         if (r2 < 0) r2 = 0;
         if (g2 < 0) g2 = 0;
         if (b2 < 0) b2 = 0;
-        pixels[i + j * pitch] =
+        Global->pixels[i + j * Global->pitch] =
             SDL_MapSurfaceRGB(Global->render_target, r2, g2, b2);
       }
     }
