@@ -1,10 +1,6 @@
 #include "ui.h"
 
 #include "extern.h"
-// void UIthing::render(unsigned char* pixels, unsigned char pixelsdepth[],
-//                      int pitch) {
-//   SDL_Log("default");
-// }
 
 void UIbox::update() {}
 void UIbox::render(unsigned char* pixels, unsigned char pixelsdepth[],

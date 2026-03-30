@@ -70,7 +70,7 @@ struct Inputs {
 
 struct SettingsClass {
  public:
-  uint16_t resolutionx, resolutiony;
+  uint16_t resolutionx = 640, resolutiony = 400;
   int fov = 90;
   int fps = 60;
   bool vsync = true;

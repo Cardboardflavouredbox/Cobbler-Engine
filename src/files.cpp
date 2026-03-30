@@ -79,8 +79,6 @@ bool init(bool hidemouse) {
   Global = new GlobalClass();
   Settings = new SettingsClass();
   P1Inputs = new Inputs();
-  Settings->resolutionx = 320;
-  Settings->resolutiony = 200;
   Settings->fov = 90;
 
   ZipData tempzipdata;
@@ -256,6 +254,9 @@ bool init(bool hidemouse) {
   SDL_SetRenderVSync(Global->renderer, 1);
   lastTime = SDL_GetTicks();
   SDL_SetRenderTarget(Global->renderer, NULL);
+
+  SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
+
   return true;
 }
 void quit() {

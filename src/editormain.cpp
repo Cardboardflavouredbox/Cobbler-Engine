@@ -22,11 +22,20 @@ Uint64 currentTime = SDL_GetPerformanceCounter();
 bool editorinit() {
   Global->UImap.reserve(4);
   std::deque<UIthing*> tempdeque;
-  UIbox* temp = new UIbox();
-  temp->color = 11;
-  temp->pos = Vector2({4, 4});
-  temp->size = Vector2({32, 64});
-  tempdeque.push_back(temp);
+  UIbox* box = new UIbox();
+  box->color = 11;
+  box->pos = Vector2({4, 4});
+  box->size = Vector2({64, 128});
+
+  tempdeque.push_back(box);
+
+  UItext* text = new UItext();
+  text->color = 0;
+  text->pos = Vector2({8, 8});
+  text->string = "test";
+
+  tempdeque.push_back(text);
+
   Global->UImap[0] = tempdeque;
   return true;
 }
