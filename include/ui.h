@@ -26,6 +26,7 @@ struct UItext : public UIthing {
   unsigned char color;
   UITextChanger* TextChanger = nullptr;
   std::string string;
+  void TextChangerSet(UITextChanger* newTextChanger);
   void update();
   void render();
 };

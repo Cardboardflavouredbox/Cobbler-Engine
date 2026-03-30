@@ -48,3 +48,5 @@ void UItext::render() {
     y += glyph.advancey;
   }
 }
+
+void UItext::TextChangerSet(UITextChanger* newTextChanger) {}

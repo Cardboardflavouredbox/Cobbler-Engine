@@ -1,9 +1,6 @@
 #include "components.h"
-
 #include "extern.h"
 #include "ui.h"
-
-void componentsupdate() {}
 
 void componentsupdatelate() {
   std::deque<UIthing*>* tempdeque = &Global->UImap[0];
