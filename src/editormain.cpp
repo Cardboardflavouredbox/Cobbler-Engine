@@ -23,9 +23,9 @@ bool editorinit() {
   Global->UImap.reserve(4);
   std::deque<UIthing*> tempdeque;
   UIbox* temp = new UIbox();
-  temp->color = 12;
+  temp->color = 11;
   temp->pos = Vector2({4, 4});
-  temp->size = Vector2({16, 64});
+  temp->size = Vector2({32, 64});
   tempdeque.push_back(temp);
   Global->UImap[0] = tempdeque;
   return true;

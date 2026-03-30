@@ -15,3 +15,7 @@ void UIbox::render(unsigned char* pixels, unsigned char pixelsdepth[],
     }
   }
 }
+
+void UItext::update() {}
+void UItext::render(unsigned char* pixels, unsigned char pixelsdepth[],
+                    int pitch) {}
