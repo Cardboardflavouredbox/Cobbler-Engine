@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "types.h"
 
 struct UIthing {
@@ -18,6 +20,7 @@ struct UIbox : public UIthing {
 
 struct UItext : public UIthing {
   unsigned char color;
+  std::string string;
   void update();
   void render(unsigned char* pixels, unsigned char pixelsdepth[], int pitch);
 };
