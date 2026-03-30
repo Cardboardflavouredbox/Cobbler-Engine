@@ -45,7 +45,7 @@ struct GlobalClass {
   FT_Face FTface;
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 
-  std::unordered_map<int, std::deque<UIthing>> UImap;
+  std::unordered_map<int, std::deque<UIthing*>> UImap;
 };
 
 struct ZipData {

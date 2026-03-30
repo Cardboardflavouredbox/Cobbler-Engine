@@ -435,9 +435,10 @@ void renderStringUI(unsigned char* pixels, unsigned char pixelsdepth[],
 }
 
 void renderUI(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {
-  std::deque<UIthing>* tempdeque = &Global->UImap[0];
-  for (int i = 0; i < tempdeque->size(); i++) {
-    tempdeque->at(i).render(pixels, pixelsdepth, pitch);
+  std::deque<UIthing*>* tempdeque = &Global->UImap[0];
+  int len = tempdeque->size();
+  for (int i = 0; i < len; i++) {
+    tempdeque->at(i)->render(pixels, pixelsdepth, pitch);
   }
 }
 

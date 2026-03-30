@@ -4,8 +4,9 @@
 
 struct UIthing {
   Vector2 pos;
-  void update() {}
-  void render(unsigned char* pixels, unsigned char pixelsdepth[], int pitch) {}
+  virtual void update() = 0;
+  virtual void render(unsigned char* pixels, unsigned char pixelsdepth[],
+              int pitch) = 0;
 };
 
 struct UIbox : public UIthing {
