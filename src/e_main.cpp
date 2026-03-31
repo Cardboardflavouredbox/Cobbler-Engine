@@ -34,6 +34,12 @@ bool editorinit() {
   text->pos = Vector2({8, 8});
   text->string = "test";
 
+  TextandNumChanger* TaNC = new TextandNumChanger();
+  TaNC->text = "Point";
+  TaNC->num = &Global->editorselectedPoint;
+
+  text->TextChangerSet(TaNC);
+
   tempdeque.push_back(text);
 
   Global->UImap[0] = tempdeque;

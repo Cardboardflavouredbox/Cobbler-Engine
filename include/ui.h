@@ -22,6 +22,12 @@ struct UITextChanger {
   virtual void update() = 0;
 };
 
+struct TextandNumChanger : UITextChanger {
+  std::string text;
+  int* num;
+  void update();
+};
+
 struct UItext : public UIthing {
   unsigned char color;
   UITextChanger* TextChanger = nullptr;

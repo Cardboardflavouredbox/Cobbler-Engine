@@ -1,6 +1,5 @@
-#include "ui.h"
-
 #include "extern.h"
+#include "ui.h"
 
 void UIbox::update() {}
 void UIbox::render() {
@@ -49,4 +48,11 @@ void UItext::render() {
   }
 }
 
-void UItext::TextChangerSet(UITextChanger* newTextChanger) {}
+void UItext::TextChangerSet(UITextChanger* newTextChanger) {
+  TextChanger = newTextChanger;
+  if (TextChanger != nullptr) {
+    TextChanger->string = &string;
+  }
+}
+
+void TextandNumChanger::update() { *string = text + std::to_string(*num); }
