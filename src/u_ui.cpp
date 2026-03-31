@@ -56,3 +56,23 @@ void UItext::TextChangerSet(UITextChanger* newTextChanger) {
 }
 
 void TextandNumChanger::update() { *string = text + std::to_string(*num); }
+
+void TextandGlobalFacePointChanger::update() {
+  *string = text + std::to_string(Global->mapfaces[*num].points[pointindex]);
+}
+
+void TextandGlobalPointChanger::update() {
+  float temp;
+  switch (xyz) {
+    case 0:
+      temp = Global->Points[*num].x;
+      break;
+    case 1:
+      temp = Global->Points[*num].y;
+      break;
+    case 2:
+      temp = Global->Points[*num].z;
+      break;
+  }
+  *string = text + std::to_string(temp);
+}

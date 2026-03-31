@@ -28,6 +28,20 @@ struct TextandNumChanger : UITextChanger {
   void update();
 };
 
+struct TextandGlobalFacePointChanger : UITextChanger {
+  std::string text;
+  int* num;
+  int pointindex;
+  void update();
+};
+
+struct TextandGlobalPointChanger : UITextChanger {
+  std::string text;
+  int* num;
+  int xyz;  // 0==x,1==y,2==z
+  void update();
+};
+
 struct UItext : public UIthing {
   unsigned char color;
   UITextChanger* TextChanger = nullptr;
