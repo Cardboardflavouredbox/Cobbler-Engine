@@ -6,6 +6,7 @@
 #include "files.h"
 #include "global.h"
 #include "screen.h"
+#include "ui_index.h"
 #include "update.h"
 
 bool ScreenPointMouseDetect(ScreenPoint SP) {
@@ -159,6 +160,7 @@ void update() {
     if (!Global->pause) {
       noncamerastuff();
       movecamera();
+      changeUIindex();
       componentsupdatelate();
     }
   }

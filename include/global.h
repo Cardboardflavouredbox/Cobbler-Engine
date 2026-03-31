@@ -50,6 +50,7 @@ struct GlobalClass {
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 
   std::unordered_map<int, std::deque<UIthing*>> UImap;
+  int UIindex = 0;
 };
 
 struct ZipData {

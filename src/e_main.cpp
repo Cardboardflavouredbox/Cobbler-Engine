@@ -21,28 +21,35 @@ Uint64 currentTime = SDL_GetPerformanceCounter();
 
 bool editorinit() {
   Global->UImap.reserve(4);
-  std::deque<UIthing*> tempdeque;
-  UIbox* box = new UIbox();
-  box->color = 11;
-  box->pos = Vector2({4, 4});
-  box->size = Vector2({64, 128});
+  for (int i = 0; i < 2; i++) {
+    std::deque<UIthing*> tempdeque;
+    UIbox* box = new UIbox();
+    box->color = 11;
+    box->pos = Vector2({4, 4});
+    box->size = Vector2({64, 128});
 
-  tempdeque.push_back(box);
+    tempdeque.push_back(box);
 
-  UItext* text = new UItext();
-  text->color = 0;
-  text->pos = Vector2({8, 8});
-  text->string = "test";
+    UItext* text = new UItext();
+    text->color = 0;
+    text->pos = Vector2({8, 8});
+    text->string = "test";
 
-  TextandNumChanger* TaNC = new TextandNumChanger();
-  TaNC->text = "Point";
-  TaNC->num = &Global->editorselectedPoint;
+    TextandNumChanger* TaNC = new TextandNumChanger();
+    if (i == 0) {
+      TaNC->text = "Face";
+      TaNC->num = &Global->editorselectedFace;
+    } else if (i == 1) {
+      TaNC->text = "Point";
+      TaNC->num = &Global->editorselectedPoint;
+    }
 
-  text->TextChangerSet(TaNC);
+    text->TextChangerSet(TaNC);
 
-  tempdeque.push_back(text);
+    tempdeque.push_back(text);
 
-  Global->UImap[0] = tempdeque;
+    Global->UImap[i] = tempdeque;
+  }
   return true;
 }
 

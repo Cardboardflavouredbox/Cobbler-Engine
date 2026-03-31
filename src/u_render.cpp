@@ -393,7 +393,7 @@ void rendergame() {
 }
 
 void renderUI() {
-  std::deque<UIthing*>* tempdeque = &Global->UImap[0];
+  std::deque<UIthing*>* tempdeque = &Global->UImap[Global->UIindex];
   int len = tempdeque->size();
   for (int i = 0; i < len; i++) {
     tempdeque->at(i)->render();

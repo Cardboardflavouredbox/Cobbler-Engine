@@ -1,5 +1,3 @@
-#include "update.h"
-
 #include <SDL3/SDL.h>
 
 #include <cmath>
@@ -8,6 +6,8 @@
 #include "entity.h"
 #include "extern.h"
 #include "global.h"
+#include "ui_index.h"
+#include "update.h"
 
 void playermovement() {
   Camera->dir.x += -2 * P1Inputs->MouseDelta.x;
@@ -65,6 +65,7 @@ void update() {
   if (!Global->pause) {
     playermovement();
     componentsupdate();
+    changeUIindex();
     componentsupdatelate();
   }
 }
