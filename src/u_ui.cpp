@@ -75,4 +75,5 @@ void TextandGlobalPointChanger::update() {
       break;
   }
   *string = text + std::to_string(temp);
+  for (int i = 0; i < 3; i++) string->pop_back();
 }
