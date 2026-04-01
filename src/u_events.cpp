@@ -16,6 +16,8 @@ void events() {
                                   &Global->windowy);
         Global->pixelsdepth.resize(Settings->resolutionx *
                                    Settings->resolutiony);
+        Global->pixelstransparency.resize(Settings->resolutionx *
+                                          Settings->resolutiony);
         break;
       case SDL_EVENT_MOUSE_BUTTON_DOWN:
         if (event.button.button == SDL_BUTTON_LEFT) {

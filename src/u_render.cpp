@@ -415,7 +415,8 @@ void renderbackground() {
     int x = Settings->resolutionx, y = Settings->resolutiony;
     for (int i = 0; i < x; i++) {
       for (int j = 0; j < y; j++) {
-        if (Global->pixelsdepth[i + j * Global->pitch] == 65535) {
+        if (Global->pixelsdepth[i + j * Global->pitch] == 65535 ||
+            Global->pixelstransparency[i + j * Global->pitch] < 255) {
           Uint32 color =
               static_cast<Uint32*>(Global->textures[Global->skybox]->pixels)
                   [(int(i * 320.f / x) +
@@ -429,6 +430,20 @@ void renderbackground() {
           int g = (color >> 8) & 0xFF;
           int b = (color >> 16) & 0xFF;
           int a = (color >> 24) & 0xFF;
+
+          if (Global->pixelstransparency[i + j * Global->pitch] < 255) {
+            int transparency =
+                Global->pixelstransparency[i + j * Global->pitch];
+            SDL_Color tempcolor =
+                Global->palette->colors[Global->pixels[i + j * Global->pitch]];
+            r = r * (255 - transparency) / 255 +
+                tempcolor.r * transparency / 255;
+            g = g * (255 - transparency) / 255 +
+                tempcolor.g * transparency / 255;
+            b = b * (255 - transparency) / 255 +
+                tempcolor.b * transparency / 255;
+          }
+
           Global->pixels[i + j * Global->pitch] =
               SDL_MapSurfaceRGB(Global->render_target, r, g, b);
         }
@@ -456,6 +471,7 @@ void render() {
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
       Global->pixelsdepth[i + j * Global->pitch] = 65535;
+      Global->pixelstransparency[i + j * Global->pitch] = 255;
     }
   }
   renderUI();

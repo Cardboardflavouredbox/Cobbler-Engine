@@ -45,6 +45,7 @@ struct GlobalClass {
   unsigned char* pixels;
   int pitch;
   std::vector<unsigned short> pixelsdepth;
+  std::vector<unsigned char> pixelstransparency;
 
   FT_Library FTlibrary;
   FT_Face FTface;

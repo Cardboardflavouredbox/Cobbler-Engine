@@ -257,6 +257,7 @@ bool init(bool hidemouse) {
 
   SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
   Global->pixelsdepth.resize(Settings->resolutionx * Settings->resolutiony);
+  Global->pixelstransparency.resize(Settings->resolutionx * Settings->resolutiony);
 
   return true;
 }
