@@ -207,7 +207,8 @@ void DrawTri(int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
             float dist =
                 std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
                           tempvec3.z * tempvec3.z);
-            if (Global->pixelsdepth[i + j * Global->pitch] > dist * 3) {
+            if (Global->pixelsdepth[i + j * Global->pitch] > dist * 3 ||
+                Global->pixelstransparency[i + j * Global->pitch] < 255) {
               r -= dist * 3;
               g -= dist * 3;
               b -= dist * 3;
@@ -217,14 +218,29 @@ void DrawTri(int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
               // r = uvresult.x * 255;
               // g = uvresult.y * 255;
               // b = 0;
+              if (Global->pixelstransparency[i + j * Global->pitch] < 255) {
+                int transparency =
+                    Global->pixelstransparency[i + j * Global->pitch];
+                SDL_Color tempcolor =
+                    Global->palette
+                        ->colors[Global->pixels[i + j * Global->pitch]];
+                r = r * (255 - transparency) / 255 +
+                    tempcolor.r * transparency / 255;
+                g = g * (255 - transparency) / 255 +
+                    tempcolor.g * transparency / 255;
+                b = b * (255 - transparency) / 255 +
+                    tempcolor.b * transparency / 255;
+              }
               if (r < 0) r = 0;
               if (g < 0) g = 0;
               if (b < 0) b = 0;
               Global->pixels[i + j * Global->pitch] =
                   SDL_MapSurfaceRGB(Global->render_target, r, g, b);
               if (dist < 0) dist = 0;
-              Global->pixelsdepth[i + j * Global->pitch] =
-                  (unsigned char)dist * 4;
+              if (Global->pixelstransparency[i + j * Global->pitch] == 255)
+                Global->pixelsdepth[i + j * Global->pitch] =
+                    (unsigned char)dist * 4;
+              Global->pixelstransparency[i + j * Global->pitch] = a;
             }
           }
         }
@@ -422,8 +438,7 @@ void renderbackground() {
                   [(int(i * 320.f / x) +
                     int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) %
                        640 +
-                   (int((1 - (Camera->dir.y < 0 ? 0 : Camera->dir.y) / 90.f) *
-                        200.f) +
+                   (int((1 - (Camera->dir.y) / 90.f) * 200.f) +
                     int(j * 200.f / y)) *
                        640];
           int r = (color >> 0) & 0xFF;

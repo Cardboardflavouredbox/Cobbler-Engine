@@ -9,7 +9,9 @@ void UIbox::render() {
           0;
       Global->pixels[((int)pos.x + j) + ((int)pos.y + i) * Global->pitch] =
           color;
-      Global->pixelstransparency[((int)pos.x + j) + ((int)pos.y + i) * Global->pitch] = 128;
+      Global->pixelstransparency[((int)pos.x + j) +
+                                 ((int)pos.y + i) * Global->pitch] =
+          255 / 3 * 2;
     }
   }
 }
