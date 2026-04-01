@@ -31,9 +31,22 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(freetype)
 
 
-add_executable(Cobbler-Engine src/g_main.cpp src/u_render.cpp src/u_input.cpp src/g_update.cpp src/u_types.cpp src/u_files.cpp src/u_events.cpp src/u_ui.cpp src/u_components.cpp src/g_entityphysics.cpp src/g_components.cpp src/g_ui_index.cpp)
+add_executable(Cobbler-Engine 
+src/g_main.cpp src/u_render.cpp 
+src/u_input.cpp src/g_update.cpp 
+src/u_types.cpp src/u_files.cpp 
+src/u_events.cpp src/u_ui.cpp 
+src/u_components.cpp src/g_entityphysics.cpp 
+src/g_components.cpp src/g_ui_index.cpp 
+src/u_raycast.cpp)
 
-add_executable(Cobbler-Engine-Editor src/e_main.cpp src/u_render.cpp src/u_input.cpp src/e_update.cpp src/u_types.cpp src/u_files.cpp src/u_events.cpp src/u_ui.cpp src/u_components.cpp src/e_components.cpp src/e_ui_index.cpp)
+add_executable(Cobbler-Engine-Editor 
+src/e_main.cpp src/u_render.cpp 
+src/u_input.cpp src/e_update.cpp 
+src/u_types.cpp src/u_files.cpp 
+src/u_events.cpp src/u_ui.cpp 
+src/u_components.cpp src/e_components.cpp 
+src/e_ui_index.cpp src/u_raycast.cpp)
 
 target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glaze::glaze freetype)
 target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glaze::glaze freetype)

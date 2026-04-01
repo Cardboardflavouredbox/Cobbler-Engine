@@ -5,6 +5,7 @@
 #include "extern.h"
 #include "files.h"
 #include "global.h"
+#include "raycast.h"
 #include "screen.h"
 #include "ui_index.h"
 #include "update.h"
@@ -68,6 +69,26 @@ void noncamerastuff() {
               Global->editorselectedPoint = i;
             }
           }
+        }
+      }
+    }
+  } else if (Global->rendermode == 0) {
+    if (P1Inputs->leftclick > 1) {
+      float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
+      float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
+      float whats = std::sin(Camera->dir.y * 3.14 / 180.0);
+      float whatc = std::cos(Camera->dir.y * 3.14 / 180.0);
+      Vector3 tempvec3;
+      tempvec3.x = -ps * whatc;
+      tempvec3.y = pc * whatc;
+      tempvec3.z = whats;
+      tempvec3 = Vector3Normalize(tempvec3);
+      Vector3 ray[2] = {Camera->position,
+                        addVec3(Camera->position, multiplyVec3(tempvec3, 32))};
+      for (int i = 0; i < Global->mapfaces.size(); i++) {
+        if (RayTriCheck(Global->mapfaces[i].points[0],
+                        Global->mapfaces[i].points[1],
+                        Global->mapfaces[i].points[2], ray[0], ray[1])) {
         }
       }
     }
