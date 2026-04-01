@@ -85,10 +85,16 @@ void noncamerastuff() {
       tempvec3 = Vector3Normalize(tempvec3);
       Vector3 ray[2] = {Camera->position,
                         addVec3(Camera->position, multiplyVec3(tempvec3, 32))};
+      float dist = INFINITY;
+      Vector3 output;
       for (int i = 0; i < Global->mapfaces.size(); i++) {
-        if (RayTriCheck(Global->mapfaces[i].points[0],
-                        Global->mapfaces[i].points[1],
-                        Global->mapfaces[i].points[2], ray[0], ray[1])) {
+        if (RayTriCheck(Global->Points[Global->mapfaces[i].points[0]],
+                        Global->Points[Global->mapfaces[i].points[1]],
+                        Global->Points[Global->mapfaces[i].points[2]], ray[0],
+                        ray[1], output) &&
+            getVec3dist(output, Camera->position) < dist) {
+          dist = getVec3dist(output, Camera->position);
+          Global->editorselectedFace = i;
         }
       }
     }
