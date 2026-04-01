@@ -33,6 +33,7 @@ struct GlobalClass {
   int editorselectedPoint = 0;
   int editorselectedFace = 0;
   int editordraggingaxis = -1;
+  bool IsEditor;
 
   int windowx = 320, windowy = 200;
 

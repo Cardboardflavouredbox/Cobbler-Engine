@@ -83,7 +83,7 @@ void noncamerastuff() {
           Global->Points[Global->editorselectedPoint].x +=
               (P1Inputs->MouseDelta.x * pc + P1Inputs->MouseDelta.y * ps) /
                   16.f -
-              std::fmodf(
+              std::fmod(
                   (P1Inputs->MouseDelta.x * pc + P1Inputs->MouseDelta.y * ps) /
                       16.f,
                   0.125f);
@@ -93,7 +93,7 @@ void noncamerastuff() {
           Global->Points[Global->editorselectedPoint].y +=
               (P1Inputs->MouseDelta.x * ps - P1Inputs->MouseDelta.y * pc) /
                   16.f -
-              std::fmodf(
+              std::fmod(
                   (P1Inputs->MouseDelta.x * ps - P1Inputs->MouseDelta.y * pc) /
                       16.f,
                   0.125f);
@@ -102,7 +102,7 @@ void noncamerastuff() {
         case 2: {
           Global->Points[Global->editorselectedPoint].z +=
               (-P1Inputs->MouseDelta.y) / 16.f -
-              std::fmodf((-P1Inputs->MouseDelta.y) / 16.f, 0.125f);
+              std::fmod((-P1Inputs->MouseDelta.y) / 16.f, 0.125f);
           break;
         }
       }

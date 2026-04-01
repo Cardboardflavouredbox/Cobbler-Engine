@@ -92,6 +92,7 @@ int main(int argc, char* argv[]) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }
+  Global->IsEditor = true;
   SDL_Log("Init done");
   while (Global->IsRunning) {
     Uint64 start = SDL_GetPerformanceCounter();

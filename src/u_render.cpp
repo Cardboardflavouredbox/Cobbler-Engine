@@ -142,7 +142,7 @@ float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
 }
 
 void DrawTri(int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
-             int yloop) {
+             int yloop, std::array<unsigned char, 4> shade) {
   ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1]),
                             ToScreenSpace(rawvectors[2])};
@@ -211,6 +211,9 @@ void DrawTri(int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
               r -= dist * 3;
               g -= dist * 3;
               b -= dist * 3;
+              r = r * (int)shade[0] / 255;
+              g = g * (int)shade[1] / 255;
+              b = b * (int)shade[2] / 255;
               // r = uvresult.x * 255;
               // g = uvresult.y * 255;
               // b = 0;
@@ -262,6 +265,11 @@ Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
 void rendergame() {
   std::deque<Mapface> tempmapfacedeque = Global->mapfaces, addlaterfacedeque;
   std::deque<Vector3> temppointsdeque = Global->Points;
+
+  if (Global->IsEditor) {
+    tempmapfacedeque[Global->editorselectedFace].shade[0] = 128;
+    tempmapfacedeque[Global->editorselectedFace].shade[1] = 128;
+  }
 
   for (int i = 0; i < tempmapfacedeque.size(); i++) {
     Mapface* tempmapface = &tempmapfacedeque[i];
@@ -343,6 +351,7 @@ void rendergame() {
         tempmapface->points[invisibledeque[0]] = temppointsdeque.size() - 1;
         tempmapface->UVs[invisibledeque[0]] = newface.UVs[visibledeque[1]];
         newface.points[visibledeque[1]] = temppointsdeque.size() - 1;
+        newface.shade = tempmapface->shade;
         addlaterfacedeque.push_back(newface);
         break;
       }
@@ -361,7 +370,8 @@ void rendergame() {
                           tempmapfacedeque[k].UVs[1],
                           tempmapfacedeque[k].UVs[2]};
       DrawTri(tempmapfacedeque[k].texture, temp, temp2,
-              tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop);
+              tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop,
+              tempmapfacedeque[k].shade);
     }
   } else if (Global->rendermode == 1) {
     for (int k = 0; k < tempmapfacedeque.size(); k++) {

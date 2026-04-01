@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <vector>
 
 #include "types.h"
@@ -9,4 +10,5 @@ struct Mapface {
   int xloop = 1, yloop = 1;
   std::vector<int> points;
   std::vector<Vector2> UVs;
+  std::array<unsigned char, 4> shade = {255, 255, 255, 255};
 };
