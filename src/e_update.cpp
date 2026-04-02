@@ -10,6 +10,25 @@
 #include "ui_index.h"
 #include "update.h"
 
+Vector2 MouseToScreenpos() {
+  int x, y, w = Global->windowx, h = Global->windowy,
+            rtw = Global->render_target->w, rth = Global->render_target->h;
+  int size = w / rtw;
+  if (size > h / rth) size = h / rth;
+
+  rtw *= size;
+  rth *= size;
+
+  w /= 2;
+  h /= 2;
+  w -= rtw / 2;
+  h -= rth / 2;
+
+  x = (P1Inputs->MousePos.x - w) / size;
+  y = (P1Inputs->MousePos.y - h) / size;
+  return Vector2({(float)x, (float)y});
+}
+
 bool ScreenPointMouseDetect(ScreenPoint SP) {
   int x, y, w = Global->windowx, h = Global->windowy,
             rtw = Global->render_target->w, rth = Global->render_target->h;
