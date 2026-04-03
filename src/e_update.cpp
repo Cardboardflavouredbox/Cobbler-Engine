@@ -1,3 +1,5 @@
+#include <SDL3/SDL.h>
+
 #include <cmath>
 
 #include "components.h"
@@ -52,6 +54,32 @@ bool ScreenPointMouseDetect(ScreenPoint SP) {
   return false;
 }
 
+Vector3 Vec2Ray() {
+  float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
+  float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
+  float whats = std::sin(Camera->dir.y * 3.14 / 180.0);
+  float whatc = std::cos(Camera->dir.y * 3.14 / 180.0);
+  Vector2 mouse = MouseToScreenpos();
+  mouse.x /= 320.f;
+  mouse.y /= 200.f;
+  mouse.y = 1.f - mouse.y;
+  mouse.x = (mouse.x * 2 - 1) / 2.f;
+  mouse.y = (mouse.y * 2 - 1) / 2.f;
+  float frustumHeight = 2.0f * std::tanf(Settings->fov * 0.5f * 3.14f / 180.f);
+  float frustumWidth = frustumHeight * ((float)Settings->resolutionx /
+                                        (float)Settings->resolutiony);
+  Vector3 tempvec3;
+  tempvec3.x = -ps * whatc;
+  tempvec3.y = pc * whatc;
+  tempvec3.z = whats;
+
+  tempvec3.x -=
+      mouse.x * frustumWidth * std::sin((Camera->dir.x - 90) * 3.14 / 180.0);
+  tempvec3.y +=
+      mouse.x * frustumWidth * std::cos((Camera->dir.x - 90) * 3.14 / 180.0);
+  return tempvec3;
+}
+
 void noncamerastuff() {
   if (Global->rendermode == 1) {
     if (P1Inputs->leftclick > 0) {
@@ -97,10 +125,8 @@ void noncamerastuff() {
       float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
       float whats = std::sin(Camera->dir.y * 3.14 / 180.0);
       float whatc = std::cos(Camera->dir.y * 3.14 / 180.0);
-      Vector3 tempvec3;
-      tempvec3.x = -ps * whatc;
-      tempvec3.y = pc * whatc;
-      tempvec3.z = whats;
+      Vector3 tempvec3 = Vec2Ray();
+      SDL_Log("%f %f %f", tempvec3.x, tempvec3.y, tempvec3.z);
       tempvec3 = Vector3Normalize(tempvec3);
       Vector3 ray[2] = {Camera->position,
                         addVec3(Camera->position, multiplyVec3(tempvec3, 32))};

@@ -1,8 +1,8 @@
-#include "files.h"
-
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_dialog.h>
 #include <ft2build.h>
+
+#include "files.h"
 #include FT_FREETYPE_H
 
 #include <glaze/json.hpp>
@@ -257,7 +257,8 @@ bool init(bool hidemouse) {
 
   SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
   Global->pixelsdepth.resize(Settings->resolutionx * Settings->resolutiony);
-  Global->pixelstransparency.resize(Settings->resolutionx * Settings->resolutiony);
+  Global->pixelstransparency.resize(Settings->resolutionx *
+                                    Settings->resolutiony);
 
   return true;
 }
