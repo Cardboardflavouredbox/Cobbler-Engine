@@ -60,23 +60,32 @@ Vector3 Vec2Ray() {
   float whats = std::sin(Camera->dir.y * 3.14 / 180.0);
   float whatc = std::cos(Camera->dir.y * 3.14 / 180.0);
   Vector2 mouse = MouseToScreenpos();
-  mouse.x /= 320.f;
-  mouse.y /= 200.f;
-  mouse.y = 1.f - mouse.y;
-  mouse.x = (mouse.x * 2 - 1) / 2.f;
-  mouse.y = (mouse.y * 2 - 1) / 2.f;
-  float frustumHeight = 2.0f * std::tanf(Settings->fov * 0.5f * 3.14f / 180.f);
+  SDL_Log("%f %f", mouse.x, mouse.y);
+  mouse.x = (mouse.x - 160.f) / 320.f;
+  mouse.y = (mouse.y - 100.f) / 200.f;
+  mouse.y *= -1;
+  float distance = 0.25f;
+  float frustumHeight =
+      2.0f * distance * std::tanf(Settings->fov * 0.5f * 3.14f / 180.f);
   float frustumWidth = frustumHeight * ((float)Settings->resolutionx /
                                         (float)Settings->resolutiony);
   Vector3 tempvec3;
-  tempvec3.x = -ps * whatc;
-  tempvec3.y = pc * whatc;
-  tempvec3.z = whats;
+  tempvec3.x = -ps * whatc * distance;
+  tempvec3.y = pc * whatc * distance;
+  tempvec3.z = whats * distance;
+  SDL_Log("%f %f", mouse.x, mouse.y);
 
   tempvec3.x -=
       mouse.x * frustumWidth * std::sin((Camera->dir.x - 90) * 3.14 / 180.0);
   tempvec3.y +=
       mouse.x * frustumWidth * std::cos((Camera->dir.x - 90) * 3.14 / 180.0);
+
+  tempvec3.x -= mouse.y * frustumHeight *
+                std::sin((Camera->dir.y + 90) * 3.14 / 180.0) * ps;
+  tempvec3.y += mouse.y * frustumHeight *
+                std::sin((Camera->dir.y + 90) * 3.14 / 180.0) * pc;
+  tempvec3.z +=
+      mouse.y * frustumHeight * std::sin((Camera->dir.y + 90) * 3.14 / 180.0);
   return tempvec3;
 }
 
@@ -128,8 +137,9 @@ void noncamerastuff() {
       Vector3 tempvec3 = Vec2Ray();
       SDL_Log("%f %f %f", tempvec3.x, tempvec3.y, tempvec3.z);
       tempvec3 = Vector3Normalize(tempvec3);
-      Vector3 ray[2] = {Camera->position,
-                        addVec3(Camera->position, multiplyVec3(tempvec3, 32))};
+      Vector3 ray[2] = {
+          Camera->position,
+          addVec3(Camera->position, multiplyVec3(tempvec3, 128.f))};
       float dist = INFINITY;
       Vector3 output;
       for (int i = 0; i < Global->mapfaces.size(); i++) {
