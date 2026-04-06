@@ -54,38 +54,40 @@ bool ScreenPointMouseDetect(ScreenPoint SP) {
   return false;
 }
 
-Vector3 Vec2Ray() {
-  float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
-  float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
-  float whats = std::sin(Camera->dir.y * 3.14 / 180.0);
-  float whatc = std::cos(Camera->dir.y * 3.14 / 180.0);
+// https://gamedev.stackexchange.com/questions/172308/c-mouse-picking-for-ray-to-plane-intersection
+// check this later
+Vector3 Vec2Ray(float distance) {
+  float ps = std::sin(Camera->dir.x * PI / 180.0);
+  float pc = std::cos(Camera->dir.x * PI / 180.0);
+  float whats = std::sin(Camera->dir.y * PI / 180.0);
+  float whatc = std::cos(Camera->dir.y * PI / 180.0);
   Vector2 mouse = MouseToScreenpos();
   SDL_Log("%f %f", mouse.x, mouse.y);
-  mouse.x = (mouse.x - 160.f) / 320.f;
-  mouse.y = (mouse.y - 100.f) / 200.f;
+  mouse.x =
+      (mouse.x - (Settings->resolutionx / 2)) / (float)Settings->resolutionx;
+  mouse.y =
+      (mouse.y - (Settings->resolutiony / 2)) / (float)Settings->resolutiony;
   mouse.y *= -1;
-  float distance = 0.25f;
   float frustumHeight =
-      2.0f * distance * std::tanf(Settings->fov * 0.5f * 3.14f / 180.f);
+      2.0f * distance * std::tan(Settings->fov / 2.f * PI / 180.f);
   float frustumWidth = frustumHeight * ((float)Settings->resolutionx /
                                         (float)Settings->resolutiony);
   Vector3 tempvec3;
   tempvec3.x = -ps * whatc * distance;
   tempvec3.y = pc * whatc * distance;
   tempvec3.z = whats * distance;
-  SDL_Log("%f %f", mouse.x, mouse.y);
 
   tempvec3.x -=
-      mouse.x * frustumWidth * std::sin((Camera->dir.x - 90) * 3.14 / 180.0);
+      mouse.x * frustumWidth * std::sin((Camera->dir.x - 90) * PI / 180.0);
   tempvec3.y +=
-      mouse.x * frustumWidth * std::cos((Camera->dir.x - 90) * 3.14 / 180.0);
+      mouse.x * frustumWidth * std::cos((Camera->dir.x - 90) * PI / 180.0);
 
   tempvec3.x -= mouse.y * frustumHeight *
-                std::sin((Camera->dir.y + 90) * 3.14 / 180.0) * ps;
+                std::cos((Camera->dir.y + 90) * PI / 180.0) * ps;
   tempvec3.y += mouse.y * frustumHeight *
-                std::sin((Camera->dir.y + 90) * 3.14 / 180.0) * pc;
+                std::cos((Camera->dir.y + 90) * PI / 180.0) * pc;
   tempvec3.z +=
-      mouse.y * frustumHeight * std::sin((Camera->dir.y + 90) * 3.14 / 180.0);
+      mouse.y * frustumHeight * std::sin((Camera->dir.y + 90) * PI / 180.0);
   return tempvec3;
 }
 
@@ -130,16 +132,13 @@ void noncamerastuff() {
     }
   } else if (Global->rendermode == 0) {
     if (P1Inputs->leftclick > 1) {
-      float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
-      float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
-      float whats = std::sin(Camera->dir.y * 3.14 / 180.0);
-      float whatc = std::cos(Camera->dir.y * 3.14 / 180.0);
-      Vector3 tempvec3 = Vec2Ray();
-      SDL_Log("%f %f %f", tempvec3.x, tempvec3.y, tempvec3.z);
-      tempvec3 = Vector3Normalize(tempvec3);
-      Vector3 ray[2] = {
-          Camera->position,
-          addVec3(Camera->position, multiplyVec3(tempvec3, 128.f))};
+      float ps = std::sin(Camera->dir.x * PI / 180.0);
+      float pc = std::cos(Camera->dir.x * PI / 180.0);
+      float whats = std::sin(Camera->dir.y * PI / 180.0);
+      float whatc = std::cos(Camera->dir.y * PI / 180.0);
+      Vector3 ray[2] = {addVec3(Camera->position, Vec2Ray(0.25f)),
+                        addVec3(Camera->position, Vec2Ray(32.f))};
+      SDL_Log("%f %f %f", ray[1].x, ray[1].y, ray[1].z);
       float dist = INFINITY;
       Vector3 output;
       for (int i = 0; i < Global->mapfaces.size(); i++) {
@@ -158,8 +157,8 @@ void noncamerastuff() {
     if (P1Inputs->leftclick == 0)
       Global->editordraggingaxis = -1;
     else {
-      float ps = std::sin(Camera->dir.x * 3.14 / 180.f);
-      float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
+      float ps = std::sin(Camera->dir.x * PI / 180.f);
+      float pc = std::cos(Camera->dir.x * PI / 180.f);
       switch (Global->editordraggingaxis) {
         case 0: {
           Global->Points[Global->editorselectedPoint].x +=
@@ -220,15 +219,15 @@ void movecamera() {
     Global->rendermode = 1;
   }
 
-  float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
-  float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
-  float whats = std::sin(Camera->dir.y * 3.14 / 180.0);
-  float whatc = std::cos(Camera->dir.y * 3.14 / 180.0);
+  float ps = std::sin(Camera->dir.x * PI / 180.0);
+  float pc = std::cos(Camera->dir.x * PI / 180.0);
+  float whats = std::sin(Camera->dir.y * PI / 180.0);
+  float whatc = std::cos(Camera->dir.y * PI / 180.0);
 
   Camera->position.x -=
-      P1Inputs->MouseScroll.x * std::sin((Camera->dir.x - 90) * 3.14 / 180.0);
+      P1Inputs->MouseScroll.x * std::sin((Camera->dir.x - 90) * PI / 180.0);
   Camera->position.y +=
-      P1Inputs->MouseScroll.x * std::cos((Camera->dir.x - 90) * 3.14 / 180.0);
+      P1Inputs->MouseScroll.x * std::cos((Camera->dir.x - 90) * PI / 180.0);
   Camera->position.x -= P1Inputs->MouseScroll.y * ps * whatc;
   Camera->position.y += P1Inputs->MouseScroll.y * pc * whatc;
   Camera->position.z += P1Inputs->MouseScroll.y * whats;

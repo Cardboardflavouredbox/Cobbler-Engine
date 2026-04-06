@@ -11,6 +11,9 @@
 #include "ui.h"
 #include FT_FREETYPE_H
 
+const double PI =
+    3.1415926535897932384626433832795028841971693993751058209749445923078164062;
+
 struct CustomGlyphthing {
   unsigned char* pixels;
   int width, height, pitch, offsetx, offsety, advancex, advancey;

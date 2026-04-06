@@ -15,17 +15,17 @@ void playermovement() {
   P1Inputs->MouseDelta.x = 0;
   P1Inputs->MouseDelta.y = 0;
 
-  float ps = std::sin(Camera->dir.x * 3.14 / 180.0);
-  float pc = std::cos(Camera->dir.x * 3.14 / 180.0);
+  float ps = std::sin(Camera->dir.x * PI / 180.0);
+  float pc = std::cos(Camera->dir.x * PI / 180.0);
 
   Vector3 tempmove = Vector3({0, 0, 0});
   if (P1Inputs->A > 0) {
-    tempmove.x -= std::sin((Camera->dir.x + 90) * 3.14 / 180.0);
-    tempmove.y += std::cos((Camera->dir.x + 90) * 3.14 / 180.0);
+    tempmove.x -= std::sin((Camera->dir.x + 90) * PI / 180.0);
+    tempmove.y += std::cos((Camera->dir.x + 90) * PI / 180.0);
   }
   if (P1Inputs->D > 0) {
-    tempmove.x -= std::sin((Camera->dir.x - 90) * 3.14 / 180.0);
-    tempmove.y += std::cos((Camera->dir.x - 90) * 3.14 / 180.0);
+    tempmove.x -= std::sin((Camera->dir.x - 90) * PI / 180.0);
+    tempmove.y += std::cos((Camera->dir.x - 90) * PI / 180.0);
   }
   if (P1Inputs->W > 0) {
     tempmove.x -= ps;

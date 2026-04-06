@@ -14,19 +14,19 @@ float getdistancething(Vector3 P) {
   p1.x = P.x - Camera->position.x;
   p1.y = P.y - Camera->position.y;
   p1.z = P.z - Camera->position.z;
-  float ps = std::sin(Camera->dir.x * 3.14 / 180.f);
-  float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
-  float what = std::sin(Camera->dir.y * 3.14 / 180.f);
+  float ps = std::sin(Camera->dir.x * PI / 180.f);
+  float pc = std::cos(Camera->dir.x * PI / 180.f);
+  float what = std::sin(Camera->dir.y * PI / 180.f);
   return p1.y * pc - p1.x * ps + p1.z * what;
 }
 
 ScreenPoint ToScreenSpace(Vector3 P) {
   Vector3 p1 = subVec3(P, Camera->position);
 
-  float ps = std::sin(Camera->dir.x * 3.14 / 180.f);
-  float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
-  float whats = std::sin(Camera->dir.y * 3.14 / 180.f);
-  float whatc = std::cos(Camera->dir.y * 3.14 / 180.f);
+  float ps = std::sin(Camera->dir.x * PI / 180.f);
+  float pc = std::cos(Camera->dir.x * PI / 180.f);
+  float whats = std::sin(Camera->dir.y * PI / 180.f);
+  float whatc = std::cos(Camera->dir.y * PI / 180.f);
 
   float tx = p1.x * pc + p1.y * ps;
   float ty = p1.y * pc - p1.x * ps + p1.z * whats;
@@ -131,7 +131,7 @@ float anglething(Vector2 a, Vector2 b, Vector2 c) {
 
   float alpha = atan2f(cross, dot);
 
-  return alpha * 180.f / 3.14f + 0.5f;
+  return alpha * 180.f / PI + 0.5f;
 }
 
 float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
@@ -266,9 +266,9 @@ Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
   p2.x = visible.x - Camera->position.x;
   p2.y = visible.y - Camera->position.y;
   p2.z = visible.z - Camera->position.z;
-  float ps = std::sin(Camera->dir.x * 3.14 / 180.f);
-  float pc = std::cos(Camera->dir.x * 3.14 / 180.f);
-  float what = std::sin(Camera->dir.y * 3.14 / 180.f);
+  float ps = std::sin(Camera->dir.x * PI / 180.f);
+  float pc = std::cos(Camera->dir.x * PI / 180.f);
+  float what = std::sin(Camera->dir.y * PI / 180.f);
 
   float u = (p1.y * pc - p1.x * ps + p1.z * what - 0.25f) /
             (-ps * (p1.x - p2.x) + pc * (p1.y - p2.y) + what * (p1.z - p2.z));
