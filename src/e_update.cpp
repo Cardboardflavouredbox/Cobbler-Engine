@@ -1,6 +1,7 @@
 #include <SDL3/SDL.h>
 
 #include <cmath>
+#include <glm/glm.hpp>
 
 #include "components.h"
 #include "entity.h"
@@ -115,8 +116,7 @@ void noncamerastuff() {
         x = (P1Inputs->MousePos.x - w) / size;
         y = (P1Inputs->MousePos.y - h) / size;
         for (int i = 0; i < 3; i++) {
-          if (ScreenPointMouseDetect(
-                  ToScreenSpace(addVec3(CurrentPoint, temp[i])))) {
+          if (ScreenPointMouseDetect(ToScreenSpace((CurrentPoint + temp[i])))) {
             Global->editordraggingaxis = i;
             break;
           }
@@ -146,8 +146,8 @@ void noncamerastuff() {
                         Global->Points[Global->mapfaces[i].points[1]],
                         Global->Points[Global->mapfaces[i].points[2]], ray[0],
                         ray[1], output) &&
-            getVec3dist(output, Camera->position) < dist) {
-          dist = getVec3dist(output, Camera->position);
+            glm::distance(output, Camera->position) < dist) {
+          dist = glm::distance(output, Camera->position);
           Global->editorselectedFace = i;
         }
       }
@@ -198,9 +198,8 @@ void noncamerastuff() {
   if (P1Inputs->F == 2) {
     glm::vec3 temp = Global->Points[Global->editorselectedPoint];
 
-    Camera->position = addVec3(
-        temp,
-        multiplyVec3(glm::vec3Normalize(subVec3(Camera->position, temp)), 4));
+    Camera->position =
+        (temp + (glm::normalize((Camera->position - temp))) * 4.f);
   }
   if (P1Inputs->LCTRL > 0 && P1Inputs->S == 2) {
     savemap();

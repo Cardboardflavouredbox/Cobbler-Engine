@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <deque>
+#include <glm/glm.hpp>
 #include <string>
 
 #include "extern.h"
@@ -21,7 +22,7 @@ float getdistancething(glm::vec3 P) {
 }
 
 ScreenPoint ToScreenSpace(glm::vec3 P) {
-  glm::vec3 p1 = subVec3(P, Camera->position);
+  glm::vec3 p1 = (P - Camera->position);
 
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
@@ -42,12 +43,6 @@ ScreenPoint ToScreenSpace(glm::vec3 P) {
       (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2) + tz;
   screenpos.dist = 1.f / ty;
   return screenpos;
-}
-
-float glm::vec2Dot(glm::vec2 P1, glm::vec2 P2) {
-  float deltaX = P2.x - P1.x;
-  float deltaY = P2.y - P1.y;
-  return std::sqrt(deltaX * deltaX + deltaY * deltaY);
 }
 
 float Areathing(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
@@ -134,7 +129,7 @@ float anglething(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
   return alpha * 180.f / PI + 0.5f;
 }
 
-float glm::vec2inTri(glm::vec2 p, glm::vec2 v1, glm::vec2 v2, glm::vec2 v3) {
+float Vec2inTri(glm::vec2 p, glm::vec2 v1, glm::vec2 v2, glm::vec2 v3) {
   float s1 = anglething(v3, p, v1), s2 = anglething(v1, p, v2),
         s3 = anglething(v2, p, v3);
 
@@ -171,18 +166,16 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
         temp.y = j;
         if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
             temp.y < Settings->resolutiony) {
-          if (glm::vec2inTri(temp, glm::vec2({vectors[0].p.x, vectors[0].p.y}),
-                             glm::vec2({vectors[1].p.x, vectors[1].p.y}),
-                             glm::vec2({vectors[2].p.x, vectors[2].p.y}))) {
+          if (Vec2inTri(temp, glm::vec2({vectors[0].p.x, vectors[0].p.y}),
+                        glm::vec2({vectors[1].p.x, vectors[1].p.y}),
+                        glm::vec2({vectors[2].p.x, vectors[2].p.y}))) {
             glm::vec3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
-            glm::vec2 uvresult = addVec2(
-                addVec2(
-                    multiplyVec2(multiplyVec2(UVs[0], uvw.x), vectors[0].dist),
-                    multiplyVec2(multiplyVec2(UVs[1], uvw.y), vectors[1].dist)),
-                multiplyVec2(multiplyVec2(UVs[2], uvw.z), vectors[2].dist));
-            uvresult = multiplyVec2(uvresult, (1 / (uvw.x * vectors[0].dist +
-                                                    uvw.y * vectors[1].dist +
-                                                    uvw.z * vectors[2].dist)));
+            glm::vec2 uvresult = ((((UVs[0] * uvw.x) * vectors[0].dist) +
+                                   ((UVs[1] * uvw.y) * vectors[1].dist)) +
+                                  ((UVs[2] * uvw.z) * vectors[2].dist));
+            uvresult = (uvresult * (1 / (uvw.x * vectors[0].dist +
+                                         uvw.y * vectors[1].dist +
+                                         uvw.z * vectors[2].dist)));
 
             int uvxthing = (int(128 * (uvresult.x)) * xloop) % 128;
             int uvything = (int(128 * (uvresult.y)) * yloop) % 128;
@@ -250,7 +243,7 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
 }
 
 float getinternaldivisionthing(glm::vec3 p1, glm::vec3 d, glm::vec3 p2) {
-  float dist1 = getVec3dist(p1, d), dist2 = getVec3dist(d, p2);
+  float dist1 = glm::distance(p1, d), dist2 = glm::distance(d, p2);
   return dist1 / (dist1 + dist2);
 }
 
@@ -273,8 +266,7 @@ glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
   float u = (p1.y * pc - p1.x * ps + p1.z * what - 0.25f) /
             (-ps * (p1.x - p2.x) + pc * (p1.y - p2.y) + what * (p1.z - p2.z));
 
-  glm::vec3 result =
-      addVec3(invisible, multiplyVec3(subVec3(visible, invisible), u));
+  glm::vec3 result = (invisible + ((visible - invisible) * u));
   return result;
 }
 
@@ -404,13 +396,13 @@ void rendergame() {
                  Global->Points[k], 1);
       if (Global->editorselectedPoint == k) {
         glm::vec3 temp[2] = {Global->Points[k],
-                             addVec3(Global->Points[k], glm::vec3({0, 4, 0}))};
+                             (Global->Points[k] + glm::vec3({0, 4, 0}))};
         DrawLine(40, temp);
         DrawCircle(40, temp[1], 1);
-        temp[1] = addVec3(Global->Points[k], glm::vec3({4, 0, 0}));
+        temp[1] = (Global->Points[k] + glm::vec3({4, 0, 0}));
         DrawLine(20, temp);
         DrawCircle(20, temp[1], 1);
-        temp[1] = addVec3(Global->Points[k], glm::vec3({0, 0, 4}));
+        temp[1] = (Global->Points[k] + glm::vec3({0, 0, 4}));
         DrawLine(50, temp);
         DrawCircle(50, temp[1], 1);
       }

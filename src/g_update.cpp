@@ -1,6 +1,7 @@
 #include <SDL3/SDL.h>
 
 #include <cmath>
+#include <glm/glm.hpp>
 
 #include "components.h"
 #include "entity.h"
@@ -36,12 +37,12 @@ void playermovement() {
     tempmove.y -= pc;
   }
 
-  tempmove = glm::vec3Normalize(tempmove);
+  tempmove = glm::normalize(tempmove);
 
-  Camera->movevec3 = multiplyVec3(tempmove, Camera->walkspeed);
+  Camera->movevec3 = (tempmove * Camera->walkspeed);
 
   if (P1Inputs->Shift > 0)
-    Camera->movevec3 = multiplyVec3(Camera->movevec3, Camera->runspeed);
+    Camera->movevec3 = (Camera->movevec3 * Camera->runspeed);
 
   if (P1Inputs->Space == 2 && Camera->IsGrounded)
     Camera->velocityvec3.z = Camera->jumpheight;

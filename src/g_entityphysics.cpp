@@ -66,11 +66,11 @@ bool movecollisioncheck(glm::vec3 hitbox[], glm::vec3 startposition,
     glm::vec3 aabb[2];
     if (startposition.x < endposition.x || startposition.y < endposition.y ||
         startposition.z < endposition.z) {
-      aabb[0] = addVec3(startposition, hitbox.A);
-      aabb[1] = addVec3(endposition, hitbox.B);
+      aabb[0] = (startposition + hitbox[0]);
+      aabb[1] = (endposition + hitbox[1]);
     } else {
-      aabb[0] = addVec3(endposition, hitbox.A);
-      aabb[1] = addVec3(startposition, hitbox.B);
+      aabb[0] = (endposition + hitbox[0]);
+      aabb[1] = (startposition + hitbox[1]);
     }
     glm::vec3 triangle[3] = {Global->Points[Global->mapfaces[i].points[0]],
                              Global->Points[Global->mapfaces[i].points[1]],
@@ -84,8 +84,7 @@ void EntityMove(Entity* tempentity) {
   tempentity->velocityvec3.z -= tempentity->gravity * Global->deltaTime;
 
   glm::vec3 tempmove =
-      multiplyVec3(addVec3(tempentity->movevec3, tempentity->velocityvec3),
-                   Global->deltaTime);
+      ((tempentity->movevec3 + tempentity->velocityvec3) * Global->deltaTime);
   glm::vec3 tempposition = tempentity->position,
             moveresult = glm::vec3({0, 0, 0});
   tempposition.x += tempmove.x;
@@ -112,7 +111,7 @@ void EntityMove(Entity* tempentity) {
     tempentity->velocityvec3.z = -2.f;
   }
 
-  tempentity->position = addVec3(tempentity->position, moveresult);
+  tempentity->position = (tempentity->position + moveresult);
   tempentity->movevec3 = glm::vec3({0, 0, 0});
 
   if (tempentity->velocityvec3.x > 0) {
