@@ -10,6 +10,19 @@
 #include "extern.h"
 #include "global.h"
 
+template <>
+struct glz::meta<glm::vec3> {
+  using mimic = std::array<float, 3>;
+  static constexpr auto value =
+      glz::array(&glm::vec3::x, &glm::vec3::y, &glm::vec3::z);
+};
+
+template <>
+struct glz::meta<glm::vec2> {
+  using mimic = std::array<float, 2>;
+  static constexpr auto value = glz::array(&glm::vec2::x, &glm::vec2::y);
+};
+
 static const SDL_DialogFileFilter filters[] = {{"JSON file", "json"},
                                                {"All files", "*"}};
 
