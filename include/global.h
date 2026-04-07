@@ -41,7 +41,7 @@ struct GlobalClass {
   int windowx = 320, windowy = 200;
 
   std::vector<SDL_Surface*> textures;
-  std::deque<Vector3> Points;
+  std::deque<glm::vec3> Points;
   std::deque<Mapface> mapfaces;
   std::deque<Entity*> Entities;
 
@@ -65,7 +65,7 @@ struct ZipData {
 };
 
 struct Mapdata {
-  std::deque<Vector3> Points;
+  std::deque<glm::vec3> Points;
   std::deque<Mapface> mapfaces;
   int skybox;
 };
@@ -75,7 +75,7 @@ struct Inputs {
   unsigned char W = 0, A = 0, S = 0, D = 0, ESC = 0, LCTRL = 0, Shift = 0,
                 Space = 0, leftclick = 0, rightclick = 0, numkeys[10] = {},
                 E = 0, F = 0;
-  Vector2 MouseDelta, MousePos, MouseScroll;
+  glm::vec2 MouseDelta, MousePos, MouseScroll;
 };
 
 struct SettingsClass {

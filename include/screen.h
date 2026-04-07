@@ -1,10 +1,12 @@
 #pragma once
 
-#include "types.h"
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+
 struct ScreenPoint {
-  Vector2 p;
+  glm::vec2 p;
   float dist;
   bool isbehindcamera = false;
 };
 
-ScreenPoint ToScreenSpace(Vector3 P);
+ScreenPoint ToScreenSpace(glm::vec3 P);

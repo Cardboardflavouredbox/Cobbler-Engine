@@ -12,7 +12,7 @@
 #include "ui_index.h"
 #include "update.h"
 
-Vector2 MouseToScreenpos() {
+glm::vec2 MouseToScreenpos() {
   int x, y, w = Global->windowx, h = Global->windowy,
             rtw = Global->render_target->w, rth = Global->render_target->h;
   int size = w / rtw;
@@ -28,7 +28,7 @@ Vector2 MouseToScreenpos() {
 
   x = (P1Inputs->MousePos.x - w) / size;
   y = (P1Inputs->MousePos.y - h) / size;
-  return Vector2({(float)x, (float)y});
+  return glm::vec2({(float)x, (float)y});
 }
 
 bool ScreenPointMouseDetect(ScreenPoint SP) {
@@ -56,12 +56,12 @@ bool ScreenPointMouseDetect(ScreenPoint SP) {
 
 // https://gamedev.stackexchange.com/questions/172308/c-mouse-picking-for-ray-to-plane-intersection
 // check this later
-Vector3 Vec2Ray(float distance) {
+glm::vec3 Vec2Ray(float distance) {
   float ps = std::sin(Camera->dir.x * PI / 180.0);
   float pc = std::cos(Camera->dir.x * PI / 180.0);
   float whats = std::sin(Camera->dir.y * PI / 180.0);
   float whatc = std::cos(Camera->dir.y * PI / 180.0);
-  Vector2 mouse = MouseToScreenpos();
+  glm::vec2 mouse = MouseToScreenpos();
   SDL_Log("%f %f", mouse.x, mouse.y);
   mouse.x =
       (mouse.x - (Settings->resolutionx / 2)) / (float)Settings->resolutionx;
@@ -72,7 +72,7 @@ Vector3 Vec2Ray(float distance) {
       2.0f * distance * std::tan(Settings->fov / 2.f * PI / 180.f);
   float frustumWidth = frustumHeight * ((float)Settings->resolutionx /
                                         (float)Settings->resolutiony);
-  Vector3 tempvec3;
+  glm::vec3 tempvec3;
   tempvec3.x = -ps * whatc * distance;
   tempvec3.y = pc * whatc * distance;
   tempvec3.z = whats * distance;
@@ -95,9 +95,9 @@ void noncamerastuff() {
   if (Global->rendermode == 1) {
     if (P1Inputs->leftclick > 0) {
       if (Global->editordraggingaxis == -1) {
-        Vector3 CurrentPoint = Global->Points[Global->editorselectedPoint],
-                temp[3] = {Vector3({4, 0, 0}), Vector3({0, 4, 0}),
-                           Vector3({0, 0, 4})};
+        glm::vec3 CurrentPoint = Global->Points[Global->editorselectedPoint],
+                  temp[3] = {glm::vec3({4, 0, 0}), glm::vec3({0, 4, 0}),
+                             glm::vec3({0, 0, 4})};
         int x, y, w = Global->windowx, h = Global->windowy,
                   rtw = Global->render_target->w,
                   rth = Global->render_target->h;
@@ -136,11 +136,11 @@ void noncamerastuff() {
       float pc = std::cos(Camera->dir.x * PI / 180.0);
       float whats = std::sin(Camera->dir.y * PI / 180.0);
       float whatc = std::cos(Camera->dir.y * PI / 180.0);
-      Vector3 ray[2] = {addVec3(Camera->position, Vec2Ray(0.25f)),
-                        addVec3(Camera->position, Vec2Ray(32.f))};
+      glm::vec3 ray[2] = {(Camera->position + Vec2Ray(0.25f)),
+                          (Camera->position + Vec2Ray(32.f))};
       SDL_Log("%f %f %f", ray[1].x, ray[1].y, ray[1].z);
       float dist = INFINITY;
-      Vector3 output;
+      glm::vec3 output;
       for (int i = 0; i < Global->mapfaces.size(); i++) {
         if (RayTriCheck(Global->Points[Global->mapfaces[i].points[0]],
                         Global->Points[Global->mapfaces[i].points[1]],
@@ -196,11 +196,11 @@ void noncamerastuff() {
     }
   }
   if (P1Inputs->F == 2) {
-    Vector3 temp = Global->Points[Global->editorselectedPoint];
+    glm::vec3 temp = Global->Points[Global->editorselectedPoint];
 
     Camera->position = addVec3(
         temp,
-        multiplyVec3(Vector3Normalize(subVec3(Camera->position, temp)), 4));
+        multiplyVec3(glm::vec3Normalize(subVec3(Camera->position, temp)), 4));
   }
   if (P1Inputs->LCTRL > 0 && P1Inputs->S == 2) {
     savemap();

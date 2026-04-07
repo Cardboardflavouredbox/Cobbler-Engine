@@ -9,8 +9,8 @@
 #include "screen.h"
 #include "update.h"
 
-float getdistancething(Vector3 P) {
-  Vector3 p1;
+float getdistancething(glm::vec3 P) {
+  glm::vec3 p1;
   p1.x = P.x - Camera->position.x;
   p1.y = P.y - Camera->position.y;
   p1.z = P.z - Camera->position.z;
@@ -20,8 +20,8 @@ float getdistancething(Vector3 P) {
   return p1.y * pc - p1.x * ps + p1.z * what;
 }
 
-ScreenPoint ToScreenSpace(Vector3 P) {
-  Vector3 p1 = subVec3(P, Camera->position);
+ScreenPoint ToScreenSpace(glm::vec3 P) {
+  glm::vec3 p1 = subVec3(P, Camera->position);
 
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
@@ -44,23 +44,23 @@ ScreenPoint ToScreenSpace(Vector3 P) {
   return screenpos;
 }
 
-float Vector2Dot(Vector2 P1, Vector2 P2) {
+float glm::vec2Dot(glm::vec2 P1, glm::vec2 P2) {
   float deltaX = P2.x - P1.x;
   float deltaY = P2.y - P1.y;
   return std::sqrt(deltaX * deltaX + deltaY * deltaY);
 }
 
-float Areathing(Vector2 a, Vector2 b, Vector2 c) {
+float Areathing(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
   return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
 }
-Vector3 GetUV(Vector2 P, ScreenPoint R1, ScreenPoint R2, ScreenPoint R3) {
+glm::vec3 GetUV(glm::vec2 P, ScreenPoint R1, ScreenPoint R2, ScreenPoint R3) {
   float det = Areathing(R1.p, R2.p, R3.p);
   float a[3] = {Areathing(R2.p, R3.p, P), Areathing(R3.p, R1.p, P),
                 Areathing(R1.p, R2.p, P)};
   for (int i = 0; i < 3; i++) a[i] /= det;
-  return Vector3({a[0], a[1], a[2]});
+  return glm::vec3({a[0], a[1], a[2]});
 }
-void DrawLine(unsigned char color, Vector3 rawvectors[]) {
+void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
   ScreenPoint vectors[2] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1])};
   if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
@@ -106,7 +106,7 @@ void DrawLine(unsigned char color, Vector3 rawvectors[]) {
   }
 }
 
-void DrawCircle(unsigned char color, Vector3 rawpoint, int radius) {
+void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
   ScreenPoint point = ToScreenSpace(rawpoint);
   if (!point.isbehindcamera)
     for (int i = point.p.x - radius; i <= point.p.x + radius; i++) {
@@ -122,9 +122,9 @@ void DrawCircle(unsigned char color, Vector3 rawpoint, int radius) {
     }
 }
 
-float anglething(Vector2 a, Vector2 b, Vector2 c) {
-  Vector2 ab = Vector2({b.x - a.x, b.y - a.y});
-  Vector2 cb = Vector2({b.x - c.x, b.y - c.y});
+float anglething(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
+  glm::vec2 ab = glm::vec2({b.x - a.x, b.y - a.y});
+  glm::vec2 cb = glm::vec2({b.x - c.x, b.y - c.y});
 
   float dot = (ab.x * cb.x + ab.y * cb.y);
   float cross = (ab.x * cb.y - ab.y * cb.x);
@@ -134,14 +134,14 @@ float anglething(Vector2 a, Vector2 b, Vector2 c) {
   return alpha * 180.f / PI + 0.5f;
 }
 
-float Vector2inTri(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3) {
+float glm::vec2inTri(glm::vec2 p, glm::vec2 v1, glm::vec2 v2, glm::vec2 v3) {
   float s1 = anglething(v3, p, v1), s2 = anglething(v1, p, v2),
         s3 = anglething(v2, p, v3);
 
   return (s1 + s2 + s3 > 360);
 }
 
-void DrawTri(int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
+void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
              int yloop, std::array<unsigned char, 4> shade) {
   ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1]),
@@ -166,16 +166,16 @@ void DrawTri(int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
     if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
     for (int i = x; i <= x2; i++) {
       for (int j = y; j <= y2; j++) {
-        Vector2 temp;
+        glm::vec2 temp;
         temp.x = i;
         temp.y = j;
         if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
             temp.y < Settings->resolutiony) {
-          if (Vector2inTri(temp, Vector2({vectors[0].p.x, vectors[0].p.y}),
-                           Vector2({vectors[1].p.x, vectors[1].p.y}),
-                           Vector2({vectors[2].p.x, vectors[2].p.y}))) {
-            Vector3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
-            Vector2 uvresult = addVec2(
+          if (glm::vec2inTri(temp, glm::vec2({vectors[0].p.x, vectors[0].p.y}),
+                             glm::vec2({vectors[1].p.x, vectors[1].p.y}),
+                             glm::vec2({vectors[2].p.x, vectors[2].p.y}))) {
+            glm::vec3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
+            glm::vec2 uvresult = addVec2(
                 addVec2(
                     multiplyVec2(multiplyVec2(UVs[0], uvw.x), vectors[0].dist),
                     multiplyVec2(multiplyVec2(UVs[1], uvw.y), vectors[1].dist)),
@@ -194,7 +194,7 @@ void DrawTri(int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
             int b = (color >> 16) & 0xFF;
             int a = (color >> 24) & 0xFF;
 
-            Vector3 tempvec3;
+            glm::vec3 tempvec3;
             tempvec3.x = rawvectors[0].x * uvw.x + rawvectors[1].x * uvw.y +
                          rawvectors[2].x * uvw.z;
             tempvec3.y = rawvectors[0].y * uvw.x + rawvectors[1].y * uvw.y +
@@ -249,17 +249,17 @@ void DrawTri(int texture, Vector3 rawvectors[], Vector2 UVs[], int xloop,
   }
 }
 
-float getinternaldivisionthing(Vector3 p1, Vector3 d, Vector3 p2) {
+float getinternaldivisionthing(glm::vec3 p1, glm::vec3 d, glm::vec3 p2) {
   float dist1 = getVec3dist(p1, d), dist2 = getVec3dist(d, p2);
   return dist1 / (dist1 + dist2);
 }
 
-Vector2 divisiontoVec2(Vector2 p1, Vector2 p2, float t) {
-  return Vector2({p2.x * t + p1.x * (1 - t), p2.y * t + p1.y * (1 - t)});
+glm::vec2 divisiontoVec2(glm::vec2 p1, glm::vec2 p2, float t) {
+  return glm::vec2({p2.x * t + p1.x * (1 - t), p2.y * t + p1.y * (1 - t)});
 }
 
-Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
-  Vector3 p1, p2;
+glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
+  glm::vec3 p1, p2;
   p1.x = invisible.x - Camera->position.x;
   p1.y = invisible.y - Camera->position.y;
   p1.z = invisible.z - Camera->position.z;
@@ -273,14 +273,14 @@ Vector3 CutLinething(Vector3 invisible, Vector3 visible) {
   float u = (p1.y * pc - p1.x * ps + p1.z * what - 0.25f) /
             (-ps * (p1.x - p2.x) + pc * (p1.y - p2.y) + what * (p1.z - p2.z));
 
-  Vector3 result =
+  glm::vec3 result =
       addVec3(invisible, multiplyVec3(subVec3(visible, invisible), u));
   return result;
 }
 
 void rendergame() {
   std::deque<Mapface> tempmapfacedeque = Global->mapfaces, addlaterfacedeque;
-  std::deque<Vector3> temppointsdeque = Global->Points;
+  std::deque<glm::vec3> temppointsdeque = Global->Points;
 
   if (Global->IsEditor) {
     tempmapfacedeque[Global->editorselectedFace].shade[0] = 128;
@@ -308,7 +308,7 @@ void rendergame() {
       }
       case 2: {
         for (int j = 0; j < 2; j++) {
-          Vector3 newvec3 = CutLinething(
+          glm::vec3 newvec3 = CutLinething(
               temppointsdeque[tempmapface->points[invisibledeque[j]]],
               temppointsdeque[tempmapface->points[visibledeque[0]]]);
           temppointsdeque.push_back(newvec3);
@@ -335,7 +335,7 @@ void rendergame() {
         newface.UVs.resize(3);
         newface.points[visibledeque[0]] = tempmapface->points[visibledeque[0]];
         newface.UVs[visibledeque[0]] = tempmapface->UVs[visibledeque[0]];
-        Vector3 newvec3;
+        glm::vec3 newvec3;
         newvec3 = CutLinething(
             temppointsdeque[tempmapface->points[invisibledeque[0]]],
             temppointsdeque[tempmapface->points[visibledeque[0]]]);
@@ -379,20 +379,20 @@ void rendergame() {
 
   if (Global->rendermode == 0) {
     for (int k = 0; k < tempmapfacedeque.size(); k++) {
-      Vector3 temp[3] = {temppointsdeque[tempmapfacedeque[k].points[0]],
-                         temppointsdeque[tempmapfacedeque[k].points[1]],
-                         temppointsdeque[tempmapfacedeque[k].points[2]]};
-      Vector2 temp2[3] = {tempmapfacedeque[k].UVs[0],
-                          tempmapfacedeque[k].UVs[1],
-                          tempmapfacedeque[k].UVs[2]};
+      glm::vec3 temp[3] = {temppointsdeque[tempmapfacedeque[k].points[0]],
+                           temppointsdeque[tempmapfacedeque[k].points[1]],
+                           temppointsdeque[tempmapfacedeque[k].points[2]]};
+      glm::vec2 temp2[3] = {tempmapfacedeque[k].UVs[0],
+                            tempmapfacedeque[k].UVs[1],
+                            tempmapfacedeque[k].UVs[2]};
       DrawTri(tempmapfacedeque[k].texture, temp, temp2,
               tempmapfacedeque[k].xloop, tempmapfacedeque[k].yloop,
               tempmapfacedeque[k].shade);
     }
   } else if (Global->rendermode == 1) {
     for (int k = 0; k < tempmapfacedeque.size(); k++) {
-      Vector3 temp[2] = {temppointsdeque[tempmapfacedeque[k].points[0]],
-                         temppointsdeque[tempmapfacedeque[k].points[1]]};
+      glm::vec3 temp[2] = {temppointsdeque[tempmapfacedeque[k].points[0]],
+                           temppointsdeque[tempmapfacedeque[k].points[1]]};
       DrawLine(10, temp);
       temp[1] = temppointsdeque[tempmapfacedeque[k].points[2]];
       DrawLine(10, temp);
@@ -403,14 +403,14 @@ void rendergame() {
       DrawCircle((Global->editorselectedPoint == k ? 32 : 37),
                  Global->Points[k], 1);
       if (Global->editorselectedPoint == k) {
-        Vector3 temp[2] = {Global->Points[k],
-                           addVec3(Global->Points[k], Vector3({0, 4, 0}))};
+        glm::vec3 temp[2] = {Global->Points[k],
+                             addVec3(Global->Points[k], glm::vec3({0, 4, 0}))};
         DrawLine(40, temp);
         DrawCircle(40, temp[1], 1);
-        temp[1] = addVec3(Global->Points[k], Vector3({4, 0, 0}));
+        temp[1] = addVec3(Global->Points[k], glm::vec3({4, 0, 0}));
         DrawLine(20, temp);
         DrawCircle(20, temp[1], 1);
-        temp[1] = addVec3(Global->Points[k], Vector3({0, 0, 4}));
+        temp[1] = addVec3(Global->Points[k], glm::vec3({0, 0, 4}));
         DrawLine(50, temp);
         DrawCircle(50, temp[1], 1);
       }

@@ -30,26 +30,32 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(freetype)
 
+FetchContent_Declare(
+	glm
+	GIT_REPOSITORY	https://github.com/g-truc/glm.git
+	GIT_TAG 1.0.3
+)
+FetchContent_MakeAvailable(glm)
+
 
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/u_render.cpp 
 src/u_input.cpp src/g_update.cpp 
-src/u_types.cpp src/u_files.cpp 
-src/u_events.cpp src/u_ui.cpp 
-src/u_components.cpp src/g_entityphysics.cpp 
-src/g_components.cpp src/g_ui_index.cpp 
-src/u_raycast.cpp)
+src/u_files.cpp src/u_events.cpp 
+src/u_ui.cpp src/u_components.cpp 
+src/g_entityphysics.cpp src/g_components.cpp 
+src/g_ui_index.cpp src/u_raycast.cpp)
 
 add_executable(Cobbler-Engine-Editor 
 src/e_main.cpp src/u_render.cpp 
 src/u_input.cpp src/e_update.cpp 
-src/u_types.cpp src/u_files.cpp 
-src/u_events.cpp src/u_ui.cpp 
-src/u_components.cpp src/e_components.cpp 
-src/e_ui_index.cpp src/u_raycast.cpp)
+src/u_files.cpp src/u_events.cpp
+src/u_ui.cpp src/u_components.cpp
+src/e_components.cpp src/e_ui_index.cpp
+src/u_raycast.cpp)
 
-target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glaze::glaze freetype)
-target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glaze::glaze freetype)
+target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm)
+target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm)
 
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(Cobbler-Engine-Editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

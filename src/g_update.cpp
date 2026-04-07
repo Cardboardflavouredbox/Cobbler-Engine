@@ -18,7 +18,7 @@ void playermovement() {
   float ps = std::sin(Camera->dir.x * PI / 180.0);
   float pc = std::cos(Camera->dir.x * PI / 180.0);
 
-  Vector3 tempmove = Vector3({0, 0, 0});
+  glm::vec3 tempmove = glm::vec3({0, 0, 0});
   if (P1Inputs->A > 0) {
     tempmove.x -= std::sin((Camera->dir.x + 90) * PI / 180.0);
     tempmove.y += std::cos((Camera->dir.x + 90) * PI / 180.0);
@@ -36,15 +36,15 @@ void playermovement() {
     tempmove.y -= pc;
   }
 
-  tempmove = Vector3Normalize(tempmove);
+  tempmove = glm::vec3Normalize(tempmove);
 
-  Camera->moveVector3 = multiplyVec3(tempmove, Camera->walkspeed);
+  Camera->movevec3 = multiplyVec3(tempmove, Camera->walkspeed);
 
   if (P1Inputs->Shift > 0)
-    Camera->moveVector3 = multiplyVec3(Camera->moveVector3, Camera->runspeed);
+    Camera->movevec3 = multiplyVec3(Camera->movevec3, Camera->runspeed);
 
   if (P1Inputs->Space == 2 && Camera->IsGrounded)
-    Camera->velocityVector3.z = Camera->jumpheight;
+    Camera->velocityvec3.z = Camera->jumpheight;
 
   if (Camera->dir.x < 0) Camera->dir.x += 360;
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;

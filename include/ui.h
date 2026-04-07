@@ -1,18 +1,17 @@
 #pragma once
 
+#include <glm/vec2.hpp>
 #include <string>
 
-#include "types.h"
-
 struct UIthing {
-  Vector2 pos;
+  glm::vec2 pos;
   virtual void update() = 0;
   virtual void render() = 0;
 };
 
 struct UIbox : public UIthing {
   unsigned char color;
-  Vector2 size;
+  glm::vec2 size;
   void update();
   void render();
 };

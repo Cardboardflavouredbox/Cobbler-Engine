@@ -103,15 +103,15 @@ bool init(bool hidemouse) {
       std::string{});
   if (error) {
     tempmapdata.Points.resize(8);
-    tempmapdata.Points[0] = Vector3({-15.f, 15.f, 2.f});
-    tempmapdata.Points[1] = Vector3({15.f, 15.f, 2.f});
-    tempmapdata.Points[2] = Vector3({15.f, 15.f, -1.f});
-    tempmapdata.Points[3] = Vector3({-15.f, 15.f, -1.f});
+    tempmapdata.Points[0] = glm::vec3({-15.f, 15.f, 2.f});
+    tempmapdata.Points[1] = glm::vec3({15.f, 15.f, 2.f});
+    tempmapdata.Points[2] = glm::vec3({15.f, 15.f, -1.f});
+    tempmapdata.Points[3] = glm::vec3({-15.f, 15.f, -1.f});
 
-    tempmapdata.Points[4] = Vector3({-15.f, -15.f, 2.f});
-    tempmapdata.Points[5] = Vector3({15.f, -15.f, 2.f});
-    tempmapdata.Points[6] = Vector3({15.f, -15.f, -1.f});
-    tempmapdata.Points[7] = Vector3({-15.f, -15.f, -1.f});
+    tempmapdata.Points[4] = glm::vec3({-15.f, -15.f, 2.f});
+    tempmapdata.Points[5] = glm::vec3({15.f, -15.f, 2.f});
+    tempmapdata.Points[6] = glm::vec3({15.f, -15.f, -1.f});
+    tempmapdata.Points[7] = glm::vec3({-15.f, -15.f, -1.f});
 
     tempmapdata.mapfaces.resize(5);
     tempmapdata.mapfaces[0].points.resize(4);
@@ -151,8 +151,8 @@ bool init(bool hidemouse) {
       tempmapdata.mapfaces[i].xloop = 8;
     }
     for (int i = 0; i < 5; i++) {
-      tempmapdata.mapfaces[i].UVs = {Vector2({0, 0}), Vector2({1, 0}),
-                                     Vector2({1, 1}), Vector2({0, 1})};
+      tempmapdata.mapfaces[i].UVs = {glm::vec2({0, 0}), glm::vec2({1, 0}),
+                                     glm::vec2({1, 1}), glm::vec2({0, 1})};
     }
     error = glz::write_file_json<glz::opts{.prettify = true}>(
         tempmapdata, "MapStuff/map/" + LoadedData->startlevel + ".json",
@@ -176,9 +176,9 @@ bool init(bool hidemouse) {
       int temppoints[3] = {Global->mapfaces[i].points[0],
                            Global->mapfaces[i].points[1],
                            Global->mapfaces[i].points[2]};
-      Vector2 tempUV[3] = {Global->mapfaces[i].UVs[0],
-                           Global->mapfaces[i].UVs[1],
-                           Global->mapfaces[i].UVs[2]};
+      glm::vec2 tempUV[3] = {Global->mapfaces[i].UVs[0],
+                             Global->mapfaces[i].UVs[1],
+                             Global->mapfaces[i].UVs[2]};
       temp.points.assign(temppoints, temppoints + 3);
       temp.UVs.assign(tempUV, tempUV + 3);
       Global->mapfaces.push_back(temp);
@@ -199,7 +199,7 @@ bool init(bool hidemouse) {
   }
 
   Camera = new Entity();
-  Camera->position = Vector3({0, 0, 3});
+  Camera->position = glm::vec3({0, 0, 3});
 
   Global->Entities.push_back(Camera);
 
