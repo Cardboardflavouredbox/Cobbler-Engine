@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "components.h"
 #include "entity.h"
@@ -57,39 +58,37 @@ bool ScreenPointMouseDetect(ScreenPoint SP) {
 
 // https://gamedev.stackexchange.com/questions/172308/c-mouse-picking-for-ray-to-plane-intersection
 // check this later
-glm::vec3 Vec2Ray(float distance) {
+glm::vec3 Vec2Ray() {
   float ps = std::sin(Camera->dir.x * PI / 180.0);
   float pc = std::cos(Camera->dir.x * PI / 180.0);
   float whats = std::sin(Camera->dir.y * PI / 180.0);
   float whatc = std::cos(Camera->dir.y * PI / 180.0);
   glm::vec2 mouse = MouseToScreenpos();
-  SDL_Log("%f %f", mouse.x, mouse.y);
-  mouse.x =
-      (mouse.x - (Settings->resolutionx / 2)) / (float)Settings->resolutionx;
-  mouse.y =
-      (mouse.y - (Settings->resolutiony / 2)) / (float)Settings->resolutiony;
+  mouse.x = (mouse.x - (Settings->resolutionx / 2)) /
+            (float)Settings->resolutionx * 2;
+  mouse.y = (mouse.y - (Settings->resolutiony / 2)) /
+            (float)Settings->resolutiony * 2;
   mouse.y *= -1;
-  float frustumHeight =
-      2.0f * distance * std::tan(Settings->fov / 2.f * PI / 180.f);
-  float frustumWidth = frustumHeight * ((float)Settings->resolutionx /
-                                        (float)Settings->resolutiony);
-  glm::vec3 tempvec3;
-  tempvec3.x = -ps * whatc * distance;
-  tempvec3.y = pc * whatc * distance;
-  tempvec3.z = whats * distance;
 
-  tempvec3.x -=
-      mouse.x * frustumWidth * std::sin((Camera->dir.x - 90) * PI / 180.0);
-  tempvec3.y +=
-      mouse.x * frustumWidth * std::cos((Camera->dir.x - 90) * PI / 180.0);
+  SDL_Log("%f %f", mouse.x, mouse.y);
 
-  tempvec3.x -= mouse.y * frustumHeight *
-                std::cos((Camera->dir.y + 90) * PI / 180.0) * ps;
-  tempvec3.y += mouse.y * frustumHeight *
-                std::cos((Camera->dir.y + 90) * PI / 180.0) * pc;
-  tempvec3.z +=
-      mouse.y * frustumHeight * std::sin((Camera->dir.y + 90) * PI / 180.0);
-  return tempvec3;
+  glm::vec3 dirtemp;
+  dirtemp.x = -ps * whatc;
+  dirtemp.y = pc * whatc;
+  dirtemp.z = whats;
+  glm::mat4 proj = glm::perspective(
+      (float)Settings->fov,
+      (float)Settings->resolutionx / (float)Settings->resolutiony, 0.25f, 64.f);
+  glm::mat4 view = glm::lookAt(Camera->position, Camera->position + dirtemp,
+                               glm::vec3({0, 0, 1}));
+
+  glm::mat4 invVP = glm::inverse(proj * view);
+  glm::vec4 screenPos = glm::vec4(mouse.x, mouse.y, 1.0f, 1.0f);
+  glm::vec4 worldPos = invVP * screenPos;
+
+  glm::vec3 dir = glm::normalize(glm::vec3(worldPos));
+
+  return dir;
 }
 
 void noncamerastuff() {
@@ -136,8 +135,8 @@ void noncamerastuff() {
       float pc = std::cos(Camera->dir.x * PI / 180.0);
       float whats = std::sin(Camera->dir.y * PI / 180.0);
       float whatc = std::cos(Camera->dir.y * PI / 180.0);
-      glm::vec3 ray[2] = {(Camera->position + Vec2Ray(0.25f)),
-                          (Camera->position + Vec2Ray(32.f))};
+      glm::vec3 ray[2] = {(Camera->position),
+                          (Camera->position + Vec2Ray() * 32.f)};
       SDL_Log("%f %f %f", ray[1].x, ray[1].y, ray[1].z);
       float dist = INFINITY;
       glm::vec3 output;

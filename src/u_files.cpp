@@ -241,6 +241,7 @@ bool init(bool hidemouse) {
     tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
                    ".bmp");
     surface = SDL_LoadBMP(tempstr.c_str());
+    if (surface == NULL) return false;
     surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
     // SDL_SetSurfacePalette(surface, palette);
     Global->textures[i] = surface;
