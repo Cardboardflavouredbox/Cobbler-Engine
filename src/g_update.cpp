@@ -1,4 +1,4 @@
-#include <SDL3/SDL.h>
+#include <SDL3/SDL_timer.h>
 
 #include <cmath>
 #include <glm/glm.hpp>

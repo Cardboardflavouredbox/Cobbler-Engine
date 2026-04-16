@@ -1,5 +1,8 @@
-#include <SDL3/SDL.h>
 #include <SDL3/SDL_dialog.h>
+#include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_log.h>
+#include <SDL3/SDL_timer.h>
 #include <ft2build.h>
 
 #include "files.h"
