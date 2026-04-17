@@ -33,9 +33,6 @@ struct GlobalClass {
   float deltaTime;
   int skybox;
   int rendermode = 0;  // 0==default, 1==wireframe and points
-  int editorselectedPoint = 0;
-  int editorselectedFace = 0;
-  int editordraggingaxis = -1;
   bool IsEditor;
 
   int windowx = 320, windowy = 200;
@@ -56,6 +53,10 @@ struct GlobalClass {
 
   std::unordered_map<int, std::deque<UIthing*>> UImap;
   int UIindex = 0;
+};
+
+struct EditorClass {
+  float x, y, zoom;
 };
 
 struct ZipData {

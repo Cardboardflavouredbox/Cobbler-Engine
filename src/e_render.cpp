@@ -1,8 +1,30 @@
 #include "extern.h"
 #include "map.h"
+#include "rendermath.h"
 #include "update.h"
 
-void rendergame() {}
+bool pointoffscreen(glm::vec3 P) { return false; }
+
+void DrawTri(Mapface face) {}
+
+void rendergame() {
+  if (Global->rendermode == 0) {
+    std::deque<Mapface> tempmapfacedeque = Global->mapfaces;
+    for (int i = 0; i < tempmapfacedeque.size(); i++) {
+      Mapface* tempmapface = &tempmapfacedeque[i];
+      int check = 0;
+      for (int j = 0; j < 3; j++) {
+        if (!pointoffscreen(Global->Points[tempmapface->points[j]])) break;
+        check++;
+      }
+      if (check == 3) {
+        tempmapfacedeque.erase(tempmapfacedeque.begin() + i);
+        i--;
+      } else
+        DrawTri(*tempmapface);
+    }
+  }
+}
 
 void renderUI() {
   std::deque<UIthing*>* tempdeque = &Global->UImap[Global->UIindex];

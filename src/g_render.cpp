@@ -1,10 +1,10 @@
-#include <cmath>
 #include <deque>
 #include <glm/glm.hpp>
 #include <string>
 
 #include "extern.h"
 #include "map.h"
+#include "rendermath.h"
 #include "screen.h"
 #include "update.h"
 
@@ -42,16 +42,6 @@ ScreenPoint ToScreenSpace(glm::vec3 P) {
   return screenpos;
 }
 
-float Areathing(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
-  return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
-}
-glm::vec3 GetUV(glm::vec2 P, ScreenPoint R1, ScreenPoint R2, ScreenPoint R3) {
-  float det = Areathing(R1.p, R2.p, R3.p);
-  float a[3] = {Areathing(R2.p, R3.p, P), Areathing(R3.p, R1.p, P),
-                Areathing(R1.p, R2.p, P)};
-  for (int i = 0; i < 3; i++) a[i] /= det;
-  return glm::vec3({a[0], a[1], a[2]});
-}
 void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
   ScreenPoint vectors[2] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1])};
@@ -114,25 +104,6 @@ void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
     }
 }
 
-float anglething(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
-  glm::vec2 ab = glm::vec2({b.x - a.x, b.y - a.y});
-  glm::vec2 cb = glm::vec2({b.x - c.x, b.y - c.y});
-
-  float dot = (ab.x * cb.x + ab.y * cb.y);
-  float cross = (ab.x * cb.y - ab.y * cb.x);
-
-  float alpha = atan2f(cross, dot);
-
-  return alpha * 180.f / PI + 0.5f;
-}
-
-float Vec2inTri(glm::vec2 p, glm::vec2 v1, glm::vec2 v2, glm::vec2 v3) {
-  float s1 = anglething(v3, p, v1), s2 = anglething(v1, p, v2),
-        s3 = anglething(v2, p, v3);
-
-  return (s1 + s2 + s3 > 360);
-}
-
 void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
              int yloop, std::array<unsigned char, 4> shade) {
   ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
@@ -166,7 +137,8 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
           if (Vec2inTri(temp, glm::vec2({vectors[0].p.x, vectors[0].p.y}),
                         glm::vec2({vectors[1].p.x, vectors[1].p.y}),
                         glm::vec2({vectors[2].p.x, vectors[2].p.y}))) {
-            glm::vec3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
+            glm::vec3 uvw =
+                GetUV(temp, vectors[0].p, vectors[1].p, vectors[2].p);
             glm::vec2 uvresult = ((((UVs[0] * uvw.x) * vectors[0].dist) +
                                    ((UVs[1] * uvw.y) * vectors[1].dist)) +
                                   ((UVs[2] * uvw.z) * vectors[2].dist));
@@ -270,11 +242,6 @@ glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
 void rendergame() {
   std::deque<Mapface> tempmapfacedeque = Global->mapfaces, addlaterfacedeque;
   std::deque<glm::vec3> temppointsdeque = Global->Points;
-
-  if (Global->IsEditor) {
-    tempmapfacedeque[Global->editorselectedFace].shade[0] = 128;
-    tempmapfacedeque[Global->editorselectedFace].shade[1] = 128;
-  }
 
   for (int i = 0; i < tempmapfacedeque.size(); i++) {
     Mapface* tempmapface = &tempmapfacedeque[i];
@@ -388,22 +355,20 @@ void rendergame() {
       temp[0] = temppointsdeque[tempmapfacedeque[k].points[1]];
       DrawLine(10, temp);
     }
-    for (int k = 0; k < Global->Points.size(); k++) {
-      DrawCircle((Global->editorselectedPoint == k ? 32 : 37),
-                 Global->Points[k], 1);
-      if (Global->editorselectedPoint == k) {
-        glm::vec3 temp[2] = {Global->Points[k],
-                             (Global->Points[k] + glm::vec3({0, 4, 0}))};
-        DrawLine(40, temp);
-        DrawCircle(40, temp[1], 1);
-        temp[1] = (Global->Points[k] + glm::vec3({4, 0, 0}));
-        DrawLine(20, temp);
-        DrawCircle(20, temp[1], 1);
-        temp[1] = (Global->Points[k] + glm::vec3({0, 0, 4}));
-        DrawLine(50, temp);
-        DrawCircle(50, temp[1], 1);
-      }
-    }
+    // for (int k = 0; k < Global->Points.size(); k++) {
+    //   if (Global->editorselectedPoint == k) {
+    //     glm::vec3 temp[2] = {Global->Points[k],
+    //                          (Global->Points[k] + glm::vec3({0, 4, 0}))};
+    //     DrawLine(40, temp);
+    //     DrawCircle(40, temp[1], 1);
+    //     temp[1] = (Global->Points[k] + glm::vec3({4, 0, 0}));
+    //     DrawLine(20, temp);
+    //     DrawCircle(20, temp[1], 1);
+    //     temp[1] = (Global->Points[k] + glm::vec3({0, 0, 4}));
+    //     DrawLine(50, temp);
+    //     DrawCircle(50, temp[1], 1);
+    //   }
+    // }
   }
 }
 
