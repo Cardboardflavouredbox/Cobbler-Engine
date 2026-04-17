@@ -39,7 +39,7 @@ FetchContent_MakeAvailable(glm)
 
 
 add_executable(Cobbler-Engine 
-src/g_main.cpp src/u_render.cpp 
+src/g_main.cpp src/g_render.cpp 
 src/u_input.cpp src/g_update.cpp 
 src/u_files.cpp src/u_events.cpp 
 src/u_ui.cpp src/u_components.cpp 
@@ -47,7 +47,7 @@ src/g_entityphysics.cpp src/g_components.cpp
 src/g_ui_index.cpp src/u_raycast.cpp)
 
 add_executable(Cobbler-Engine-Editor 
-src/e_main.cpp src/u_render.cpp 
+src/e_main.cpp src/e_render.cpp 
 src/u_input.cpp src/e_update.cpp 
 src/u_files.cpp src/u_events.cpp
 src/u_ui.cpp src/u_components.cpp

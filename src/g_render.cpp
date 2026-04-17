@@ -1,5 +1,3 @@
-
-
 #include <cmath>
 #include <deque>
 #include <glm/glm.hpp>
@@ -27,7 +25,6 @@ ScreenPoint ToScreenSpace(glm::vec3 P) {
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
   float whats = std::sin(Camera->dir.y * PI / 180.f);
-  float whatc = std::cos(Camera->dir.y * PI / 180.f);
 
   float tx = p1.x * pc + p1.y * ps;
   float ty = p1.y * pc - p1.x * ps + p1.z * whats;
