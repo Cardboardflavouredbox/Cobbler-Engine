@@ -2,6 +2,7 @@
 #include "global.h"
 
 extern GlobalClass* Global;
+extern EditorClass* Editor;
 extern SettingsClass* Settings;
 extern Inputs* P1Inputs;
 extern Entity* Camera;

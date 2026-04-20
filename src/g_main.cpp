@@ -13,6 +13,7 @@
 #include "update.h"
 
 GlobalClass* Global;
+EditorClass* Editor;
 SettingsClass* Settings;
 ZipData* LoadedData;
 Entity* Camera;

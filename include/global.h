@@ -56,7 +56,8 @@ struct GlobalClass {
 };
 
 struct EditorClass {
-  float x, y, zoom;
+  glm::vec2 pos;
+  float zoom = 1;
 };
 
 struct ZipData {

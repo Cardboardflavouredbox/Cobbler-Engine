@@ -13,6 +13,7 @@
 #include "update.h"
 
 GlobalClass* Global;
+EditorClass* Editor;
 SettingsClass* Settings;
 ZipData* LoadedData;
 Entity* Camera;
@@ -21,6 +22,7 @@ Uint32 lastTime;
 Uint64 currentTime = SDL_GetPerformanceCounter();
 
 bool editorinit() {
+  Editor = new EditorClass();
   Global->UImap.reserve(4);
   for (int i = 0; i < 2; i++) {
     std::deque<UIthing*> tempdeque;

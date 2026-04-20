@@ -15,8 +15,8 @@ glm::vec3 GetUV(glm::vec2 P, glm::vec2 R1, glm::vec2 R2, glm::vec2 R3) {
 }
 
 float anglething(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
-  glm::vec2 ab = glm::vec2({b.x - a.x, b.y - a.y});
-  glm::vec2 cb = glm::vec2({b.x - c.x, b.y - c.y});
+  glm::vec2 ab = b - a;
+  glm::vec2 cb = b - c;
 
   float dot = (ab.x * cb.x + ab.y * cb.y);
   float cross = (ab.x * cb.y - ab.y * cb.x);
@@ -26,7 +26,7 @@ float anglething(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
   return alpha * 180.f / PI + 0.5f;
 }
 
-float Vec2inTri(glm::vec2 p, glm::vec2 v1, glm::vec2 v2, glm::vec2 v3) {
+bool Vec2inTri(glm::vec2 p, glm::vec2 v1, glm::vec2 v2, glm::vec2 v3) {
   float s1 = anglething(v3, p, v1), s2 = anglething(v1, p, v2),
         s3 = anglething(v2, p, v3);
 

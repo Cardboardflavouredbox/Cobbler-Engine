@@ -37,7 +37,7 @@ void playermovement() {
     tempmove.y -= pc;
   }
 
-  tempmove = glm::normalize(tempmove);
+  if (tempmove != glm::vec3(0)) tempmove = glm::normalize(tempmove);
 
   Camera->movevec3 = (tempmove * Camera->walkspeed);
 

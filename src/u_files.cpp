@@ -215,6 +215,8 @@ bool init(bool hidemouse) {
   }
 
   Camera = new Entity();
+  Camera->hitbox[0] = glm::vec3({-1, -1, -3});
+  Camera->hitbox[1] = glm::vec3({1, 1, 0});
   Camera->position = glm::vec3({0, 0, 3});
 
   Global->Entities.push_back(Camera);
@@ -287,6 +289,7 @@ void quit() {
     SDL_DestroySurface(i);
   }
   delete (Global);
+  delete (Editor);
   delete (Settings);
   delete (Camera);
   delete (P1Inputs);

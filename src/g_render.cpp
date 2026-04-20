@@ -1,3 +1,5 @@
+#include <SDL3/SDL_log.h>
+
 #include <deque>
 #include <glm/glm.hpp>
 #include <string>
@@ -9,10 +11,7 @@
 #include "update.h"
 
 float getdistancething(glm::vec3 P) {
-  glm::vec3 p1;
-  p1.x = P.x - Camera->position.x;
-  p1.y = P.y - Camera->position.y;
-  p1.z = P.z - Camera->position.z;
+  glm::vec3 p1 = P - Camera->position;
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
   float what = std::sin(Camera->dir.y * PI / 180.f);
@@ -134,9 +133,7 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
         temp.y = j;
         if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
             temp.y < Settings->resolutiony) {
-          if (Vec2inTri(temp, glm::vec2({vectors[0].p.x, vectors[0].p.y}),
-                        glm::vec2({vectors[1].p.x, vectors[1].p.y}),
-                        glm::vec2({vectors[2].p.x, vectors[2].p.y}))) {
+          if (Vec2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p)) {
             glm::vec3 uvw =
                 GetUV(temp, vectors[0].p, vectors[1].p, vectors[2].p);
             glm::vec2 uvresult = ((((UVs[0] * uvw.x) * vectors[0].dist) +

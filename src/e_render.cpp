@@ -1,11 +1,116 @@
+#include <SDL3/SDL_log.h>
+
+#include <cmath>
+
 #include "extern.h"
 #include "map.h"
 #include "rendermath.h"
 #include "update.h"
 
+glm::vec2 ToScreenSpace(glm::vec3 P) {
+  glm::vec2 temp = (glm::vec2)P - Editor->pos;
+  temp *= Editor->zoom;
+  return temp;
+}
+
 bool pointoffscreen(glm::vec3 P) { return false; }
 
-void DrawTri(Mapface face) {}
+void DrawTri(Mapface face) {
+  glm::vec2 vectors[3] = {ToScreenSpace(Global->Points[face.points[0]]),
+                          ToScreenSpace(Global->Points[face.points[1]]),
+                          ToScreenSpace(Global->Points[face.points[2]])};
+  int x = vectors[0].x, x2 = vectors[0].x, y = vectors[0].y, y2 = vectors[0].y;
+  for (int i = 1; i < 3; i++) {
+    if (vectors[i].x < x) x = vectors[i].x;
+    if (vectors[i].x > x2) x2 = vectors[i].x;
+    if (vectors[i].y < y) y = vectors[i].y;
+    if (vectors[i].y > y2) y2 = vectors[i].y;
+  }
+  if (x < 0) x = 0;
+  if (x >= Settings->resolutionx - 1) x = Settings->resolutionx - 1;
+  if (x2 < 0) x2 = 0;
+  if (x2 >= Settings->resolutionx - 1) x2 = Settings->resolutionx - 1;
+  if (y < 0) y = 0;
+  if (y >= Settings->resolutiony - 1) y = Settings->resolutiony - 1;
+  if (y2 < 0) y2 = 0;
+  if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
+  for (int i = x; i <= x2; i++) {
+    for (int j = y; j <= y2; j++) {
+      glm::vec2 temp;
+      temp.x = i;
+      temp.y = j;
+      if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
+          temp.y < Settings->resolutiony) {
+        if (Vec2inTri(temp, vectors[1], vectors[0], vectors[2])) {
+          SDL_Log("%d %d", i, j);
+          glm::vec3 uvw = GetUV(temp, vectors[1], vectors[0], vectors[2]);
+          glm::vec2 uvresult =
+              ((((face.UVs[0] * uvw.x) * Global->Points[face.points[0]].z) +
+                ((face.UVs[1] * uvw.y) * Global->Points[face.points[1]].z)) +
+               ((face.UVs[2] * uvw.z) * Global->Points[face.points[2]].z));
+          uvresult =
+              (uvresult * (1 / (uvw.x * Global->Points[face.points[0]].z +
+                                uvw.y * Global->Points[face.points[1]].z +
+                                uvw.z * Global->Points[face.points[2]].z)));
+
+          int uvxthing = (int(128 * (uvresult.x)) * face.xloop) % 128;
+          int uvything = (int(128 * (uvresult.y)) * face.yloop) % 128;
+          Uint32 color =
+              static_cast<Uint32*>(Global->textures[face.texture]
+                                       ->pixels)[uvxthing + uvything * 128];
+
+          int r = (color >> 0) & 0xFF;
+          int g = (color >> 8) & 0xFF;
+          int b = (color >> 16) & 0xFF;
+          int a = (color >> 24) & 0xFF;
+
+          glm::vec3 tempvec3;
+          tempvec3.x = Global->Points[face.points[0]].x * uvw.x +
+                       Global->Points[face.points[1]].x * uvw.y +
+                       Global->Points[face.points[2]].x * uvw.z;
+          tempvec3.y = Global->Points[face.points[0]].y * uvw.x +
+                       Global->Points[face.points[1]].y * uvw.y +
+                       Global->Points[face.points[2]].y * uvw.z;
+          tempvec3.z = Global->Points[face.points[0]].z;
+          tempvec3.x -= Editor->pos.x;
+          tempvec3.y -= Editor->pos.y;
+          float dist =
+              std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
+                        tempvec3.z * tempvec3.z);
+          SDL_Log("%f", dist);
+          if (Global->pixelsdepth[i + j * Global->pitch] > dist * 3 ||
+              Global->pixelstransparency[i + j * Global->pitch] < 255) {
+            r = r * (int)face.shade[0] / 255;
+            g = g * (int)face.shade[1] / 255;
+            b = b * (int)face.shade[2] / 255;
+            if (Global->pixelstransparency[i + j * Global->pitch] < 255) {
+              int transparency =
+                  Global->pixelstransparency[i + j * Global->pitch];
+              SDL_Color tempcolor =
+                  Global->palette
+                      ->colors[Global->pixels[i + j * Global->pitch]];
+              r = r * (255 - transparency) / 255 +
+                  tempcolor.r * transparency / 255;
+              g = g * (255 - transparency) / 255 +
+                  tempcolor.g * transparency / 255;
+              b = b * (255 - transparency) / 255 +
+                  tempcolor.b * transparency / 255;
+            }
+            if (r < 0) r = 0;
+            if (g < 0) g = 0;
+            if (b < 0) b = 0;
+
+            if (dist < 0) dist = 0;
+            if (Global->pixelstransparency[i + j * Global->pitch] == 255)
+              Global->pixelsdepth[i + j * Global->pitch] =
+                  (unsigned char)dist * 4;
+            Global->pixelstransparency[i + j * Global->pitch] = a;
+          }
+        }
+      }
+    }
+  }
+}
 
 void rendergame() {
   if (Global->rendermode == 0) {

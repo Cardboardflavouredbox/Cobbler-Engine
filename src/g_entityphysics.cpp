@@ -1,3 +1,5 @@
+#include <SDL3/SDL_log.h>
+
 #include "entityphysics.h"
 
 glm::vec2 SAT3Dto2D(int normal, glm::vec3 point) {
