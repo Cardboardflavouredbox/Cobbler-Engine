@@ -1,5 +1,3 @@
-#include <SDL3/SDL_log.h>
-
 #include <cmath>
 
 #include "extern.h"
@@ -10,6 +8,8 @@
 glm::vec2 ToScreenSpace(glm::vec3 P) {
   glm::vec2 temp = (glm::vec2)P - Editor->pos;
   temp *= Editor->zoom;
+  temp.x += (Settings->resolutionx / 2);
+  temp.y += (Settings->resolutiony / 2);
   return temp;
 }
 
@@ -42,7 +42,6 @@ void DrawTri(Mapface face) {
       if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
           temp.y < Settings->resolutiony) {
         if (Vec2inTri(temp, vectors[1], vectors[0], vectors[2])) {
-          SDL_Log("%d %d", i, j);
           glm::vec3 uvw = GetUV(temp, vectors[1], vectors[0], vectors[2]);
           glm::vec2 uvresult =
               ((((face.UVs[0] * uvw.x) * Global->Points[face.points[0]].z) +
@@ -77,7 +76,6 @@ void DrawTri(Mapface face) {
           float dist =
               std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
                         tempvec3.z * tempvec3.z);
-          SDL_Log("%f", dist);
           if (Global->pixelsdepth[i + j * Global->pitch] > dist * 3 ||
               Global->pixelstransparency[i + j * Global->pitch] < 255) {
             r = r * (int)face.shade[0] / 255;

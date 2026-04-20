@@ -63,8 +63,12 @@ void noncamerastuff() {
 
 void movecamera() {
   if (P1Inputs->rightclick > 0) {
-    Camera->dir.x += -0.5f * P1Inputs->MouseDelta.x;
-    Camera->dir.y += -0.5f * P1Inputs->MouseDelta.y;
+    int w = Global->windowx, h = Global->windowy,
+        rtw = Global->render_target->w, rth = Global->render_target->h;
+    int size = w / rtw;
+    if (size > h / rth) size = h / rth;
+    Editor->pos.x -= P1Inputs->MouseDelta.x / Editor->zoom / (float)size;
+    Editor->pos.y -= P1Inputs->MouseDelta.y / Editor->zoom / (float)size;
   }
 
   if (P1Inputs->numkeys[0] == 2) {
@@ -73,27 +77,14 @@ void movecamera() {
     Global->rendermode = 1;
   }
 
-  float ps = std::sin(Camera->dir.x * PI / 180.0);
-  float pc = std::cos(Camera->dir.x * PI / 180.0);
-  float whats = std::sin(Camera->dir.y * PI / 180.0);
-  float whatc = std::cos(Camera->dir.y * PI / 180.0);
-
-  Camera->position.x -=
-      P1Inputs->MouseScroll.x * std::sin((Camera->dir.x - 90) * PI / 180.0);
-  Camera->position.y +=
-      P1Inputs->MouseScroll.x * std::cos((Camera->dir.x - 90) * PI / 180.0);
-  Camera->position.x -= P1Inputs->MouseScroll.y * ps * whatc;
-  Camera->position.y += P1Inputs->MouseScroll.y * pc * whatc;
-  Camera->position.z += P1Inputs->MouseScroll.y * whats;
+  Editor->zoom -= P1Inputs->MouseScroll.y;
+  if (Editor->zoom < 0.0625f) Editor->zoom = 0.0625f;
+  if (Editor->zoom > 16.f) Editor->zoom = 16.f;
 
   P1Inputs->MouseDelta.x = 0;
   P1Inputs->MouseDelta.y = 0;
   P1Inputs->MouseScroll.x = std::lerp(P1Inputs->MouseScroll.x, 0, 0.5f);
   P1Inputs->MouseScroll.y = std::lerp(P1Inputs->MouseScroll.y, 0, 0.5f);
-  if (Camera->dir.x < 0) Camera->dir.x += 360;
-  if (Camera->dir.x >= 360) Camera->dir.x -= 360;
-  if (Camera->dir.y >= 90) Camera->dir.y = 90;
-  if (Camera->dir.y <= -90) Camera->dir.y = -90;
 }
 
 void update() {
