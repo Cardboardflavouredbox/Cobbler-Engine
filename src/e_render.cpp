@@ -100,6 +100,9 @@ void DrawTri(Mapface face) {
             if (g < 0) g = 0;
             if (b < 0) b = 0;
 
+            Global->pixels[i + j * Global->pitch] =
+                SDL_MapSurfaceRGB(Global->render_target, r, g, b);
+
             if (dist < 0) dist = 0;
             if (Global->pixelstransparency[i + j * Global->pitch] == 255)
               Global->pixelsdepth[i + j * Global->pitch] =
