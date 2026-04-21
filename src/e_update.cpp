@@ -67,7 +67,7 @@ void movecamera() {
         rtw = Global->render_target->w, rth = Global->render_target->h;
     int size = w / rtw;
     if (size > h / rth) size = h / rth;
-    Editor->pos.x -= P1Inputs->MouseDelta.x / Editor->zoom / (float)size;
+    Editor->pos.x += P1Inputs->MouseDelta.x / Editor->zoom / (float)size;
     Editor->pos.y -= P1Inputs->MouseDelta.y / Editor->zoom / (float)size;
   }
 

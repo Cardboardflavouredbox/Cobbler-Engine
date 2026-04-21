@@ -8,6 +8,7 @@
 glm::vec2 ToScreenSpace(glm::vec3 P) {
   glm::vec2 temp = (glm::vec2)P - Editor->pos;
   temp *= Editor->zoom;
+  temp.x *= -1;
   temp.x += (Settings->resolutionx / 2);
   temp.y += (Settings->resolutiony / 2);
   return temp;
@@ -41,8 +42,8 @@ void DrawTri(Mapface face) {
       temp.y = j;
       if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
           temp.y < Settings->resolutiony) {
-        if (Vec2inTri(temp, vectors[1], vectors[0], vectors[2])) {
-          glm::vec3 uvw = GetUV(temp, vectors[1], vectors[0], vectors[2]);
+        if (Vec2inTri(temp, vectors[0], vectors[1], vectors[2])) {
+          glm::vec3 uvw = GetUV(temp, vectors[0], vectors[1], vectors[2]);
           glm::vec2 uvresult =
               ((((face.UVs[0] * uvw.x) * Global->Points[face.points[0]].z) +
                 ((face.UVs[1] * uvw.y) * Global->Points[face.points[1]].z)) +
