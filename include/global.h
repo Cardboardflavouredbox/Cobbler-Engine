@@ -86,4 +86,5 @@ struct SettingsClass {
   int fov = 90;
   int fps = 60;
   bool vsync = true;
+  int graphicsmode = 1;  // 0 = software, 1 = opengl
 };

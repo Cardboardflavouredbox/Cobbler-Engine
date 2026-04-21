@@ -145,13 +145,8 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
 
             int uvxthing = (int(128 * (uvresult.x)) * xloop) % 128;
             int uvything = (int(128 * (uvresult.y)) * yloop) % 128;
-            Uint32 color = static_cast<Uint32*>(
+            Uint8 color = static_cast<Uint8*>(
                 Global->textures[texture]->pixels)[uvxthing + uvything * 128];
-
-            int r = (color >> 0) & 0xFF;
-            int g = (color >> 8) & 0xFF;
-            int b = (color >> 16) & 0xFF;
-            int a = (color >> 24) & 0xFF;
 
             glm::vec3 tempvec3;
             tempvec3.x = rawvectors[0].x * uvw.x + rawvectors[1].x * uvw.y +
@@ -166,40 +161,39 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
             float dist =
                 std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
                           tempvec3.z * tempvec3.z);
-            if (Global->pixelsdepth[i + j * Global->pitch] > dist * 3 ||
-                Global->pixelstransparency[i + j * Global->pitch] < 255) {
-              r -= dist * 3;
-              g -= dist * 3;
-              b -= dist * 3;
-              r = r * (int)shade[0] / 255;
-              g = g * (int)shade[1] / 255;
-              b = b * (int)shade[2] / 255;
+            if (Global->pixelsdepth[i + j * Global->pitch] > dist * 3 /*||
+                Global->pixelstransparency[i + j * Global->pitch] < 255*/) {
+              // r -= dist * 3;
+              // g -= dist * 3;
+              // b -= dist * 3;
+              // r = r * (int)shade[0] / 255;
+              // g = g * (int)shade[1] / 255;
+              // b = b * (int)shade[2] / 255;
               // r = uvresult.x * 255;
               // g = uvresult.y * 255;
               // b = 0;
-              if (Global->pixelstransparency[i + j * Global->pitch] < 255) {
-                int transparency =
-                    Global->pixelstransparency[i + j * Global->pitch];
-                SDL_Color tempcolor =
-                    Global->palette
-                        ->colors[Global->pixels[i + j * Global->pitch]];
-                r = r * (255 - transparency) / 255 +
-                    tempcolor.r * transparency / 255;
-                g = g * (255 - transparency) / 255 +
-                    tempcolor.g * transparency / 255;
-                b = b * (255 - transparency) / 255 +
-                    tempcolor.b * transparency / 255;
-              }
-              if (r < 0) r = 0;
-              if (g < 0) g = 0;
-              if (b < 0) b = 0;
-              Global->pixels[i + j * Global->pitch] =
-                  SDL_MapSurfaceRGB(Global->render_target, r, g, b);
+              // if (Global->pixelstransparency[i + j * Global->pitch] < 255) {
+              //   int transparency =
+              //       Global->pixelstransparency[i + j * Global->pitch];
+              //   SDL_Color tempcolor =
+              //       Global->palette
+              //           ->colors[Global->pixels[i + j * Global->pitch]];
+              //   r = r * (255 - transparency) / 255 +
+              //       tempcolor.r * transparency / 255;
+              //   g = g * (255 - transparency) / 255 +
+              //       tempcolor.g * transparency / 255;
+              //   b = b * (255 - transparency) / 255 +
+              //       tempcolor.b * transparency / 255;
+              // }
+              // if (r < 0) r = 0;
+              // if (g < 0) g = 0;
+              // if (b < 0) b = 0;
+              Global->pixels[i + j * Global->pitch] = color;
               if (dist < 0) dist = 0;
               if (Global->pixelstransparency[i + j * Global->pitch] == 255)
                 Global->pixelsdepth[i + j * Global->pitch] =
                     (unsigned char)dist * 4;
-              Global->pixelstransparency[i + j * Global->pitch] = a;
+              Global->pixelstransparency[i + j * Global->pitch] = 255;
             }
           }
         }
@@ -382,36 +376,32 @@ void renderbackground() {
     int x = Settings->resolutionx, y = Settings->resolutiony;
     for (int i = 0; i < x; i++) {
       for (int j = 0; j < y; j++) {
-        if (Global->pixelsdepth[i + j * Global->pitch] == 65535 ||
-            Global->pixelstransparency[i + j * Global->pitch] < 255) {
-          Uint32 color =
-              static_cast<Uint32*>(Global->textures[Global->skybox]->pixels)
+        if (Global->pixelsdepth[i + j * Global->pitch] == 65535 /*||
+            Global->pixelstransparency[i + j * Global->pitch] < 255*/) {
+          Uint8 color =
+              static_cast<Uint8*>(Global->textures[Global->skybox]->pixels)
                   [(int(i * 320.f / x) +
                     int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) %
                        640 +
                    (int((1 - (Camera->dir.y) / 90.f) * 200.f) +
                     int(j * 200.f / y)) *
                        640];
-          int r = (color >> 0) & 0xFF;
-          int g = (color >> 8) & 0xFF;
-          int b = (color >> 16) & 0xFF;
-          int a = (color >> 24) & 0xFF;
 
-          if (Global->pixelstransparency[i + j * Global->pitch] < 255) {
-            int transparency =
-                Global->pixelstransparency[i + j * Global->pitch];
-            SDL_Color tempcolor =
-                Global->palette->colors[Global->pixels[i + j * Global->pitch]];
-            r = r * (255 - transparency) / 255 +
-                tempcolor.r * transparency / 255;
-            g = g * (255 - transparency) / 255 +
-                tempcolor.g * transparency / 255;
-            b = b * (255 - transparency) / 255 +
-                tempcolor.b * transparency / 255;
-          }
+          // if (Global->pixelstransparency[i + j * Global->pitch] < 255) {
+          //   int transparency =
+          //       Global->pixelstransparency[i + j * Global->pitch];
+          //   SDL_Color tempcolor =
+          //       Global->palette->colors[Global->pixels[i + j *
+          //       Global->pitch]];
+          //   r = r * (255 - transparency) / 255 +
+          //       tempcolor.r * transparency / 255;
+          //   g = g * (255 - transparency) / 255 +
+          //       tempcolor.g * transparency / 255;
+          //   b = b * (255 - transparency) / 255 +
+          //       tempcolor.b * transparency / 255;
+          // }
 
-          Global->pixels[i + j * Global->pitch] =
-              SDL_MapSurfaceRGB(Global->render_target, r, g, b);
+          Global->pixels[i + j * Global->pitch] = color;
         }
       }
     }

@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 project(Cobbler-Engine)
 
+
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include(FetchContent)
+
+find_package(OpenGL REQUIRED)
 
 FetchContent_Declare(
     SDL3
@@ -55,8 +58,8 @@ src/u_ui.cpp src/u_components.cpp
 src/e_components.cpp src/e_ui_index.cpp
 src/u_raycast.cpp src/u_rendermath.cpp)
 
-target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm)
-target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm)
+target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm OpenGL::GL)
+target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm OpenGL::GL)
 
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(Cobbler-Engine-Editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

@@ -1,3 +1,4 @@
+#include <OpenGL/gl.h>
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_init.h>
