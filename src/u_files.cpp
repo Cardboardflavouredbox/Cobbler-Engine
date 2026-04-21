@@ -247,8 +247,10 @@ bool init(bool hidemouse) {
                    ".bmp");
     surface = SDL_LoadBMP(tempstr.c_str());
     if (surface == NULL) return false;
-    surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
-    // SDL_SetSurfacePalette(surface, palette);
+    surface = SDL_ConvertSurfaceAndColorspace(surface, SDL_PIXELFORMAT_INDEX8,
+                                              Global->palette,
+                                              SDL_COLORSPACE_RGB_DEFAULT, 0);
+    SDL_SetSurfacePalette(surface, Global->palette);
     Global->textures[i] = surface;
   }
 
