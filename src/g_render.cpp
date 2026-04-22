@@ -494,11 +494,10 @@ void openglrender() {
   glBegin(GL_TRIANGLES);
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     glColor3f(1, 1, 1);
-
     for (int j = 0; j < 3; j++) {
       glm::vec3 temp = Global->Points[Global->mapfaces[i].points[j]];
       temp -= Camera->position;
-      glVertex3f(temp.x, temp.y, temp.z);
+      glVertex3f(temp.x / 64, temp.y / 64, temp.z / 64);
     }
   }
   glEnd();

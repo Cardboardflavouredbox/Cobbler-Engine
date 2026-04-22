@@ -4,6 +4,8 @@
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_timer.h>
 #include <ft2build.h>
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl.h>
 
 #include "files.h"
 #include FT_FREETYPE_H
@@ -225,17 +227,30 @@ bool init(bool hidemouse) {
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
   if (Settings->graphicsmode == 1) {
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
+                        SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+
     Global->window = SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
                                       Settings->resolutiony,
                                       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                        SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
     // Create OpenGL context
     Global->GLContext = SDL_GL_CreateContext(Global->window);
+
+    SDL_GL_MakeCurrent(Global->window, Global->GLContext);
+
     SDL_GL_SetSwapInterval(1);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    SDL_Log("%d", glGetError());
   } else {
     Global->window =
         SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
