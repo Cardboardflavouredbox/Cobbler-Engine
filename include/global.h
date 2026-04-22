@@ -28,6 +28,8 @@ struct GlobalClass {
   SDL_Surface* render_target;
   SDL_Palette* palette;
 
+  SDL_GLContext GLContext;
+
   bool IsRunning;
   bool pause = false, isopeningfile = false;
   float deltaTime;

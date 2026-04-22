@@ -1,4 +1,3 @@
-#include <OpenGL/gl.h>
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_init.h>
@@ -225,10 +224,29 @@ bool init(bool hidemouse) {
   if (!SDL_SetAppMetadata("CobblerEngine", "0.1", "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
-  Global->window =
-      SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
-                       Settings->resolutiony, SDL_WINDOW_RESIZABLE);
-  Global->renderer = SDL_CreateRenderer(Global->window, NULL);
+  if (Settings->graphicsmode == 1) {
+    Global->window = SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
+                                      Settings->resolutiony,
+                                      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                        SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    // Create OpenGL context
+    Global->GLContext = SDL_GL_CreateContext(Global->window);
+    SDL_GL_SetSwapInterval(1);
+  } else {
+    Global->window =
+        SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
+                         Settings->resolutiony, SDL_WINDOW_RESIZABLE);
+    Global->renderer = SDL_CreateRenderer(Global->window, NULL);
+    SDL_SetRenderVSync(Global->renderer, 1);
+    SDL_SetRenderTarget(Global->renderer, NULL);
+    Global->render_target = SDL_CreateSurface(
+        Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
+    SDL_SetSurfacePalette(Global->render_target, Global->palette);
+  }
 
   SDL_SetWindowRelativeMouseMode(Global->window, hidemouse);
 
@@ -237,10 +255,6 @@ bool init(bool hidemouse) {
   SDL_Surface* surface = SDL_LoadBMP(tempstr.c_str());
 
   Global->palette = SDL_GetSurfacePalette(surface);
-
-  Global->render_target = SDL_CreateSurface(
-      Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
-  SDL_SetSurfacePalette(Global->render_target, Global->palette);
 
   for (int i = 0; i < LoadedData->texturenames.size(); i++) {
     tempstr = basepath;
@@ -273,9 +287,7 @@ bool init(bool hidemouse) {
   }
 
   Global->IsRunning = true;
-  SDL_SetRenderVSync(Global->renderer, 1);
   lastTime = SDL_GetTicks();
-  SDL_SetRenderTarget(Global->renderer, NULL);
 
   SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
   Global->pixelsdepth.resize(Settings->resolutionx * Settings->resolutiony);
@@ -285,6 +297,7 @@ bool init(bool hidemouse) {
   return true;
 }
 void quit() {
+  SDL_GL_DestroyContext(Global->GLContext);
   SDL_DestroyRenderer(Global->renderer);
   SDL_DestroyWindow(Global->window);
   SDL_DestroySurface(Global->render_target);

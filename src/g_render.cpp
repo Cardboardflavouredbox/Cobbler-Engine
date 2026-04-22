@@ -1,3 +1,5 @@
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl.h>
 #include <SDL3/SDL_log.h>
 
 #include <deque>
@@ -416,7 +418,7 @@ void renderbackground() {
   }
 }
 
-void render() {
+void softwarerender() {
   // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
   // SDL_RenderClear(Global->renderer);
   SDL_LockSurface(Global->render_target);
@@ -481,4 +483,35 @@ void render() {
   SDL_SetTextureScaleMode(temptexture, SDL_SCALEMODE_PIXELART);
   SDL_RenderTexture(Global->renderer, temptexture, NULL, &temprect);
   SDL_RenderPresent(Global->renderer);
+}
+
+void openglrender() {
+  glViewport(0, 0, Settings->resolutionx, Settings->resolutiony);
+  glClearColor(0.f, 0.f, 0.f, 0.f);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  // OpenGL rendering goes here
+  glBegin(GL_TRIANGLES);
+  for (int i = 0; i < Global->mapfaces.size(); i++) {
+    glColor3f(1, 1, 1);
+
+    for (int j = 0; j < 3; j++) {
+      glm::vec3 temp = Global->Points[Global->mapfaces[i].points[j]];
+      temp -= Camera->position;
+      glVertex3f(temp.x, temp.y, temp.z);
+    }
+  }
+  glEnd();
+
+  SDL_GL_SwapWindow(Global->window);
+}
+
+void render() {
+  switch (Settings->graphicsmode) {
+    case 1:
+      openglrender();
+      break;
+    default:
+      softwarerender();
+  }
 }
