@@ -497,10 +497,18 @@ void openglrender() {
     for (int j = 0; j < 3; j++) {
       glm::vec3 temp = Global->Points[Global->mapfaces[i].points[j]];
       temp -= Camera->position;
-      glVertex3f(temp.x / 64, temp.y / 64, temp.z / 64);
+
+      glVertex3f(temp.x, temp.z, temp.y);
     }
   }
   glEnd();
+
+  glm::vec2 tempdir = Camera->dir - Global->prevdelta;
+
+  glRotatef(tempdir.y, 1.0f, 0.0f, 0.0f);   // Rotate around X-axis
+  glRotatef(-tempdir.x, 0.0f, 1.0f, 0.0f);  // Rotate around Y-axis
+
+  Global->prevdelta = Camera->dir;
 
   SDL_GL_SwapWindow(Global->window);
 }

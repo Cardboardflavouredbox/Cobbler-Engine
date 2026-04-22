@@ -246,6 +246,7 @@ bool init(bool hidemouse) {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+    glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 64.f);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
