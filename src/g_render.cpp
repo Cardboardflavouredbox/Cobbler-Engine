@@ -1,5 +1,6 @@
 #define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
 #include <SDL3/SDL_log.h>
 
 #include <deque>
@@ -487,28 +488,41 @@ void softwarerender() {
 
 void openglrender() {
   glViewport(0, 0, Settings->resolutionx, Settings->resolutiony);
+
   glClearColor(0.f, 0.f, 0.f, 0.f);
   glClear(GL_COLOR_BUFFER_BIT);
 
   // OpenGL rendering goes here
   glBegin(GL_TRIANGLES);
   for (int i = 0; i < Global->mapfaces.size(); i++) {
-    glColor3f(1, 1, 1);
     for (int j = 0; j < 3; j++) {
       glm::vec3 temp = Global->Points[Global->mapfaces[i].points[j]];
-      temp -= Camera->position;
-
+      switch (j) {
+        case 0:
+          glColor3f(1, 0, 0);
+          break;
+        case 1:
+          glColor3f(0, 1, 0);
+          break;
+        case 2:
+          glColor3f(0, 0, 1);
+          break;
+      }
       glVertex3f(temp.x, temp.z, temp.y);
     }
   }
   glEnd();
 
-  glm::vec2 tempdir = Camera->dir - Global->prevdelta;
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.0625f, 64.f);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
 
-  glRotatef(tempdir.y, 1.0f, 0.0f, 0.0f);   // Rotate around X-axis
-  glRotatef(-tempdir.x, 0.0f, 1.0f, 0.0f);  // Rotate around Y-axis
+  glTranslatef(-Camera->position.x, -Camera->position.z, -Camera->position.y);
+  gluLookAt(0, 0, 0, 1, 0, 0, 0, 1, 0);
 
-  Global->prevdelta = Camera->dir;
+  glFlush();
 
   SDL_GL_SwapWindow(Global->window);
 }

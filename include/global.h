@@ -55,8 +55,6 @@ struct GlobalClass {
 
   std::unordered_map<int, std::deque<UIthing*>> UImap;
   int UIindex = 0;
-
-  glm::vec2 prevdelta;
 };
 
 struct EditorClass {

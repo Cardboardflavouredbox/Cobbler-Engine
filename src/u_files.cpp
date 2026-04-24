@@ -227,8 +227,8 @@ bool init(bool hidemouse) {
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
   if (Settings->graphicsmode == 1) {
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
                         SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
@@ -246,7 +246,7 @@ bool init(bool hidemouse) {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 64.f);
+    glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.0625f, 64.f);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
