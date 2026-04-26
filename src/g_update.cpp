@@ -49,8 +49,8 @@ void playermovement() {
 
   if (Camera->dir.x < 0) Camera->dir.x += 360;
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;
-  if (Camera->dir.y >= 90) Camera->dir.y = 90;
-  if (Camera->dir.y <= -90) Camera->dir.y = -90;
+  if (Camera->dir.y >= 89) Camera->dir.y = 89;
+  if (Camera->dir.y <= -89) Camera->dir.y = -89;
 }
 
 void update() {

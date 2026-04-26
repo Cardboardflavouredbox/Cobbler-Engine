@@ -5,6 +5,7 @@
 
 #include <deque>
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <string>
 
 #include "extern.h"
@@ -508,19 +509,31 @@ void openglrender() {
           glColor3f(0, 0, 1);
           break;
       }
-      glVertex3f(temp.x, temp.z, temp.y);
+      temp -= Camera->position;
+      glVertex3f(temp.x, temp.y, temp.z);
     }
   }
   glEnd();
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.0625f, 64.f);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+  glm::vec3 lookdir;
+  lookdir.x =
+      cos(glm::radians(Camera->dir.x + 90)) * cos(glm::radians(Camera->dir.y));
+  lookdir.z = sin(glm::radians(Camera->dir.y));
+  lookdir.y =
+      sin(glm::radians(Camera->dir.x + 90)) * cos(glm::radians(Camera->dir.y));
+  glm::mat4 modelMatrix = glm::perspective(
+      (Settings->fov / 2.0),
+      Settings->resolutionx / (double)Settings->resolutiony, 0.25, 64.0);
+  glm::mat4 view = glm::lookAt(glm::vec3(0), lookdir, glm::vec3(0, 0, 1));
 
-  glTranslatef(-Camera->position.x, -Camera->position.z, -Camera->position.y);
-  gluLookAt(0, 0, 0, 1, 0, 0, 0, 1, 0);
+  modelMatrix = modelMatrix * view;
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(glm::value_ptr(modelMatrix));
+  // glLoadIdentity();
+
+  // glTranslatef(-Camera->position.x, -Camera->position.z,
+  // -Camera->position.y);
 
   glFlush();
 
