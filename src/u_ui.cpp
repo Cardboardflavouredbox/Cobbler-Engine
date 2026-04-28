@@ -5,12 +5,15 @@ void UIbox::update() {}
 void UIbox::render() {
   for (int i = 0; i < size.y; i++) {
     for (int j = 0; j < size.x; j++) {
-      Global->pixelsdepth[((int)pos.x + j) + ((int)pos.y + i) * Global->pitch] =
+      Global->SRstuff->pixelsdepth[((int)pos.x + j) +
+                                   ((int)pos.y + i) * Global->SRstuff->pitch] =
           0;
-      Global->pixels[((int)pos.x + j) + ((int)pos.y + i) * Global->pitch] =
+      Global->SRstuff->pixels[((int)pos.x + j) +
+                              ((int)pos.y + i) * Global->SRstuff->pitch] =
           color;
-      Global->pixelstransparency[((int)pos.x + j) +
-                                 ((int)pos.y + i) * Global->pitch] =
+      Global->SRstuff
+          ->pixelstransparency[((int)pos.x + j) +
+                               ((int)pos.y + i) * Global->SRstuff->pitch] =
           255 / 3 * 2;
     }
   }
@@ -38,11 +41,11 @@ void UItext::render() {
         if (k > -1 && k < Settings->resolutionx && j > -1 &&
             j < Settings->resolutiony &&
             ((glyph.pixels[k / 8 + j * glyph.pitch]) >> (7 - k % 8) & 0x01)) {
-          Global->pixelsdepth[(k + x) +
-                              (j + y + 12 - glyph.offsety) * Global->pitch] = 0;
-          Global
-              ->pixels[(k + x) + (j + y + 12 - glyph.offsety) * Global->pitch] =
-              color;
+          Global->SRstuff->pixelsdepth[(k + x) + (j + y + 12 - glyph.offsety) *
+                                                     Global->SRstuff->pitch] =
+              0;
+          Global->SRstuff->pixels[(k + x) + (j + y + 12 - glyph.offsety) *
+                                                Global->SRstuff->pitch] = color;
         }
       }
     }

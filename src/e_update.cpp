@@ -15,7 +15,8 @@
 
 glm::vec2 MouseToScreenpos() {
   int x, y, w = Global->windowx, h = Global->windowy,
-            rtw = Global->render_target->w, rth = Global->render_target->h;
+            rtw = Global->SRstuff->render_target->w,
+            rth = Global->SRstuff->render_target->h;
   int size = w / rtw;
   if (size > h / rth) size = h / rth;
 
@@ -34,7 +35,8 @@ glm::vec2 MouseToScreenpos() {
 
 bool ScreenPointMouseDetect(ScreenPoint SP) {
   int x, y, w = Global->windowx, h = Global->windowy,
-            rtw = Global->render_target->w, rth = Global->render_target->h;
+            rtw = Global->SRstuff->render_target->w,
+            rth = Global->SRstuff->render_target->h;
   int size = w / rtw;
   if (size > h / rth) size = h / rth;
 
@@ -64,7 +66,8 @@ void noncamerastuff() {
 void movecamera() {
   if (P1Inputs->rightclick > 0) {
     int w = Global->windowx, h = Global->windowy,
-        rtw = Global->render_target->w, rth = Global->render_target->h;
+        rtw = Global->SRstuff->render_target->w,
+        rth = Global->SRstuff->render_target->h;
     int size = w / rtw;
     if (size > h / rth) size = h / rth;
     Editor->pos.x += P1Inputs->MouseDelta.x / Editor->zoom / (float)size;

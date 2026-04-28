@@ -64,9 +64,11 @@ void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
         int tempy = y + ((i - x) * (y2 - y) / (x2 - x));
         if (i >= 0 && tempy >= 0 && i < Settings->resolutionx &&
             tempy < Settings->resolutiony) {
-          if (Global->pixelsdepth[i + tempy * Global->pitch] >= 8) {
-            Global->pixelsdepth[i + tempy * Global->pitch] = 8;
-            Global->pixels[i + tempy * Global->pitch] = color;
+          if (Global->SRstuff
+                  ->pixelsdepth[i + tempy * Global->SRstuff->pitch] >= 8) {
+            Global->SRstuff->pixelsdepth[i + tempy * Global->SRstuff->pitch] =
+                8;
+            Global->SRstuff->pixels[i + tempy * Global->SRstuff->pitch] = color;
           }
         }
       }
@@ -81,9 +83,11 @@ void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
         int tempx = x + ((i - y) * (x2 - x) / (y2 - y));
         if (tempx >= 0 && i >= 0 && tempx < Settings->resolutionx &&
             i < Settings->resolutiony) {
-          if (Global->pixelsdepth[tempx + i * Global->pitch] >= 8) {
-            Global->pixelsdepth[tempx + i * Global->pitch] = 8;
-            Global->pixels[tempx + i * Global->pitch] = color;
+          if (Global->SRstuff
+                  ->pixelsdepth[tempx + i * Global->SRstuff->pitch] >= 8) {
+            Global->SRstuff->pixelsdepth[tempx + i * Global->SRstuff->pitch] =
+                8;
+            Global->SRstuff->pixels[tempx + i * Global->SRstuff->pitch] = color;
           }
         }
       }
@@ -98,9 +102,10 @@ void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
       for (int j = point.p.y - radius; j < point.p.y + radius; j++) {
         if (i > -1 && i < Settings->resolutionx && j > -1 &&
             j < Settings->resolutiony) {
-          if (Global->pixelsdepth[i + j * Global->pitch] >= 7) {
-            Global->pixelsdepth[i + j * Global->pitch] = 7;
-            Global->pixels[i + j * Global->pitch] = color;
+          if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >=
+              7) {
+            Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 7;
+            Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
           }
         }
       }
@@ -149,8 +154,9 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
 
             int uvxthing = (int(128 * (uvresult.x)) * xloop) % 128;
             int uvything = (int(128 * (uvresult.y)) * yloop) % 128;
-            Uint8 color = static_cast<Uint8*>(
-                Global->textures[texture]->pixels)[uvxthing + uvything * 128];
+            Uint8 color =
+                static_cast<Uint8*>(Global->SRstuff->textures[texture]
+                                        ->pixels)[uvxthing + uvything * 128];
 
             glm::vec3 tempvec3;
             tempvec3.x = rawvectors[0].x * uvw.x + rawvectors[1].x * uvw.y +
@@ -165,8 +171,10 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
             float dist =
                 std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
                           tempvec3.z * tempvec3.z);
-            if (Global->pixelsdepth[i + j * Global->pitch] > dist * 3 /*||
-                Global->pixelstransparency[i + j * Global->pitch] < 255*/) {
+            if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >
+                dist * 3 /*||
+Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
+255*/) {
               // r -= dist * 3;
               // g -= dist * 3;
               // b -= dist * 3;
@@ -176,12 +184,15 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
               // r = uvresult.x * 255;
               // g = uvresult.y * 255;
               // b = 0;
-              // if (Global->pixelstransparency[i + j * Global->pitch] < 255) {
+              // if (Global->SRstuff->pixelstransparency[i + j *
+              // Global->SRstuff->pitch] < 255) {
               //   int transparency =
-              //       Global->pixelstransparency[i + j * Global->pitch];
+              //       Global->SRstuff->pixelstransparency[i + j *
+              //       Global->SRstuff->pitch];
               //   SDL_Color tempcolor =
               //       Global->palette
-              //           ->colors[Global->pixels[i + j * Global->pitch]];
+              //           ->colors[Global->SRstuff->pixels[i + j *
+              //           Global->SRstuff->pitch]];
               //   r = r * (255 - transparency) / 255 +
               //       tempcolor.r * transparency / 255;
               //   g = g * (255 - transparency) / 255 +
@@ -192,12 +203,15 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
               // if (r < 0) r = 0;
               // if (g < 0) g = 0;
               // if (b < 0) b = 0;
-              Global->pixels[i + j * Global->pitch] = color;
+              Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
               if (dist < 0) dist = 0;
-              if (Global->pixelstransparency[i + j * Global->pitch] == 255)
-                Global->pixelsdepth[i + j * Global->pitch] =
+              if (Global->SRstuff
+                      ->pixelstransparency[i + j * Global->SRstuff->pitch] ==
+                  255)
+                Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
                     (unsigned char)dist * 4;
-              Global->pixelstransparency[i + j * Global->pitch] = 255;
+              Global->SRstuff
+                  ->pixelstransparency[i + j * Global->SRstuff->pitch] = 255;
             }
           }
         }
@@ -380,23 +394,26 @@ void renderbackground() {
     int x = Settings->resolutionx, y = Settings->resolutiony;
     for (int i = 0; i < x; i++) {
       for (int j = 0; j < y; j++) {
-        if (Global->pixelsdepth[i + j * Global->pitch] == 65535 /*||
-            Global->pixelstransparency[i + j * Global->pitch] < 255*/) {
-          Uint8 color =
-              static_cast<Uint8*>(Global->textures[Global->skybox]->pixels)
-                  [(int(i * 320.f / x) +
-                    int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) %
-                       640 +
-                   (int((1 - (Camera->dir.y) / 90.f) * 200.f) +
-                    int(j * 200.f / y)) *
-                       640];
+        if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] == 65535 /*||
+            Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] < 255*/) {
+          Uint8 color = static_cast<Uint8*>(
+              Global->SRstuff->textures[Global->skybox]
+                  ->pixels)[(int(i * 320.f / x) +
+                             int((1 - ((int(Camera->dir.x) % 180) / 180.f)) *
+                                 640.f)) %
+                                640 +
+                            (int((1 - (Camera->dir.y) / 90.f) * 200.f) +
+                             int(j * 200.f / y)) *
+                                640];
 
-          // if (Global->pixelstransparency[i + j * Global->pitch] < 255) {
+          // if (Global->SRstuff->pixelstransparency[i + j *
+          // Global->SRstuff->pitch] < 255) {
           //   int transparency =
-          //       Global->pixelstransparency[i + j * Global->pitch];
+          //       Global->SRstuff->pixelstransparency[i + j *
+          //       Global->SRstuff->pitch];
           //   SDL_Color tempcolor =
-          //       Global->palette->colors[Global->pixels[i + j *
-          //       Global->pitch]];
+          //       Global->palette->colors[Global->SRstuff->pixels[i + j *
+          //       Global->SRstuff->pitch]];
           //   r = r * (255 - transparency) / 255 +
           //       tempcolor.r * transparency / 255;
           //   g = g * (255 - transparency) / 255 +
@@ -405,15 +422,16 @@ void renderbackground() {
           //       tempcolor.b * transparency / 255;
           // }
 
-          Global->pixels[i + j * Global->pitch] = color;
+          Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
         }
       }
     }
   } else if (Global->rendermode == 1) {
     for (int i = 0; i < Settings->resolutionx; i++) {
       for (int j = 0; j < Settings->resolutiony; j++) {
-        if (Global->pixelsdepth[i + j * Global->pitch] == 65535) {
-          Global->pixels[i + j * Global->pitch] = 1;
+        if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] ==
+            65535) {
+          Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = 1;
         }
       }
     }
@@ -423,15 +441,16 @@ void renderbackground() {
 void softwarerender() {
   // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
   // SDL_RenderClear(Global->renderer);
-  SDL_LockSurface(Global->render_target);
+  SDL_LockSurface(Global->SRstuff->render_target);
 
-  Global->pixels = static_cast<unsigned char*>(Global->render_target->pixels);
-  Global->pitch = Global->render_target->pitch;
+  Global->SRstuff->pixels =
+      static_cast<unsigned char*>(Global->SRstuff->render_target->pixels);
+  Global->SRstuff->pitch = Global->SRstuff->render_target->pitch;
 
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
-      Global->pixelsdepth[i + j * Global->pitch] = 65535;
-      Global->pixelstransparency[i + j * Global->pitch] = 255;
+      Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 65535;
+      Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] = 255;
     }
   }
   renderUI();
@@ -443,9 +462,9 @@ void softwarerender() {
     for (int i = 0; i < Settings->resolutionx; i++) {
       for (int j = 0; j < Settings->resolutiony; j++) {
         Uint8 r, g, b;
-        SDL_GetRGB(Global->pixels[i + j * Global->pitch],
+        SDL_GetRGB(Global->SRstuff->pixels[i + j * Global->SRstuff->pitch],
                    SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_INDEX8),
-                   Global->palette, &r, &g, &b);
+                   Global->SRstuff->palette, &r, &g, &b);
         int r2 = r, g2 = g, b2 = b;
         r2 -= 64;
         g2 -= 64;
@@ -453,17 +472,17 @@ void softwarerender() {
         if (r2 < 0) r2 = 0;
         if (g2 < 0) g2 = 0;
         if (b2 < 0) b2 = 0;
-        Global->pixels[i + j * Global->pitch] =
-            SDL_MapSurfaceRGB(Global->render_target, r2, g2, b2);
+        Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] =
+            SDL_MapSurfaceRGB(Global->SRstuff->render_target, r2, g2, b2);
       }
     }
   }
 
-  SDL_UnlockSurface(Global->render_target);
+  SDL_UnlockSurface(Global->SRstuff->render_target);
 
   // Screen size and position stuff
-  int w = Global->windowx, h = Global->windowy, rtw = Global->render_target->w,
-      rth = Global->render_target->h;
+  int w = Global->windowx, h = Global->windowy, rtw = Settings->resolutionx,
+      rth = Settings->resolutiony;
   int size = w / rtw;
   if (size > h / rth) size = h / rth;
 
@@ -480,16 +499,14 @@ void softwarerender() {
   temprect.h = rth;
   temprect.x = w;
   temprect.y = h;
-  SDL_Texture* temptexture =
-      SDL_CreateTextureFromSurface(Global->renderer, Global->render_target);
+  SDL_Texture* temptexture = SDL_CreateTextureFromSurface(
+      Global->SRstuff->renderer, Global->SRstuff->render_target);
   SDL_SetTextureScaleMode(temptexture, SDL_SCALEMODE_PIXELART);
-  SDL_RenderTexture(Global->renderer, temptexture, NULL, &temprect);
-  SDL_RenderPresent(Global->renderer);
+  SDL_RenderTexture(Global->SRstuff->renderer, temptexture, NULL, &temprect);
+  SDL_RenderPresent(Global->SRstuff->renderer);
 }
 
 void openglrender() {
-  glViewport(0, 0, Settings->resolutionx, Settings->resolutiony);
-
   glClearColor(0.f, 0.f, 0.f, 0.f);
   glClear(GL_COLOR_BUFFER_BIT);
 
@@ -516,15 +533,16 @@ void openglrender() {
   glEnd();
 
   glm::vec3 lookdir;
-  lookdir.x =
-      cos(glm::radians(Camera->dir.x + 90)) * cos(glm::radians(Camera->dir.y));
-  lookdir.z = sin(glm::radians(Camera->dir.y));
-  lookdir.y =
-      sin(glm::radians(Camera->dir.x + 90)) * cos(glm::radians(Camera->dir.y));
+  lookdir.x = std::cos(glm::radians(Camera->dir.x + 90.f)) *
+              std::cos(glm::radians(Camera->dir.y));
+  lookdir.z = std::sin(glm::radians(Camera->dir.y));
+  lookdir.y = std::sin(glm::radians(Camera->dir.x + 90.f)) *
+              std::cos(glm::radians(Camera->dir.y));
   glm::mat4 modelMatrix = glm::perspective(
       (Settings->fov / 2.0),
-      Settings->resolutionx / (double)Settings->resolutiony, 0.25, 64.0);
-  glm::mat4 view = glm::lookAt(glm::vec3(0), lookdir, glm::vec3(0, 0, 1));
+      Settings->resolutionx / (double)Settings->resolutiony, 0.25, 256.0);
+  glm::mat4 view =
+      glm::lookAt(glm::vec3(0), lookdir * 16.f, glm::vec3(0, 0, 1));
 
   modelMatrix = modelMatrix * view;
 

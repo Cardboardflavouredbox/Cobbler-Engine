@@ -69,14 +69,19 @@ void DrawTri(Mapface face) {
           float dist =
               std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
                         tempvec3.z * tempvec3.z);
-          if (Global->pixelsdepth[i + j * Global->pitch] > dist * 3 /*||
-              Global->pixelstransparency[i + j * Global->pitch] < 255*/) {
-            // if (Global->pixelstransparency[i + j * Global->pitch] < 255) {
+          if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >
+              dist * 3 /*||
+Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
+255*/) {
+            // if (Global->SRstuff->pixelstransparency[i + j *
+            // Global->SRstuff->pitch] < 255) {
             //   int transparency =
-            //       Global->pixelstransparency[i + j * Global->pitch];
+            //       Global->SRstuff->pixelstransparency[i + j *
+            //       Global->SRstuff->pitch];
             //   SDL_Color tempcolor =
             //       Global->palette
-            //           ->colors[Global->pixels[i + j * Global->pitch]];
+            //           ->colors[Global->SRstuff->pixels[i + j *
+            //           Global->SRstuff->pitch]];
             //   r = r * (255 - transparency) / 255 +
             //       tempcolor.r * transparency / 255;
             //   g = g * (255 - transparency) / 255 +
@@ -88,14 +93,16 @@ void DrawTri(Mapface face) {
             // if (g < 0) g = 0;
             // if (b < 0) b = 0;
 
-            Global->pixels[i + j * Global->pitch] =
-                static_cast<Uint8*>(Global->textures[face.texture]
+            Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] =
+                static_cast<Uint8*>(Global->SRstuff->textures[face.texture]
                                         ->pixels)[uvxthing + uvything * 128];
             if (dist < 0) dist = 0;
-            if (Global->pixelstransparency[i + j * Global->pitch] == 255)
-              Global->pixelsdepth[i + j * Global->pitch] =
+            if (Global->SRstuff
+                    ->pixelstransparency[i + j * Global->SRstuff->pitch] == 255)
+              Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
                   (unsigned char)dist * 4;
-            Global->pixelstransparency[i + j * Global->pitch] = 255;
+            Global->SRstuff
+                ->pixelstransparency[i + j * Global->SRstuff->pitch] = 255;
           }
         }
       }
@@ -131,15 +138,16 @@ void renderUI() {
 }
 
 void render() {
-  SDL_LockSurface(Global->render_target);
+  SDL_LockSurface(Global->SRstuff->render_target);
 
-  Global->pixels = static_cast<unsigned char*>(Global->render_target->pixels);
-  Global->pitch = Global->render_target->pitch;
+  Global->SRstuff->pixels =
+      static_cast<unsigned char*>(Global->SRstuff->render_target->pixels);
+  Global->SRstuff->pitch = Global->SRstuff->render_target->pitch;
 
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
-      Global->pixelsdepth[i + j * Global->pitch] = 65535;
-      Global->pixelstransparency[i + j * Global->pitch] = 255;
+      Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 65535;
+      Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] = 255;
     }
   }
   renderUI();
@@ -148,8 +156,9 @@ void render() {
   unsigned char bgcolor = Global->rendermode == 1 ? 1 : 0;
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
-      if (Global->pixelsdepth[i + j * Global->pitch] == 65535) {
-        Global->pixels[i + j * Global->pitch] = bgcolor;
+      if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] ==
+          65535) {
+        Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = bgcolor;
       }
     }
   }
@@ -158,9 +167,9 @@ void render() {
     for (int i = 0; i < Settings->resolutionx; i++) {
       for (int j = 0; j < Settings->resolutiony; j++) {
         Uint8 r, g, b;
-        SDL_GetRGB(Global->pixels[i + j * Global->pitch],
+        SDL_GetRGB(Global->SRstuff->pixels[i + j * Global->SRstuff->pitch],
                    SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_INDEX8),
-                   Global->palette, &r, &g, &b);
+                   Global->SRstuff->palette, &r, &g, &b);
         int r2 = r, g2 = g, b2 = b;
         r2 -= 64;
         g2 -= 64;
@@ -168,17 +177,18 @@ void render() {
         if (r2 < 0) r2 = 0;
         if (g2 < 0) g2 = 0;
         if (b2 < 0) b2 = 0;
-        Global->pixels[i + j * Global->pitch] =
-            SDL_MapSurfaceRGB(Global->render_target, r2, g2, b2);
+        Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] =
+            SDL_MapSurfaceRGB(Global->SRstuff->render_target, r2, g2, b2);
       }
     }
   }
 
-  SDL_UnlockSurface(Global->render_target);
+  SDL_UnlockSurface(Global->SRstuff->render_target);
 
   // Screen size and position stuff
-  int w = Global->windowx, h = Global->windowy, rtw = Global->render_target->w,
-      rth = Global->render_target->h;
+  int w = Global->windowx, h = Global->windowy,
+      rtw = Global->SRstuff->render_target->w,
+      rth = Global->SRstuff->render_target->h;
   int size = w / rtw;
   if (size > h / rth) size = h / rth;
 
@@ -195,9 +205,9 @@ void render() {
   temprect.h = rth;
   temprect.x = w;
   temprect.y = h;
-  SDL_Texture* temptexture =
-      SDL_CreateTextureFromSurface(Global->renderer, Global->render_target);
+  SDL_Texture* temptexture = SDL_CreateTextureFromSurface(
+      Global->SRstuff->renderer, Global->SRstuff->render_target);
   SDL_SetTextureScaleMode(temptexture, SDL_SCALEMODE_PIXELART);
-  SDL_RenderTexture(Global->renderer, temptexture, NULL, &temprect);
-  SDL_RenderPresent(Global->renderer);
+  SDL_RenderTexture(Global->SRstuff->renderer, temptexture, NULL, &temprect);
+  SDL_RenderPresent(Global->SRstuff->renderer);
 }

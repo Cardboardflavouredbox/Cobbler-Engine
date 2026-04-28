@@ -24,11 +24,24 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
 struct GlobalClass {
  public:
   SDL_Window* window;
-  SDL_Renderer* renderer;
-  SDL_Surface* render_target;
-  SDL_Palette* palette;
 
-  SDL_GLContext GLContext;
+  struct SoftwareRenderer {
+    SDL_Renderer* renderer;
+    SDL_Surface* render_target;
+    SDL_Palette* palette;
+    std::vector<SDL_Surface*> textures;
+    unsigned char* pixels;
+    int pitch;
+    std::vector<unsigned short> pixelsdepth;
+    std::vector<unsigned char> pixelstransparency;
+  };
+
+  SoftwareRenderer* SRstuff;
+
+  struct OpenGLRenderer {
+    SDL_GLContext GLContext;
+  };
+  OpenGLRenderer* GLstuff;
 
   bool IsRunning;
   bool pause = false, isopeningfile = false;
@@ -39,15 +52,9 @@ struct GlobalClass {
 
   int windowx = 320, windowy = 200;
 
-  std::vector<SDL_Surface*> textures;
   std::deque<glm::vec3> Points;
   std::deque<Mapface> mapfaces;
   std::deque<Entity*> Entities;
-
-  unsigned char* pixels;
-  int pitch;
-  std::vector<unsigned short> pixelsdepth;
-  std::vector<unsigned char> pixelstransparency;
 
   FT_Library FTlibrary;
   FT_Face FTface;

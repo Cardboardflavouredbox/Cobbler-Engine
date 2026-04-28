@@ -93,6 +93,104 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
   return temp;
 }
 
+void freeRenderer() {
+  SDL_DestroyWindow(Global->window);
+
+  switch (Settings->graphicsmode) {
+    case 1: {
+      SDL_GL_DestroyContext(Global->GLstuff->GLContext);
+      delete (Global->GLstuff);
+      break;
+    }
+    default: {
+      SDL_DestroyPalette(Global->SRstuff->palette);
+      SDL_DestroyRenderer(Global->SRstuff->renderer);
+      SDL_DestroySurface(Global->SRstuff->render_target);
+      for (const auto& i : Global->SRstuff->textures) {
+        SDL_DestroySurface(i);
+      }
+      delete (Global->SRstuff);
+      break;
+    }
+  }
+}
+
+bool setRenderer() {
+  switch (Settings->graphicsmode) {
+    case 1: {
+      Global->GLstuff = new GlobalClass::OpenGLRenderer();
+
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
+                          SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+
+      Global->window = SDL_CreateWindow(
+          "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
+          SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+
+      // Create OpenGL context
+      Global->GLstuff->GLContext = SDL_GL_CreateContext(Global->window);
+
+      SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext);
+
+      SDL_GL_SetSwapInterval(1);
+
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
+
+      SDL_Log("%d", glGetError());
+      break;
+    }
+    default: {
+      SDL_Surface* surface;
+      std::string basepath = SDL_GetBasePath(), tempstr = basepath;
+      std::vector<SDL_Surface*> tempvector;
+      tempvector.resize(32);
+
+      Global->SRstuff = new GlobalClass::SoftwareRenderer();
+
+      Global->SRstuff->textures = tempvector;
+      tempstr = basepath;
+      tempstr.append("/res/Color_palette.bmp");
+      surface = SDL_LoadBMP(tempstr.c_str());
+
+      Global->SRstuff->palette = SDL_GetSurfacePalette(surface);
+      Global->window =
+          SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
+                           Settings->resolutiony, SDL_WINDOW_RESIZABLE);
+      Global->SRstuff->renderer = SDL_CreateRenderer(Global->window, NULL);
+      SDL_SetRenderVSync(Global->SRstuff->renderer, 1);
+      SDL_SetRenderTarget(Global->SRstuff->renderer, NULL);
+      Global->SRstuff->render_target = SDL_CreateSurface(
+          Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
+      SDL_SetSurfacePalette(Global->SRstuff->render_target,
+                            Global->SRstuff->palette);
+
+      for (int i = 0; i < LoadedData->texturenames.size(); i++) {
+        tempstr = basepath;
+        tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
+                       ".bmp");
+        surface = SDL_LoadBMP(tempstr.c_str());
+        if (surface == NULL) return false;
+        surface = SDL_ConvertSurfaceAndColorspace(
+            surface, SDL_PIXELFORMAT_INDEX8, Global->SRstuff->palette,
+            SDL_COLORSPACE_RGB_DEFAULT, 0);
+        SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
+        Global->SRstuff->textures[i] = surface;
+      }
+      Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
+                                          Settings->resolutiony);
+      Global->SRstuff->pixelstransparency.resize(Settings->resolutionx *
+                                                 Settings->resolutiony);
+      break;
+    }
+  }
+  return true;
+}
+
 bool init(bool hidemouse) {
   Global = new GlobalClass();
   Settings = new SettingsClass();
@@ -114,6 +212,14 @@ bool init(bool hidemouse) {
     if (error) return false;
   }
   LoadedData = &tempzipdata;
+
+  if (!SDL_SetAppMetadata("CobblerEngine", "0.1", "com.example.myapp") ||
+      !SDL_Init(SDL_INIT_VIDEO))
+    return false;
+
+  if (!setRenderer()) return false;
+
+  SDL_SetWindowRelativeMouseMode(Global->window, hidemouse);
 
   Mapdata tempmapdata;
   error = glz::read_file_json(
@@ -180,9 +286,6 @@ bool init(bool hidemouse) {
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
-  std::vector<SDL_Surface*> tempvector;
-  tempvector.resize(32);
-  Global->textures = tempvector;
 
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     if (Global->mapfaces[i].points.size() == 4) {
@@ -223,67 +326,7 @@ bool init(bool hidemouse) {
 
   Global->Entities.push_back(Camera);
 
-  if (!SDL_SetAppMetadata("CobblerEngine", "0.1", "com.example.myapp") ||
-      !SDL_Init(SDL_INIT_VIDEO))
-    return false;
-  if (Settings->graphicsmode == 1) {
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
-                        SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
-
-    Global->window = SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
-                                      Settings->resolutiony,
-                                      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-
-    // Create OpenGL context
-    Global->GLContext = SDL_GL_CreateContext(Global->window);
-
-    SDL_GL_MakeCurrent(Global->window, Global->GLContext);
-
-    SDL_GL_SetSwapInterval(1);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.0625f, 64.f);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    SDL_Log("%d", glGetError());
-  } else {
-    Global->window =
-        SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
-                         Settings->resolutiony, SDL_WINDOW_RESIZABLE);
-    Global->renderer = SDL_CreateRenderer(Global->window, NULL);
-    SDL_SetRenderVSync(Global->renderer, 1);
-    SDL_SetRenderTarget(Global->renderer, NULL);
-    Global->render_target = SDL_CreateSurface(
-        Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
-    SDL_SetSurfacePalette(Global->render_target, Global->palette);
-  }
-
-  SDL_SetWindowRelativeMouseMode(Global->window, hidemouse);
-
   std::string basepath = SDL_GetBasePath(), tempstr = basepath;
-  tempstr.append("/res/Color_palette.bmp");
-  SDL_Surface* surface = SDL_LoadBMP(tempstr.c_str());
-
-  Global->palette = SDL_GetSurfacePalette(surface);
-
-  for (int i = 0; i < LoadedData->texturenames.size(); i++) {
-    tempstr = basepath;
-    tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
-                   ".bmp");
-    surface = SDL_LoadBMP(tempstr.c_str());
-    if (surface == NULL) return false;
-    surface = SDL_ConvertSurfaceAndColorspace(surface, SDL_PIXELFORMAT_INDEX8,
-                                              Global->palette,
-                                              SDL_COLORSPACE_RGB_DEFAULT, 0);
-    SDL_SetSurfacePalette(surface, Global->palette);
-    Global->textures[i] = surface;
-  }
 
   if (FT_Init_FreeType(&(Global->FTlibrary))) return false;
 
@@ -306,20 +349,10 @@ bool init(bool hidemouse) {
   lastTime = SDL_GetTicks();
 
   SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
-  Global->pixelsdepth.resize(Settings->resolutionx * Settings->resolutiony);
-  Global->pixelstransparency.resize(Settings->resolutionx *
-                                    Settings->resolutiony);
-
   return true;
 }
 void quit() {
-  SDL_GL_DestroyContext(Global->GLContext);
-  SDL_DestroyRenderer(Global->renderer);
-  SDL_DestroyWindow(Global->window);
-  SDL_DestroySurface(Global->render_target);
-  for (const auto& i : Global->textures) {
-    SDL_DestroySurface(i);
-  }
+  freeRenderer();
   delete (Global);
   delete (Editor);
   delete (Settings);

@@ -1,4 +1,5 @@
-
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl.h>
 
 #include "extern.h"
 #include "update.h"
@@ -14,10 +15,32 @@ void events() {
       case SDL_EVENT_WINDOW_RESIZED:
         SDL_GetWindowSizeInPixels(Global->window, &Global->windowx,
                                   &Global->windowy);
-        Global->pixelsdepth.resize(Settings->resolutionx *
-                                   Settings->resolutiony);
-        Global->pixelstransparency.resize(Settings->resolutionx *
-                                          Settings->resolutiony);
+        switch (Settings->graphicsmode) {
+          case 0: {
+            Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
+                                                Settings->resolutiony);
+            Global->SRstuff->pixelstransparency.resize(Settings->resolutionx *
+                                                       Settings->resolutiony);
+            break;
+          }
+          case 1: {
+            int w = Global->windowx, h = Global->windowy,
+                rtw = Settings->resolutionx, rth = Settings->resolutiony;
+            int size = w / rtw;
+            if (size > h / rth) size = h / rth;
+
+            rtw *= size;
+            rth *= size;
+
+            w /= 2;
+            h /= 2;
+            w -= rtw / 2;
+            h -= rth / 2;
+
+            glViewport(w, h, rtw, rth);
+            break;
+          }
+        }
         break;
       case SDL_EVENT_MOUSE_BUTTON_DOWN:
         if (event.button.button == SDL_BUTTON_LEFT) {
