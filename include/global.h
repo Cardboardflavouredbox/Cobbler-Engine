@@ -1,5 +1,7 @@
 #pragma once
 
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl.h>
 #include <SDL3/SDL_render.h>
 #include <ft2build.h>
 

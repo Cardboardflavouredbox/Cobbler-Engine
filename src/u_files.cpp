@@ -153,11 +153,14 @@ bool setRenderer() {
         tempstr = basepath;
         tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
                        ".bmp");
-        surface = SDL_LoadBMP(tempstr.c_str());
-        if (surface == NULL) return false;
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR,
-                     GL_UNSIGNED_BYTE, data);
+        FILE* File = NULL;
+        File = std::ofstream(tempstr.c_str(), "r");
+
+        if (File == NULL) return false;
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_BGR,
+                     GL_UNSIGNED_BYTE, File);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
