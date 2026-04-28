@@ -40,6 +40,7 @@ struct GlobalClass {
 
   struct OpenGLRenderer {
     SDL_GLContext GLContext;
+    std::vector<GLuint> textures;
   };
   OpenGLRenderer* GLstuff;
 

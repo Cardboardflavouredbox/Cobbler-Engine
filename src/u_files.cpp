@@ -141,6 +141,28 @@ bool setRenderer() {
       glLoadIdentity();
       glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
 
+      std::vector<GLuint> tempvector;
+      tempvector.resize(32);
+
+      Global->GLstuff->textures = tempvector;
+      std::string basepath = SDL_GetBasePath(), tempstr = basepath;
+      for (int i = 0; i < LoadedData->texturenames.size(); i++) {
+        glGenTextures(1, &Global->GLstuff->textures[i]);
+        glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[i]);
+
+        tempstr = basepath;
+        tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
+                       ".bmp");
+        surface = SDL_LoadBMP(tempstr.c_str());
+        if (surface == NULL) return false;
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR,
+                     GL_UNSIGNED_BYTE, data);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      }
+
       SDL_Log("%d", glGetError());
       break;
     }
