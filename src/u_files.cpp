@@ -6,8 +6,9 @@
 #include <ft2build.h>
 #include <glad/glad.h>
 
+#include <sstream>
+
 #include "files.h"
-#include "glad.c"
 #include FT_FREETYPE_H
 
 #include <glaze/json.hpp>
@@ -156,13 +157,13 @@ bool setRenderer() {
         tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
                        ".bmp");
 
-        FILE* File = NULL;
-        File = std::ofstream(tempstr.c_str(), "r");
+        std::stringstream ss(tempstr.c_str(), std::ios::binary);
+        std::string str = ss.str();
 
-        if (File == NULL) return false;
+        std::vector<char> byteArr(str.begin(), str.end());
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_BGR,
-                     GL_UNSIGNED_BYTE, File);
+                     GL_UNSIGNED_BYTE, byteArr.data());
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
