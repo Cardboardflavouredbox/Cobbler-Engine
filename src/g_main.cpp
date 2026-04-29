@@ -22,7 +22,11 @@ Uint32 lastTime;
 Uint64 currentTime = SDL_GetPerformanceCounter();
 
 int main(int argc, char* argv[]) {
-  if (!init(true)) {
+  std::vector<std::string> args;
+  args.resize(argc);
+  for (int i = 0; i < argc; i++) args[i] = argv[i];
+
+  if (!init(true, args)) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }

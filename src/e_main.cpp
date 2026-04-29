@@ -91,7 +91,11 @@ bool editorinit() {
 }
 
 int main(int argc, char* argv[]) {
-  if (!init(false) || !editorinit()) {
+  std::vector<std::string> args;
+  args.resize(argc);
+  for (int i = 0; i < argc; i++) args[i] = argv[i];
+
+  if (!init(false, args) || !editorinit()) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }

@@ -7,6 +7,7 @@
 #include <glad/glad.h>
 
 #include <sstream>
+#include <unordered_map>
 
 #include "files.h"
 #include FT_FREETYPE_H
@@ -139,16 +140,17 @@ bool setRenderer() {
 
       SDL_GL_SetSwapInterval(1);
 
-      gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
+      if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) return false;
 
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
       glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
-
+      SDL_Log("temp");
       std::vector<GLuint> tempvector;
       tempvector.resize(32);
 
       Global->GLstuff->textures = tempvector;
+
       std::string basepath = SDL_GetBasePath(), tempstr = basepath;
       glGenTextures(LoadedData->texturenames.size(),
                     &(Global->GLstuff->textures[0]));
@@ -168,6 +170,8 @@ bool setRenderer() {
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         SDL_DestroySurface(surface);
       }
       // glEnable(GL_CULL_FACE);
@@ -221,11 +225,34 @@ bool setRenderer() {
   return true;
 }
 
-bool init(bool hidemouse) {
+enum argenums { SetRendererAsOpenGL, SetRendererAsSoftware, SetFPS, SetFOV };
+
+bool init(bool hidemouse, std::vector<std::string> args) {
   Global = new GlobalClass();
   Settings = new SettingsClass();
   P1Inputs = new Inputs();
   Settings->fov = 90;
+
+  std::unordered_map<std::string, argenums> stringtoenums = {
+      {"-OpenGL", SetRendererAsOpenGL},
+      {"-openGL", SetRendererAsOpenGL},
+      {"-GL", SetRendererAsOpenGL},
+      {"-gl", SetRendererAsOpenGL}};
+
+  for (int i = 0; i < args.size(); i++) {
+    switch (args[i]) {
+      case "-OpenGL":
+      case "-openGL":
+      case "-GL":
+      case "-gl":
+        Settings->graphicsmode = 1;
+        break;
+      case "-Software":
+      case "-software":
+        Settings->graphicsmode = 0;
+        break;
+    }
+  }
 
   ZipData tempzipdata;
   auto error = glz::read_file_json(tempzipdata, "MapStuff/resources.json",
