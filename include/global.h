@@ -96,6 +96,6 @@ struct SettingsClass {
   uint16_t resolutionx = 320, resolutiony = 200;
   int fov = 90;
   int fps = 60;
-  bool vsync = true;
+  bool vsync = false;
   int graphicsmode = 0;  // 0 = software, 1 = opengl
 };

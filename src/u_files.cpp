@@ -138,7 +138,7 @@ bool setRenderer() {
 
       SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext);
 
-      SDL_GL_SetSwapInterval(1);
+      SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0);
 
       if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) return false;
 
@@ -196,7 +196,8 @@ bool setRenderer() {
           SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
                            Settings->resolutiony, SDL_WINDOW_RESIZABLE);
       Global->SRstuff->renderer = SDL_CreateRenderer(Global->window, NULL);
-      SDL_SetRenderVSync(Global->SRstuff->renderer, 1);
+      SDL_SetRenderVSync(Global->SRstuff->renderer,
+                         Settings->vsync ? 1 : SDL_RENDERER_VSYNC_DISABLED);
       SDL_SetRenderTarget(Global->SRstuff->renderer, NULL);
       Global->SRstuff->render_target = SDL_CreateSurface(
           Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
@@ -225,7 +226,20 @@ bool setRenderer() {
   return true;
 }
 
-enum argenums { SetRendererAsOpenGL, SetRendererAsSoftware, SetFPS, SetFOV };
+bool is_number(const std::string s) {
+  for (int i = 0; i < s.size(); i++) {
+    if (!std::isdigit(s[i])) return false;
+  }
+  return true;
+}
+
+enum argenums {
+  SetRendererAsOpenGL,
+  SetRendererAsSoftware,
+  SetFPS,
+  SetFOV,
+  SetVsync
+};
 
 bool init(bool hidemouse, std::vector<std::string> args) {
   Global = new GlobalClass();
@@ -237,20 +251,43 @@ bool init(bool hidemouse, std::vector<std::string> args) {
       {"-OpenGL", SetRendererAsOpenGL},
       {"-openGL", SetRendererAsOpenGL},
       {"-GL", SetRendererAsOpenGL},
-      {"-gl", SetRendererAsOpenGL}};
+      {"-gl", SetRendererAsOpenGL},
+      {"-Software", SetRendererAsSoftware},
+      {"-software", SetRendererAsSoftware},
+      {"-fps", SetFPS},
+      {"-fov", SetFOV},
+      {"-vsync", SetVsync}};
 
   for (int i = 0; i < args.size(); i++) {
-    switch (args[i]) {
-      case "-OpenGL":
-      case "-openGL":
-      case "-GL":
-      case "-gl":
-        Settings->graphicsmode = 1;
-        break;
-      case "-Software":
-      case "-software":
-        Settings->graphicsmode = 0;
-        break;
+    if (stringtoenums.contains(args[i])) {
+      argenums temp = stringtoenums[args[i]];
+      switch (temp) {
+        case SetRendererAsOpenGL:
+          Settings->graphicsmode = 1;
+          break;
+        case SetRendererAsSoftware:
+          Settings->graphicsmode = 0;
+          break;
+        case SetVsync:
+          Settings->vsync = true;
+          break;
+        case SetFPS:
+          i++;
+          if (i >= args.size() || !is_number(args[i])) {
+            SDL_Log("Wrong Arguements!(FPS)");
+            return false;
+          }
+          Settings->fps = std::stoi(args[i]);
+          break;
+        case SetFOV:
+          i++;
+          if (i >= args.size() || !is_number(args[i])) {
+            SDL_Log("Wrong Arguements!(FOV)");
+            return false;
+          }
+          Settings->fov = std::stoi(args[i]);
+          break;
+      }
     }
   }
 
@@ -380,6 +417,7 @@ bool init(bool hidemouse, std::vector<std::string> args) {
   Camera->hitbox[0] = glm::vec3({-1, -1, -3});
   Camera->hitbox[1] = glm::vec3({1, 1, 0});
   Camera->position = glm::vec3({0, 0, 3});
+  Camera->dir = glm::vec2(0);
 
   Global->Entities.push_back(Camera);
 
