@@ -1,7 +1,5 @@
-#define GL_SILENCE_DEPRECATION
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
 #include <SDL3/SDL_log.h>
+#include <glad/glad.h>
 
 #include <deque>
 #include <glm/glm.hpp>

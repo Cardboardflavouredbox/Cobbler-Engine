@@ -9,8 +9,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include(FetchContent)
 
-find_package(OpenGL REQUIRED)
-
 FetchContent_Declare(
     SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
@@ -40,6 +38,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
+add_library(glad STATIC glad/src/glad.c)
+
+target_include_directories(glad PUBLIC glad/include)
 
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/g_render.cpp 
@@ -58,11 +59,13 @@ src/u_ui.cpp src/u_components.cpp
 src/e_components.cpp src/e_ui_index.cpp
 src/u_raycast.cpp src/u_rendermath.cpp)
 
-target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm OpenGL::GL)
-target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm OpenGL::GL)
+target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm)
+target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm)
 
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(Cobbler-Engine PRIVATE glad/include)
 target_include_directories(Cobbler-Engine-Editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(Cobbler-Engine-Editor PRIVATE glad/include)
 
 FILE(COPY res DESTINATION "${CMAKE_BINARY_DIR}/bin")
 FILE(COPY MapStuff DESTINATION "${CMAKE_BINARY_DIR}/bin")
