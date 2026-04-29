@@ -509,26 +509,20 @@ void openglrender() {
   glClear(GL_COLOR_BUFFER_BIT);
 
   // OpenGL rendering goes here
-  glBegin(GL_TRIANGLES);
   for (int i = 0; i < Global->mapfaces.size(); i++) {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D,
+                  Global->GLstuff->textures[Global->mapfaces[i].texture]);
+    glBegin(GL_TRIANGLES);
     for (int j = 0; j < 3; j++) {
-      glm::vec3 temp = Global->Points[Global->mapfaces[i].points[j]];
-      switch (j) {
-        case 0:
-          glColor3f(1, 0, 0);
-          break;
-        case 1:
-          glColor3f(0, 1, 0);
-          break;
-        case 2:
-          glColor3f(0, 0, 1);
-          break;
-      }
-      temp -= Camera->position;
-      glVertex3f(temp.x, temp.y, temp.z);
+      glm::vec3 pos = Global->Points[Global->mapfaces[i].points[j]];
+      glm::vec2 uvw = Global->mapfaces[i].UVs[j];
+      pos -= Camera->position;
+      glTexCoord2f(uvw.x, uvw.y);
+      glVertex3f(pos.x, pos.y, pos.z);
     }
+    glEnd();
   }
-  glEnd();
 
   glm::vec3 lookdir;
   lookdir.x = std::cos(glm::radians(Camera->dir.x + 90.f)) *

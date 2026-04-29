@@ -119,6 +119,7 @@ void freeRenderer() {
 bool setRenderer() {
   switch (Settings->graphicsmode) {
     case 1: {
+      SDL_Surface* surface;
       Global->GLstuff = new GlobalClass::OpenGLRenderer();
 
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
@@ -149,26 +150,26 @@ bool setRenderer() {
 
       Global->GLstuff->textures = tempvector;
       std::string basepath = SDL_GetBasePath(), tempstr = basepath;
+      glGenTextures(LoadedData->texturenames.size(),
+                    &(Global->GLstuff->textures[0]));
       for (int i = 0; i < LoadedData->texturenames.size(); i++) {
-        glGenTextures(1, &Global->GLstuff->textures[i]);
-        glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[i]);
-
         tempstr = basepath;
         tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
                        ".bmp");
 
-        std::stringstream ss(tempstr.c_str(), std::ios::binary);
-        std::string str = ss.str();
+        surface = SDL_LoadBMP(tempstr.c_str());
+        if (surface == NULL) return false;
 
-        std::vector<char> byteArr(str.begin(), str.end());
+        glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[i]);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_BGR,
-                     GL_UNSIGNED_BYTE, byteArr.data());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        SDL_DestroySurface(surface);
       }
-
+      // glEnable(GL_CULL_FACE);
       SDL_Log("%d", glGetError());
       break;
     }
