@@ -38,10 +38,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
-add_library(glad STATIC glad/src/glad.c)
-
-target_include_directories(glad PUBLIC glad/include)
-
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/g_render.cpp 
 src/u_input.cpp src/g_update.cpp 
@@ -49,7 +45,8 @@ src/u_files.cpp src/u_events.cpp
 src/u_ui.cpp src/u_components.cpp 
 src/g_entityphysics.cpp src/g_components.cpp 
 src/g_ui_index.cpp src/u_raycast.cpp
-src/u_rendermath.cpp)
+src/u_rendermath.cpp
+src/glad.c)
 
 add_executable(Cobbler-Engine-Editor 
 src/e_main.cpp src/e_render.cpp 
@@ -57,15 +54,14 @@ src/u_input.cpp src/e_update.cpp
 src/u_files.cpp src/u_events.cpp
 src/u_ui.cpp src/u_components.cpp
 src/e_components.cpp src/e_ui_index.cpp
-src/u_raycast.cpp src/u_rendermath.cpp)
+src/u_raycast.cpp src/u_rendermath.cpp
+src/glad.c)
 
 target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm)
 target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm)
 
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(Cobbler-Engine PRIVATE glad/include)
 target_include_directories(Cobbler-Engine-Editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(Cobbler-Engine-Editor PRIVATE glad/include)
 
 FILE(COPY res DESTINATION "${CMAKE_BINARY_DIR}/bin")
 FILE(COPY MapStuff DESTINATION "${CMAKE_BINARY_DIR}/bin")

@@ -4,10 +4,10 @@
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_timer.h>
 #include <ft2build.h>
-#define GL_SILENCE_DEPRECATION
-#include <OpenGL/gl.h>
+#include <glad/glad.h>
 
 #include "files.h"
+#include "glad.c"
 #include FT_FREETYPE_H
 
 #include <glaze/json.hpp>
@@ -136,6 +136,8 @@ bool setRenderer() {
       SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext);
 
       SDL_GL_SetSwapInterval(1);
+
+      gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
 
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
