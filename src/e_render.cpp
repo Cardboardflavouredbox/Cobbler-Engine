@@ -224,30 +224,20 @@ void openglrender() {
                   Global->GLstuff->textures[Global->mapfaces[i].texture]);
     glBegin(GL_TRIANGLES);
     for (int j = 0; j < 3; j++) {
-      glm::vec3 pos = Global->Points[Global->mapfaces[i].points[j]];
-
-      pos.x -= Editor->pos.x;
-      pos.y -= Editor->pos.y;
+      glm::vec2 pos = (glm::vec2)Global->Points[Global->mapfaces[i].points[j]] -
+                      Editor->pos;
       pos *= Editor->zoom;
+      pos *= -1;
 
       glm::vec2 uvw = Global->mapfaces[i].UVs[j];
       glTexCoord2f(uvw.x * Global->mapfaces[i].xloop,
                    uvw.y * Global->mapfaces[i].yloop);
-      glVertex2f(-pos.x / (float)Settings->resolutionx,
-                 -pos.y / (float)Settings->resolutiony);
+      glVertex2f(pos.x / Settings->resolutionx, pos.y / Settings->resolutiony);
     }
     glEnd();
   }
-  glm::mat4 modelMatrix =
-      glm::ortho(0.0, (double)Settings->resolutionx, 0.0,
-                 (double)Settings->resolutiony, 0.25, 256.0);
-  glm::mat4 view =
-      glm::lookAt(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, 0, 1));
 
-  modelMatrix = modelMatrix * view;
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadMatrixf(glm::value_ptr(modelMatrix));
+  glOrtho(0, Settings->resolutionx, Settings->resolutiony, 0, -1, 1);
   glLoadIdentity();
 
   // glTranslatef(-Camera->position.x, -Camera->position.z,
