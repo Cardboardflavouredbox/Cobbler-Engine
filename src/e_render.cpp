@@ -233,7 +233,8 @@ void openglrender() {
       glm::vec2 uvw = Global->mapfaces[i].UVs[j];
       glTexCoord2f(uvw.x * Global->mapfaces[i].xloop,
                    uvw.y * Global->mapfaces[i].yloop);
-      glVertex3f(pos.x, pos.y, pos.z);
+      glVertex2f(-pos.x / (float)Settings->resolutionx,
+                 -pos.y / (float)Settings->resolutiony);
     }
     glEnd();
   }
@@ -247,7 +248,7 @@ void openglrender() {
 
   glMatrixMode(GL_PROJECTION);
   glLoadMatrixf(glm::value_ptr(modelMatrix));
-  // glLoadIdentity();
+  glLoadIdentity();
 
   // glTranslatef(-Camera->position.x, -Camera->position.z,
   // -Camera->position.y);
