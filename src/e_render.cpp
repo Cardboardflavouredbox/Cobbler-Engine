@@ -1,4 +1,5 @@
 #include <cmath>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "extern.h"
 #include "map.h"
@@ -137,7 +138,7 @@ void renderUI() {
   }
 }
 
-void render() {
+void softwarerender() {
   SDL_LockSurface(Global->SRstuff->render_target);
 
   Global->SRstuff->pixels =
@@ -210,4 +211,58 @@ void render() {
   SDL_SetTextureScaleMode(temptexture, SDL_SCALEMODE_PIXELART);
   SDL_RenderTexture(Global->SRstuff->renderer, temptexture, NULL, &temprect);
   SDL_RenderPresent(Global->SRstuff->renderer);
+}
+
+void openglrender() {
+  glClearColor(0.f, 0.f, 0.f, 0.f);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  // OpenGL rendering goes here
+  for (int i = 0; i < Global->mapfaces.size(); i++) {
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D,
+                  Global->GLstuff->textures[Global->mapfaces[i].texture]);
+    glBegin(GL_TRIANGLES);
+    for (int j = 0; j < 3; j++) {
+      glm::vec3 pos = Global->Points[Global->mapfaces[i].points[j]];
+
+      pos.x -= Editor->pos.x;
+      pos.y -= Editor->pos.y;
+      pos *= Editor->zoom;
+
+      glm::vec2 uvw = Global->mapfaces[i].UVs[j];
+      glTexCoord2f(uvw.x * Global->mapfaces[i].xloop,
+                   uvw.y * Global->mapfaces[i].yloop);
+      glVertex3f(pos.x, pos.y, pos.z);
+    }
+    glEnd();
+  }
+  glm::mat4 modelMatrix =
+      glm::ortho(0.0, (double)Settings->resolutionx, 0.0,
+                 (double)Settings->resolutiony, 0.25, 256.0);
+  glm::mat4 view =
+      glm::lookAt(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, 0, 1));
+
+  modelMatrix = modelMatrix * view;
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(glm::value_ptr(modelMatrix));
+  // glLoadIdentity();
+
+  // glTranslatef(-Camera->position.x, -Camera->position.z,
+  // -Camera->position.y);
+
+  glFlush();
+
+  SDL_GL_SwapWindow(Global->window);
+}
+
+void render() {
+  switch (Settings->graphicsmode) {
+    case 1:
+      openglrender();
+      break;
+    default:
+      softwarerender();
+  }
 }

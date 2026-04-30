@@ -23,6 +23,7 @@ Uint64 currentTime = SDL_GetPerformanceCounter();
 
 bool editorinit() {
   Editor = new EditorClass();
+  if (Editor == nullptr) return false;
   Global->UImap.reserve(4);
   for (int i = 0; i < 2; i++) {
     std::deque<UIthing*> tempdeque;

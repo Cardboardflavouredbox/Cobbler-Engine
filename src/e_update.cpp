@@ -65,9 +65,8 @@ void noncamerastuff() {
 
 void movecamera() {
   if (P1Inputs->rightclick > 0) {
-    int w = Global->windowx, h = Global->windowy,
-        rtw = Global->SRstuff->render_target->w,
-        rth = Global->SRstuff->render_target->h;
+    int w = Global->windowx, h = Global->windowy, rtw = Settings->resolutionx,
+        rth = Settings->resolutiony;
     int size = w / rtw;
     if (size > h / rth) size = h / rth;
     Editor->pos.x += P1Inputs->MouseDelta.x / Editor->zoom / (float)size;
