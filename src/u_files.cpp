@@ -117,7 +117,7 @@ void freeRenderer() {
   }
 }
 
-bool setRenderer() {
+bool setRenderer(bool IsEditor) {
   switch (Settings->graphicsmode) {
     case 1: {
       SDL_Surface* surface;
@@ -142,10 +142,18 @@ bool setRenderer() {
 
       if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) return false;
 
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
-      SDL_Log("temp");
+      if (IsEditor) {
+        // Enable 2D rendering
+        glMatrixMode(GL_PROJECTION);
+        glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
+        glLoadIdentity();
+        glDisable(GL_DEPTH_TEST);
+      } else {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
+      }
+
       std::vector<GLuint> tempvector;
       tempvector.resize(32);
 
@@ -241,7 +249,7 @@ enum argenums {
   SetVsync
 };
 
-bool init(bool hidemouse, std::vector<std::string> args) {
+bool init(bool IsEditor, std::vector<std::string> args) {
   Global = new GlobalClass();
   Settings = new SettingsClass();
   P1Inputs = new Inputs();
@@ -311,9 +319,9 @@ bool init(bool hidemouse, std::vector<std::string> args) {
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
 
-  if (!setRenderer()) return false;
+  if (!setRenderer(IsEditor)) return false;
 
-  SDL_SetWindowRelativeMouseMode(Global->window, hidemouse);
+  SDL_SetWindowRelativeMouseMode(Global->window, !IsEditor);
 
   Mapdata tempmapdata;
   error = glz::read_file_json(

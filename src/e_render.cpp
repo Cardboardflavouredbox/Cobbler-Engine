@@ -232,13 +232,14 @@ void openglrender() {
       glm::vec2 uvw = Global->mapfaces[i].UVs[j];
       glTexCoord2f(uvw.x * Global->mapfaces[i].xloop,
                    uvw.y * Global->mapfaces[i].yloop);
-      glVertex2f(pos.x / Settings->resolutionx, pos.y / Settings->resolutiony);
+      glVertex2f(pos.x * 2 / (float)Settings->resolutionx,
+                 pos.y * 2 / (float)Settings->resolutiony);
     }
     glEnd();
   }
 
-  glOrtho(0, Settings->resolutionx, Settings->resolutiony, 0, -1, 1);
-  glLoadIdentity();
+  // glOrtho(0, Settings->resolutionx, Settings->resolutiony, 0, -1, 1);
+  // glLoadIdentity();
 
   // glTranslatef(-Camera->position.x, -Camera->position.z,
   // -Camera->position.y);
