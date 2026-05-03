@@ -69,6 +69,7 @@ struct GlobalClass {
 struct EditorClass {
   glm::vec2 pos;
   float zoom = 1;
+  int currentlyselectedpoint = -1;
 };
 
 struct ZipData {

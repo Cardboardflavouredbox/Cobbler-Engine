@@ -15,8 +15,7 @@
 
 glm::vec2 MouseToScreenpos() {
   int x, y, w = Global->windowx, h = Global->windowy,
-            rtw = Global->SRstuff->render_target->w,
-            rth = Global->SRstuff->render_target->h;
+            rtw = Settings->resolutionx, rth = Settings->resolutiony;
   int size = w / rtw;
   if (size > h / rth) size = h / rth;
 
@@ -33,10 +32,31 @@ glm::vec2 MouseToScreenpos() {
   return glm::vec2({(float)x, (float)y});
 }
 
+ScreenPoint ToScreenSpace(glm::vec3 P) {
+  glm::vec2 temp = (glm::vec2)P - Editor->pos;
+  temp *= Editor->zoom;
+  temp.x *= -1;
+  temp.x += (Settings->resolutionx / 2);
+  temp.y += (Settings->resolutiony / 2);
+  ScreenPoint sp;
+  sp.dist = 32;
+  sp.isbehindcamera = false;
+  sp.p = temp;
+  return sp;
+}
+
+glm::vec3 ToWorldSpace(glm::vec2 P) {
+  P.x -= (Settings->resolutionx / 2);
+  P.y -= (Settings->resolutiony / 2);
+  P.x *= -1;
+  P /= Editor->zoom;
+  P += Editor->pos;
+  return glm::vec3(P.x, P.y, 0);
+}
+
 bool ScreenPointMouseDetect(ScreenPoint SP) {
   int x, y, w = Global->windowx, h = Global->windowy,
-            rtw = Global->SRstuff->render_target->w,
-            rth = Global->SRstuff->render_target->h;
+            rtw = Settings->resolutionx, rth = Settings->resolutiony;
   int size = w / rtw;
   if (size > h / rth) size = h / rth;
 
@@ -71,6 +91,21 @@ void movecamera() {
     if (size > h / rth) size = h / rth;
     Editor->pos.x += P1Inputs->MouseDelta.x / Editor->zoom / (float)size;
     Editor->pos.y -= P1Inputs->MouseDelta.y / Editor->zoom / (float)size;
+  } else if (P1Inputs->leftclick == 2) {
+    bool check = false;
+    for (int i = 0; i < Global->Points.size(); i++) {
+      if (ScreenPointMouseDetect(ToScreenSpace(Global->Points[i]))) {
+        Editor->currentlyselectedpoint = i;
+        check = true;
+        break;
+      }
+    }
+    if (!check) Editor->currentlyselectedpoint = -1;
+  } else if (P1Inputs->leftclick == 1 && Editor->currentlyselectedpoint > -1) {
+    glm::vec2 mouse = MouseToScreenpos();
+    glm::vec3 temp = ToWorldSpace(mouse);
+    Global->Points[Editor->currentlyselectedpoint].x = temp.x;
+    Global->Points[Editor->currentlyselectedpoint].y = temp.y;
   }
 
   if (P1Inputs->numkeys[0] == 2) {

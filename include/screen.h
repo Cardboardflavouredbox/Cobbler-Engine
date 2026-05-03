@@ -10,3 +10,4 @@ struct ScreenPoint {
 };
 
 ScreenPoint ToScreenSpace(glm::vec3 P);
+glm::vec3 ToWorldSpace(glm::vec2 P);

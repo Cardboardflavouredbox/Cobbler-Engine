@@ -4,23 +4,15 @@
 #include "extern.h"
 #include "map.h"
 #include "rendermath.h"
+#include "screen.h"
 #include "update.h"
-
-glm::vec2 ToScreenSpace(glm::vec3 P) {
-  glm::vec2 temp = (glm::vec2)P - Editor->pos;
-  temp *= Editor->zoom;
-  temp.x *= -1;
-  temp.x += (Settings->resolutionx / 2);
-  temp.y += (Settings->resolutiony / 2);
-  return temp;
-}
 
 bool pointoffscreen(glm::vec3 P) { return false; }
 
 void DrawTri(Mapface face) {
-  glm::vec2 vectors[3] = {ToScreenSpace(Global->Points[face.points[0]]),
-                          ToScreenSpace(Global->Points[face.points[1]]),
-                          ToScreenSpace(Global->Points[face.points[2]])};
+  glm::vec2 vectors[3] = {ToScreenSpace(Global->Points[face.points[0]]).p,
+                          ToScreenSpace(Global->Points[face.points[1]]).p,
+                          ToScreenSpace(Global->Points[face.points[2]]).p};
   int x = vectors[0].x, x2 = vectors[0].x, y = vectors[0].y, y2 = vectors[0].y;
   for (int i = 1; i < 3; i++) {
     if (vectors[i].x < x) x = vectors[i].x;
