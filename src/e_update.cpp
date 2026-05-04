@@ -108,7 +108,8 @@ void movecamera() {
     temp.y = std::roundf(temp.y);
     Global->Points[Editor->currentlyselectedpoint].x = temp.x;
     Global->Points[Editor->currentlyselectedpoint].y = temp.y;
-  }
+  } else
+    Editor->currentlyselectedpoint = -1;
 
   if (P1Inputs->numkeys[0] == 2) {
     Global->rendermode = 0;

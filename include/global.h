@@ -17,6 +17,7 @@ const double PI =
 
 struct CustomGlyphthing {
   unsigned char* pixels;
+  GLuint* GLTexture;
   int width, height, pitch, offsetx, offsety, advancex, advancey;
 };
 
@@ -69,7 +70,7 @@ struct GlobalClass {
 struct EditorClass {
   glm::vec2 pos;
   float zoom = 1;
-  int currentlyselectedpoint = -1;
+  int currentlyselectedpoint = -1, currentlyselectedface = -1;
 };
 
 struct ZipData {

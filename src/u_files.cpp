@@ -88,10 +88,20 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
   temp.offsetx = glyph->bitmap_left;
   temp.offsety = glyph->bitmap_top;
 
-  temp.pixels = new unsigned char[temp.width * temp.height];
-  for (int i = 0; i < temp.width * temp.height; i++) {
-    temp.pixels[i] = glyph->bitmap.buffer[i];
+  switch (Settings->graphicsmode) {
+    case 1: {
+      glGenTextures(1, temp.GLTexture);
+      break;
+    }
+    case 0: {
+      temp.pixels = new unsigned char[temp.width * temp.height];
+      for (int i = 0; i < temp.width * temp.height; i++) {
+        temp.pixels[i] = glyph->bitmap.buffer[i];
+      }
+      break;
+    }
   }
+
   return temp;
 }
 

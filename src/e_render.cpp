@@ -234,26 +234,30 @@ void openglrender() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  int cnt = Settings->resolutionx * Editor->zoom;
-  for (int i = -cnt - Editor->pos.x; i < cnt - Editor->pos.x; i++) {
-    glBegin(GL_LINES);
-    float pos = i + Editor->pos.x;
-    pos *= Editor->zoom;
-    glColor4f(1, 1, 1, 0.5f);
-    glVertex2f(pos * 2 / (float)Settings->resolutionx, -1);
-    glVertex2f(pos * 2 / (float)Settings->resolutionx, 1);
-    glEnd();
-  }
+  if (Editor->zoom >= 1) {
+    int cnt = Settings->resolutionx / Editor->zoom;
+    for (int i = -cnt - Editor->pos.x; i < cnt - Editor->pos.x; i++) {
+      glBegin(GL_LINES);
+      float pos = i + Editor->pos.x;
+      pos *= Editor->zoom;
+      glColor4f(1, 1, 1, 0.5f);
+      glVertex2f(pos * 2 / (float)Settings->resolutionx, -1);
+      glVertex2f(pos * 2 / (float)Settings->resolutionx, 1);
+      glEnd();
+    }
 
-  cnt = Settings->resolutiony * Editor->zoom;
-  for (int i = -cnt - Editor->pos.y; i < cnt - Editor->pos.y; i++) {
-    glBegin(GL_LINES);
-    float pos = i + Editor->pos.y;
-    pos *= Editor->zoom;
-    glColor4f(1, 1, 1, 0.5f);
-    glVertex2f(-1, pos * 2 / (float)Settings->resolutiony);
-    glVertex2f(1, pos * 2 / (float)Settings->resolutiony);
-    glEnd();
+    cnt = Settings->resolutiony / Editor->zoom;
+    for (int i = -cnt - Editor->pos.y; i < cnt - Editor->pos.y; i++) {
+      glBegin(GL_LINES);
+      float pos = i + Editor->pos.y;
+      pos *= Editor->zoom;
+      glColor4f(1, 1, 1, 0.5f);
+      glVertex2f(-1, pos * 2 / (float)Settings->resolutiony);
+      glVertex2f(1, pos * 2 / (float)Settings->resolutiony);
+      glEnd();
+    }
+
+    renderUI();
   }
 
   for (int i = 0; i < Global->Points.size(); i++) {
