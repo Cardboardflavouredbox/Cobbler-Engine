@@ -230,6 +230,51 @@ void openglrender() {
     glEnd();
   }
 
+  glDisable(GL_TEXTURE_2D);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  int cnt = Settings->resolutionx * Editor->zoom;
+  for (int i = -cnt - Editor->pos.x; i < cnt - Editor->pos.x; i++) {
+    glBegin(GL_LINES);
+    float pos = i + Editor->pos.x;
+    pos *= Editor->zoom;
+    glColor4f(1, 1, 1, 0.5f);
+    glVertex2f(pos * 2 / (float)Settings->resolutionx, -1);
+    glVertex2f(pos * 2 / (float)Settings->resolutionx, 1);
+    glEnd();
+  }
+
+  cnt = Settings->resolutiony * Editor->zoom;
+  for (int i = -cnt - Editor->pos.y; i < cnt - Editor->pos.y; i++) {
+    glBegin(GL_LINES);
+    float pos = i + Editor->pos.y;
+    pos *= Editor->zoom;
+    glColor4f(1, 1, 1, 0.5f);
+    glVertex2f(-1, pos * 2 / (float)Settings->resolutiony);
+    glVertex2f(1, pos * 2 / (float)Settings->resolutiony);
+    glEnd();
+  }
+
+  for (int i = 0; i < Global->Points.size(); i++) {
+    glBegin(GL_TRIANGLE_FAN);
+
+    glm::vec2 pos = (glm::vec2)Global->Points[i] - Editor->pos;
+    pos *= Editor->zoom;
+    pos *= -1;
+    glColor3f(1, 1, 1);
+    glVertex2f((pos.x - 2) * 2 / (float)Settings->resolutionx,
+               (pos.y - 2) * 2 / (float)Settings->resolutiony);
+    glVertex2f((pos.x - 2) * 2 / (float)Settings->resolutionx,
+               (pos.y + 2) * 2 / (float)Settings->resolutiony);
+    glVertex2f((pos.x + 2) * 2 / (float)Settings->resolutionx,
+               (pos.y + 2) * 2 / (float)Settings->resolutiony);
+    glVertex2f((pos.x + 2) * 2 / (float)Settings->resolutionx,
+               (pos.y - 2) * 2 / (float)Settings->resolutiony);
+
+    glEnd();
+  }
+
   // glOrtho(0, Settings->resolutionx, Settings->resolutiony, 0, -1, 1);
   // glLoadIdentity();
 

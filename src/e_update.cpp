@@ -104,6 +104,8 @@ void movecamera() {
   } else if (P1Inputs->leftclick == 1 && Editor->currentlyselectedpoint > -1) {
     glm::vec2 mouse = MouseToScreenpos();
     glm::vec3 temp = ToWorldSpace(mouse);
+    temp.x = std::roundf(temp.x);
+    temp.y = std::roundf(temp.y);
     Global->Points[Editor->currentlyselectedpoint].x = temp.x;
     Global->Points[Editor->currentlyselectedpoint].y = temp.y;
   }
@@ -115,7 +117,7 @@ void movecamera() {
   }
 
   Editor->zoom -= P1Inputs->MouseScroll.y;
-  if (Editor->zoom < 0.0625f) Editor->zoom = 0.0625f;
+  if (Editor->zoom < 0.125f) Editor->zoom = 0.125f;
   if (Editor->zoom > 16.f) Editor->zoom = 16.f;
 
   P1Inputs->MouseDelta.x = 0;
