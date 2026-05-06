@@ -3,18 +3,39 @@
 
 void UIbox::update() {}
 void UIbox::render() {
-  for (int i = 0; i < size.y; i++) {
-    for (int j = 0; j < size.x; j++) {
-      Global->SRstuff->pixelsdepth[((int)pos.x + j) +
+  switch (Settings->graphicsmode) {
+    case 1: {
+      glBegin(GL_QUADS);
+
+      glColor4f(1, 1, 1, 2 / 3.f);
+      glVertex2f(pos.x * 2 / (float)Settings->resolutionx,
+                 pos.y * 2 / (float)Settings->resolutiony);
+      glVertex2f((pos.x + size.x) * 2 / (float)Settings->resolutionx,
+                 pos.y * 2 / (float)Settings->resolutiony);
+      glVertex2f((pos.x + size.x) * 2 / (float)Settings->resolutionx,
+                 (pos.y + size.y) * 2 / (float)Settings->resolutiony);
+      glVertex2f(pos.x * 2 / (float)Settings->resolutionx,
+                 (pos.y + size.y) * 2 / (float)Settings->resolutiony);
+
+      glEnd();
+      break;
+    }
+    case 0: {
+      for (int i = 0; i < size.y; i++) {
+        for (int j = 0; j < size.x; j++) {
+          Global->SRstuff
+              ->pixelsdepth[((int)pos.x + j) +
+                            ((int)pos.y + i) * Global->SRstuff->pitch] = 0;
+          Global->SRstuff->pixels[((int)pos.x + j) +
+                                  ((int)pos.y + i) * Global->SRstuff->pitch] =
+              color;
+          Global->SRstuff
+              ->pixelstransparency[((int)pos.x + j) +
                                    ((int)pos.y + i) * Global->SRstuff->pitch] =
-          0;
-      Global->SRstuff->pixels[((int)pos.x + j) +
-                              ((int)pos.y + i) * Global->SRstuff->pitch] =
-          color;
-      Global->SRstuff
-          ->pixelstransparency[((int)pos.x + j) +
-                               ((int)pos.y + i) * Global->SRstuff->pitch] =
-          255 / 3 * 2;
+              255 / 3 * 2;
+        }
+      }
+      break;
     }
   }
 }

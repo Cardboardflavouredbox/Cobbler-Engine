@@ -231,8 +231,6 @@ void openglrender() {
   }
 
   glDisable(GL_TEXTURE_2D);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   if (Editor->zoom >= 1) {
     int cnt = Settings->resolutionx / Editor->zoom;
@@ -256,8 +254,6 @@ void openglrender() {
       glVertex2f(1, pos * 2 / (float)Settings->resolutiony);
       glEnd();
     }
-
-    renderUI();
   }
 
   for (int i = 0; i < Global->Points.size(); i++) {
@@ -278,6 +274,7 @@ void openglrender() {
 
     glEnd();
   }
+  renderUI();
 
   // glOrtho(0, Settings->resolutionx, Settings->resolutiony, 0, -1, 1);
   // glLoadIdentity();

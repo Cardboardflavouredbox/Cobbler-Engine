@@ -90,12 +90,16 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
 
   switch (Settings->graphicsmode) {
     case 1: {
+      SDL_Log("%d %d", temp.width, temp.height);
+
       glGenTextures(1, &temp.GLTexture);
 
       SDL_Surface* surface;
       surface =
-          SDL_CreateSurfaceFrom(temp.width, temp.height, SDL_PIXELFORMAT_INDEX8,
-                                glyph->bitmap.buffer, temp.pitch);
+          SDL_CreateSurfaceFrom(temp.width, temp.height, SDL_PIXELFORMAT_RGBA32,
+                                glyph->bitmap.buffer, temp.width * 4);
+
+      SDL_Log("%s", SDL_GetError());
 
       glBindTexture(GL_TEXTURE_2D, temp.GLTexture);
 
@@ -174,6 +178,8 @@ bool setRenderer(bool IsEditor) {
         glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
         glLoadIdentity();
         glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       } else {
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
@@ -467,6 +473,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   FT_Set_Pixel_Sizes(Global->FTface, 0, 12);
 
   for (int i = 0; i < 128; i++) {
+    SDL_Log("%d", i);
     FT_UInt glyph_index = FT_Get_Char_Index(Global->FTface, i);
     FT_Load_Glyph(Global->FTface, glyph_index, FT_LOAD_MONOCHROME);
     FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_MONO);
