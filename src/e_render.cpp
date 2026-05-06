@@ -9,6 +9,23 @@
 
 bool pointoffscreen(glm::vec3 P) { return false; }
 
+void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
+  ScreenPoint point = ToScreenSpace(rawpoint);
+  if (!point.isbehindcamera)
+    for (int i = point.p.x - radius; i <= point.p.x + radius; i++) {
+      for (int j = point.p.y - radius; j < point.p.y + radius; j++) {
+        if (i > -1 && i < Settings->resolutionx && j > -1 &&
+            j < Settings->resolutiony) {
+          if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >=
+              7) {
+            Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 7;
+            Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
+          }
+        }
+      }
+    }
+}
+
 void DrawTri(Mapface face) {
   glm::vec2 vectors[3] = {ToScreenSpace(Global->Points[face.points[0]]).p,
                           ToScreenSpace(Global->Points[face.points[1]]).p,
@@ -119,6 +136,35 @@ void rendergame() {
       } else
         DrawTri(*tempmapface);
     }
+    for (int i = 0; i < Global->Points.size(); i++) {
+      DrawCircle(8, Global->Points[i], 2);
+    }
+  }
+}
+
+void renderGrid() {
+  if (Editor->zoom >= 1) {
+    int cnt = Settings->resolutionx / Editor->zoom;
+    for (int i = -cnt - Editor->pos.x; i < cnt - Editor->pos.x; i++) {
+      float pos = i + Editor->pos.x;
+      pos *= Editor->zoom;
+      for (int j = 0; j < Settings->resolutiony; j++) {
+        if (0 <= pos && pos < Settings->resolutionx) {
+          int index = pos + j * Global->SRstuff->pitch;
+          if (Global->SRstuff->pixelsdepth[index] > 0) {
+            Global->SRstuff->pixels[index] = 11;
+            Global->SRstuff->pixelsdepth[index] = 0;
+            Global->SRstuff->pixelstransparency[index] = 255 / 3 * 2;
+          }
+        }
+      }
+    }
+
+    cnt = Settings->resolutiony / Editor->zoom;
+    for (int i = -cnt - Editor->pos.y; i < cnt - Editor->pos.y; i++) {
+      float pos = i + Editor->pos.y;
+      pos *= Editor->zoom;
+    }
   }
 }
 
@@ -144,6 +190,7 @@ void softwarerender() {
     }
   }
   renderUI();
+  renderGrid();
   rendergame();
 
   unsigned char bgcolor = Global->rendermode == 1 ? 1 : 0;
