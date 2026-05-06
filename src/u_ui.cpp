@@ -38,21 +38,26 @@ void UItext::render() {
         CustomGlyphthing glyph = Global->Glyphmap[temp];
         x += glyph.offsetx;
         int x2 = glyph.width, y2 = glyph.height;
-        for (int j = 0; j < y2; j++) {
-          for (int k = 0; k < x2; k++) {
-            if (k > -1 && k < Settings->resolutionx && j > -1 &&
-                j < Settings->resolutiony &&
-                ((glyph.pixels[k / 8 + j * glyph.pitch]) >> (7 - k % 8) &
-                 0x01)) {
-              Global->SRstuff
-                  ->pixelsdepth[(k + x) + (j + y + 12 - glyph.offsety) *
-                                              Global->SRstuff->pitch] = 0;
-              Global->SRstuff->pixels[(k + x) + (j + y + 12 - glyph.offsety) *
-                                                    Global->SRstuff->pitch] =
-                  color;
-            }
-          }
-        }
+
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, Global->Glyphmap[temp].GLTexture);
+        glBegin(GL_QUADS);
+
+        glTexCoord2f(0, 0);
+        glVertex2f(x * 2 / (float)Settings->resolutionx,
+                   y * 2 / (float)Settings->resolutiony);
+        glTexCoord2f(1, 0);
+        glVertex2f((x + x2) * 2 / (float)Settings->resolutionx,
+                   y * 2 / (float)Settings->resolutiony);
+        glTexCoord2f(1, 1);
+        glVertex2f((x + x2) * 2 / (float)Settings->resolutionx,
+                   (y + y2) * 2 / (float)Settings->resolutiony);
+        glTexCoord2f(0, 1);
+        glVertex2f(x * 2 / (float)Settings->resolutionx,
+                   (y + y2) * 2 / (float)Settings->resolutiony);
+
+        glEnd();
+
         x += glyph.advancex;
         y += glyph.advancey;
       }

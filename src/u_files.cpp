@@ -90,7 +90,23 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
 
   switch (Settings->graphicsmode) {
     case 1: {
-      glGenTextures(1, temp.GLTexture);
+      glGenTextures(1, &temp.GLTexture);
+
+      SDL_Surface* surface;
+      surface =
+          SDL_CreateSurfaceFrom(temp.width, temp.height, SDL_PIXELFORMAT_INDEX8,
+                                glyph->bitmap.buffer, temp.pitch);
+
+      glBindTexture(GL_TEXTURE_2D, temp.GLTexture);
+
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, surface->w, surface->h, 0,
+                   GL_ALPHA, GL_UNSIGNED_BYTE, surface->pixels);
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      SDL_DestroySurface(surface);
       break;
     }
     case 0: {

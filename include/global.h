@@ -17,7 +17,7 @@ const double PI =
 
 struct CustomGlyphthing {
   unsigned char* pixels;
-  GLuint* GLTexture;
+  GLuint GLTexture;
   int width, height, pitch, offsetx, offsety, advancex, advancey;
 };
 
