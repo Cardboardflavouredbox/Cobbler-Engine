@@ -148,9 +148,10 @@ void renderGrid() {
     for (int i = -cnt - Editor->pos.x; i < cnt - Editor->pos.x; i++) {
       float pos = i + Editor->pos.x;
       pos *= Editor->zoom;
-      for (int j = 0; j < Settings->resolutiony; j++) {
-        if (0 <= pos && pos < Settings->resolutionx) {
-          int index = pos + j * Global->SRstuff->pitch;
+      pos += Settings->resolutionx / 2;
+      if (0 <= pos && pos < Settings->resolutionx) {
+        for (int j = 0; j < Settings->resolutiony; j++) {
+          int index = (int)pos + j * Global->SRstuff->pitch;
           if (Global->SRstuff->pixelsdepth[index] > 0) {
             Global->SRstuff->pixels[index] = 11;
             Global->SRstuff->pixelsdepth[index] = 0;
@@ -164,6 +165,18 @@ void renderGrid() {
     for (int i = -cnt - Editor->pos.y; i < cnt - Editor->pos.y; i++) {
       float pos = i + Editor->pos.y;
       pos *= Editor->zoom;
+      pos += Settings->resolutiony / 2;
+      if (0 <= pos && pos < Settings->resolutiony) {
+        for (int j = 0; j < Settings->resolutionx; j++) {
+          int index =
+              j + int(Settings->resolutiony - pos) * Global->SRstuff->pitch;
+          if (Global->SRstuff->pixelsdepth[index] > 0) {
+            Global->SRstuff->pixels[index] = 11;
+            Global->SRstuff->pixelsdepth[index] = 0;
+            Global->SRstuff->pixelstransparency[index] = 255 / 3 * 2;
+          }
+        }
+      }
     }
   }
 }
