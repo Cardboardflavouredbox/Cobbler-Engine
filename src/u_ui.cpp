@@ -8,14 +8,22 @@ void UIbox::render() {
       glBegin(GL_QUADS);
 
       glColor4f(1, 1, 1, 2 / 3.f);
-      glVertex2f(pos.x * 2 / (float)Settings->resolutionx,
-                 pos.y * 2 / (float)Settings->resolutiony);
-      glVertex2f((pos.x + size.x) * 2 / (float)Settings->resolutionx,
-                 pos.y * 2 / (float)Settings->resolutiony);
-      glVertex2f((pos.x + size.x) * 2 / (float)Settings->resolutionx,
-                 (pos.y + size.y) * 2 / (float)Settings->resolutiony);
-      glVertex2f(pos.x * 2 / (float)Settings->resolutionx,
-                 (pos.y + size.y) * 2 / (float)Settings->resolutiony);
+      glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
 
       glEnd();
       break;
@@ -49,6 +57,7 @@ void UItext::render() {
   int x = pos.x, y = pos.y;
   switch (Settings->graphicsmode) {
     case 1: {  // opengl
+      glColor4f(1, 1, 1, 1);
       for (int i = 0; i < string.length(); i++) {
         FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
         if (!Global->Glyphmap.contains(temp)) {
@@ -65,17 +74,25 @@ void UItext::render() {
         glBegin(GL_QUADS);
 
         glTexCoord2f(0, 0);
-        glVertex2f(x * 2 / (float)Settings->resolutionx,
-                   y * 2 / (float)Settings->resolutiony);
+        glVertex2f(
+            (x - Settings->resolutionx / 2) * 2 / (float)Settings->resolutionx,
+            (-y + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
+                (float)Settings->resolutiony);
         glTexCoord2f(1, 0);
-        glVertex2f((x + x2) * 2 / (float)Settings->resolutionx,
-                   y * 2 / (float)Settings->resolutiony);
+        glVertex2f((x + x2 - Settings->resolutionx / 2) * 2 /
+                       (float)Settings->resolutionx,
+                   (-y + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
+                       (float)Settings->resolutiony);
         glTexCoord2f(1, 1);
-        glVertex2f((x + x2) * 2 / (float)Settings->resolutionx,
-                   (y + y2) * 2 / (float)Settings->resolutiony);
+        glVertex2f((x + x2 - Settings->resolutionx / 2) * 2 /
+                       (float)Settings->resolutionx,
+                   (-y - y2 + Settings->resolutiony / 2 - 12 + glyph.offsety) *
+                       2 / (float)Settings->resolutiony);
         glTexCoord2f(0, 1);
-        glVertex2f(x * 2 / (float)Settings->resolutionx,
-                   (y + y2) * 2 / (float)Settings->resolutiony);
+        glVertex2f(
+            (x - Settings->resolutionx / 2) * 2 / (float)Settings->resolutionx,
+            (-y - y2 + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
+                (float)Settings->resolutiony);
 
         glEnd();
 

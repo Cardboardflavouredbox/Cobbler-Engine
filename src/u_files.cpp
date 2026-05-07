@@ -90,27 +90,23 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
 
   switch (Settings->graphicsmode) {
     case 1: {
-      SDL_Log("%d %d", temp.width, temp.height);
-
       glGenTextures(1, &temp.GLTexture);
 
-      SDL_Surface* surface;
-      surface =
-          SDL_CreateSurfaceFrom(temp.width, temp.height, SDL_PIXELFORMAT_RGBA32,
-                                glyph->bitmap.buffer, temp.width * 4);
-
-      SDL_Log("%s", SDL_GetError());
+      temp.pixels = new unsigned char[temp.width * temp.height];
+      for (int i = 0; i < temp.width * temp.height; i++) {
+        temp.pixels[i] =
+            (glyph->bitmap.buffer[i / 8] >> (7 - i % 8) & 0x01) ? 255 : 0;
+      }
 
       glBindTexture(GL_TEXTURE_2D, temp.GLTexture);
 
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, surface->w, surface->h, 0,
-                   GL_ALPHA, GL_UNSIGNED_BYTE, surface->pixels);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, temp.width, temp.height, 0,
+                   GL_ALPHA, GL_UNSIGNED_BYTE, temp.pixels);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      SDL_DestroySurface(surface);
       break;
     }
     case 0: {

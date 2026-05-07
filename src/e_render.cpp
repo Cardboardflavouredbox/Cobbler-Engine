@@ -268,7 +268,7 @@ void softwarerender() {
 void openglrender() {
   glClearColor(0.f, 0.f, 0.f, 0.f);
   glClear(GL_COLOR_BUFFER_BIT);
-
+  glColor4f(1, 1, 1, 1);
   // OpenGL rendering goes here
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     glEnable(GL_TEXTURE_2D);
@@ -322,7 +322,7 @@ void openglrender() {
     glm::vec2 pos = (glm::vec2)Global->Points[i] - Editor->pos;
     pos *= Editor->zoom;
     pos *= -1;
-    glColor3f(1, 1, 1);
+    glColor4f(1, 1, 1, 1);
     glVertex2f((pos.x - 2) * 2 / (float)Settings->resolutionx,
                (pos.y - 2) * 2 / (float)Settings->resolutiony);
     glVertex2f((pos.x - 2) * 2 / (float)Settings->resolutionx,
