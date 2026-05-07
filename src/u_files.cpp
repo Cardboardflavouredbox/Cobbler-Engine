@@ -91,11 +91,10 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
   switch (Settings->graphicsmode) {
     case 1: {
       glGenTextures(1, &temp.GLTexture);
-      SDL_Log("%d %d", temp.width, temp.height);
-      temp.pixels = new unsigned char[temp.width * temp.height * 4]();
-      for (int i = 0; i < temp.width * temp.height * 4; i++) {
+      temp.pixels = new unsigned char[8 * temp.pitch * temp.height]();
+      for (int i = 0; i < 8 * temp.pitch * temp.height; i++) {
         temp.pixels[i] =
-            (glyph->bitmap.buffer[i / 8] & (0x01 << (7 - i % 8))) ? 255 : 127;
+            (glyph->bitmap.buffer[i / 8] & (0x01 << (7 - i % 8))) ? 255 : 0;
       }
 
       glBindTexture(GL_TEXTURE_2D, temp.GLTexture);
