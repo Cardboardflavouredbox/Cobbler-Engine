@@ -57,7 +57,7 @@ void UItext::render() {
   int x = pos.x, y = pos.y;
   switch (Settings->graphicsmode) {
     case 1: {  // opengl
-      glColor4f(1, 1, 1, 1);
+      glColor4f(0, 0, 0, 1);
       for (int i = 0; i < string.length(); i++) {
         FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
         if (!Global->Glyphmap.contains(temp)) {
