@@ -21,12 +21,25 @@ Inputs* P1Inputs;
 Uint32 lastTime;
 Uint64 currentTime = SDL_GetPerformanceCounter();
 
+bool gameinit() {
+  Global->UImap.reserve(4);
+  std::deque<UIthing*> tempdeque;
+  UIimage* weapon = new UIimage();
+  weapon->color = 11;
+  weapon->pos = glm::vec2({4, 4});
+  weapon->size = glm::vec2({64, 128});
+  weapon->textureindex = 4;
+  tempdeque.push_back(weapon);
+  Global->UImap[0] = tempdeque;
+  return true;
+}
+
 int main(int argc, char* argv[]) {
   std::vector<std::string> args;
   args.resize(argc);
   for (int i = 0; i < argc; i++) args[i] = argv[i];
 
-  if (!init(false, args)) {
+  if (!init(false, args) || !gameinit()) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }

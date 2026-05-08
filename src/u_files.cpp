@@ -334,7 +334,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
             SDL_Log("Wrong Arguements!(Game)");
             return false;
           }
-          Settings->fov = std::stoi(args[i]);
+          Global->GameName = args[i];
           break;
       }
     }
