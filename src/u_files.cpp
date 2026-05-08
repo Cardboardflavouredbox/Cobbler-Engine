@@ -195,8 +195,8 @@ bool setRenderer(bool IsEditor) {
                     &(Global->GLstuff->textures[0]));
       for (int i = 0; i < LoadedData->texturenames.size(); i++) {
         tempstr = basepath;
-        tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
-                       ".bmp");
+        tempstr.append("/" + Global->GameName + "/textures/" +
+                       LoadedData->texturenames[i] + ".bmp");
 
         surface = SDL_LoadBMP(tempstr.c_str());
         if (surface == NULL) return false;
@@ -245,8 +245,8 @@ bool setRenderer(bool IsEditor) {
 
       for (int i = 0; i < LoadedData->texturenames.size(); i++) {
         tempstr = basepath;
-        tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
-                       ".bmp");
+        tempstr.append("/" + Global->GameName + "/textures/" +
+                       LoadedData->texturenames[i] + ".bmp");
         surface = SDL_LoadBMP(tempstr.c_str());
         if (surface == NULL) return false;
         surface = SDL_ConvertSurfaceAndColorspace(
@@ -277,7 +277,8 @@ enum argenums {
   SetRendererAsSoftware,
   SetFPS,
   SetFOV,
-  SetVsync
+  SetVsync,
+  SetGame
 };
 
 bool init(bool IsEditor, std::vector<std::string> args) {
@@ -295,7 +296,8 @@ bool init(bool IsEditor, std::vector<std::string> args) {
       {"-software", SetRendererAsSoftware},
       {"-fps", SetFPS},
       {"-fov", SetFOV},
-      {"-vsync", SetVsync}};
+      {"-vsync", SetVsync},
+      {"-game", SetGame}};
 
   for (int i = 0; i < args.size(); i++) {
     if (stringtoenums.contains(args[i])) {
@@ -326,13 +328,21 @@ bool init(bool IsEditor, std::vector<std::string> args) {
           }
           Settings->fov = std::stoi(args[i]);
           break;
+        case SetGame:
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(Game)");
+            return false;
+          }
+          Settings->fov = std::stoi(args[i]);
+          break;
       }
     }
   }
 
   ZipData tempzipdata;
-  auto error = glz::read_file_json(tempzipdata, "MapStuff/resources.json",
-                                   std::string{});
+  auto error = glz::read_file_json(
+      tempzipdata, Global->GameName + "/resources.json", std::string{});
   if (error) {
     tempzipdata.texturenames.resize(2);
     tempzipdata.texturenames[0] = "Wall";
@@ -341,7 +351,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
     tempzipdata.stagenames[0] = "test";
     tempzipdata.startlevel = "test";
     error = glz::write_file_json<glz::opts{.prettify = true}>(
-        tempzipdata, "MapStuff/resources.json", std::string{});
+        tempzipdata, Global->GameName + "/resources.json", std::string{});
     if (error) return false;
   }
   LoadedData = &tempzipdata;
@@ -356,7 +366,8 @@ bool init(bool IsEditor, std::vector<std::string> args) {
 
   Mapdata tempmapdata;
   error = glz::read_file_json(
-      tempmapdata, "MapStuff/map/" + LoadedData->startlevel + ".json",
+      tempmapdata,
+      Global->GameName + "/map/" + LoadedData->startlevel + ".json",
       std::string{});
   if (error) {
     tempmapdata.Points.resize(8);
@@ -412,7 +423,8 @@ bool init(bool IsEditor, std::vector<std::string> args) {
                                      glm::vec2({1, 1}), glm::vec2({0, 1})};
     }
     error = glz::write_file_json<glz::opts{.prettify = true}>(
-        tempmapdata, "MapStuff/map/" + LoadedData->startlevel + ".json",
+        tempmapdata,
+        Global->GameName + "/map/" + LoadedData->startlevel + ".json",
         std::string{});
     if (error) return false;
   }

@@ -64,4 +64,4 @@ target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/in
 target_include_directories(Cobbler-Engine-Editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 FILE(COPY res DESTINATION "${CMAKE_BINARY_DIR}/bin")
-FILE(COPY MapStuff DESTINATION "${CMAKE_BINARY_DIR}/bin")
+FILE(COPY CobblerGame DESTINATION "${CMAKE_BINARY_DIR}/bin")

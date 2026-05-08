@@ -25,6 +25,8 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
 
 struct GlobalClass {
  public:
+  std::string GameName = "CobblerGame";
+
   SDL_Window* window;
 
   struct SoftwareRenderer {
