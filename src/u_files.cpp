@@ -179,6 +179,9 @@ bool setRenderer(bool IsEditor) {
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       }
 
       std::vector<GLuint> tempvector;

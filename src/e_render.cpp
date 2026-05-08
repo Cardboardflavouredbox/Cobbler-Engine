@@ -121,7 +121,7 @@ Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
 }
 
 void rendergame() {
-  if (Global->rendermode == 0) {
+  if (Editor->UIindex == 0) {
     std::deque<Mapface> tempmapfacedeque = Global->mapfaces;
     for (int i = 0; i < tempmapfacedeque.size(); i++) {
       Mapface* tempmapface = &tempmapfacedeque[i];
@@ -206,7 +206,7 @@ void softwarerender() {
   renderGrid();
   rendergame();
 
-  unsigned char bgcolor = Global->rendermode == 1 ? 1 : 0;
+  unsigned char bgcolor = Editor->UIindex == 1 ? 1 : 0;
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
       if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] ==
@@ -275,6 +275,10 @@ void openglrender() {
     glBindTexture(GL_TEXTURE_2D,
                   Global->GLstuff->textures[Global->mapfaces[i].texture]);
     glBegin(GL_TRIANGLES);
+    if (Editor->currentlyselectedface == i)
+      glColor4f(0, 1, 1, 1);
+    else
+      glColor4f(1, 1, 1, 1);
     for (int j = 0; j < 3; j++) {
       glm::vec2 pos = (glm::vec2)Global->Points[Global->mapfaces[i].points[j]] -
                       Editor->pos;
@@ -291,6 +295,27 @@ void openglrender() {
   }
 
   glDisable(GL_TEXTURE_2D);
+
+  for (int i = 0; i < Global->mapfaces.size(); i++) {
+    glBegin(GL_LINE_LOOP);
+    if (Editor->currentlyselectedface == i)
+      glColor4f(0, 1, 1, 1);
+    else
+      glColor4f(1, 1, 1, 1);
+    for (int j = 0; j < 3; j++) {
+      glm::vec2 pos = (glm::vec2)Global->Points[Global->mapfaces[i].points[j]] -
+                      Editor->pos;
+      pos *= Editor->zoom;
+      pos *= -1;
+
+      glm::vec2 uvw = Global->mapfaces[i].UVs[j];
+      glTexCoord2f(uvw.x * Global->mapfaces[i].xloop,
+                   uvw.y * Global->mapfaces[i].yloop);
+      glVertex2f(pos.x * 2 / (float)Settings->resolutionx,
+                 pos.y * 2 / (float)Settings->resolutiony);
+    }
+    glEnd();
+  }
 
   if (Editor->zoom >= 1) {
     int cnt = Settings->resolutionx / Editor->zoom;
@@ -322,7 +347,12 @@ void openglrender() {
     glm::vec2 pos = (glm::vec2)Global->Points[i] - Editor->pos;
     pos *= Editor->zoom;
     pos *= -1;
-    glColor4f(1, 1, 1, 1);
+
+    if (Editor->currentlyselectedpoint == i)
+      glColor4f(0, 1, 1, 1);
+    else
+      glColor4f(1, 1, 1, 1);
+
     glVertex2f((pos.x - 2) * 2 / (float)Settings->resolutionx,
                (pos.y - 2) * 2 / (float)Settings->resolutiony);
     glVertex2f((pos.x - 2) * 2 / (float)Settings->resolutionx,
@@ -334,6 +364,20 @@ void openglrender() {
 
     glEnd();
   }
+
+  if (Global->pause || Global->isopeningfile) {
+    glBegin(GL_TRIANGLE_FAN);
+
+    glColor4f(0, 0, 0, 0.5f);
+
+    glVertex2f(-1, -1);
+    glVertex2f(1, -1);
+    glVertex2f(1, 1);
+    glVertex2f(-1, 1);
+
+    glEnd();
+  }
+
   renderUI();
 
   // glOrtho(0, Settings->resolutionx, Settings->resolutiony, 0, -1, 1);
