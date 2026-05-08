@@ -173,6 +173,7 @@ bool setRenderer(bool IsEditor) {
         glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
         glLoadIdentity();
         glDisable(GL_DEPTH_TEST);
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       } else {

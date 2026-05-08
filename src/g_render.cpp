@@ -503,6 +503,10 @@ void softwarerender() {
 }
 
 void openglrender() {
+  glClearColor(0.f, 0.f, 0.f, 0.f);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glColor4f(1, 1, 1, 1);
+
   glm::vec3 lookdir;
   lookdir.x = std::cos(glm::radians(Camera->dir.x + 90.f)) *
               std::cos(glm::radians(Camera->dir.y));
@@ -519,10 +523,6 @@ void openglrender() {
 
   glMatrixMode(GL_PROJECTION);
   glLoadMatrixf(glm::value_ptr(modelMatrix));
-  glEnable(GL_DEPTH_TEST);
-
-  glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
 
   // OpenGL rendering goes here
   for (int i = 0; i < Global->mapfaces.size(); i++) {
@@ -541,11 +541,11 @@ void openglrender() {
     glEnd();
   }
 
-  glDisable(GL_DEPTH_TEST);
-
   glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
   glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
+  glLoadIdentity();
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_TEXTURE_2D);
 
   if (Global->pause || Global->isopeningfile) {
     glBegin(GL_TRIANGLE_FAN);
@@ -559,11 +559,6 @@ void openglrender() {
 
     glEnd();
   }
-
-  // glLoadIdentity();
-
-  // glTranslatef(-Camera->position.x, -Camera->position.z,
-  // -Camera->position.y);
 
   glFlush();
 
