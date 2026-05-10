@@ -203,13 +203,8 @@ Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
               // if (b < 0) b = 0;
               Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
               if (dist < 0) dist = 0;
-              if (Global->SRstuff
-                      ->pixelstransparency[i + j * Global->SRstuff->pitch] ==
-                  255)
-                Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
-                    (unsigned char)dist * 4;
-              Global->SRstuff
-                  ->pixelstransparency[i + j * Global->SRstuff->pitch] = 255;
+              Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
+                  (unsigned char)dist * 4;
             }
           }
         }
@@ -446,7 +441,6 @@ void softwarerender() {
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
       Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 65535;
-      Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] = 255;
     }
   }
   renderUI();

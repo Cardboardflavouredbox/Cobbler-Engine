@@ -37,10 +37,6 @@ void UIbox::render() {
           Global->SRstuff->pixels[((int)pos.x + j) +
                                   ((int)pos.y + i) * Global->SRstuff->pitch] =
               color;
-          Global->SRstuff
-              ->pixelstransparency[((int)pos.x + j) +
-                                   ((int)pos.y + i) * Global->SRstuff->pitch] =
-              255 / 3 * 2;
         }
       }
       break;
@@ -103,10 +99,6 @@ void UIimage::render() {
             Global->SRstuff->pixels[((int)pos.x + j) +
                                     ((int)pos.y + i) * Global->SRstuff->pitch] =
                 color;
-            Global->SRstuff->pixelstransparency[((int)pos.x + j) +
-                                                ((int)pos.y + i) *
-                                                    Global->SRstuff->pitch] =
-                255;
           }
         }
       }

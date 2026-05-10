@@ -37,7 +37,6 @@ struct GlobalClass {
     unsigned char* pixels;
     int pitch;
     std::vector<unsigned short> pixelsdepth;
-    std::vector<unsigned char> pixelstransparency;
   };
 
   SoftwareRenderer* SRstuff;

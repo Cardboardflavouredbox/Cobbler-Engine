@@ -258,8 +258,6 @@ bool setRenderer(bool IsEditor) {
       }
       Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
                                           Settings->resolutiony);
-      Global->SRstuff->pixelstransparency.resize(Settings->resolutionx *
-                                                 Settings->resolutiony);
       break;
     }
   }

@@ -107,12 +107,8 @@ Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
                 static_cast<Uint8*>(Global->SRstuff->textures[face.texture]
                                         ->pixels)[uvxthing + uvything * 128];
             if (dist < 0) dist = 0;
-            if (Global->SRstuff
-                    ->pixelstransparency[i + j * Global->SRstuff->pitch] == 255)
-              Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
-                  (unsigned char)dist * 4;
-            Global->SRstuff
-                ->pixelstransparency[i + j * Global->SRstuff->pitch] = 255;
+            Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
+                (unsigned char)dist * 4;
           }
         }
       }
@@ -121,24 +117,22 @@ Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
 }
 
 void rendergame() {
-  if (Editor->UIindex == 0) {
-    std::deque<Mapface> tempmapfacedeque = Global->mapfaces;
-    for (int i = 0; i < tempmapfacedeque.size(); i++) {
-      Mapface* tempmapface = &tempmapfacedeque[i];
-      int check = 0;
-      for (int j = 0; j < 3; j++) {
-        if (!pointoffscreen(Global->Points[tempmapface->points[j]])) break;
-        check++;
-      }
-      if (check == 3) {
-        tempmapfacedeque.erase(tempmapfacedeque.begin() + i);
-        i--;
-      } else
-        DrawTri(*tempmapface);
+  std::deque<Mapface> tempmapfacedeque = Global->mapfaces;
+  for (int i = 0; i < tempmapfacedeque.size(); i++) {
+    Mapface* tempmapface = &tempmapfacedeque[i];
+    int check = 0;
+    for (int j = 0; j < 3; j++) {
+      if (!pointoffscreen(Global->Points[tempmapface->points[j]])) break;
+      check++;
     }
-    for (int i = 0; i < Global->Points.size(); i++) {
-      DrawCircle(8, Global->Points[i], 2);
-    }
+    if (check == 3) {
+      tempmapfacedeque.erase(tempmapfacedeque.begin() + i);
+      i--;
+    } else
+      DrawTri(*tempmapface);
+  }
+  for (int i = 0; i < Global->Points.size(); i++) {
+    DrawCircle(8, Global->Points[i], 2);
   }
 }
 
@@ -155,7 +149,6 @@ void renderGrid() {
           if (Global->SRstuff->pixelsdepth[index] > 0) {
             Global->SRstuff->pixels[index] = 11;
             Global->SRstuff->pixelsdepth[index] = 0;
-            Global->SRstuff->pixelstransparency[index] = 255 / 3 * 2;
           }
         }
       }
@@ -173,7 +166,6 @@ void renderGrid() {
           if (Global->SRstuff->pixelsdepth[index] > 0) {
             Global->SRstuff->pixels[index] = 11;
             Global->SRstuff->pixelsdepth[index] = 0;
-            Global->SRstuff->pixelstransparency[index] = 255 / 3 * 2;
           }
         }
       }
@@ -199,19 +191,17 @@ void softwarerender() {
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
       Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 65535;
-      Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] = 255;
     }
   }
   renderUI();
   renderGrid();
   rendergame();
 
-  unsigned char bgcolor = Editor->UIindex == 1 ? 1 : 0;
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
       if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] ==
           65535) {
-        Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = bgcolor;
+        Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = 0;
       }
     }
   }
