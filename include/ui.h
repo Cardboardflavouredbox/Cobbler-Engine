@@ -34,6 +34,17 @@ struct TextandGlobalPointChanger : UITextChanger {
   void update();
 };
 
+struct UIImageUVIndexChanger {
+  int* index;
+  virtual void update() = 0;
+};
+
+struct ImagePistolChanger : UIImageUVIndexChanger {
+  float animlen[3] = {0.f, 0.25f, 0.5f}, animprogress = 0.f;
+  unsigned char anim;
+  void update();
+};
+
 struct UIbox : public UIthing {
   unsigned char color;
   glm::vec2 size;
@@ -43,6 +54,7 @@ struct UIbox : public UIthing {
 
 struct UIimage : public UIthing {
   unsigned char color;
+  UIImageUVIndexChanger* UVIndexChanger = nullptr;
   glm::vec2 size;
   std::pair<glm::vec2, glm::vec2>* uvlist;
   int textureindex, uvindex = 0;

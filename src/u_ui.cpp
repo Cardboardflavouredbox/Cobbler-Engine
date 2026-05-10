@@ -48,7 +48,11 @@ void UIbox::render() {
   }
 }
 
-void UIimage::update() {}
+void UIimage::update() {
+  if (UVIndexChanger != nullptr) {
+    UVIndexChanger->update();
+  }
+}
 void UIimage::render() {
   switch (Settings->graphicsmode) {
     case 1: {
@@ -223,3 +227,5 @@ void TextandGlobalPointChanger::update() {
   } else
     *string = "";
 }
+
+void ImagePistolChanger::update() {}
