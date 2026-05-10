@@ -32,6 +32,10 @@ bool gameinit() {
       new std::pair<glm::vec2, glm::vec2>[3]{{{0, 0}, {1 / 3.f, 1.f}},
                                              {{1 / 3.f, 0}, {2 / 3.f, 1.f}},
                                              {{2 / 3.f, 0}, {1.f, 1.f}}};
+  ImagePistolChanger* IPC = new ImagePistolChanger();
+  IPC->index = &weapon->uvindex;
+
+  weapon->UVIndexChanger = IPC;
   weapon->textureindex = 4;
   tempdeque.push_back(weapon);
   Global->UImap[0] = tempdeque;

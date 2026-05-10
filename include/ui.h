@@ -40,8 +40,8 @@ struct UIImageUVIndexChanger {
 };
 
 struct ImagePistolChanger : UIImageUVIndexChanger {
-  float animlen[3] = {0.f, 0.25f, 0.5f}, animprogress = 0.f;
-  unsigned char anim;
+  float animlen[3] = {0.f, 1.f, 2.f}, animprogress = 0.f;
+  unsigned char anim = 0;
   void update();
 };
 

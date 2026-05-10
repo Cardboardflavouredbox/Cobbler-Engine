@@ -86,18 +86,28 @@ void UIimage::render() {
       break;
     }
     case 0: {
+      std::pair<glm::vec2, glm::vec2> uv = uvlist[uvindex];
+      SDL_Surface* surface = Global->SRstuff->textures[textureindex];
+      uv.first.x *= surface->w;
+      uv.first.y *= surface->h;
+      uv.second.x *= surface->w;
+      uv.second.y *= surface->h;
       for (int i = 0; i < size.y; i++) {
         for (int j = 0; j < size.x; j++) {
-          Global->SRstuff
-              ->pixelsdepth[((int)pos.x + j) +
-                            ((int)pos.y + i) * Global->SRstuff->pitch] = 0;
-          Global->SRstuff->pixels[((int)pos.x + j) +
-                                  ((int)pos.y + i) * Global->SRstuff->pitch] =
-              color;
-          Global->SRstuff
-              ->pixelstransparency[((int)pos.x + j) +
-                                   ((int)pos.y + i) * Global->SRstuff->pitch] =
-              255 / 3 * 2;
+          Uint8 color = static_cast<Uint8*>(surface->pixels)[int(
+              uv.first.x + j + surface->pitch * (uv.first.y + i))];
+          if (color > 0) {
+            Global->SRstuff
+                ->pixelsdepth[((int)pos.x + j) +
+                              ((int)pos.y + i) * Global->SRstuff->pitch] = 0;
+            Global->SRstuff->pixels[((int)pos.x + j) +
+                                    ((int)pos.y + i) * Global->SRstuff->pitch] =
+                color;
+            Global->SRstuff->pixelstransparency[((int)pos.x + j) +
+                                                ((int)pos.y + i) *
+                                                    Global->SRstuff->pitch] =
+                255;
+          }
         }
       }
       break;
@@ -228,4 +238,22 @@ void TextandGlobalPointChanger::update() {
     *string = "";
 }
 
-void ImagePistolChanger::update() {}
+void ImagePistolChanger::update() {
+  if (anim == 0) {
+    if (P1Inputs->leftclick > 1) {
+      anim = 1;
+      animprogress = animlen[1];
+    }
+  } else {
+    animprogress -= Global->deltaTime;
+    if (animprogress <= 0) {
+      if (anim == 1) {
+        anim = 2;
+        animprogress = animlen[2] + animprogress;
+      } else {
+        anim = 0;
+      }
+    }
+  }
+  *index = anim;
+}
