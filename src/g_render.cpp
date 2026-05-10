@@ -559,6 +559,7 @@ void openglrender() {
 
     glEnd();
   }
+  renderUI();
 
   glFlush();
 

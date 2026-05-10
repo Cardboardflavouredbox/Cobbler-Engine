@@ -200,6 +200,7 @@ bool setRenderer(bool IsEditor) {
 
         surface = SDL_LoadBMP(tempstr.c_str());
         if (surface == NULL) return false;
+        SDL_SetSurfaceColorKey(surface, true, 0);
         surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
 
         glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[i]);

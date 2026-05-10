@@ -26,8 +26,12 @@ bool gameinit() {
   std::deque<UIthing*> tempdeque;
   UIimage* weapon = new UIimage();
   weapon->color = 11;
-  weapon->pos = glm::vec2({4, 4});
-  weapon->size = glm::vec2({64, 128});
+  weapon->pos = glm::vec2({160 - 48, 200 - 112});
+  weapon->size = glm::vec2({96, 112});
+  weapon->uvlist =
+      new std::pair<glm::vec2, glm::vec2>[3]{{{0, 0}, {1 / 3.f, 1.f}},
+                                             {{1 / 3.f, 0}, {2 / 3.f, 1.f}},
+                                             {{2 / 3.f, 0}, {1.f, 1.f}}};
   weapon->textureindex = 4;
   tempdeque.push_back(weapon);
   Global->UImap[0] = tempdeque;

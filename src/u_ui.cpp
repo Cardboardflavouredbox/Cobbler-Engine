@@ -48,6 +48,59 @@ void UIbox::render() {
   }
 }
 
+void UIimage::update() {}
+void UIimage::render() {
+  switch (Settings->graphicsmode) {
+    case 1: {
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[textureindex]);
+      glBegin(GL_QUADS);
+      std::pair<glm::vec2, glm::vec2>* uv = &uvlist[uvindex];
+      glColor4f(1, 1, 1, 1);
+      glTexCoord2f(uv->first.x, uv->first.y);
+      glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glTexCoord2f(uv->second.x, uv->first.y);
+      glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glTexCoord2f(uv->second.x, uv->second.y);
+      glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glTexCoord2f(uv->first.x, uv->second.y);
+      glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+
+      glEnd();
+      break;
+    }
+    case 0: {
+      for (int i = 0; i < size.y; i++) {
+        for (int j = 0; j < size.x; j++) {
+          Global->SRstuff
+              ->pixelsdepth[((int)pos.x + j) +
+                            ((int)pos.y + i) * Global->SRstuff->pitch] = 0;
+          Global->SRstuff->pixels[((int)pos.x + j) +
+                                  ((int)pos.y + i) * Global->SRstuff->pitch] =
+              color;
+          Global->SRstuff
+              ->pixelstransparency[((int)pos.x + j) +
+                                   ((int)pos.y + i) * Global->SRstuff->pitch] =
+              255 / 3 * 2;
+        }
+      }
+      break;
+    }
+  }
+}
+
 void UItext::update() {
   if (TextChanger != nullptr) {
     TextChanger->update();

@@ -44,10 +44,11 @@ struct UIbox : public UIthing {
 struct UIimage : public UIthing {
   unsigned char color;
   glm::vec2 size;
-  int textureindex;
+  std::pair<glm::vec2, glm::vec2>* uvlist;
+  int textureindex, uvindex = 0;
   void update();
   void render();
-}
+};
 
 struct UItext : public UIthing {
   unsigned char color;
