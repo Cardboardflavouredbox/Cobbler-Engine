@@ -96,11 +96,15 @@ void movecamera() {
     bool check = false;
     for (int i = 0; i < Global->Points.size(); i++) {
       if (ScreenPointMouseDetect(ToScreenSpace(Global->Points[i]))) {
-        Editor->currentlyselectedpoint = i;
-        Editor->currentlyselectedface = -1;
-        Editor->UIindex = 0;
-        check = true;
-        break;
+        if (Editor->currentlyselectedpoint == -1 ||
+            (Editor->currentlyselectedpoint > -1 &&
+             Global->Points[i].z >
+                 Global->Points[Editor->currentlyselectedpoint].z)) {
+          Editor->currentlyselectedpoint = i;
+          Editor->currentlyselectedface = -1;
+          Editor->UIindex = 0;
+          check = true;
+        }
       }
     }
     if (!check) {
@@ -131,8 +135,10 @@ void movecamera() {
       Global->Points[Editor->currentlyselectedpoint].y = temp.y;
     } else {
     }
+  } else {
+    Editor->currentlyselectedpoint = -1;
+    Editor->currentlyselectedface = -1;
   }
-  // else Editor->currentlyselectedpoint = -1;
 
   Editor->zoom -= P1Inputs->MouseScroll.y;
   if (Editor->zoom < 0.125f) Editor->zoom = 0.125f;
