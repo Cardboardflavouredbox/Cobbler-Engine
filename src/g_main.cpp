@@ -38,6 +38,13 @@ bool gameinit() {
   weapon->UVIndexChanger = IPC;
   weapon->textureindex = 4;
   tempdeque.push_back(weapon);
+
+  UIbox* crosshair = new UIbox();
+  crosshair->color = 11;
+  crosshair->size = glm::vec2({2, 2});
+  crosshair->pos = glm::vec2({159, 99});
+
+  tempdeque.push_back(crosshair);
   Global->UImap[0] = tempdeque;
   return true;
 }
