@@ -1,0 +1,3 @@
+[submodule "CobblerGame"]
+	path = CobblerGame
+	url = https://github.com/Cardboardflavouredbox/CobblerGame.git

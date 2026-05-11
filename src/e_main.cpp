@@ -40,7 +40,7 @@ bool editorinit() {
     text[0]->string = "test";
 
     TextandNumChanger* TaNC = new TextandNumChanger();
-    if (i == 0) {
+    if (i == 1) {
       TaNC->text = "Face";
       TaNC->num = &Editor->currentlyselectedface;
       TextandGlobalFacePointChanger* TaGFPC[3] = {
@@ -56,7 +56,7 @@ bool editorinit() {
         TaGFPC[j - 1]->pointindex = j - 1;
         text[j]->TextChangerSet(TaGFPC[j - 1]);
       }
-    } else if (i == 1) {
+    } else if (i == 0) {
       TaNC->text = "Point";
       TaNC->num = &Editor->currentlyselectedpoint;
       TextandGlobalPointChanger* TaGPC[3] = {new TextandGlobalPointChanger(),

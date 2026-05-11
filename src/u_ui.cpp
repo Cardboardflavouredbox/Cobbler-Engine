@@ -8,14 +8,22 @@ void UIbox::render() {
       glBegin(GL_QUADS);
 
       glColor4f(1, 1, 1, 2 / 3.f);
-      glVertex2f(pos.x * 2 / (float)Settings->resolutionx,
-                 pos.y * 2 / (float)Settings->resolutiony);
-      glVertex2f((pos.x + size.x) * 2 / (float)Settings->resolutionx,
-                 pos.y * 2 / (float)Settings->resolutiony);
-      glVertex2f((pos.x + size.x) * 2 / (float)Settings->resolutionx,
-                 (pos.y + size.y) * 2 / (float)Settings->resolutiony);
-      glVertex2f(pos.x * 2 / (float)Settings->resolutionx,
-                 (pos.y + size.y) * 2 / (float)Settings->resolutiony);
+      glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
 
       glEnd();
       break;
@@ -29,10 +37,69 @@ void UIbox::render() {
           Global->SRstuff->pixels[((int)pos.x + j) +
                                   ((int)pos.y + i) * Global->SRstuff->pitch] =
               color;
-          Global->SRstuff
-              ->pixelstransparency[((int)pos.x + j) +
-                                   ((int)pos.y + i) * Global->SRstuff->pitch] =
-              255 / 3 * 2;
+        }
+      }
+      break;
+    }
+  }
+}
+
+void UIimage::update() {
+  if (UVIndexChanger != nullptr) {
+    UVIndexChanger->update();
+  }
+}
+void UIimage::render() {
+  switch (Settings->graphicsmode) {
+    case 1: {
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[textureindex]);
+      glBegin(GL_QUADS);
+      std::pair<glm::vec2, glm::vec2>* uv = &uvlist[uvindex];
+      glColor4f(1, 1, 1, 1);
+      glTexCoord2f(uv->first.x, uv->first.y);
+      glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glTexCoord2f(uv->second.x, uv->first.y);
+      glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glTexCoord2f(uv->second.x, uv->second.y);
+      glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+      glTexCoord2f(uv->first.x, uv->second.y);
+      glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+                     (float)Settings->resolutionx,
+                 (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                     (float)Settings->resolutiony);
+
+      glEnd();
+      break;
+    }
+    case 0: {
+      std::pair<glm::vec2, glm::vec2> uv = uvlist[uvindex];
+      SDL_Surface* surface = Global->SRstuff->textures[textureindex];
+      uv.first.x *= surface->w;
+      uv.first.y *= surface->h;
+      uv.second.x *= surface->w;
+      uv.second.y *= surface->h;
+      for (int i = 0; i < size.y; i++) {
+        for (int j = 0; j < size.x; j++) {
+          Uint8 color = static_cast<Uint8*>(surface->pixels)[int(
+              uv.first.x + j + surface->pitch * (uv.first.y + i))];
+          if (color > 0) {
+            Global->SRstuff
+                ->pixelsdepth[((int)pos.x + j) +
+                              ((int)pos.y + i) * Global->SRstuff->pitch] = 0;
+            Global->SRstuff->pixels[((int)pos.x + j) +
+                                    ((int)pos.y + i) * Global->SRstuff->pitch] =
+                color;
+          }
         }
       }
       break;
@@ -49,6 +116,7 @@ void UItext::render() {
   int x = pos.x, y = pos.y;
   switch (Settings->graphicsmode) {
     case 1: {  // opengl
+      glColor4f(0, 0, 0, 1);
       for (int i = 0; i < string.length(); i++) {
         FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
         if (!Global->Glyphmap.contains(temp)) {
@@ -65,17 +133,25 @@ void UItext::render() {
         glBegin(GL_QUADS);
 
         glTexCoord2f(0, 0);
-        glVertex2f(x * 2 / (float)Settings->resolutionx,
-                   y * 2 / (float)Settings->resolutiony);
+        glVertex2f(
+            (x - Settings->resolutionx / 2) * 2 / (float)Settings->resolutionx,
+            (-y + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
+                (float)Settings->resolutiony);
         glTexCoord2f(1, 0);
-        glVertex2f((x + x2) * 2 / (float)Settings->resolutionx,
-                   y * 2 / (float)Settings->resolutiony);
+        glVertex2f((x + x2 - Settings->resolutionx / 2) * 2 /
+                       (float)Settings->resolutionx,
+                   (-y + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
+                       (float)Settings->resolutiony);
         glTexCoord2f(1, 1);
-        glVertex2f((x + x2) * 2 / (float)Settings->resolutionx,
-                   (y + y2) * 2 / (float)Settings->resolutiony);
+        glVertex2f((x + x2 - Settings->resolutionx / 2) * 2 /
+                       (float)Settings->resolutionx,
+                   (-y - y2 + Settings->resolutiony / 2 - 12 + glyph.offsety) *
+                       2 / (float)Settings->resolutiony);
         glTexCoord2f(0, 1);
-        glVertex2f(x * 2 / (float)Settings->resolutionx,
-                   (y + y2) * 2 / (float)Settings->resolutiony);
+        glVertex2f(
+            (x - Settings->resolutionx / 2) * 2 / (float)Settings->resolutionx,
+            (-y - y2 + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
+                (float)Settings->resolutiony);
 
         glEnd();
 
@@ -149,7 +225,27 @@ void TextandGlobalPointChanger::update() {
         break;
     }
     *string = text + std::to_string(temp);
-    for (int i = 0; i < 3; i++) string->pop_back();
+    for (int i = 0; i < 7; i++) string->pop_back();
   } else
     *string = "";
+}
+
+void ImagePistolChanger::update() {
+  if (anim == 0) {
+    if (P1Inputs->leftclick > 1) {
+      anim = 1;
+      animprogress = animlen[1];
+    }
+  } else {
+    animprogress -= Global->deltaTime;
+    if (animprogress <= 0) {
+      if (anim == 1) {
+        anim = 2;
+        animprogress = animlen[2] + animprogress;
+      } else {
+        anim = 0;
+      }
+    }
+  }
+  *index = anim;
 }

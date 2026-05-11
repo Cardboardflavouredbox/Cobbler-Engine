@@ -107,12 +107,8 @@ Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
                 static_cast<Uint8*>(Global->SRstuff->textures[face.texture]
                                         ->pixels)[uvxthing + uvything * 128];
             if (dist < 0) dist = 0;
-            if (Global->SRstuff
-                    ->pixelstransparency[i + j * Global->SRstuff->pitch] == 255)
-              Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
-                  (unsigned char)dist * 4;
-            Global->SRstuff
-                ->pixelstransparency[i + j * Global->SRstuff->pitch] = 255;
+            Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
+                (unsigned char)dist * 4;
           }
         }
       }
@@ -121,24 +117,22 @@ Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
 }
 
 void rendergame() {
-  if (Global->rendermode == 0) {
-    std::deque<Mapface> tempmapfacedeque = Global->mapfaces;
-    for (int i = 0; i < tempmapfacedeque.size(); i++) {
-      Mapface* tempmapface = &tempmapfacedeque[i];
-      int check = 0;
-      for (int j = 0; j < 3; j++) {
-        if (!pointoffscreen(Global->Points[tempmapface->points[j]])) break;
-        check++;
-      }
-      if (check == 3) {
-        tempmapfacedeque.erase(tempmapfacedeque.begin() + i);
-        i--;
-      } else
-        DrawTri(*tempmapface);
+  std::deque<Mapface> tempmapfacedeque = Global->mapfaces;
+  for (int i = 0; i < tempmapfacedeque.size(); i++) {
+    Mapface* tempmapface = &tempmapfacedeque[i];
+    int check = 0;
+    for (int j = 0; j < 3; j++) {
+      if (!pointoffscreen(Global->Points[tempmapface->points[j]])) break;
+      check++;
     }
-    for (int i = 0; i < Global->Points.size(); i++) {
-      DrawCircle(8, Global->Points[i], 2);
-    }
+    if (check == 3) {
+      tempmapfacedeque.erase(tempmapfacedeque.begin() + i);
+      i--;
+    } else
+      DrawTri(*tempmapface);
+  }
+  for (int i = 0; i < Global->Points.size(); i++) {
+    DrawCircle(8, Global->Points[i], 2);
   }
 }
 
@@ -148,13 +142,13 @@ void renderGrid() {
     for (int i = -cnt - Editor->pos.x; i < cnt - Editor->pos.x; i++) {
       float pos = i + Editor->pos.x;
       pos *= Editor->zoom;
-      for (int j = 0; j < Settings->resolutiony; j++) {
-        if (0 <= pos && pos < Settings->resolutionx) {
-          int index = pos + j * Global->SRstuff->pitch;
+      pos += Settings->resolutionx / 2;
+      if (0 <= pos && pos < Settings->resolutionx) {
+        for (int j = 0; j < Settings->resolutiony; j++) {
+          int index = (int)pos + j * Global->SRstuff->pitch;
           if (Global->SRstuff->pixelsdepth[index] > 0) {
             Global->SRstuff->pixels[index] = 11;
             Global->SRstuff->pixelsdepth[index] = 0;
-            Global->SRstuff->pixelstransparency[index] = 255 / 3 * 2;
           }
         }
       }
@@ -164,6 +158,17 @@ void renderGrid() {
     for (int i = -cnt - Editor->pos.y; i < cnt - Editor->pos.y; i++) {
       float pos = i + Editor->pos.y;
       pos *= Editor->zoom;
+      pos += Settings->resolutiony / 2;
+      if (0 <= pos && pos < Settings->resolutiony) {
+        for (int j = 0; j < Settings->resolutionx; j++) {
+          int index =
+              j + int(Settings->resolutiony - pos) * Global->SRstuff->pitch;
+          if (Global->SRstuff->pixelsdepth[index] > 0) {
+            Global->SRstuff->pixels[index] = 11;
+            Global->SRstuff->pixelsdepth[index] = 0;
+          }
+        }
+      }
     }
   }
 }
@@ -186,19 +191,17 @@ void softwarerender() {
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
       Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 65535;
-      Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] = 255;
     }
   }
   renderUI();
   renderGrid();
   rendergame();
 
-  unsigned char bgcolor = Global->rendermode == 1 ? 1 : 0;
   for (int i = 0; i < Settings->resolutionx; i++) {
     for (int j = 0; j < Settings->resolutiony; j++) {
       if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] ==
           65535) {
-        Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = bgcolor;
+        Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = 0;
       }
     }
   }
@@ -255,13 +258,17 @@ void softwarerender() {
 void openglrender() {
   glClearColor(0.f, 0.f, 0.f, 0.f);
   glClear(GL_COLOR_BUFFER_BIT);
-
+  glColor4f(1, 1, 1, 1);
   // OpenGL rendering goes here
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D,
                   Global->GLstuff->textures[Global->mapfaces[i].texture]);
     glBegin(GL_TRIANGLES);
+    if (Editor->currentlyselectedface == i)
+      glColor4f(0, 1, 1, 1);
+    else
+      glColor4f(1, 1, 1, 1);
     for (int j = 0; j < 3; j++) {
       glm::vec2 pos = (glm::vec2)Global->Points[Global->mapfaces[i].points[j]] -
                       Editor->pos;
@@ -278,6 +285,27 @@ void openglrender() {
   }
 
   glDisable(GL_TEXTURE_2D);
+
+  for (int i = 0; i < Global->mapfaces.size(); i++) {
+    glBegin(GL_LINE_LOOP);
+    if (Editor->currentlyselectedface == i)
+      glColor4f(0, 1, 1, 1);
+    else
+      glColor4f(1, 1, 1, 1);
+    for (int j = 0; j < 3; j++) {
+      glm::vec2 pos = (glm::vec2)Global->Points[Global->mapfaces[i].points[j]] -
+                      Editor->pos;
+      pos *= Editor->zoom;
+      pos *= -1;
+
+      glm::vec2 uvw = Global->mapfaces[i].UVs[j];
+      glTexCoord2f(uvw.x * Global->mapfaces[i].xloop,
+                   uvw.y * Global->mapfaces[i].yloop);
+      glVertex2f(pos.x * 2 / (float)Settings->resolutionx,
+                 pos.y * 2 / (float)Settings->resolutiony);
+    }
+    glEnd();
+  }
 
   if (Editor->zoom >= 1) {
     int cnt = Settings->resolutionx / Editor->zoom;
@@ -309,7 +337,12 @@ void openglrender() {
     glm::vec2 pos = (glm::vec2)Global->Points[i] - Editor->pos;
     pos *= Editor->zoom;
     pos *= -1;
-    glColor3f(1, 1, 1);
+
+    if (Editor->currentlyselectedpoint == i)
+      glColor4f(0, 1, 1, 1);
+    else
+      glColor4f(1, 1, 1, 1);
+
     glVertex2f((pos.x - 2) * 2 / (float)Settings->resolutionx,
                (pos.y - 2) * 2 / (float)Settings->resolutiony);
     glVertex2f((pos.x - 2) * 2 / (float)Settings->resolutionx,
@@ -321,6 +354,20 @@ void openglrender() {
 
     glEnd();
   }
+
+  if (Global->pause || Global->isopeningfile) {
+    glBegin(GL_TRIANGLE_FAN);
+
+    glColor4f(0, 0, 0, 0.5f);
+
+    glVertex2f(-1, -1);
+    glVertex2f(1, -1);
+    glVertex2f(1, 1);
+    glVertex2f(-1, 1);
+
+    glEnd();
+  }
+
   renderUI();
 
   // glOrtho(0, Settings->resolutionx, Settings->resolutiony, 0, -1, 1);

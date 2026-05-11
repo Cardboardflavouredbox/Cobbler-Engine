@@ -9,6 +9,7 @@
 #include "files.h"
 #include "global.h"
 #include "raycast.h"
+#include "rendermath.h"
 #include "screen.h"
 #include "ui_index.h"
 #include "update.h"
@@ -95,26 +96,48 @@ void movecamera() {
     bool check = false;
     for (int i = 0; i < Global->Points.size(); i++) {
       if (ScreenPointMouseDetect(ToScreenSpace(Global->Points[i]))) {
-        Editor->currentlyselectedpoint = i;
-        check = true;
-        break;
+        if (Editor->currentlyselectedpoint == -1 ||
+            (Editor->currentlyselectedpoint > -1 &&
+             Global->Points[i].z >
+                 Global->Points[Editor->currentlyselectedpoint].z)) {
+          Editor->currentlyselectedpoint = i;
+          Editor->currentlyselectedface = -1;
+          Editor->UIindex = 0;
+          check = true;
+        }
       }
     }
-    if (!check) Editor->currentlyselectedpoint = -1;
-  } else if (P1Inputs->leftclick == 1 && Editor->currentlyselectedpoint > -1) {
-    glm::vec2 mouse = MouseToScreenpos();
-    glm::vec3 temp = ToWorldSpace(mouse);
-    temp.x = std::roundf(temp.x);
-    temp.y = std::roundf(temp.y);
-    Global->Points[Editor->currentlyselectedpoint].x = temp.x;
-    Global->Points[Editor->currentlyselectedpoint].y = temp.y;
-  } else
+    if (!check) {
+      Editor->currentlyselectedpoint = -1;
+      for (int i = 0; i < Global->mapfaces.size(); i++) {
+        if (Vec2inTri(
+                MouseToScreenpos(),
+                ToScreenSpace(Global->Points[Global->mapfaces[i].points[0]]).p,
+                ToScreenSpace(Global->Points[Global->mapfaces[i].points[1]]).p,
+                ToScreenSpace(Global->Points[Global->mapfaces[i].points[2]])
+                    .p)) {
+          Editor->UIindex = 1;
+          check = true;
+          Editor->currentlyselectedface = i;
+          break;
+        }
+        if (!check) Editor->currentlyselectedface = -1;
+      }
+    }
+  } else if (P1Inputs->leftclick == 1 && (Editor->currentlyselectedpoint > -1 ||
+                                          Editor->currentlyselectedface > -1)) {
+    if (Editor->currentlyselectedpoint > -1) {
+      glm::vec2 mouse = MouseToScreenpos();
+      glm::vec3 temp = ToWorldSpace(mouse);
+      temp.x = std::roundf(temp.x);
+      temp.y = std::roundf(temp.y);
+      Global->Points[Editor->currentlyselectedpoint].x = temp.x;
+      Global->Points[Editor->currentlyselectedpoint].y = temp.y;
+    } else {
+    }
+  } else {
     Editor->currentlyselectedpoint = -1;
-
-  if (P1Inputs->numkeys[0] == 2) {
-    Global->rendermode = 0;
-  } else if (P1Inputs->numkeys[1] == 2) {
-    Global->rendermode = 1;
+    Editor->currentlyselectedface = -1;
   }
 
   Editor->zoom -= P1Inputs->MouseScroll.y;
@@ -123,8 +146,8 @@ void movecamera() {
 
   P1Inputs->MouseDelta.x = 0;
   P1Inputs->MouseDelta.y = 0;
-  P1Inputs->MouseScroll.x = std::lerp(P1Inputs->MouseScroll.x, 0, 0.5f);
-  P1Inputs->MouseScroll.y = std::lerp(P1Inputs->MouseScroll.y, 0, 0.5f);
+  P1Inputs->MouseScroll.x = 0;
+  P1Inputs->MouseScroll.y = 0;
 }
 
 void update() {

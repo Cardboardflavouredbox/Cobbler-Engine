@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(Cobbler-Engine)
 
+set(GAME "CobblerGame" CACHE STRING "Name of the Game folder")
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -64,4 +65,4 @@ target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/in
 target_include_directories(Cobbler-Engine-Editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 FILE(COPY res DESTINATION "${CMAKE_BINARY_DIR}/bin")
-FILE(COPY MapStuff DESTINATION "${CMAKE_BINARY_DIR}/bin")
+FILE(COPY $CACHE{GAME} DESTINATION "${CMAKE_BINARY_DIR}/bin")
