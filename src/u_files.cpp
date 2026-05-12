@@ -151,9 +151,7 @@ bool setRenderer(bool IsEditor) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
-                          SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
-
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
       Global->window = SDL_CreateWindow(
           "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
           SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -161,11 +159,11 @@ bool setRenderer(bool IsEditor) {
       // Create OpenGL context
       Global->GLstuff->GLContext = SDL_GL_CreateContext(Global->window);
 
-      SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext);
-
-      SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0);
+      if (!SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext)) return false;
 
       if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) return false;
+      
+      if (!SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0)) return false;
 
       if (IsEditor) {
         // Enable 2D rendering
@@ -483,7 +481,6 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   FT_Set_Pixel_Sizes(Global->FTface, 0, 12);
 
   for (int i = 0; i < 128; i++) {
-    SDL_Log("%d", i);
     FT_UInt glyph_index = FT_Get_Char_Index(Global->FTface, i);
     FT_Load_Glyph(Global->FTface, glyph_index, FT_LOAD_MONOCHROME);
     FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_MONO);
