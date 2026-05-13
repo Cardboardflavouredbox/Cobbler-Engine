@@ -135,12 +135,10 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
     if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
 
     float det = Areathing(vectors[0].p, vectors[1].p, vectors[2].p);
-    float A01 = (vectors[1].p.x - vectors[0].p.x) / -det,
-          A12 = (vectors[2].p.x - vectors[1].p.x) / -det,
-          A20 = (vectors[0].p.x - vectors[2].p.x) / -det,
-          B01 = (vectors[0].p.y - vectors[1].p.y) / -det,
-          B12 = (vectors[1].p.y - vectors[2].p.y) / -det,
-          B20 = (vectors[2].p.y - vectors[0].p.y) / -det;
+    glm::vec3 A = {(vectors[2].p.x - vectors[1].p.x), (vectors[0].p.x - vectors[2].p.x), (vectors[1].p.x - vectors[0].p.x)},
+              B = {(vectors[1].p.y - vectors[2].p.y), (vectors[2].p.y - vectors[0].p.y), (vectors[0].p.y - vectors[1].p.y)};
+    A /= -det;
+    B /= -det;
     glm::vec3 uvwrow =
         GetUV(glm::vec2(x, y), vectors[0].p, vectors[1].p, vectors[2].p);
     for (int i = x; i <= x2; i++) {
@@ -180,48 +178,16 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
                           tempvec3.z * tempvec3.z);
             if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >
                 dist * 3) {
-              // r -= dist * 3;
-              // g -= dist * 3;
-              // b -= dist * 3;
-              // r = r * (int)shade[0] / 255;
-              // g = g * (int)shade[1] / 255;
-              // b = b * (int)shade[2] / 255;
-              // r = uvresult.x * 255;
-              // g = uvresult.y * 255;
-              // b = 0;
-              // if (Global->SRstuff->pixelstransparency[i + j *
-              // Global->SRstuff->pitch] < 255) {
-              //   int transparency =
-              //       Global->SRstuff->pixelstransparency[i + j *
-              //       Global->SRstuff->pitch];
-              //   SDL_Color tempcolor =
-              //       Global->palette
-              //           ->colors[Global->SRstuff->pixels[i + j *
-              //           Global->SRstuff->pitch]];
-              //   r = r * (255 - transparency) / 255 +
-              //       tempcolor.r * transparency / 255;
-              //   g = g * (255 - transparency) / 255 +
-              //       tempcolor.g * transparency / 255;
-              //   b = b * (255 - transparency) / 255 +
-              //       tempcolor.b * transparency / 255;
-              // }
-              // if (r < 0) r = 0;
-              // if (g < 0) g = 0;
-              // if (b < 0) b = 0;
               Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
               if (dist < 0) dist = 0;
               Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
                   (unsigned char)dist * 4;
             }
-            uvw.x += A12;
-            uvw.y += A20;
-            uvw.z += A01;
+            uvw += A;
           }
         }
       }
-      uvwrow.x += B12;
-      uvwrow.y += B20;
-      uvwrow.z += B01;
+      uvwrow += B;
     }
   }
 }
