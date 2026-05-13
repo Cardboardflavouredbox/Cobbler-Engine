@@ -135,12 +135,12 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
     if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
 
     float det = Areathing(vectors[0].p, vectors[1].p, vectors[2].p);
-    float A01 = (vectors[1].p.y - vectors[0].p.y) / det,
-          A12 = (vectors[2].p.y - vectors[1].p.y) / det,
-          A20 = (vectors[0].p.y - vectors[2].p.y) / det,
-          B01 = (vectors[0].p.x - vectors[1].p.x) / det,
-          B12 = (vectors[1].p.x - vectors[2].p.x) / det,
-          B20 = (vectors[2].p.x - vectors[0].p.x) / det;
+    float A01 = (vectors[1].p.x - vectors[0].p.x) / -det,
+          A12 = (vectors[2].p.x - vectors[1].p.x) / -det,
+          A20 = (vectors[0].p.x - vectors[2].p.x) / -det,
+          B01 = (vectors[0].p.y - vectors[1].p.y) / -det,
+          B12 = (vectors[1].p.y - vectors[2].p.y) / -det,
+          B20 = (vectors[2].p.y - vectors[0].p.y) / -det;
     glm::vec3 uvwrow =
         GetUV(glm::vec2(x, y), vectors[0].p, vectors[1].p, vectors[2].p);
     for (int i = x; i <= x2; i++) {
