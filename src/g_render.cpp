@@ -135,8 +135,12 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
     if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
 
     float det = Areathing(vectors[0].p, vectors[1].p, vectors[2].p);
-    glm::vec3 A = {(vectors[2].p.x - vectors[1].p.x), (vectors[0].p.x - vectors[2].p.x), (vectors[1].p.x - vectors[0].p.x)},
-              B = {(vectors[1].p.y - vectors[2].p.y), (vectors[2].p.y - vectors[0].p.y), (vectors[0].p.y - vectors[1].p.y)};
+    glm::vec3 A = {(vectors[2].p.x - vectors[1].p.x),
+                   (vectors[0].p.x - vectors[2].p.x),
+                   (vectors[1].p.x - vectors[0].p.x)},
+              B = {(vectors[1].p.y - vectors[2].p.y),
+                   (vectors[2].p.y - vectors[0].p.y),
+                   (vectors[0].p.y - vectors[1].p.y)};
     A /= -det;
     B /= -det;
     glm::vec3 uvwrow =
@@ -183,8 +187,8 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
               Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
                   (unsigned char)dist * 4;
             }
-            uvw += A;
           }
+          uvw += A;
         }
       }
       uvwrow += B;
@@ -367,8 +371,8 @@ void renderbackground() {
   int x = Settings->resolutionx, y = Settings->resolutiony;
   for (int i = 0; i < x; i++) {
     for (int j = 0; j < y; j++) {
-      if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] == 65535 /*||
-            Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] < 255*/) {
+      if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] ==
+          65535) {
         Uint8 color = static_cast<Uint8*>(
             Global->SRstuff->textures[Global->skybox]->pixels)
             [(int(i * 320.f / x) +
@@ -376,23 +380,6 @@ void renderbackground() {
                  640 +
              (int((1 - (Camera->dir.y) / 90.f) * 200.f) + int(j * 200.f / y)) *
                  640];
-
-        // if (Global->SRstuff->pixelstransparency[i + j *
-        // Global->SRstuff->pitch] < 255) {
-        //   int transparency =
-        //       Global->SRstuff->pixelstransparency[i + j *
-        //       Global->SRstuff->pitch];
-        //   SDL_Color tempcolor =
-        //       Global->palette->colors[Global->SRstuff->pixels[i + j *
-        //       Global->SRstuff->pitch]];
-        //   r = r * (255 - transparency) / 255 +
-        //       tempcolor.r * transparency / 255;
-        //   g = g * (255 - transparency) / 255 +
-        //       tempcolor.g * transparency / 255;
-        //   b = b * (255 - transparency) / 255 +
-        //       tempcolor.b * transparency / 255;
-        // }
-
         Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
       }
     }
@@ -429,23 +416,23 @@ void softwarerender() {
   renderbackground();
 
   if (Global->pause || Global->isopeningfile) {
-    for (int i = 0; i < Settings->resolutionx; i++) {
-      for (int j = 0; j < Settings->resolutiony; j++) {
-        Uint8 r, g, b;
-        SDL_GetRGB(Global->SRstuff->pixels[i + j * Global->SRstuff->pitch],
-                   SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_INDEX8),
-                   Global->SRstuff->palette, &r, &g, &b);
-        int r2 = r, g2 = g, b2 = b;
-        r2 -= 64;
-        g2 -= 64;
-        b2 -= 64;
-        if (r2 < 0) r2 = 0;
-        if (g2 < 0) g2 = 0;
-        if (b2 < 0) b2 = 0;
-        Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] =
-            SDL_MapSurfaceRGB(Global->SRstuff->render_target, r2, g2, b2);
-      }
-    }
+    // for (int i = 0; i < Settings->resolutionx; i++) {
+    //   for (int j = 0; j < Settings->resolutiony; j++) {
+    //     Uint8 r, g, b;
+    //     SDL_GetRGB(Global->SRstuff->pixels[i + j * Global->SRstuff->pitch],
+    //                SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_INDEX8),
+    //                Global->SRstuff->palette, &r, &g, &b);
+    //     int r2 = r, g2 = g, b2 = b;
+    //     r2 -= 64;
+    //     g2 -= 64;
+    //     b2 -= 64;
+    //     if (r2 < 0) r2 = 0;
+    //     if (g2 < 0) g2 = 0;
+    //     if (b2 < 0) b2 = 0;
+    //     Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] =
+    //         SDL_MapSurfaceRGB(Global->SRstuff->render_target, r2, g2, b2);
+    //   }
+    // }
   }
 
   SDL_UnlockSurface(Global->SRstuff->render_target);

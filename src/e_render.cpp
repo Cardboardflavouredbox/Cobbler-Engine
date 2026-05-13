@@ -207,23 +207,23 @@ void softwarerender() {
   }
 
   if (Global->pause || Global->isopeningfile) {
-    for (int i = 0; i < Settings->resolutionx; i++) {
-      for (int j = 0; j < Settings->resolutiony; j++) {
-        Uint8 r, g, b;
-        SDL_GetRGB(Global->SRstuff->pixels[i + j * Global->SRstuff->pitch],
-                   SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_INDEX8),
-                   Global->SRstuff->palette, &r, &g, &b);
-        int r2 = r, g2 = g, b2 = b;
-        r2 -= 64;
-        g2 -= 64;
-        b2 -= 64;
-        if (r2 < 0) r2 = 0;
-        if (g2 < 0) g2 = 0;
-        if (b2 < 0) b2 = 0;
-        Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] =
-            SDL_MapSurfaceRGB(Global->SRstuff->render_target, r2, g2, b2);
-      }
-    }
+    // for (int i = 0; i < Settings->resolutionx; i++) {
+    //   for (int j = 0; j < Settings->resolutiony; j++) {
+    //     Uint8 r, g, b;
+    //     SDL_GetRGB(Global->SRstuff->pixels[i + j * Global->SRstuff->pitch],
+    //                SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_INDEX8),
+    //                Global->SRstuff->palette, &r, &g, &b);
+    //     int r2 = r, g2 = g, b2 = b;
+    //     r2 -= 64;
+    //     g2 -= 64;
+    //     b2 -= 64;
+    //     if (r2 < 0) r2 = 0;
+    //     if (g2 < 0) g2 = 0;
+    //     if (b2 < 0) b2 = 0;
+    //     Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] =
+    //         SDL_MapSurfaceRGB(Global->SRstuff->render_target, r2, g2, b2);
+    //   }
+    // }
   }
 
   SDL_UnlockSurface(Global->SRstuff->render_target);
