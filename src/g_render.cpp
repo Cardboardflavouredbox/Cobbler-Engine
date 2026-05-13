@@ -133,7 +133,18 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
     if (y >= Settings->resolutiony - 1) y = Settings->resolutiony - 1;
     if (y2 < 0) y2 = 0;
     if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
+
+    float det = Areathing(vectors[0].p, vectors[1].p, vectors[2].p);
+    float A01 = (vectors[1].p.y - vectors[0].p.y) / det,
+          A12 = (vectors[2].p.y - vectors[1].p.y) / det,
+          A20 = (vectors[0].p.y - vectors[2].p.y) / det,
+          B01 = (vectors[0].p.x - vectors[1].p.x) / det,
+          B12 = (vectors[1].p.x - vectors[2].p.x) / det,
+          B20 = (vectors[2].p.x - vectors[0].p.x) / det;
+    glm::vec3 uvwrow =
+        GetUV(glm::vec2(x, y), vectors[0].p, vectors[1].p, vectors[2].p);
     for (int i = x; i <= x2; i++) {
+      glm::vec3 uvw = uvwrow;
       for (int j = y; j <= y2; j++) {
         glm::vec2 temp;
         temp.x = i;
@@ -141,8 +152,6 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
         if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
             temp.y < Settings->resolutiony) {
           if (Vec2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p)) {
-            glm::vec3 uvw =
-                GetUV(temp, vectors[0].p, vectors[1].p, vectors[2].p);
             glm::vec2 uvresult = ((((UVs[0] * uvw.x) * vectors[0].dist) +
                                    ((UVs[1] * uvw.y) * vectors[1].dist)) +
                                   ((UVs[2] * uvw.z) * vectors[2].dist));
@@ -170,9 +179,7 @@ void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
                 std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
                           tempvec3.z * tempvec3.z);
             if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >
-                dist * 3 /*||
-Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
-255*/) {
+                dist * 3) {
               // r -= dist * 3;
               // g -= dist * 3;
               // b -= dist * 3;
@@ -206,9 +213,15 @@ Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
               Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
                   (unsigned char)dist * 4;
             }
+            uvw.x += A12;
+            uvw.y += A20;
+            uvw.z += A01;
           }
         }
       }
+      uvwrow.x += B12;
+      uvwrow.y += B20;
+      uvwrow.z += B01;
     }
   }
 }
