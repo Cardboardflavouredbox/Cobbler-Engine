@@ -18,8 +18,6 @@ void events() {
           case 0: {
             Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
                                                 Settings->resolutiony);
-            Global->SRstuff->pixelstransparency.resize(Settings->resolutionx *
-                                                       Settings->resolutiony);
             break;
           }
           case 1: {

@@ -57,7 +57,7 @@ void update() {
   lastTime = currentTime;
   currentTime = SDL_GetPerformanceCounter();
   Global->deltaTime =
-      (currentTime - lastTime) / (double)SDL_GetPerformanceFrequency();
+      ((currentTime - lastTime) * 10) / (double)SDL_GetPerformanceFrequency();
 
   if (P1Inputs->ESC == 2) {
     Global->pause = !Global->pause;

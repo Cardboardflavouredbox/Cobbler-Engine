@@ -30,5 +30,5 @@ bool Vec2inTri(glm::vec2 p, glm::vec2 v1, glm::vec2 v2, glm::vec2 v3) {
   float s1 = anglething(v3, p, v1), s2 = anglething(v1, p, v2),
         s3 = anglething(v2, p, v3);
 
-  return (s1 + s2 + s3 > 360);
+  return (s1 + s2 + s3 >= 360);
 }

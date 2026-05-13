@@ -90,27 +90,22 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
 
   switch (Settings->graphicsmode) {
     case 1: {
-      SDL_Log("%d %d", temp.width, temp.height);
-
       glGenTextures(1, &temp.GLTexture);
-
-      SDL_Surface* surface;
-      surface =
-          SDL_CreateSurfaceFrom(temp.width, temp.height, SDL_PIXELFORMAT_RGBA32,
-                                glyph->bitmap.buffer, temp.width * 4);
-
-      SDL_Log("%s", SDL_GetError());
+      temp.pixels = new unsigned char[8 * temp.pitch * temp.height]();
+      for (int i = 0; i < 8 * temp.pitch * temp.height; i++) {
+        temp.pixels[i] =
+            (glyph->bitmap.buffer[i / 8] & (0x01 << (7 - i % 8))) ? 255 : 0;
+      }
 
       glBindTexture(GL_TEXTURE_2D, temp.GLTexture);
 
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, surface->w, surface->h, 0,
-                   GL_ALPHA, GL_UNSIGNED_BYTE, surface->pixels);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, temp.width, temp.height, 0,
+                   GL_ALPHA, GL_UNSIGNED_BYTE, temp.pixels);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      SDL_DestroySurface(surface);
       break;
     }
     case 0: {
@@ -156,9 +151,7 @@ bool setRenderer(bool IsEditor) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
-                          SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
-
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
       Global->window = SDL_CreateWindow(
           "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
           SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -166,11 +159,11 @@ bool setRenderer(bool IsEditor) {
       // Create OpenGL context
       Global->GLstuff->GLContext = SDL_GL_CreateContext(Global->window);
 
-      SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext);
-
-      SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0);
+      if (!SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext)) return false;
 
       if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) return false;
+      
+      if (!SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0)) return false;
 
       if (IsEditor) {
         // Enable 2D rendering
@@ -178,12 +171,16 @@ bool setRenderer(bool IsEditor) {
         glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
         glLoadIdentity();
         glDisable(GL_DEPTH_TEST);
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       } else {
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       }
 
       std::vector<GLuint> tempvector;
@@ -196,11 +193,12 @@ bool setRenderer(bool IsEditor) {
                     &(Global->GLstuff->textures[0]));
       for (int i = 0; i < LoadedData->texturenames.size(); i++) {
         tempstr = basepath;
-        tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
-                       ".bmp");
+        tempstr.append("/" + Global->GameName + "/textures/" +
+                       LoadedData->texturenames[i] + ".bmp");
 
         surface = SDL_LoadBMP(tempstr.c_str());
         if (surface == NULL) return false;
+        SDL_SetSurfaceColorKey(surface, true, 0);
         surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
 
         glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[i]);
@@ -246,8 +244,8 @@ bool setRenderer(bool IsEditor) {
 
       for (int i = 0; i < LoadedData->texturenames.size(); i++) {
         tempstr = basepath;
-        tempstr.append("/MapStuff/textures/" + LoadedData->texturenames[i] +
-                       ".bmp");
+        tempstr.append("/" + Global->GameName + "/textures/" +
+                       LoadedData->texturenames[i] + ".bmp");
         surface = SDL_LoadBMP(tempstr.c_str());
         if (surface == NULL) return false;
         surface = SDL_ConvertSurfaceAndColorspace(
@@ -258,8 +256,6 @@ bool setRenderer(bool IsEditor) {
       }
       Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
                                           Settings->resolutiony);
-      Global->SRstuff->pixelstransparency.resize(Settings->resolutionx *
-                                                 Settings->resolutiony);
       break;
     }
   }
@@ -278,7 +274,8 @@ enum argenums {
   SetRendererAsSoftware,
   SetFPS,
   SetFOV,
-  SetVsync
+  SetVsync,
+  SetGame
 };
 
 bool init(bool IsEditor, std::vector<std::string> args) {
@@ -296,7 +293,8 @@ bool init(bool IsEditor, std::vector<std::string> args) {
       {"-software", SetRendererAsSoftware},
       {"-fps", SetFPS},
       {"-fov", SetFOV},
-      {"-vsync", SetVsync}};
+      {"-vsync", SetVsync},
+      {"-game", SetGame}};
 
   for (int i = 0; i < args.size(); i++) {
     if (stringtoenums.contains(args[i])) {
@@ -327,13 +325,21 @@ bool init(bool IsEditor, std::vector<std::string> args) {
           }
           Settings->fov = std::stoi(args[i]);
           break;
+        case SetGame:
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(Game)");
+            return false;
+          }
+          Global->GameName = args[i];
+          break;
       }
     }
   }
 
   ZipData tempzipdata;
-  auto error = glz::read_file_json(tempzipdata, "MapStuff/resources.json",
-                                   std::string{});
+  auto error = glz::read_file_json(
+      tempzipdata, Global->GameName + "/resources.json", std::string{});
   if (error) {
     tempzipdata.texturenames.resize(2);
     tempzipdata.texturenames[0] = "Wall";
@@ -342,7 +348,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
     tempzipdata.stagenames[0] = "test";
     tempzipdata.startlevel = "test";
     error = glz::write_file_json<glz::opts{.prettify = true}>(
-        tempzipdata, "MapStuff/resources.json", std::string{});
+        tempzipdata, Global->GameName + "/resources.json", std::string{});
     if (error) return false;
   }
   LoadedData = &tempzipdata;
@@ -357,7 +363,8 @@ bool init(bool IsEditor, std::vector<std::string> args) {
 
   Mapdata tempmapdata;
   error = glz::read_file_json(
-      tempmapdata, "MapStuff/map/" + LoadedData->startlevel + ".json",
+      tempmapdata,
+      Global->GameName + "/map/" + LoadedData->startlevel + ".json",
       std::string{});
   if (error) {
     tempmapdata.Points.resize(8);
@@ -413,7 +420,8 @@ bool init(bool IsEditor, std::vector<std::string> args) {
                                      glm::vec2({1, 1}), glm::vec2({0, 1})};
     }
     error = glz::write_file_json<glz::opts{.prettify = true}>(
-        tempmapdata, "MapStuff/map/" + LoadedData->startlevel + ".json",
+        tempmapdata,
+        Global->GameName + "/map/" + LoadedData->startlevel + ".json",
         std::string{});
     if (error) return false;
   }
@@ -473,7 +481,6 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   FT_Set_Pixel_Sizes(Global->FTface, 0, 12);
 
   for (int i = 0; i < 128; i++) {
-    SDL_Log("%d", i);
     FT_UInt glyph_index = FT_Get_Char_Index(Global->FTface, i);
     FT_Load_Glyph(Global->FTface, glyph_index, FT_LOAD_MONOCHROME);
     FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_MONO);
