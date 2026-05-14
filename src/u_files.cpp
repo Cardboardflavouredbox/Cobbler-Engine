@@ -342,20 +342,10 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   ZipData tempzipdata;
   auto error = glz::read_file_json(
       tempzipdata, Global->GameName + "/resources.json", std::string{});
-  if (error) {
-    tempzipdata.texturenames.resize(2);
-    tempzipdata.texturenames[0] = "Wall";
-    tempzipdata.texturenames[1] = "Fence";
-    tempzipdata.stagenames.resize(1);
-    tempzipdata.stagenames[0] = "test";
-    tempzipdata.startlevel = "test";
-    error = glz::write_file_json<glz::opts{.prettify = true}>(
-        tempzipdata, Global->GameName + "/resources.json", std::string{});
-    if (error) return false;
-  }
+  if (error) return false;
   LoadedData = &tempzipdata;
 
-  if (!SDL_SetAppMetadata("CobblerEngine", "0.1", "com.example.myapp") ||
+  if (!SDL_SetAppMetadata(Global->GameName, "0.1", "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
 
@@ -368,65 +358,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
       tempmapdata,
       Global->GameName + "/map/" + LoadedData->startlevel + ".json",
       std::string{});
-  if (error) {
-    tempmapdata.Points.resize(8);
-    tempmapdata.Points[0] = glm::vec3({-15.f, 15.f, 2.f});
-    tempmapdata.Points[1] = glm::vec3({15.f, 15.f, 2.f});
-    tempmapdata.Points[2] = glm::vec3({15.f, 15.f, -1.f});
-    tempmapdata.Points[3] = glm::vec3({-15.f, 15.f, -1.f});
-
-    tempmapdata.Points[4] = glm::vec3({-15.f, -15.f, 2.f});
-    tempmapdata.Points[5] = glm::vec3({15.f, -15.f, 2.f});
-    tempmapdata.Points[6] = glm::vec3({15.f, -15.f, -1.f});
-    tempmapdata.Points[7] = glm::vec3({-15.f, -15.f, -1.f});
-
-    tempmapdata.mapfaces.resize(5);
-    tempmapdata.mapfaces[0].points.resize(4);
-    tempmapdata.mapfaces[0].points[0] = 0;
-    tempmapdata.mapfaces[0].points[1] = 1;
-    tempmapdata.mapfaces[0].points[2] = 2;
-    tempmapdata.mapfaces[0].points[3] = 3;
-
-    tempmapdata.mapfaces[1].points.resize(4);
-    tempmapdata.mapfaces[1].points[0] = 4;
-    tempmapdata.mapfaces[1].points[1] = 0;
-    tempmapdata.mapfaces[1].points[2] = 3;
-    tempmapdata.mapfaces[1].points[3] = 7;
-
-    tempmapdata.mapfaces[2].points.resize(4);
-    tempmapdata.mapfaces[2].points[0] = 5;
-    tempmapdata.mapfaces[2].points[1] = 4;
-    tempmapdata.mapfaces[2].points[2] = 7;
-    tempmapdata.mapfaces[2].points[3] = 6;
-
-    tempmapdata.mapfaces[3].points.resize(4);
-    tempmapdata.mapfaces[3].points[0] = 1;
-    tempmapdata.mapfaces[3].points[1] = 5;
-    tempmapdata.mapfaces[3].points[2] = 6;
-    tempmapdata.mapfaces[3].points[3] = 2;
-
-    tempmapdata.mapfaces[4].points.resize(4);
-    tempmapdata.mapfaces[4].points[0] = 3;
-    tempmapdata.mapfaces[4].points[1] = 2;
-    tempmapdata.mapfaces[4].points[2] = 6;
-    tempmapdata.mapfaces[4].points[3] = 7;
-    tempmapdata.mapfaces[4].xloop = 10;
-    tempmapdata.mapfaces[4].yloop = 10;
-    tempmapdata.mapfaces[4].texture = 2;
-
-    for (int i = 0; i < 4; i++) {
-      tempmapdata.mapfaces[i].xloop = 8;
-    }
-    for (int i = 0; i < 5; i++) {
-      tempmapdata.mapfaces[i].UVs = {glm::vec2({0, 0}), glm::vec2({1, 0}),
-                                     glm::vec2({1, 1}), glm::vec2({0, 1})};
-    }
-    error = glz::write_file_json<glz::opts{.prettify = true}>(
-        tempmapdata,
-        Global->GameName + "/map/" + LoadedData->startlevel + ".json",
-        std::string{});
-    if (error) return false;
-  }
+  if (error) return false;
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;

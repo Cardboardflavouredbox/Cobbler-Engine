@@ -78,6 +78,7 @@ struct ZipData {
   std::string startlevel;
   std::deque<std::string> texturenames;
   std::deque<std::string> stagenames;
+  std::deque<std::string> uinames;
 };
 
 struct Mapdata {
