@@ -101,4 +101,5 @@ struct SettingsClass {
   int fps = 60;
   bool vsync = false;
   int graphicsmode = 0;  // 0 = software, 1 = opengl
+  bool autorun = false;
 };

@@ -329,32 +329,6 @@ void rendergame() {
     DrawTri(tempmapfacedeque[k].texture, temp, temp2, tempmapfacedeque[k].xloop,
             tempmapfacedeque[k].yloop, tempmapfacedeque[k].shade);
   }
-  // }
-  // else if (Editor->UIindex == 1) {
-  //   for (int k = 0; k < tempmapfacedeque.size(); k++) {
-  //     glm::vec3 temp[2] = {temppointsdeque[tempmapfacedeque[k].points[0]],
-  //                          temppointsdeque[tempmapfacedeque[k].points[1]]};
-  //     DrawLine(10, temp);
-  //     temp[1] = temppointsdeque[tempmapfacedeque[k].points[2]];
-  //     DrawLine(10, temp);
-  //     temp[0] = temppointsdeque[tempmapfacedeque[k].points[1]];
-  //     DrawLine(10, temp);
-  //   }
-  // for (int k = 0; k < Global->Points.size(); k++) {
-  //   if (Global->editorselectedPoint == k) {
-  //     glm::vec3 temp[2] = {Global->Points[k],
-  //                          (Global->Points[k] + glm::vec3({0, 4, 0}))};
-  //     DrawLine(40, temp);
-  //     DrawCircle(40, temp[1], 1);
-  //     temp[1] = (Global->Points[k] + glm::vec3({4, 0, 0}));
-  //     DrawLine(20, temp);
-  //     DrawCircle(20, temp[1], 1);
-  //     temp[1] = (Global->Points[k] + glm::vec3({0, 0, 4}));
-  //     DrawLine(50, temp);
-  //     DrawCircle(50, temp[1], 1);
-  //   }
-  // }
-  // }
 }
 
 void renderUI() {
@@ -367,7 +341,6 @@ void renderUI() {
 }
 
 void renderbackground() {
-  // if (Editor->UIindex == 0) {
   int x = Settings->resolutionx, y = Settings->resolutiony;
   for (int i = 0; i < x; i++) {
     for (int j = 0; j < y; j++) {
@@ -384,21 +357,9 @@ void renderbackground() {
       }
     }
   }
-  // } else if (Editor->UIindex == 1) {
-  //   for (int i = 0; i < Settings->resolutionx; i++) {
-  //     for (int j = 0; j < Settings->resolutiony; j++) {
-  //       if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] ==
-  //           65535) {
-  //         Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = 1;
-  //       }
-  //     }
-  //   }
-  // }
 }
 
 void softwarerender() {
-  // SDL_SetRenderDrawColorFloat(Global->renderer, 0, 0, 0, 1);
-  // SDL_RenderClear(Global->renderer);
   SDL_LockSurface(Global->SRstuff->render_target);
 
   Global->SRstuff->pixels =
@@ -414,26 +375,6 @@ void softwarerender() {
   rendergame();
 
   renderbackground();
-
-  if (Global->pause || Global->isopeningfile) {
-    // for (int i = 0; i < Settings->resolutionx; i++) {
-    //   for (int j = 0; j < Settings->resolutiony; j++) {
-    //     Uint8 r, g, b;
-    //     SDL_GetRGB(Global->SRstuff->pixels[i + j * Global->SRstuff->pitch],
-    //                SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_INDEX8),
-    //                Global->SRstuff->palette, &r, &g, &b);
-    //     int r2 = r, g2 = g, b2 = b;
-    //     r2 -= 64;
-    //     g2 -= 64;
-    //     b2 -= 64;
-    //     if (r2 < 0) r2 = 0;
-    //     if (g2 < 0) g2 = 0;
-    //     if (b2 < 0) b2 = 0;
-    //     Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] =
-    //         SDL_MapSurfaceRGB(Global->SRstuff->render_target, r2, g2, b2);
-    //   }
-    // }
-  }
 
   SDL_UnlockSurface(Global->SRstuff->render_target);
 

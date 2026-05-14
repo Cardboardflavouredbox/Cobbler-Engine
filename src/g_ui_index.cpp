@@ -1,4 +1,9 @@
 #include "extern.h"
 #include "ui_index.h"
 
-void changeUIindex() { Global->UIindex = 0; }
+void changeUIindex() {
+  if (Global->pause || Global->isopeningfile) {
+    Global->UIindex = 1;
+  } else
+    Global->UIindex = 0;
+}

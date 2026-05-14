@@ -7,7 +7,7 @@ void UIbox::render() {
     case 1: {
       glBegin(GL_QUADS);
 
-      glColor4f(1, 1, 1, 2 / 3.f);
+      glColor4f(rgba.r, rgba.g, rgba.b, rgba.a);
       glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
                      (float)Settings->resolutionx,
                  (-pos.y + Settings->resolutiony / 2) * 2 /
@@ -56,7 +56,7 @@ void UIimage::render() {
       glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[textureindex]);
       glBegin(GL_QUADS);
       std::pair<glm::vec2, glm::vec2>* uv = &uvlist[uvindex];
-      glColor4f(1, 1, 1, 1);
+      glColor4f(rgba.r, rgba.g, rgba.b, rgba.a);
       glTexCoord2f(uv->first.x, uv->first.y);
       glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
                      (float)Settings->resolutionx,
@@ -116,7 +116,7 @@ void UItext::render() {
   int x = pos.x, y = pos.y;
   switch (Settings->graphicsmode) {
     case 1: {  // opengl
-      glColor4f(0, 0, 0, 1);
+      glColor4f(rgba.r, rgba.g, rgba.b, rgba.a);
       for (int i = 0; i < string.length(); i++) {
         FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
         if (!Global->Glyphmap.contains(temp)) {

@@ -41,7 +41,8 @@ void playermovement() {
 
   Camera->movevec3 = (tempmove * Camera->walkspeed);
 
-  if (P1Inputs->Shift > 0)
+  if ((P1Inputs->Shift == 0 && Settings->autorun) ||
+      (P1Inputs->Shift > 0 && !Settings->autorun))
     Camera->movevec3 = (Camera->movevec3 * Camera->runspeed);
 
   if (P1Inputs->Space == 2 && Camera->IsGrounded)
@@ -66,7 +67,7 @@ void update() {
   if (!Global->pause) {
     playermovement();
     componentsupdate();
-    changeUIindex();
     componentsupdatelate();
   }
+  changeUIindex();
 }

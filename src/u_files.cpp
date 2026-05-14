@@ -151,7 +151,8 @@ bool setRenderer(bool IsEditor) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                          SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
       Global->window = SDL_CreateWindow(
           "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
           SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -159,10 +160,11 @@ bool setRenderer(bool IsEditor) {
       // Create OpenGL context
       Global->GLstuff->GLContext = SDL_GL_CreateContext(Global->window);
 
-      if (!SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext)) return false;
+      if (!SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext))
+        return false;
 
       if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) return false;
-      
+
       if (!SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0)) return false;
 
       if (IsEditor) {

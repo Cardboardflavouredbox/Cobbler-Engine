@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
 #include <string>
 
 struct UIthing {
@@ -47,6 +48,7 @@ struct ImagePistolChanger : UIImageUVIndexChanger {
 
 struct UIbox : public UIthing {
   unsigned char color;
+  glm::vec4 rgba;
   glm::vec2 size;
   void update();
   void render();
@@ -54,6 +56,7 @@ struct UIbox : public UIthing {
 
 struct UIimage : public UIthing {
   unsigned char color;
+  glm::vec4 rgba;
   UIImageUVIndexChanger* UVIndexChanger = nullptr;
   glm::vec2 size;
   std::pair<glm::vec2, glm::vec2>* uvlist;
@@ -64,6 +67,7 @@ struct UIimage : public UIthing {
 
 struct UItext : public UIthing {
   unsigned char color;
+  glm::vec4 rgba;
   UITextChanger* TextChanger = nullptr;
   std::string string;
   void TextChangerSet(UITextChanger* newTextChanger);

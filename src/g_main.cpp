@@ -26,6 +26,7 @@ bool gameinit() {
   std::deque<UIthing*> tempdeque;
   UIimage* weapon = new UIimage();
   weapon->color = 11;
+  weapon->rgba = glm::vec4(1, 1, 1, 1);
   weapon->pos = glm::vec2({160 - 48, 200 - 112});
   weapon->size = glm::vec2({96, 112});
   weapon->uvlist =
@@ -40,12 +41,24 @@ bool gameinit() {
   tempdeque.push_back(weapon);
 
   UIbox* crosshair = new UIbox();
+  crosshair->rgba = glm::vec4(1, 1, 1, 1);
   crosshair->color = 11;
   crosshair->size = glm::vec2({2, 2});
   crosshair->pos = glm::vec2({159, 99});
 
   tempdeque.push_back(crosshair);
   Global->UImap[0] = tempdeque;
+
+  tempdeque.clear();
+
+  UIbox* background = new UIbox();
+  background->rgba = glm::vec4(0, 0, 0, 1);
+  background->color = 0;
+  background->size = glm::vec2({320, 200});
+  background->pos = glm::vec2({0, 0});
+  tempdeque.push_back(background);
+
+  Global->UImap[1] = tempdeque;
   return true;
 }
 

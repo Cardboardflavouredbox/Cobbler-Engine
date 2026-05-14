@@ -29,6 +29,7 @@ bool editorinit() {
     std::deque<UIthing*> tempdeque;
     UIbox* box = new UIbox();
     box->color = 11;
+    box->rgba = glm::vec4(1, 1, 1, 1);
     box->pos = glm::vec2({4, 4});
     box->size = glm::vec2({64, 128});
 
@@ -36,6 +37,7 @@ bool editorinit() {
 
     UItext* text[4] = {new UItext(), new UItext(), new UItext(), new UItext()};
     text[0]->color = 0;
+    text[0]->rgba = glm::vec4(0, 0, 0, 1);
     text[0]->pos = glm::vec2({8, 8});
     text[0]->string = "test";
 
@@ -49,6 +51,7 @@ bool editorinit() {
           new TextandGlobalFacePointChanger()};
       for (int j = 1; j < 4; j++) {
         text[j]->color = 0;
+        text[j]->rgba = glm::vec4(0, 0, 0, 1);
         text[j]->pos = glm::vec2({8, 8 + 12.f * j});
         text[j]->string = "test";
         TaGFPC[j - 1]->text = "Point";
@@ -75,6 +78,7 @@ bool editorinit() {
 
       for (int j = 1; j < 4; j++) {
         text[j]->color = 0;
+        text[j]->rgba = glm::vec4(0, 0, 0, 1);
         text[j]->pos = glm::vec2({8, 8 + 12.f * j});
         text[j]->string = "test";
         text[j]->TextChangerSet(TaGPC[j - 1]);
