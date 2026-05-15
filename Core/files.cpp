@@ -1,21 +1,24 @@
+#include "files.h"
+
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_timer.h>
+#include <dlfcn.h>  // dylib
 #include <ft2build.h>
 #include <glad/glad.h>
 
 #include <sstream>
 #include <unordered_map>
-
-#include "files.h"
 #include FT_FREETYPE_H
 
 #include <glaze/json.hpp>
 
 #include "extern.h"
 #include "global.h"
+
+void* lib_handle[3];
 
 template <>
 struct glz::meta<glm::vec3> {
@@ -78,48 +81,6 @@ void savemap() {
                          SDL_arraysize(filters), NULL);
 }
 
-CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
-  CustomGlyphthing temp;
-  temp.width = glyph->bitmap.width;
-  temp.height = glyph->bitmap.rows;
-  temp.pitch = glyph->bitmap.pitch;
-  temp.advancex = glyph->advance.x / 64;
-  temp.advancey = glyph->advance.y / 64;
-  temp.offsetx = glyph->bitmap_left;
-  temp.offsety = glyph->bitmap_top;
-
-  switch (Settings->graphicsmode) {
-    case 1: {
-      glGenTextures(1, &temp.GLTexture);
-      temp.pixels = new unsigned char[8 * temp.pitch * temp.height]();
-      for (int i = 0; i < 8 * temp.pitch * temp.height; i++) {
-        temp.pixels[i] =
-            (glyph->bitmap.buffer[i / 8] & (0x01 << (7 - i % 8))) ? 255 : 0;
-      }
-
-      glBindTexture(GL_TEXTURE_2D, temp.GLTexture);
-
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, temp.width, temp.height, 0,
-                   GL_ALPHA, GL_UNSIGNED_BYTE, temp.pixels);
-
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      break;
-    }
-    case 0: {
-      temp.pixels = new unsigned char[temp.width * temp.height];
-      for (int i = 0; i < temp.width * temp.height; i++) {
-        temp.pixels[i] = glyph->bitmap.buffer[i];
-      }
-      break;
-    }
-  }
-
-  return temp;
-}
-
 void freeRenderer() {
   SDL_DestroyWindow(Global->window);
 
@@ -151,7 +112,8 @@ bool setRenderer(bool IsEditor) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                          SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
       Global->window = SDL_CreateWindow(
           "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
           SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -159,10 +121,11 @@ bool setRenderer(bool IsEditor) {
       // Create OpenGL context
       Global->GLstuff->GLContext = SDL_GL_CreateContext(Global->window);
 
-      if (!SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext)) return false;
+      if (!SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext))
+        return false;
 
       if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) return false;
-      
+
       if (!SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0)) return false;
 
       if (IsEditor) {
@@ -279,10 +242,31 @@ enum argenums {
 };
 
 bool init(bool IsEditor, std::vector<std::string> args) {
+  lib_handle[0] = dlopen("./libCobblerGLAD.dylib", RTLD_GLOBAL);
+  if (!lib_handle[0]) {
+    SDL_Log("CobblerGLAD missing!");
+    return false;
+  }
+  lib_handle[1] = dlopen("./libCobblerCore.dylib", RTLD_GLOBAL);
+  if (!lib_handle[1]) {
+    SDL_Log("CobblerCore missing!");
+    return false;
+  }
+  lib_handle[2] = dlopen("./libCobblerUI.dylib", RTLD_GLOBAL);
+  if (!lib_handle[2]) {
+    SDL_Log("CobblerUI missing!");
+    return false;
+  }
+  SDL_Log("Libraries loaded");
   Global = new GlobalClass();
+  if (Global == nullptr) return false;
   Settings = new SettingsClass();
+  if (Settings == nullptr) return false;
   P1Inputs = new Inputs();
+  if (P1Inputs == nullptr) return false;
   Settings->fov = 90;
+
+  SDL_Log("Classes initialized");
 
   std::unordered_map<std::string, argenums> stringtoenums = {
       {"-OpenGL", SetRendererAsOpenGL},
@@ -336,95 +320,36 @@ bool init(bool IsEditor, std::vector<std::string> args) {
       }
     }
   }
+  SDL_Log("args done");
 
   ZipData tempzipdata;
   auto error = glz::read_file_json(
       tempzipdata, Global->GameName + "/resources.json", std::string{});
   if (error) {
-    tempzipdata.texturenames.resize(2);
-    tempzipdata.texturenames[0] = "Wall";
-    tempzipdata.texturenames[1] = "Fence";
-    tempzipdata.stagenames.resize(1);
-    tempzipdata.stagenames[0] = "test";
-    tempzipdata.startlevel = "test";
-    error = glz::write_file_json<glz::opts{.prettify = true}>(
-        tempzipdata, Global->GameName + "/resources.json", std::string{});
-    if (error) return false;
+    SDL_Log("%s", glz::format_error(
+                      error, (Global->GameName + "/resources.json").c_str())
+                      .c_str());
+    return false;
   }
   LoadedData = &tempzipdata;
 
-  if (!SDL_SetAppMetadata("CobblerEngine", "0.1", "com.example.myapp") ||
+  SDL_Log("Loaded resources data");
+
+  if (!SDL_SetAppMetadata(Global->GameName.c_str(), "0.1",
+                          "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
+  SDL_Log("SDL initialized");
 
   if (!setRenderer(IsEditor)) return false;
 
   SDL_SetWindowRelativeMouseMode(Global->window, !IsEditor);
-
   Mapdata tempmapdata;
   error = glz::read_file_json(
       tempmapdata,
       Global->GameName + "/map/" + LoadedData->startlevel + ".json",
       std::string{});
-  if (error) {
-    tempmapdata.Points.resize(8);
-    tempmapdata.Points[0] = glm::vec3({-15.f, 15.f, 2.f});
-    tempmapdata.Points[1] = glm::vec3({15.f, 15.f, 2.f});
-    tempmapdata.Points[2] = glm::vec3({15.f, 15.f, -1.f});
-    tempmapdata.Points[3] = glm::vec3({-15.f, 15.f, -1.f});
-
-    tempmapdata.Points[4] = glm::vec3({-15.f, -15.f, 2.f});
-    tempmapdata.Points[5] = glm::vec3({15.f, -15.f, 2.f});
-    tempmapdata.Points[6] = glm::vec3({15.f, -15.f, -1.f});
-    tempmapdata.Points[7] = glm::vec3({-15.f, -15.f, -1.f});
-
-    tempmapdata.mapfaces.resize(5);
-    tempmapdata.mapfaces[0].points.resize(4);
-    tempmapdata.mapfaces[0].points[0] = 0;
-    tempmapdata.mapfaces[0].points[1] = 1;
-    tempmapdata.mapfaces[0].points[2] = 2;
-    tempmapdata.mapfaces[0].points[3] = 3;
-
-    tempmapdata.mapfaces[1].points.resize(4);
-    tempmapdata.mapfaces[1].points[0] = 4;
-    tempmapdata.mapfaces[1].points[1] = 0;
-    tempmapdata.mapfaces[1].points[2] = 3;
-    tempmapdata.mapfaces[1].points[3] = 7;
-
-    tempmapdata.mapfaces[2].points.resize(4);
-    tempmapdata.mapfaces[2].points[0] = 5;
-    tempmapdata.mapfaces[2].points[1] = 4;
-    tempmapdata.mapfaces[2].points[2] = 7;
-    tempmapdata.mapfaces[2].points[3] = 6;
-
-    tempmapdata.mapfaces[3].points.resize(4);
-    tempmapdata.mapfaces[3].points[0] = 1;
-    tempmapdata.mapfaces[3].points[1] = 5;
-    tempmapdata.mapfaces[3].points[2] = 6;
-    tempmapdata.mapfaces[3].points[3] = 2;
-
-    tempmapdata.mapfaces[4].points.resize(4);
-    tempmapdata.mapfaces[4].points[0] = 3;
-    tempmapdata.mapfaces[4].points[1] = 2;
-    tempmapdata.mapfaces[4].points[2] = 6;
-    tempmapdata.mapfaces[4].points[3] = 7;
-    tempmapdata.mapfaces[4].xloop = 10;
-    tempmapdata.mapfaces[4].yloop = 10;
-    tempmapdata.mapfaces[4].texture = 2;
-
-    for (int i = 0; i < 4; i++) {
-      tempmapdata.mapfaces[i].xloop = 8;
-    }
-    for (int i = 0; i < 5; i++) {
-      tempmapdata.mapfaces[i].UVs = {glm::vec2({0, 0}), glm::vec2({1, 0}),
-                                     glm::vec2({1, 1}), glm::vec2({0, 1})};
-    }
-    error = glz::write_file_json<glz::opts{.prettify = true}>(
-        tempmapdata,
-        Global->GameName + "/map/" + LoadedData->startlevel + ".json",
-        std::string{});
-    if (error) return false;
-  }
+  if (error) return false;
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
@@ -494,6 +419,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
   return true;
 }
+
 void quit() {
   freeRenderer();
   delete (Global);
@@ -507,4 +433,9 @@ void quit() {
 
   Global->IsRunning = false;
   SDL_Quit();
+  for (int i = 0; i < 3; i++) {
+    if (dlclose(lib_handle[i]) != 0) {
+      SDL_Log("unabled to close library");
+    }
+  }
 }

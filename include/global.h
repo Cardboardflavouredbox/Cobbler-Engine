@@ -63,15 +63,14 @@ struct GlobalClass {
   FT_Face FTface;
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 
-  std::unordered_map<int, std::deque<UIthing*>> UImap;
-  int UIindex = 0;
+  std::unordered_map<std::string, std::deque<UIthing*>> UImap;
+  std::string UIname = "default";
 };
 
 struct EditorClass {
   glm::vec2 pos;
   float zoom = 1;
   int currentlyselectedpoint = -1, currentlyselectedface = -1;
-  int UIindex = 0;  // 0==default, 1==wireframe and points
 };
 
 struct ZipData {
@@ -101,4 +100,5 @@ struct SettingsClass {
   int fps = 60;
   bool vsync = false;
   int graphicsmode = 0;  // 0 = software, 1 = opengl
+  bool autorun = false;
 };
