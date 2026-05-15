@@ -71,7 +71,6 @@ struct EditorClass {
   glm::vec2 pos;
   float zoom = 1;
   int currentlyselectedpoint = -1, currentlyselectedface = -1;
-  int UIindex = 0;  // 0==default, 1==wireframe and points
 };
 
 struct ZipData {

@@ -3,7 +3,7 @@
 
 void changeUIindex() {
   if (Global->pause || Global->isopeningfile) {
-    Global->UIname = "pause";
+    Global->UIname = "Pause";
   } else
-    Global->UIname = "default";
+    Global->UIname = "Pistol";
 }

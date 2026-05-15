@@ -116,7 +116,6 @@ void movecamera() {
                    Global->Points[Editor->currentlyselectedpoint].z)) {
             Editor->currentlyselectedpoint = i;
             Editor->currentlyselectedface = -1;
-            Editor->UIindex = 0;
             check = true;
           }
         }
@@ -132,7 +131,6 @@ void movecamera() {
                       .p,
                   ToScreenSpace(Global->Points[Global->mapfaces[i].points[2]])
                       .p)) {
-            Editor->UIindex = 1;
             check = true;
             Editor->currentlyselectedface = i;
             break;

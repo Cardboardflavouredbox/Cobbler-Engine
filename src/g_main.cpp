@@ -11,6 +11,7 @@
 #include "extern.h"
 #include "files.h"
 #include "global.h"
+#include "ui.h"
 #include "update.h"
 
 int main(int argc, char* argv[]) {
@@ -18,7 +19,7 @@ int main(int argc, char* argv[]) {
   args.resize(argc);
   for (int i = 0; i < argc; i++) args[i] = argv[i];
 
-  if (!init(false, args)) {
+  if (!init(false, args) || !UIsetup()) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }

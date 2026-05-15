@@ -318,7 +318,6 @@ void rendergame() {
   tempmapfacedeque.insert(tempmapfacedeque.end(), addlaterfacedeque.begin(),
                           addlaterfacedeque.end());
 
-  // if (Editor->UIindex == 0) {
   for (int k = 0; k < tempmapfacedeque.size(); k++) {
     glm::vec3 temp[3] = {temppointsdeque[tempmapfacedeque[k].points[0]],
                          temppointsdeque[tempmapfacedeque[k].points[1]],

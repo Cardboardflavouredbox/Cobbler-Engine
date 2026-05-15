@@ -1,3 +1,5 @@
+#include "files.h"
+
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_init.h>
@@ -9,8 +11,6 @@
 
 #include <sstream>
 #include <unordered_map>
-
-#include "files.h"
 #include FT_FREETYPE_H
 
 #include <glaze/json.hpp>

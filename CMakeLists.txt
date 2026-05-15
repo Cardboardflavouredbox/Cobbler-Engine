@@ -51,26 +51,28 @@ set(CORE_SOURCES
 
 add_library(CobblerGLAD SHARED glad/glad.c "include/glad/glad.h")
 add_library(CobblerCore SHARED Core/extern.cpp ${CORE_SOURCES})
-add_library(CobblerUI SHARED UI/ui.cpp "include/ui.h")
+add_library(CobblerGameUI SHARED UI/g_ui.cpp UI/g_ui_index.cpp "include/ui.h")
+add_library(CobblerEditorUI SHARED UI/e_ui.cpp UI/e_ui_index.cpp "include/ui.h")
 
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/g_render.cpp 
 src/g_update.cpp src/g_entityphysics.cpp
-src/g_ui_index.cpp src/g_components.cpp)
+src/g_components.cpp)
 
 add_executable(Cobbler-Engine-Editor 
 src/e_main.cpp src/e_render.cpp 
-src/e_update.cpp src/e_components.cpp
-src/e_ui_index.cpp)
+src/e_update.cpp src/e_components.cpp)
 
 target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 glaze::glaze glm::glm freetype CobblerGLAD)
-target_link_libraries(CobblerUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
-target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD CobblerUI)
-target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD CobblerUI)
+target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
+target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
+target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD CobblerGameUI)
+target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD CobblerEditorUI)
 
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(CobblerUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(CobblerEditorUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(Cobbler-Engine-Editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
