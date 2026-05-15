@@ -422,10 +422,20 @@ bool init(bool IsEditor, std::vector<std::string> args) {
 
 void quit() {
   freeRenderer();
+
+  for (int i = 0; i < Global->Entities.size(); i++) {
+    delete (Global->Entities[i]);
+  }
+
+  for (const auto& [key, value] : Global->UImap) {
+    for (int i = 0; i < value.size(); i++) {
+      delete (value[i]);
+    }
+  }
+
   delete (Global);
-  delete (Editor);
+  if (Editor != nullptr) delete (Editor);
   delete (Settings);
-  delete (Camera);
   delete (P1Inputs);
 
   FT_Done_Face(Global->FTface);

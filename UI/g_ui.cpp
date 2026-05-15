@@ -9,12 +9,14 @@
 struct UITextChanger {
   std::string* string;
   virtual void update() = 0;
+  virtual ~UITextChanger() {}
 };
 
 struct TextandNumChanger : UITextChanger {
   std::string text;
   int* num;
   void update() { *string = text + std::to_string(*num); }
+  ~TextandNumChanger() {}
 };
 
 struct TextandGlobalFacePointChanger : UITextChanger {
@@ -28,6 +30,7 @@ struct TextandGlobalFacePointChanger : UITextChanger {
     else
       *string = "";
   }
+  ~TextandGlobalFacePointChanger() {}
 };
 
 struct TextandGlobalPointChanger : UITextChanger {
@@ -53,11 +56,13 @@ struct TextandGlobalPointChanger : UITextChanger {
     } else
       *string = "";
   }
+  ~TextandGlobalPointChanger() {}
 };
 
 struct UIImageUVIndexChanger {
   int* index;
   virtual void update() = 0;
+  virtual ~UIImageUVIndexChanger() {}
 };
 
 struct ImagePistolChanger : UIImageUVIndexChanger {
@@ -82,6 +87,7 @@ struct ImagePistolChanger : UIImageUVIndexChanger {
     }
     *index = anim;
   }
+  ~ImagePistolChanger() {}
 };
 
 // UIthings
@@ -131,6 +137,7 @@ struct UIbox : public UIthing {
       }
     }
   }
+  ~UIbox() {}
 };
 
 struct UIimage : public UIthing {
@@ -201,6 +208,9 @@ struct UIimage : public UIthing {
         break;
       }
     }
+  }
+  ~UIimage() {
+    if (UVIndexChanger != nullptr) delete (UVIndexChanger);
   }
 };
 
@@ -302,6 +312,9 @@ struct UItext : public UIthing {
     if (TextChanger != nullptr) {
       TextChanger->string = &string;
     }
+  }
+  ~UItext() {
+    if (TextChanger != nullptr) delete (TextChanger);
   }
 };
 
