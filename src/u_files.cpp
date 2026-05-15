@@ -345,14 +345,14 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   if (error) return false;
   LoadedData = &tempzipdata;
 
-  if (!SDL_SetAppMetadata(Global->GameName, "0.1", "com.example.myapp") ||
+  if (!SDL_SetAppMetadata(Global->GameName.c_str(), "0.1",
+                          "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
 
   if (!setRenderer(IsEditor)) return false;
 
   SDL_SetWindowRelativeMouseMode(Global->window, !IsEditor);
-
   Mapdata tempmapdata;
   error = glz::read_file_json(
       tempmapdata,

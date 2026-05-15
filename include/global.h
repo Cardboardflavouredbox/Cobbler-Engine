@@ -63,8 +63,8 @@ struct GlobalClass {
   FT_Face FTface;
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 
-  std::unordered_map<int, std::deque<UIthing*>> UImap;
-  int UIindex = 0;
+  std::unordered_map<std::string, std::deque<UIthing*>> UImap;
+  std::string UIname = "default";
 };
 
 struct EditorClass {
@@ -78,7 +78,6 @@ struct ZipData {
   std::string startlevel;
   std::deque<std::string> texturenames;
   std::deque<std::string> stagenames;
-  std::deque<std::string> uinames;
 };
 
 struct Mapdata {

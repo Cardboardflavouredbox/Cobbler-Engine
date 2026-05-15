@@ -3,7 +3,7 @@
 
 void changeUIindex() {
   if (Global->pause || Global->isopeningfile) {
-    Global->UIindex = 1;
+    Global->UIname = "pause";
   } else
-    Global->UIindex = 0;
+    Global->UIname = "default";
 }

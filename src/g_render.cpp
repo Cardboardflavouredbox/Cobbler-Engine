@@ -332,7 +332,7 @@ void rendergame() {
 }
 
 void renderUI() {
-  std::deque<UIthing*>* tempdeque = &Global->UImap[Global->UIindex];
+  std::deque<UIthing*>* tempdeque = &Global->UImap[Global->UIname];
   int len = tempdeque->size();
   for (int i = 0; i < len; i++) {
     if (Settings->graphicsmode == 1) glDisable(GL_TEXTURE_2D);

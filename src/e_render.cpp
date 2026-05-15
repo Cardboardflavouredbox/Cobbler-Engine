@@ -174,7 +174,7 @@ void renderGrid() {
 }
 
 void renderUI() {
-  std::deque<UIthing*>* tempdeque = &Global->UImap[Global->UIindex];
+  std::deque<UIthing*>* tempdeque = &Global->UImap[Global->UIname];
   int len = tempdeque->size();
   for (int i = 0; i < len; i++) {
     tempdeque->at(i)->render();

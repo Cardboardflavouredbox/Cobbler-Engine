@@ -39,6 +39,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
+add_library(CobblerCore SHARED src/u_extern.cpp "include/extern.h")
+add_library(CobblerUI SHARED src/u_ui.cpp "include/ui.h")
+
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/g_render.cpp 
 src/u_input.cpp src/g_update.cpp 
