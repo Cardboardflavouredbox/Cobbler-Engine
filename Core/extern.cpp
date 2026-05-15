@@ -1,6 +1,6 @@
-#include <SDL3/SDL_timer.h>
-
 #include "extern.h"
+
+#include <SDL3/SDL_timer.h>
 
 GlobalClass* Global;
 EditorClass* Editor;

@@ -18,7 +18,7 @@
 #include "extern.h"
 #include "global.h"
 
-void* lib_handle;
+void* lib_handle[3];
 
 template <>
 struct glz::meta<glm::vec3> {
@@ -242,15 +242,31 @@ enum argenums {
 };
 
 bool init(bool IsEditor, std::vector<std::string> args) {
-  lib_handle = dlopen("./libCobblerCore.dylib", RTLD_GLOBAL);
-  if (!lib_handle) {
-    SDL_Log("CobblerCore missing!");
-    return -1;
+  lib_handle[0] = dlopen("./libCobblerGLAD.dylib", RTLD_GLOBAL);
+  if (!lib_handle[0]) {
+    SDL_Log("CobblerGLAD missing!");
+    return false;
   }
+  lib_handle[1] = dlopen("./libCobblerCore.dylib", RTLD_GLOBAL);
+  if (!lib_handle[1]) {
+    SDL_Log("CobblerCore missing!");
+    return false;
+  }
+  lib_handle[2] = dlopen("./libCobblerUI.dylib", RTLD_GLOBAL);
+  if (!lib_handle[2]) {
+    SDL_Log("CobblerUI missing!");
+    return false;
+  }
+  SDL_Log("Libraries loaded");
   Global = new GlobalClass();
+  if (Global == nullptr) return false;
   Settings = new SettingsClass();
+  if (Settings == nullptr) return false;
   P1Inputs = new Inputs();
+  if (P1Inputs == nullptr) return false;
   Settings->fov = 90;
+
+  SDL_Log("Classes initialized");
 
   std::unordered_map<std::string, argenums> stringtoenums = {
       {"-OpenGL", SetRendererAsOpenGL},
@@ -304,17 +320,26 @@ bool init(bool IsEditor, std::vector<std::string> args) {
       }
     }
   }
+  SDL_Log("args done");
 
   ZipData tempzipdata;
   auto error = glz::read_file_json(
       tempzipdata, Global->GameName + "/resources.json", std::string{});
-  if (error) return false;
+  if (error) {
+    SDL_Log("%s", glz::format_error(
+                      error, (Global->GameName + "/resources.json").c_str())
+                      .c_str());
+    return false;
+  }
   LoadedData = &tempzipdata;
+
+  SDL_Log("Loaded resources data");
 
   if (!SDL_SetAppMetadata(Global->GameName.c_str(), "0.1",
                           "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
+  SDL_Log("SDL initialized");
 
   if (!setRenderer(IsEditor)) return false;
 
@@ -394,6 +419,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
   return true;
 }
+
 void quit() {
   freeRenderer();
   delete (Global);
@@ -407,7 +433,9 @@ void quit() {
 
   Global->IsRunning = false;
   SDL_Quit();
-  if (dlclose(lib_handle) != 0) {
-    SDL_Log("unabled to close library");
+  for (int i = 0; i < 3; i++) {
+    if (dlclose(lib_handle[i]) != 0) {
+      SDL_Log("unabled to close library");
+    }
   }
 }

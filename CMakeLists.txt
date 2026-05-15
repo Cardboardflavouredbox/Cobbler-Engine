@@ -39,32 +39,34 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
-add_library(CobblerGLAD SHARED src/glad.c "include/glad/glad.h")
-add_library(CobblerCore SHARED src/u_extern.cpp "include/extern.h")
-add_library(CobblerUI SHARED src/u_ui.cpp "include/ui.h")
+set(CORE_SOURCES 
+    Core/components.cpp 
+    Core/events.cpp
+    Core/extern.cpp
+    Core/files.cpp
+    Core/input.cpp
+    Core/raycast.cpp
+    Core/rendermath.cpp
+)
+
+add_library(CobblerGLAD SHARED glad/glad.c "include/glad/glad.h")
+add_library(CobblerCore SHARED Core/extern.cpp ${CORE_SOURCES})
+add_library(CobblerUI SHARED UI/ui.cpp "include/ui.h")
 
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/g_render.cpp 
-src/u_input.cpp src/g_update.cpp 
-src/u_files.cpp src/u_events.cpp 
-src/u_components.cpp src/g_entityphysics.cpp
-src/g_ui_index.cpp src/u_raycast.cpp
-src/u_rendermath.cpp src/g_components.cpp 
-src/glad.c)
+src/g_update.cpp src/g_entityphysics.cpp
+src/g_ui_index.cpp src/g_components.cpp)
 
 add_executable(Cobbler-Engine-Editor 
 src/e_main.cpp src/e_render.cpp 
-src/u_input.cpp src/e_update.cpp 
-src/u_files.cpp src/u_events.cpp
-src/u_components.cpp src/e_components.cpp
-src/e_ui_index.cpp src/u_raycast.cpp
-src/u_rendermath.cpp
-src/glad.c)
+src/e_update.cpp src/e_components.cpp
+src/e_ui_index.cpp)
 
-target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 glm::glm freetype CobblerGLAD)
+target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 glaze::glaze glm::glm freetype CobblerGLAD)
 target_link_libraries(CobblerUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
-target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm CobblerCore CobblerGLAD)
-target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glaze::glaze freetype glm::glm CobblerCore CobblerGLAD)
+target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD CobblerUI)
+target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD CobblerUI)
 
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
