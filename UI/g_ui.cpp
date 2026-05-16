@@ -19,46 +19,6 @@ struct TextandNumChanger : UITextChanger {
   ~TextandNumChanger() {}
 };
 
-struct TextandGlobalFacePointChanger : UITextChanger {
-  std::string text;
-  int* num;
-  int pointindex;
-  void update() {
-    if (*num > -1)
-      *string =
-          text + std::to_string(Global->mapfaces[*num].points[pointindex]);
-    else
-      *string = "";
-  }
-  ~TextandGlobalFacePointChanger() {}
-};
-
-struct TextandGlobalPointChanger : UITextChanger {
-  std::string text;
-  int* num;
-  int xyz;  // 0==x,1==y,2==z
-  void update() {
-    if (*num > -1) {
-      float temp;
-      switch (xyz) {
-        case 0:
-          temp = Global->Points[*num].x;
-          break;
-        case 1:
-          temp = Global->Points[*num].y;
-          break;
-        case 2:
-          temp = Global->Points[*num].z;
-          break;
-      }
-      *string = text + std::to_string(temp);
-      for (int i = 0; i < 7; i++) string->pop_back();
-    } else
-      *string = "";
-  }
-  ~TextandGlobalPointChanger() {}
-};
-
 struct UIImageUVIndexChanger {
   int* index;
   virtual void update() = 0;
@@ -146,7 +106,8 @@ struct UIimage : public UIthing {
   UIImageUVIndexChanger* UVIndexChanger = nullptr;
   glm::vec2 size;
   std::pair<glm::vec2, glm::vec2>* uvlist;
-  int textureindex, uvindex = 0;
+  std::string texturename;
+  int uvindex = 0;
   void update() {
     if (UVIndexChanger != nullptr) {
       UVIndexChanger->update();
@@ -156,7 +117,7 @@ struct UIimage : public UIthing {
     switch (Settings->graphicsmode) {
       case 1: {
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[textureindex]);
+        glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[texturename]);
         glBegin(GL_QUADS);
         std::pair<glm::vec2, glm::vec2>* uv = &uvlist[uvindex];
         glColor4f(rgba.r, rgba.g, rgba.b, rgba.a);
@@ -186,7 +147,7 @@ struct UIimage : public UIthing {
       }
       case 0: {
         std::pair<glm::vec2, glm::vec2> uv = uvlist[uvindex];
-        SDL_Surface* surface = Global->SRstuff->textures[textureindex];
+        SDL_Surface* surface = Global->SRstuff->textures[texturename];
         uv.first.x *= surface->w;
         uv.first.y *= surface->h;
         uv.second.x *= surface->w;
@@ -336,7 +297,7 @@ bool UIsetup() {
   IPC->index = &weapon->uvindex;
 
   weapon->UVIndexChanger = IPC;
-  weapon->textureindex = 4;
+  weapon->texturename = "Pistol";
   tempdeque.push_back(weapon);
 
   UIbox* crosshair = new UIbox();

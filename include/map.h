@@ -1,11 +1,12 @@
 #pragma once
 #include <array>
 #include <glm/vec2.hpp>
+#include <string>
 #include <vector>
 
 struct Mapface {
   bool doublesided = false;
-  int texture = 0;
+  std::string texture;
   int xloop = 1, yloop = 1;
   std::vector<int> points;
   std::vector<glm::vec2> UVs;

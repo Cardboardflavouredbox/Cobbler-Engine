@@ -110,8 +110,8 @@ void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
     }
 }
 
-void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
-             int yloop, std::array<unsigned char, 4> shade) {
+void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
+             int xloop, int yloop, std::array<unsigned char, 4> shade) {
   ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1]),
                             ToScreenSpace(rawvectors[2])};

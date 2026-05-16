@@ -146,7 +146,8 @@ struct UIimage : public UIthing {
   UIImageUVIndexChanger* UVIndexChanger = nullptr;
   glm::vec2 size;
   std::pair<glm::vec2, glm::vec2>* uvlist;
-  int textureindex, uvindex = 0;
+  std::string texturename;
+  int uvindex = 0;
   void update() {
     if (UVIndexChanger != nullptr) {
       UVIndexChanger->update();
@@ -156,7 +157,7 @@ struct UIimage : public UIthing {
     switch (Settings->graphicsmode) {
       case 1: {
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[textureindex]);
+        glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[texturename]);
         glBegin(GL_QUADS);
         std::pair<glm::vec2, glm::vec2>* uv = &uvlist[uvindex];
         glColor4f(rgba.r, rgba.g, rgba.b, rgba.a);
@@ -186,7 +187,7 @@ struct UIimage : public UIthing {
       }
       case 0: {
         std::pair<glm::vec2, glm::vec2> uv = uvlist[uvindex];
-        SDL_Surface* surface = Global->SRstuff->textures[textureindex];
+        SDL_Surface* surface = Global->SRstuff->textures[texturename];
         uv.first.x *= surface->w;
         uv.first.y *= surface->h;
         uv.second.x *= surface->w;

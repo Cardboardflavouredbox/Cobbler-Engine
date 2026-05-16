@@ -33,7 +33,7 @@ struct GlobalClass {
     SDL_Renderer* renderer;
     SDL_Surface* render_target;
     SDL_Palette* palette;
-    std::vector<SDL_Surface*> textures;
+    std::unordered_map<std::string, SDL_Surface*> textures;
     unsigned char* pixels;
     int pitch;
     std::vector<unsigned short> pixelsdepth;
@@ -43,14 +43,14 @@ struct GlobalClass {
 
   struct OpenGLRenderer {
     SDL_GLContext GLContext;
-    std::vector<GLuint> textures;
+    std::unordered_map<std::string, GLuint> textures;
   };
   OpenGLRenderer* GLstuff;
 
   bool IsRunning;
   bool pause = false, isopeningfile = false;
   float deltaTime;
-  int skybox;
+  std::string skybox;
   bool IsEditor;
 
   int windowx = 320, windowy = 200;
@@ -82,7 +82,7 @@ struct ZipData {
 struct Mapdata {
   std::deque<glm::vec3> Points;
   std::deque<Mapface> mapfaces;
-  int skybox;
+  std::string skybox;
 };
 
 struct Inputs {

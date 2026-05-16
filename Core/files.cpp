@@ -92,8 +92,8 @@ void freeRenderer() {
       SDL_DestroyPalette(Global->SRstuff->palette);
       SDL_DestroyRenderer(Global->SRstuff->renderer);
       SDL_DestroySurface(Global->SRstuff->render_target);
-      for (const auto& i : Global->SRstuff->textures) {
-        SDL_DestroySurface(i);
+      for (const auto& [key, value] : Global->SRstuff->textures) {
+        SDL_DestroySurface(value);
       }
       delete (Global->SRstuff);
       break;
@@ -144,15 +144,15 @@ bool setRenderer(bool IsEditor) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       }
 
-      std::vector<GLuint> tempvector;
-      tempvector.resize(32);
+      std::unordered_map<std::string, GLuint> tempvector;
+      tempvector.reserve(32);
 
       Global->GLstuff->textures = tempvector;
 
       std::string basepath = SDL_GetBasePath(), tempstr = basepath;
-      glGenTextures(LoadedData->texturenames.size(),
-                    &(Global->GLstuff->textures[0]));
       for (int i = 0; i < LoadedData->texturenames.size(); i++) {
+        glGenTextures(
+            1, &(Global->GLstuff->textures[LoadedData->texturenames[i]]));
         tempstr = basepath;
         tempstr.append("/" + Global->GameName + "/textures/" +
                        LoadedData->texturenames[i] + ".bmp");
@@ -162,7 +162,8 @@ bool setRenderer(bool IsEditor) {
         SDL_SetSurfaceColorKey(surface, true, 0);
         surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
 
-        glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[i]);
+        glBindTexture(GL_TEXTURE_2D,
+                      Global->GLstuff->textures[LoadedData->texturenames[i]]);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
                      GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
@@ -180,8 +181,8 @@ bool setRenderer(bool IsEditor) {
     default: {
       SDL_Surface* surface;
       std::string basepath = SDL_GetBasePath(), tempstr = basepath;
-      std::vector<SDL_Surface*> tempvector;
-      tempvector.resize(32);
+      std::unordered_map<std::string, SDL_Surface*> tempvector;
+      tempvector.reserve(32);
 
       Global->SRstuff = new GlobalClass::SoftwareRenderer();
 
@@ -213,7 +214,7 @@ bool setRenderer(bool IsEditor) {
             surface, SDL_PIXELFORMAT_INDEX8, Global->SRstuff->palette,
             SDL_COLORSPACE_RGB_DEFAULT, 0);
         SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
-        Global->SRstuff->textures[i] = surface;
+        Global->SRstuff->textures[LoadedData->texturenames[i]] = surface;
       }
       Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
                                           Settings->resolutiony);
