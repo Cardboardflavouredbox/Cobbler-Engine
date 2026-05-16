@@ -3,7 +3,7 @@
 
 void changeUIindex() {
   if (Editor->currentlyselectedface > -1)
-    Global->UIname = "Face";
+    Global->UIlist[0] = "Face";
   else
-    Global->UIname = "Point";
+    Global->UIlist[0] = "Point";
 }

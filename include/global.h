@@ -64,7 +64,7 @@ struct GlobalClass {
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 
   std::unordered_map<std::string, std::deque<UIthing*>> UImap;
-  std::string UIname = "default";
+  std::deque<std::string> UIlist = {"default"};
 };
 
 struct EditorClass {
@@ -89,7 +89,7 @@ struct Inputs {
  public:
   unsigned char W = 0, A = 0, S = 0, D = 0, ESC = 0, LCTRL = 0, Shift = 0,
                 Space = 0, leftclick = 0, rightclick = 0, numkeys[10] = {},
-                E = 0, F = 0;
+                E = 0, F = 0, Enter = 0;
   glm::vec2 MouseDelta, MousePos, MouseScroll;
 };
 

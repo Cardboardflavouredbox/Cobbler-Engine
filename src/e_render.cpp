@@ -174,10 +174,13 @@ void renderGrid() {
 }
 
 void renderUI() {
-  std::deque<UIthing*>* tempdeque = &Global->UImap[Global->UIname];
-  int len = tempdeque->size();
-  for (int i = 0; i < len; i++) {
-    tempdeque->at(i)->render();
+  for (int i = 0; i < Global->UIlist.size(); i++) {
+    std::deque<UIthing*>* tempdeque = &Global->UImap[Global->UIlist[i]];
+    int len = tempdeque->size();
+    for (int i = 0; i < len; i++) {
+      if (Settings->graphicsmode == 1) glDisable(GL_TEXTURE_2D);
+      tempdeque->at(i)->render();
+    }
   }
 }
 
