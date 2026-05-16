@@ -5,20 +5,18 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_timer.h>
-#include <dlfcn.h>  // dylib
 #include <ft2build.h>
 #include <glad/glad.h>
 
 #include <sstream>
 #include <unordered_map>
+
 #include FT_FREETYPE_H
 
 #include <glaze/json.hpp>
 
 #include "extern.h"
 #include "global.h"
-
-void* lib_handle[3];
 
 template <>
 struct glz::meta<glm::vec3> {
@@ -242,22 +240,6 @@ enum argenums {
 };
 
 bool init(bool IsEditor, std::vector<std::string> args) {
-  lib_handle[0] = dlopen("./libCobblerGLAD.dylib", RTLD_GLOBAL);
-  if (!lib_handle[0]) {
-    SDL_Log("CobblerGLAD missing!");
-    return false;
-  }
-  lib_handle[1] = dlopen("./libCobblerCore.dylib", RTLD_GLOBAL);
-  if (!lib_handle[1]) {
-    SDL_Log("CobblerCore missing!");
-    return false;
-  }
-  lib_handle[2] = dlopen("./libCobblerUI.dylib", RTLD_GLOBAL);
-  if (!lib_handle[2]) {
-    SDL_Log("CobblerUI missing!");
-    return false;
-  }
-  SDL_Log("Libraries loaded");
   Global = new GlobalClass();
   if (Global == nullptr) return false;
   Settings = new SettingsClass();
@@ -443,9 +425,4 @@ void quit() {
 
   Global->IsRunning = false;
   SDL_Quit();
-  for (int i = 0; i < 3; i++) {
-    if (dlclose(lib_handle[i]) != 0) {
-      SDL_Log("unabled to close library");
-    }
-  }
 }

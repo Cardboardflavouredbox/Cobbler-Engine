@@ -7,7 +7,6 @@
 #include "entity.h"
 #include "extern.h"
 #include "global.h"
-#include "ui_index.h"
 #include "update.h"
 
 void playermovement() {
@@ -69,5 +68,4 @@ void update() {
     componentsupdate();
     componentsupdatelate();
   }
-  changeUIindex();
 }

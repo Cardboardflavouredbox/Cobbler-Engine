@@ -7,11 +7,11 @@
 
 #include <string>
 
+#include "dylib.hpp"
 #include "entity.h"
 #include "extern.h"
 #include "files.h"
 #include "global.h"
-#include "ui.h"
 #include "update.h"
 
 int main(int argc, char* argv[]) {
@@ -19,10 +19,22 @@ int main(int argc, char* argv[]) {
   args.resize(argc);
   for (int i = 0; i < argc; i++) args[i] = argv[i];
 
-  if (!init(false, args) || !UIsetup()) {
+  if (!init(false, args)) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }
+
+  dylib::library lib("./" + Global->GameName + "/bin/CobblerGameUI",
+                     dylib::decorations::os_default());
+  SDL_Log("UI library loaded");
+  auto UIsetup = lib.get_function<bool()>("UIsetup");
+  if (!UIsetup()) {
+    SDL_Log("UI load fail");
+    return -1;
+  }
+  SDL_Log("UI loaded");
+  auto changeUIindex = lib.get_function<void()>("changeUIindex");
+
   Global->IsEditor = false;
   SDL_Log("Init done");
   while (Global->IsRunning) {
@@ -30,6 +42,7 @@ int main(int argc, char* argv[]) {
     events();
     input();
     update();
+    changeUIindex();
     render();
     Uint64 result = (SDL_GetPerformanceCounter() - start);
     if (!Settings->vsync && result < 1000000000 / (double)Settings->fps) {

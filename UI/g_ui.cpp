@@ -357,6 +357,41 @@ bool UIsetup() {
   background->pos = glm::vec2({0, 0});
   tempdeque.push_back(background);
 
+  UItext* text = new UItext();
+  text->rgba = glm::vec4(1, 1, 1, 1);
+  text->color = 11;
+  text->string = "Resume";
+  text->pos = glm::vec2({16, 16});
+  tempdeque.push_back(text);
+
+  text = new UItext();
+  text->rgba = glm::vec4(1, 1, 1, 1);
+  text->color = 11;
+  text->string = "Save";
+  text->pos = glm::vec2({16, 32});
+  tempdeque.push_back(text);
+
+  text = new UItext();
+  text->rgba = glm::vec4(1, 1, 1, 1);
+  text->color = 11;
+  text->string = "Load";
+  text->pos = glm::vec2({16, 48});
+  tempdeque.push_back(text);
+
+  text = new UItext();
+  text->rgba = glm::vec4(1, 1, 1, 1);
+  text->color = 11;
+  text->string = "Settings";
+  text->pos = glm::vec2({16, 64});
+  tempdeque.push_back(text);
+
+  text = new UItext();
+  text->rgba = glm::vec4(1, 1, 1, 1);
+  text->color = 11;
+  text->string = "Quit";
+  text->pos = glm::vec2({16, 80});
+  tempdeque.push_back(text);
+
   Global->UImap["Pause"] = tempdeque;
   return true;
 }
