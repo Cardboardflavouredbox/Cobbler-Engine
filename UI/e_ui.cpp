@@ -231,78 +231,88 @@ struct UItext : public UIthing {
       case 1: {  // opengl
         glColor4f(rgba.r, rgba.g, rgba.b, rgba.a);
         for (int i = 0; i < string.length(); i++) {
-          FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
-          if (!Global->Glyphmap.contains(temp)) {
-            FT_Load_Glyph(Global->FTface, temp, FT_LOAD_MONOCHROME);
-            FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_MONO);
-            Global->Glyphmap[temp] = CreateGlyph(Global->FTface->glyph);
+          if (string[i] == '\n') {
+            x = pos.x;
+            y += 12;
+          } else {
+            FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
+            if (!Global->Glyphmap.contains(temp)) {
+              FT_Load_Glyph(Global->FTface, temp, FT_LOAD_MONOCHROME);
+              FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_MONO);
+              Global->Glyphmap[temp] = CreateGlyph(Global->FTface->glyph);
+            }
+            CustomGlyphthing glyph = Global->Glyphmap[temp];
+            x += glyph.offsetx;
+            int x2 = glyph.width, y2 = glyph.height;
+
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, Global->Glyphmap[temp].GLTexture);
+            glBegin(GL_QUADS);
+
+            glTexCoord2f(0, 0);
+            glVertex2f((x - Settings->resolutionx / 2) * 2 /
+                           (float)Settings->resolutionx,
+                       (-y + Settings->resolutiony / 2 - 12 + glyph.offsety) *
+                           2 / (float)Settings->resolutiony);
+            glTexCoord2f(1, 0);
+            glVertex2f((x + x2 - Settings->resolutionx / 2) * 2 /
+                           (float)Settings->resolutionx,
+                       (-y + Settings->resolutiony / 2 - 12 + glyph.offsety) *
+                           2 / (float)Settings->resolutiony);
+            glTexCoord2f(1, 1);
+            glVertex2f(
+                (x + x2 - Settings->resolutionx / 2) * 2 /
+                    (float)Settings->resolutionx,
+                (-y - y2 + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
+                    (float)Settings->resolutiony);
+            glTexCoord2f(0, 1);
+            glVertex2f(
+                (x - Settings->resolutionx / 2) * 2 /
+                    (float)Settings->resolutionx,
+                (-y - y2 + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
+                    (float)Settings->resolutiony);
+
+            glEnd();
+
+            x += glyph.advancex;
+            y += glyph.advancey;
           }
-          CustomGlyphthing glyph = Global->Glyphmap[temp];
-          x += glyph.offsetx;
-          int x2 = glyph.width, y2 = glyph.height;
-
-          glEnable(GL_TEXTURE_2D);
-          glBindTexture(GL_TEXTURE_2D, Global->Glyphmap[temp].GLTexture);
-          glBegin(GL_QUADS);
-
-          glTexCoord2f(0, 0);
-          glVertex2f((x - Settings->resolutionx / 2) * 2 /
-                         (float)Settings->resolutionx,
-                     (-y + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
-                         (float)Settings->resolutiony);
-          glTexCoord2f(1, 0);
-          glVertex2f((x + x2 - Settings->resolutionx / 2) * 2 /
-                         (float)Settings->resolutionx,
-                     (-y + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
-                         (float)Settings->resolutiony);
-          glTexCoord2f(1, 1);
-          glVertex2f(
-              (x + x2 - Settings->resolutionx / 2) * 2 /
-                  (float)Settings->resolutionx,
-              (-y - y2 + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
-                  (float)Settings->resolutiony);
-          glTexCoord2f(0, 1);
-          glVertex2f(
-              (x - Settings->resolutionx / 2) * 2 /
-                  (float)Settings->resolutionx,
-              (-y - y2 + Settings->resolutiony / 2 - 12 + glyph.offsety) * 2 /
-                  (float)Settings->resolutiony);
-
-          glEnd();
-
-          x += glyph.advancex;
-          y += glyph.advancey;
         }
         break;
       }
       case 0: {  // software
         for (int i = 0; i < string.length(); i++) {
-          FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
-          if (!Global->Glyphmap.contains(temp)) {
-            FT_Load_Glyph(Global->FTface, temp, FT_LOAD_MONOCHROME);
-            FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_MONO);
-            Global->Glyphmap[temp] = CreateGlyph(Global->FTface->glyph);
-          }
-          CustomGlyphthing glyph = Global->Glyphmap[temp];
-          x += glyph.offsetx;
-          int x2 = glyph.width, y2 = glyph.height;
-          for (int j = 0; j < y2; j++) {
-            for (int k = 0; k < x2; k++) {
-              if (k > -1 && k < Settings->resolutionx && j > -1 &&
-                  j < Settings->resolutiony &&
-                  ((glyph.pixels[k / 8 + j * glyph.pitch]) >> (7 - k % 8) &
-                   0x01)) {
-                Global->SRstuff
-                    ->pixelsdepth[(k + x) + (j + y + 12 - glyph.offsety) *
-                                                Global->SRstuff->pitch] = 0;
-                Global->SRstuff->pixels[(k + x) + (j + y + 12 - glyph.offsety) *
-                                                      Global->SRstuff->pitch] =
-                    color;
+          if (string[i] == '\n') {
+            x = pos.x;
+            y += 12;
+          } else {
+            FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
+            if (!Global->Glyphmap.contains(temp)) {
+              FT_Load_Glyph(Global->FTface, temp, FT_LOAD_MONOCHROME);
+              FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_MONO);
+              Global->Glyphmap[temp] = CreateGlyph(Global->FTface->glyph);
+            }
+            CustomGlyphthing glyph = Global->Glyphmap[temp];
+            x += glyph.offsetx;
+            int x2 = glyph.width, y2 = glyph.height;
+            for (int j = 0; j < y2; j++) {
+              for (int k = 0; k < x2; k++) {
+                if (k > -1 && k < Settings->resolutionx && j > -1 &&
+                    j < Settings->resolutiony &&
+                    ((glyph.pixels[k / 8 + j * glyph.pitch]) >> (7 - k % 8) &
+                     0x01)) {
+                  Global->SRstuff
+                      ->pixelsdepth[(k + x) + (j + y + 12 - glyph.offsety) *
+                                                  Global->SRstuff->pitch] = 0;
+                  Global->SRstuff
+                      ->pixels[(k + x) + (j + y + 12 - glyph.offsety) *
+                                             Global->SRstuff->pitch] = color;
+                }
               }
             }
+            x += glyph.advancex;
+            y += glyph.advancey;
           }
-          x += glyph.advancex;
-          y += glyph.advancey;
         }
         break;
       }
@@ -318,20 +328,19 @@ struct UItext : public UIthing {
     if (TextChanger != nullptr) delete (TextChanger);
   }
 };
-
 // UI setup
 
 bool UIsetup() {
   Global->UImap.reserve(4);
   for (int i = 0; i < 2; i++) {
-    std::deque<UIthing*> tempdeque;
+    std::vector<UIthing*> tempvector;
     UIbox* box = new UIbox();
     box->color = 11;
     box->rgba = glm::vec4(1, 1, 1, 1);
     box->pos = glm::vec2({4, 4});
     box->size = glm::vec2({64, 128});
 
-    tempdeque.push_back(box);
+    tempvector.push_back(box);
 
     UItext* text[4] = {new UItext(), new UItext(), new UItext(), new UItext()};
     text[0]->color = 0;
@@ -385,13 +394,13 @@ bool UIsetup() {
     text[0]->TextChangerSet(TaNC);
 
     for (int j = 0; j < 4; j++) {
-      tempdeque.push_back(text[j]);
+      tempvector.push_back(text[j]);
     }
 
     if (i == 0)
-      Global->UImap["Point"] = tempdeque;
+      Global->UImap["Point"] = tempvector;
     else
-      Global->UImap["Face"] = tempdeque;
+      Global->UImap["Face"] = tempvector;
   }
   return true;
 }

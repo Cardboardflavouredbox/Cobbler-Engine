@@ -66,6 +66,6 @@ void update() {
   if (!Global->pause) {
     playermovement();
     componentsupdate();
-    componentsupdatelate();
   }
+  componentsupdatelate();
 }

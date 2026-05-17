@@ -4,7 +4,6 @@
 #include <ft2build.h>
 #include <glad/glad.h>
 
-#include <deque>
 #include <string>
 #include <unordered_map>
 
@@ -55,16 +54,16 @@ struct GlobalClass {
 
   int windowx = 320, windowy = 200;
 
-  std::deque<glm::vec3> Points;
-  std::deque<Mapface> mapfaces;
-  std::deque<Entity*> Entities;
+  std::vector<glm::vec3> Points;
+  std::vector<Mapface> mapfaces;
+  std::vector<Entity*> Entities;
 
   FT_Library FTlibrary;
   FT_Face FTface;
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 
-  std::unordered_map<std::string, std::deque<UIthing*>> UImap;
-  std::deque<std::string> UIlist = {"default"};
+  std::unordered_map<std::string, std::vector<UIthing*>> UImap;
+  std::vector<std::string> UIlist = {"default"};
 };
 
 struct EditorClass {
@@ -75,13 +74,13 @@ struct EditorClass {
 
 struct ZipData {
   std::string startlevel;
-  std::deque<std::string> texturenames;
-  std::deque<std::string> stagenames;
+  std::vector<std::string> texturenames;
+  std::vector<std::string> stagenames;
 };
 
 struct Mapdata {
-  std::deque<glm::vec3> Points;
-  std::deque<Mapface> mapfaces;
+  std::vector<glm::vec3> Points;
+  std::vector<Mapface> mapfaces;
   std::string skybox;
 };
 
