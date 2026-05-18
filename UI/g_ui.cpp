@@ -3,7 +3,7 @@
 #include <string>
 
 #include "extern.h"
-#include "settingsmenu.h"
+#include "pausemenu.h"
 #include "ui.h"
 
 // UIcomponents
