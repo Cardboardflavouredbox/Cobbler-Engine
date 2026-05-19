@@ -2,6 +2,7 @@
 #include <vector>
 
 struct MenuOptions {
+  std::string name;
   virtual void Interact() = 0;
   virtual ~MenuOptions() {}
 };
@@ -16,5 +17,4 @@ struct PauseMenu {
 };
 
 extern int menuindex;
-extern int currentmenusize;
 extern PauseMenu* currentpausemenu;
