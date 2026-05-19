@@ -21,10 +21,10 @@ struct TextandNumChanger : UITextChanger {
 };
 
 struct MenuOptionTextChanger : UITextChanger {
-  int index;
-  std::string optionname;
-  void update() { *string = (index == menuindex ? ">" : " ") + optionname; }
-  MenuOptionTextChanger(std::string inputname) { optionname = inputname; }
+  int* index;
+  std::string* optionname;
+  void update() { *string = (*index == menuindex ? ">" : " ") + *optionname; }
+  MenuOptionTextChanger() {}
   ~MenuOptionTextChanger() {}
 };
 
