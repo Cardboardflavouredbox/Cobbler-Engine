@@ -14,4 +14,4 @@ bool SATcubetri(glm::vec3 aabb[], glm::vec3 tri[]);
 bool movecollisioncheck(glm::vec3 hitbox[], glm::vec3 startposition,
                         glm::vec3 endposition);
 
-void EntityMove(Entity* tempentity);
+void EntityMove(std::shared_ptr<Entity> tempentity);

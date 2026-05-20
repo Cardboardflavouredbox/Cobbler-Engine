@@ -9,24 +9,15 @@
 #include "ui.h"
 
 void clearMenuOptionsVector() {
-  for (auto i : MenuOptionsVector) {
-    if (i != nullptr) delete i;
-  }
   MenuOptionsVector.clear();
-  std::vector<UIthing*>* tempvector = &Global->UImap["Pause"];
-  for (int i = 0; i < tempvector->size(); i++) {
-    if (tempvector->at(i) == nullptr) {
-      tempvector->erase(tempvector->begin() + i);
-      i--;
-    }
-  }
+  Global->UImap.erase("Menu");
 }
 
 // UI setup
 bool UIsetup() {
   Global->UImap.reserve(4);
-  std::vector<UIthing*> tempvector;
-  UIimage* weapon = new UIimage();
+  std::vector<std::shared_ptr<UIthing>> tempvector;
+  std::shared_ptr<UIimage> weapon(new UIimage());
   weapon->color = 11;
   weapon->rgba = glm::vec4(1, 1, 1, 1);
   weapon->pos = glm::vec2({160 - 48, 200 - 112});
@@ -42,7 +33,7 @@ bool UIsetup() {
   weapon->texturename = "Pistol";
   tempvector.push_back(weapon);
 
-  UIbox* crosshair = new UIbox();
+  std::shared_ptr<UIbox> crosshair(new UIbox());
   crosshair->rgba = glm::vec4(1, 1, 1, 1);
   crosshair->color = 11;
   crosshair->size = glm::vec2({2, 2});
@@ -53,7 +44,7 @@ bool UIsetup() {
 
   tempvector.clear();
 
-  UIbox* background = new UIbox();
+  std::shared_ptr<UIbox> background(new UIbox());
   background->rgba = glm::vec4(0, 0, 0, 1);
   background->color = 0;
   background->size = glm::vec2({320, 200});

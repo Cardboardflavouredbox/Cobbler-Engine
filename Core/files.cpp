@@ -101,7 +101,7 @@ void freeRenderer() {
   }
 }
 
-bool setRenderer(bool IsEditor) {
+bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
   switch (Settings->graphicsmode) {
     case 1: {
       SDL_Surface* surface;
@@ -305,16 +305,15 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   }
   SDL_Log("args done");
 
-  ZipData tempzipdata;
+  std::shared_ptr<ZipData> LoadedData(new ZipData());
   auto error = glz::read_file_json(
-      tempzipdata, Global->GameName + "/resources.json", std::string{});
+      LoadedData, Global->GameName + "/resources.json", std::string{});
   if (error) {
     SDL_Log("%s", glz::format_error(
                       error, (Global->GameName + "/resources.json").c_str())
                       .c_str());
     return false;
   }
-  LoadedData = &tempzipdata;
 
   SDL_Log("Loaded resources data");
 
@@ -324,7 +323,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
     return false;
   SDL_Log("SDL initialized");
 
-  if (!setRenderer(IsEditor)) return false;
+  if (!setRenderer(IsEditor, LoadedData)) return false;
 
   SDL_SetWindowRelativeMouseMode(Global->window, !IsEditor);
   Mapdata tempmapdata;
@@ -369,7 +368,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
     }
   }
 
-  Camera = new Entity();
+  Camera.reset(new Entity());
   Camera->hitbox[0] = glm::vec3({-1, -1, -3});
   Camera->hitbox[1] = glm::vec3({1, 1, 0});
   Camera->position = glm::vec3({0, 0, 3});
@@ -406,18 +405,6 @@ bool init(bool IsEditor, std::vector<std::string> args) {
 void quit() {
   freeRenderer();
 
-  for (int i = 0; i < Global->Entities.size(); i++) {
-    delete (Global->Entities[i]);
-  }
-
-  for (int j = 0; j < Global->UIlist.size(); j++) {
-    std::vector<UIthing*>* tempvector = &Global->UImap[Global->UIlist[j]];
-    for (int i = 0; i < tempvector->size(); i++) {
-      if (tempvector->at(i) != nullptr) {
-        delete tempvector->at(i);
-      }
-    }
-  }
   delete (P1Inputs);
 
   FT_Done_Face(Global->FTface);

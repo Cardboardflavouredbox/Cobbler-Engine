@@ -56,13 +56,13 @@ struct GlobalClass {
 
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;
-  std::vector<Entity*> Entities;
+  std::vector<std::shared_ptr<Entity>> Entities;
 
   FT_Library FTlibrary;
   FT_Face FTface;
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 
-  std::unordered_map<std::string, std::vector<UIthing*>> UImap;
+  std::unordered_map<std::string, std::vector<std::shared_ptr<UIthing>>> UImap;
   std::vector<std::string> UIlist = {"default"};
 };
 

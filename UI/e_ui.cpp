@@ -333,8 +333,8 @@ struct UItext : public UIthing {
 bool UIsetup() {
   Global->UImap.reserve(4);
   for (int i = 0; i < 2; i++) {
-    std::vector<UIthing*> tempvector;
-    UIbox* box = new UIbox();
+    std::vector<std::shared_ptr<UIthing>> tempvector;
+    std::shared_ptr<UIbox> box(std::make_shared<UIbox>());
     box->color = 11;
     box->rgba = glm::vec4(1, 1, 1, 1);
     box->pos = glm::vec2({4, 4});
@@ -342,7 +342,9 @@ bool UIsetup() {
 
     tempvector.push_back(box);
 
-    UItext* text[4] = {new UItext(), new UItext(), new UItext(), new UItext()};
+    std::shared_ptr<UItext> text[4] = {
+        std::make_shared<UItext>(), std::make_shared<UItext>(),
+        std::make_shared<UItext>(), std::make_shared<UItext>()};
     text[0]->color = 0;
     text[0]->rgba = glm::vec4(0, 0, 0, 1);
     text[0]->pos = glm::vec2({8, 8});

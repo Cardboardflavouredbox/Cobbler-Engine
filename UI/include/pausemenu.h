@@ -2,14 +2,14 @@
 #include <vector>
 
 struct MenuOptions {
-  UIthing* UIcomponent;
+  std::shared_ptr<UIthing> UIcomponent;
   std::string name;
   int index;
   virtual void Interact() = 0;
-  virtual ~MenuOptions() { delete UIcomponent; }
+  virtual ~MenuOptions() {}
 };
 
 extern int menuindex;
-extern std::vector<MenuOptions*> MenuOptionsVector;
+extern std::vector<std::shared_ptr<MenuOptions>> MenuOptionsVector;
 
 void clearMenuOptionsVector();

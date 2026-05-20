@@ -6,8 +6,7 @@ std::unique_ptr<GlobalClass> Global;
 std::unique_ptr<EditorClass> Editor;
 std::unique_ptr<SettingsClass> Settings;
 Inputs* P1Inputs;
-Entity* Camera;
-ZipData* LoadedData;
+std::shared_ptr<Entity> Camera;
 Uint64 lastTime;
 Uint64 currentTime = SDL_GetPerformanceCounter();
 
