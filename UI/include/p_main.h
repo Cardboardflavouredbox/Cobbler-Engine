@@ -23,3 +23,13 @@ struct SettingsMenuOption : BasicSelectMenuOption {
   }
   ~SettingsMenuOption() {}
 };
+
+struct QuitMenuOption : BasicSelectMenuOption {
+  void Interact() { /*MenuOptionsVector.push_back();*/ }
+  QuitMenuOption(int i) {
+    name = "Quit";
+    index = i;
+    UIcomponent->pos = glm::vec2(16, 12 * (index + 1));
+  }
+  ~QuitMenuOption() {}
+};

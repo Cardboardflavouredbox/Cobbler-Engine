@@ -15,7 +15,7 @@
 #include "update.h"
 
 bool editorinit() {
-  Editor = new EditorClass();
+  Editor.reset(new EditorClass());
   if (Editor == nullptr) return false;
   if (!UIsetup()) return false;
   return true;

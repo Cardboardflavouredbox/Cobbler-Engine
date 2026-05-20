@@ -2,9 +2,9 @@
 
 #include <SDL3/SDL_timer.h>
 
-GlobalClass* Global;
-EditorClass* Editor;
-SettingsClass* Settings;
+std::unique_ptr<GlobalClass> Global;
+std::unique_ptr<EditorClass> Editor;
+std::unique_ptr<SettingsClass> Settings;
 Inputs* P1Inputs;
 Entity* Camera;
 ZipData* LoadedData;

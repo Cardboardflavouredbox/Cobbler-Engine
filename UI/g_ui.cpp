@@ -9,9 +9,17 @@
 #include "ui.h"
 
 void clearMenuOptionsVector() {
-  for (int i = 0; i < MenuOptionsVector.size(); i++)
-    delete MenuOptionsVector[i];
+  for (auto i : MenuOptionsVector) {
+    if (i != nullptr) delete i;
+  }
   MenuOptionsVector.clear();
+  std::vector<UIthing*>* tempvector = &Global->UImap["Pause"];
+  for (int i = 0; i < tempvector->size(); i++) {
+    if (tempvector->at(i) == nullptr) {
+      tempvector->erase(tempvector->begin() + i);
+      i--;
+    }
+  }
 }
 
 // UI setup

@@ -241,9 +241,9 @@ enum argenums {
 };
 
 bool init(bool IsEditor, std::vector<std::string> args) {
-  Global = new GlobalClass();
+  Global.reset(new GlobalClass());
   if (Global == nullptr) return false;
-  Settings = new SettingsClass();
+  Settings.reset(new SettingsClass());
   if (Settings == nullptr) return false;
   P1Inputs = new Inputs();
   if (P1Inputs == nullptr) return false;
@@ -410,15 +410,14 @@ void quit() {
     delete (Global->Entities[i]);
   }
 
-  for (const auto& [key, value] : Global->UImap) {
-    for (int i = 0; i < value.size(); i++) {
-      delete (value[i]);
+  for (int j = 0; j < Global->UIlist.size(); j++) {
+    std::vector<UIthing*>* tempvector = &Global->UImap[Global->UIlist[j]];
+    for (int i = 0; i < tempvector->size(); i++) {
+      if (tempvector->at(i) != nullptr) {
+        delete tempvector->at(i);
+      }
     }
   }
-
-  delete (Global);
-  if (Editor != nullptr) delete (Editor);
-  delete (Settings);
   delete (P1Inputs);
 
   FT_Done_Face(Global->FTface);
