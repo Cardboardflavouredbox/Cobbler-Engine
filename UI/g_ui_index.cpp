@@ -29,6 +29,17 @@ void changeUIindex() {
     }
     UIupdate();
     Global->UIlist[0] = "Pause";
-  } else
+  } else {
+    if (!MenuOptionsVector.empty()) {
+      clearMenuOptionsVector();
+      std::vector<UIthing*>* tempvector = &Global->UImap["Pause"];
+      for (int i = 0; i < tempvector->size(); i++) {
+        if (tempvector->at(i) == nullptr) {
+          tempvector->erase(tempvector->begin() + i);
+          i--;
+        }
+      }
+    }
     Global->UIlist[0] = "Pistol";
+  }
 }

@@ -8,8 +8,13 @@
 #include "pausemenu.h"
 #include "ui.h"
 
-// UI setup
+void clearMenuOptionsVector() {
+  for (int i = 0; i < MenuOptionsVector.size(); i++)
+    delete MenuOptionsVector[i];
+  MenuOptionsVector.clear();
+}
 
+// UI setup
 bool UIsetup() {
   Global->UImap.reserve(4);
   std::vector<UIthing*> tempvector;

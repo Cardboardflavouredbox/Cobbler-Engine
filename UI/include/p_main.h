@@ -5,10 +5,7 @@
 #include "ui.h"
 
 struct ResumeMenuOption : BasicSelectMenuOption {
-  void Interact() {
-    Global->pause = false;
-    MenuOptionsVector.clear();
-  }
+  void Interact() { Global->pause = false; }
   ResumeMenuOption(int i) {
     name = "Resume";
     index = i;

@@ -6,11 +6,10 @@ struct MenuOptions {
   std::string name;
   int index;
   virtual void Interact() = 0;
-  virtual ~MenuOptions() {}
+  virtual ~MenuOptions() { delete UIcomponent; }
 };
 
 extern int menuindex;
 extern std::vector<MenuOptions*> MenuOptionsVector;
 
-// for (int i = 0; i < MenuOptionsVector.size(); i++) delete
-// MenuOptionsVector[i];
+void clearMenuOptionsVector();
