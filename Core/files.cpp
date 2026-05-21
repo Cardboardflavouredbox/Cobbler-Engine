@@ -92,7 +92,7 @@ void freeRenderer() {
       SDL_DestroyPalette(Global->SRstuff->palette);
       SDL_DestroyRenderer(Global->SRstuff->renderer);
       SDL_DestroySurface(Global->SRstuff->render_target);
-      for (const auto& [key, value] : Global->SRstuff->textures) {
+      for (auto& [key, value] : Global->SRstuff->textures) {
         SDL_DestroySurface(value);
       }
       delete (Global->SRstuff);
@@ -415,7 +415,11 @@ void quit() {
 
   SDL_Log("freed Freetype stuff");
 
-  Global->UImap;  // delete all UI stuffs
+  for (auto& [key, value] : Global->UImap) {
+    for (int i = 0; i < value.size(); i++) {
+      delete (value[i]);
+    }
+  }
   Global->IsRunning = false;
   SDL_Quit();
   SDL_Log("SDL_Quit");
