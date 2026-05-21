@@ -187,7 +187,7 @@ struct UIimage : public UIthing {  // turn stuff into shared pointers!!
 struct UItext : public UIthing {
   unsigned char color;
   glm::vec4 rgba;
-  std::shared_ptr<UITextChanger> TextChanger = nullptr;
+  UITextChanger* TextChanger = nullptr;
   std::string string;
   void update() {
     if (TextChanger != nullptr) {
@@ -287,7 +287,7 @@ struct UItext : public UIthing {
       }
     }
   }
-  UItext(std::shared_ptr<UITextChanger> newTextChanger) {
+  UItext(UITextChanger* newTextChanger) {
     TextChanger = newTextChanger;
     if (TextChanger != nullptr) {
       TextChanger->string = &string;

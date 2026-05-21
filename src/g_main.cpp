@@ -50,5 +50,8 @@ int main(int argc, char* argv[]) {
     }
   }
   quit();
+  auto UIfree = lib.get_function<void()>("UIfree");
+  UIfree();
+  SDL_Log("UIfreed");
   return 0;
 }

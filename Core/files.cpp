@@ -241,9 +241,9 @@ enum argenums {
 };
 
 bool init(bool IsEditor, std::vector<std::string> args) {
-  Global.reset(new GlobalClass());
+  Global = std::make_unique<GlobalClass>();
   if (Global == nullptr) return false;
-  Settings.reset(new SettingsClass());
+  Settings = std::make_unique<SettingsClass>();
   if (Settings == nullptr) return false;
   P1Inputs = new Inputs();
   if (P1Inputs == nullptr) return false;
@@ -368,7 +368,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
     }
   }
 
-  Camera.reset(new Entity());
+  Camera = std::make_shared<Entity>();
   Camera->hitbox[0] = glm::vec3({-1, -1, -3});
   Camera->hitbox[1] = glm::vec3({1, 1, 0});
   Camera->position = glm::vec3({0, 0, 3});
@@ -415,6 +415,7 @@ void quit() {
 
   SDL_Log("freed Freetype stuff");
 
+  Global->UImap;  // delete all UI stuffs
   Global->IsRunning = false;
   SDL_Quit();
   SDL_Log("SDL_Quit");

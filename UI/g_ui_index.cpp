@@ -5,7 +5,7 @@
 #include "ui_index.h"
 
 int menuindex = 0;
-std::vector<std::shared_ptr<MenuOptions>> MenuOptionsVector;
+std::vector<std::unique_ptr<MenuOptions>> MenuOptionsVector;
 
 void UIupdate() {
   if (P1Inputs->Enter == 2) {
@@ -27,8 +27,8 @@ void changeUIindex() {
       Global->UIlist.push_back("Menus");
       Global->UImap["Menus"];
 
-      MenuOptionsVector.push_back(std::make_shared<ResumeMenuOption>(0));
-      MenuOptionsVector.push_back(std::make_shared<SettingsMenuOption>(1));
+      MenuOptionsVector.push_back(std::make_unique<ResumeMenuOption>(0));
+      MenuOptionsVector.push_back(std::make_unique<SettingsMenuOption>(1));
     }
     UIupdate();
     Global->UIlist[0] = "Pause";

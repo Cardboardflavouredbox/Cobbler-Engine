@@ -10,3 +10,5 @@ struct UIthing {
 };
 
 bool UIsetup();
+
+void UIfree();

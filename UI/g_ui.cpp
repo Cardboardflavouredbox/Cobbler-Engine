@@ -18,7 +18,7 @@ void clearMenuOptionsVector() {
 bool UIsetup() {
   Global->UImap.reserve(4);
   Global->UImap["Pistol"];
-  std::shared_ptr<UIimage> weapon(std::make_shared<UIimage>());
+  UIimage* weapon = new UIimage();
   weapon->color = 11;
   weapon->rgba = glm::vec4(1, 1, 1, 1);
   weapon->pos = glm::vec2({160 - 48, 200 - 112});
@@ -34,7 +34,7 @@ bool UIsetup() {
   weapon->texturename = "Pistol";
   Global->UImap["Pistol"].push_back(weapon);
 
-  std::shared_ptr<UIbox> crosshair(std::make_shared<UIbox>());
+  UIbox* crosshair = new UIbox();
   crosshair->rgba = glm::vec4(1, 1, 1, 1);
   crosshair->color = 11;
   crosshair->size = glm::vec2({2, 2});
@@ -43,7 +43,7 @@ bool UIsetup() {
   Global->UImap["Pistol"].push_back(crosshair);
 
   Global->UImap["Pause"];
-  std::shared_ptr<UIbox> background(std::make_shared<UIbox>());
+  UIbox* background = new UIbox();
   background->rgba = glm::vec4(0, 0, 0, 1);
   background->color = 0;
   background->size = glm::vec2({320, 200});
@@ -52,3 +52,5 @@ bool UIsetup() {
 
   return true;
 }
+
+void UIfree() { clearMenuOptionsVector(); }

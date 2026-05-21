@@ -62,7 +62,7 @@ struct GlobalClass {
   FT_Face FTface;
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 
-  std::unordered_map<std::string, std::vector<std::shared_ptr<UIthing>>> UImap;
+  std::unordered_map<std::string, std::vector<UIthing*>> UImap;
   std::vector<std::string> UIlist = {"default"};
 };
 

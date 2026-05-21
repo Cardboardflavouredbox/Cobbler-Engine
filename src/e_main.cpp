@@ -15,7 +15,7 @@
 #include "update.h"
 
 bool editorinit() {
-  Editor.reset(new EditorClass());
+  Editor = std::make_unique<EditorClass>();
   if (Editor == nullptr) return false;
   if (!UIsetup()) return false;
   return true;
