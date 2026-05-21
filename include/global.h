@@ -73,7 +73,7 @@ struct EditorClass {
 };
 
 struct ZipData {
-  std::string startlevel;
+  std::string startlevel, fontname;
   std::vector<std::string> texturenames;
   std::vector<std::string> stagenames;
 };
@@ -94,7 +94,7 @@ struct Inputs {
 
 struct SettingsClass {
  public:
-  uint16_t resolutionx = 320, resolutiony = 200;
+  uint16_t resolutionx = 480, resolutiony = 270;
   int fov = 90;
   int fps = 60;
   bool vsync = false;

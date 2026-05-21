@@ -10,6 +10,9 @@
 
 void clearMenuOptionsVector() {
   MenuOptionsVector.clear();
+  for (int i = 0; i < Global->UImap["Menu"].size(); i++) {
+    delete (Global->UImap["Menu"][i]);
+  }
   Global->UImap.erase("Menu");
   Global->UIlist.pop_back();
 }
@@ -21,12 +24,13 @@ bool UIsetup() {
   UIimage* weapon = new UIimage();
   weapon->color = 11;
   weapon->rgba = glm::vec4(1, 1, 1, 1);
-  weapon->pos = glm::vec2({160 - 48, 200 - 112});
-  weapon->size = glm::vec2({96, 112});
+  weapon->pos =
+      glm::vec2({Settings->resolutionx - 142, Settings->resolutiony - 181});
+  weapon->size = glm::vec2({142, 181});
   weapon->uvlist =
-      new std::pair<glm::vec2, glm::vec2>[3]{{{0, 0}, {1 / 3.f, 1.f}},
-                                             {{1 / 3.f, 0}, {2 / 3.f, 1.f}},
-                                             {{2 / 3.f, 0}, {1.f, 1.f}}};
+      new std::pair<glm::vec2, glm::vec2>[3]{{{0, 0}, {1 / 2.f, 1.f}},
+                                             {{0, 0}, {1 / 2.f, 1.f}},
+                                             {{1 / 2.f, 0}, {1.f, 1.f}}};
   ImagePistolChanger* IPC = new ImagePistolChanger();
   IPC->index = &weapon->uvindex;
 
@@ -38,7 +42,8 @@ bool UIsetup() {
   crosshair->rgba = glm::vec4(1, 1, 1, 1);
   crosshair->color = 11;
   crosshair->size = glm::vec2({2, 2});
-  crosshair->pos = glm::vec2({159, 99});
+  crosshair->pos =
+      glm::vec2({Settings->resolutionx / 2 - 1, Settings->resolutiony / 2 - 1});
 
   Global->UImap["Pistol"].push_back(crosshair);
 
@@ -46,7 +51,7 @@ bool UIsetup() {
   UIbox* background = new UIbox();
   background->rgba = glm::vec4(0, 0, 0, 1);
   background->color = 0;
-  background->size = glm::vec2({320, 200});
+  background->size = glm::vec2({Settings->resolutionx, Settings->resolutiony});
   background->pos = glm::vec2({0, 0});
   Global->UImap["Pause"].push_back(background);
 

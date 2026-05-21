@@ -159,7 +159,8 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
 
         surface = SDL_LoadBMP(tempstr.c_str());
         if (surface == NULL) return false;
-        SDL_SetSurfaceColorKey(surface, true, 0);
+        SDL_SetSurfaceColorKey(surface, true,
+                               SDL_MapSurfaceRGB(surface, 255, 0, 255));
         surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
 
         glBindTexture(GL_TEXTURE_2D,
@@ -188,7 +189,7 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
 
       Global->SRstuff->textures = tempvector;
       tempstr = basepath;
-      tempstr.append("/res/Color_palette.bmp");
+      tempstr.append("/" + Global->GameName + "/res/Color_palette.bmp");
       surface = SDL_LoadBMP(tempstr.c_str());
 
       Global->SRstuff->palette = SDL_GetSurfacePalette(surface);
@@ -381,7 +382,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   if (FT_Init_FreeType(&(Global->FTlibrary))) return false;
 
   tempstr = basepath;
-  tempstr.append("/res/Galmuri11.bdf");
+  tempstr.append("/" + Global->GameName + "/res/" + LoadedData->fontname);
   if (FT_New_Face(Global->FTlibrary, tempstr.c_str(), 0, &(Global->FTface)))
     return false;
 

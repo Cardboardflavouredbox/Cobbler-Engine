@@ -89,7 +89,6 @@ target_include_directories(CobblerEditorUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/i
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(Cobbler-Engine-Editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-FILE(COPY res DESTINATION "${CMAKE_BINARY_DIR}/bin")
 FILE(COPY $CACHE{GAME} DESTINATION "${CMAKE_BINARY_DIR}/bin")
 
 string(CONCAT MY_STRING "Hello" " " "World")
