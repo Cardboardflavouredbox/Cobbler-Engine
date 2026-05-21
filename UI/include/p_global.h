@@ -4,7 +4,8 @@
 
 struct BasicSelectMenuOption : MenuOptions {
   BasicSelectMenuOption() {
-    MenuOptionTextChanger* temp = new MenuOptionTextChanger();
+    std::shared_ptr<MenuOptionTextChanger> temp =
+        std::make_shared<MenuOptionTextChanger>();
     temp->optionname = &name;
     temp->index = &index;
     std::shared_ptr<UItext> text(std::make_shared<UItext>(temp));

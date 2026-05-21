@@ -11,13 +11,14 @@
 void clearMenuOptionsVector() {
   MenuOptionsVector.clear();
   Global->UImap.erase("Menu");
+  Global->UIlist.pop_back();
 }
 
 // UI setup
 bool UIsetup() {
   Global->UImap.reserve(4);
-  std::vector<std::shared_ptr<UIthing>> tempvector;
-  std::shared_ptr<UIimage> weapon(new UIimage());
+  Global->UImap["Pistol"];
+  std::shared_ptr<UIimage> weapon(std::make_shared<UIimage>());
   weapon->color = 11;
   weapon->rgba = glm::vec4(1, 1, 1, 1);
   weapon->pos = glm::vec2({160 - 48, 200 - 112});
@@ -31,26 +32,23 @@ bool UIsetup() {
 
   weapon->UVIndexChanger = IPC;
   weapon->texturename = "Pistol";
-  tempvector.push_back(weapon);
+  Global->UImap["Pistol"].push_back(weapon);
 
-  std::shared_ptr<UIbox> crosshair(new UIbox());
+  std::shared_ptr<UIbox> crosshair(std::make_shared<UIbox>());
   crosshair->rgba = glm::vec4(1, 1, 1, 1);
   crosshair->color = 11;
   crosshair->size = glm::vec2({2, 2});
   crosshair->pos = glm::vec2({159, 99});
 
-  tempvector.push_back(crosshair);
-  Global->UImap["Pistol"] = tempvector;
+  Global->UImap["Pistol"].push_back(crosshair);
 
-  tempvector.clear();
-
-  std::shared_ptr<UIbox> background(new UIbox());
+  Global->UImap["Pause"];
+  std::shared_ptr<UIbox> background(std::make_shared<UIbox>());
   background->rgba = glm::vec4(0, 0, 0, 1);
   background->color = 0;
   background->size = glm::vec2({320, 200});
   background->pos = glm::vec2({0, 0});
-  tempvector.push_back(background);
+  Global->UImap["Pause"].push_back(background);
 
-  Global->UImap["Pause"] = tempvector;
   return true;
 }

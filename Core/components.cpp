@@ -5,11 +5,9 @@
 
 void componentsupdatelate() {
   for (int i = 0; i < Global->UIlist.size(); i++) {
-    std::vector<std::shared_ptr<UIthing>>* tempvector =
-        &Global->UImap[Global->UIlist[i]];
-    int len = tempvector->size();
-    for (int i = 0; i < len; i++) {
-      tempvector->at(i)->update();
+    int len = Global->UImap[Global->UIlist[i]].size();
+    for (int j = 0; j < len; j++) {
+      Global->UImap[Global->UIlist[i]].at(j)->update();
     }
   }
 }

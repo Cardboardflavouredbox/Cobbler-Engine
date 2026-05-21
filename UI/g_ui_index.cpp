@@ -24,9 +24,8 @@ void UIupdate() {
 void changeUIindex() {
   if (Global->pause) {
     if (MenuOptionsVector.empty()) {
-      std::vector<std::shared_ptr<UIthing>> tempvector;
       Global->UIlist.push_back("Menus");
-      Global->UImap["Menus"] = tempvector;
+      Global->UImap["Menus"];
 
       MenuOptionsVector.push_back(std::make_shared<ResumeMenuOption>(0));
       MenuOptionsVector.push_back(std::make_shared<SettingsMenuOption>(1));

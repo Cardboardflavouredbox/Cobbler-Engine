@@ -403,13 +403,19 @@ bool init(bool IsEditor, std::vector<std::string> args) {
 }
 
 void quit() {
+  SDL_Log("started quit");
   freeRenderer();
+  SDL_Log("freed renderer");
 
   delete (P1Inputs);
+  SDL_Log("freed P1Inputs");
 
   FT_Done_Face(Global->FTface);
   FT_Done_FreeType(Global->FTlibrary);
 
+  SDL_Log("freed Freetype stuff");
+
   Global->IsRunning = false;
   SDL_Quit();
+  SDL_Log("SDL_Quit");
 }
