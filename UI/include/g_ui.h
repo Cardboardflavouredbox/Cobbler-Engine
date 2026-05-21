@@ -181,6 +181,7 @@ struct UIimage : public UIthing {  // turn stuff into shared pointers!!
   }
   ~UIimage() {
     if (UVIndexChanger != nullptr) delete (UVIndexChanger);
+    delete (uvlist);
   }
 };
 

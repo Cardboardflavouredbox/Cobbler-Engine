@@ -55,7 +55,7 @@ bool UIsetup() {
   Global->UImap["Pause"];
   UIbox* background = new UIbox();
   background->rgba = glm::vec4(0, 0, 0, 1);
-  background->color = 0;
+  background->color = 255;
   background->size = glm::vec2({Settings->resolutionx, Settings->resolutiony});
   background->pos = glm::vec2({0, 0});
   Global->UImap["Pause"].push_back(background);

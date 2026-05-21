@@ -15,3 +15,7 @@ struct BasicSelectMenuOption : MenuOptions {
     UIcomponent = text;
   }
 };
+
+void setMenuMain();
+void setMenuQuit();
+void setMenuSettings();

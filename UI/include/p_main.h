@@ -1,5 +1,6 @@
 #pragma once
 #include "p_global.h"
+#include "p_quit.h"
 #include "p_settings.h"
 #include "pausemenu.h"
 #include "ui.h"
@@ -28,7 +29,7 @@ struct SettingsMenuOption : BasicSelectMenuOption {
 };
 
 struct QuitMenuOption : BasicSelectMenuOption {
-  void Interact() { /*MenuOptionsVector.push_back();*/ }
+  void Interact() { setMenuQuit(); }
   QuitMenuOption(int i) {
     name = "Quit";
     index = i;
@@ -36,3 +37,13 @@ struct QuitMenuOption : BasicSelectMenuOption {
   }
   ~QuitMenuOption() {}
 };
+
+void setMenuMain() {
+  menuindex = 0;
+  clearMenuOptionsVector();
+  Global->UIlist.push_back("Menus");
+  Global->UImap["Menus"];
+  MenuOptionsVector.push_back(std::make_unique<ResumeMenuOption>(0));
+  MenuOptionsVector.push_back(std::make_unique<SettingsMenuOption>(1));
+  MenuOptionsVector.push_back(std::make_unique<QuitMenuOption>(2));
+}

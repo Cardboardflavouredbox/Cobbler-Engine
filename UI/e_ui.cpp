@@ -212,6 +212,7 @@ struct UIimage : public UIthing {
   }
   ~UIimage() {
     if (UVIndexChanger != nullptr) delete (UVIndexChanger);
+    delete (uvlist);
   }
 };
 

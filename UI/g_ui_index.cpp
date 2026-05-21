@@ -29,6 +29,7 @@ void changeUIindex() {
 
       MenuOptionsVector.push_back(std::make_unique<ResumeMenuOption>(0));
       MenuOptionsVector.push_back(std::make_unique<SettingsMenuOption>(1));
+      MenuOptionsVector.push_back(std::make_unique<QuitMenuOption>(2));
     }
     UIupdate();
     Global->UIlist[0] = "Pause";
