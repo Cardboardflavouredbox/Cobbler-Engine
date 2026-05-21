@@ -293,5 +293,9 @@ struct UItext : public UIthing {
       TextChanger->string = &string;
     }
   }
-  ~UItext() {}
+  ~UItext() {
+    if (TextChanger != nullptr) {
+      delete (TextChanger);
+    }
+  }
 };

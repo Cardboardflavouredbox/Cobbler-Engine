@@ -1,5 +1,4 @@
 #include "extern.h"
-#include "ui_index.h"
 
 void changeUIindex() {
   if (Editor->currentlyselectedface > -1)

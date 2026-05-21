@@ -5,7 +5,10 @@
 #include "ui.h"
 
 struct ResumeMenuOption : BasicSelectMenuOption {
-  void Interact() { Global->pause = false; }
+  void Interact() {
+    Global->pause = false;
+    SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);
+  }
   ResumeMenuOption(int i) {
     name = "Resume";
     index = i;

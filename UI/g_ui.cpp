@@ -1,5 +1,7 @@
 #include "g_ui.h"
 
+#include <SDL3/SDL_log.h>
+
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
 #include <string>
@@ -10,11 +12,14 @@
 
 void clearMenuOptionsVector() {
   MenuOptionsVector.clear();
-  for (int i = 0; i < Global->UImap["Menu"].size(); i++) {
-    delete (Global->UImap["Menu"][i]);
+  if (Global->UImap.contains("Menus")) {
+    while (!Global->UImap["Menus"].empty()) {
+      delete (Global->UImap["Menus"].back());
+      Global->UImap["Menus"].pop_back();
+    }
+    Global->UImap.erase("Menus");
   }
-  Global->UImap.erase("Menu");
-  Global->UIlist.pop_back();
+  while (Global->UIlist.back() == "Menus") Global->UIlist.pop_back();
 }
 
 // UI setup

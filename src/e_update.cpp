@@ -11,7 +11,6 @@
 #include "raycast.h"
 #include "rendermath.h"
 #include "screen.h"
-#include "ui_index.h"
 #include "update.h"
 
 glm::vec2 MouseToScreenpos() {
@@ -172,7 +171,6 @@ void update() {
     }
     noncamerastuff();
     movecamera();
-    changeUIindex();
     componentsupdatelate();
   }
 }

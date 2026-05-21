@@ -8,7 +8,3 @@ struct UIthing {
   virtual void render() = 0;
   virtual ~UIthing() {}  // delete thingy
 };
-
-bool UIsetup();
-
-void UIfree();

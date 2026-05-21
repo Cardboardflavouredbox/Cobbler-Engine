@@ -2,7 +2,6 @@
 #include "g_ui.h"
 #include "p_main.h"
 #include "pausemenu.h"
-#include "ui_index.h"
 
 int menuindex = 0;
 std::vector<std::unique_ptr<MenuOptions>> MenuOptionsVector;
@@ -23,7 +22,8 @@ void UIupdate() {
 
 void changeUIindex() {
   if (Global->pause) {
-    if (MenuOptionsVector.empty()) {
+    if (MenuOptionsVector.empty() && !Global->UImap.contains("Menus") &&
+        Global->UIlist.back() != "Menus") {
       Global->UIlist.push_back("Menus");
       Global->UImap["Menus"];
 
@@ -33,7 +33,8 @@ void changeUIindex() {
     UIupdate();
     Global->UIlist[0] = "Pause";
   } else {
-    if (!MenuOptionsVector.empty()) {
+    if (!MenuOptionsVector.empty() || Global->UImap.contains("Menus") ||
+        Global->UIlist.back() == "Menus") {
       clearMenuOptionsVector();
     }
     Global->UIlist[0] = "Pistol";

@@ -417,8 +417,9 @@ void quit() {
   SDL_Log("freed Freetype stuff");
 
   for (auto& [key, value] : Global->UImap) {
-    for (int i = 0; i < value.size(); i++) {
-      delete (value[i]);
+    while (!value.empty()) {
+      delete (value.back());
+      value.pop_back();
     }
   }
   Global->IsRunning = false;
