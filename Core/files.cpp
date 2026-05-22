@@ -101,6 +101,36 @@ void freeRenderer() {
   }
 }
 
+void SaveSettings() {
+  std::string location =
+      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
+  auto error = glz::write_file_json<glz::opts{.prettify = true}>(
+      Settings, location + "/Settings.json", std::string{});
+  if (error) {
+    SDL_Log("Failed to save!");
+    SDL_Log("%s",
+            glz::format_error(error, (location + "/Settings.json").c_str())
+                .c_str());
+    return;
+  }
+  SDL_Log("Saved settings!");
+}
+
+void LoadSettings() {
+  std::string location =
+      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
+  auto error =
+      glz::read_file_json(Settings, location + "/Settings.json", std::string{});
+  if (error) {
+    SDL_Log("Failed to load settings!");
+    SDL_Log("%s",
+            glz::format_error(error, (location + "/Settings.json").c_str())
+                .c_str());
+    return;
+  }
+  SDL_Log("Loaded settings!");
+}
+
 bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
   switch (Settings->graphicsmode) {
     case 1: {
@@ -249,6 +279,8 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   P1Inputs = new Inputs();
   if (P1Inputs == nullptr) return false;
   Settings->fov = 90;
+
+  LoadSettings();
 
   SDL_Log("Classes initialized");
 

@@ -19,7 +19,7 @@ struct ResumeMenuOption : BasicSelectMenuOption {
 };
 
 struct SettingsMenuOption : BasicSelectMenuOption {
-  void Interact() { /*MenuOptionsVector.push_back();*/ }
+  void Interact() { setMenuSettings(); }
   SettingsMenuOption(int i) {
     name = "Settings";
     index = i;
