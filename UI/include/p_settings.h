@@ -1,5 +1,6 @@
 #pragma once
 #include "files.h"
+#include "p_gameplaysettings.h"
 #include "p_global.h"
 #include "pausemenu.h"
 #include "ui.h"
@@ -7,7 +8,7 @@
 struct DisplayMenuOption : BasicSelectMenuOption {
   void Interact() {}
   DisplayMenuOption(int i) {
-    name = "Display Settings";
+    name = U"Display Settings";
     index = i;
     UIcomponent->pos = glm::vec2(16, 12 * (index + 1));
   }
@@ -15,9 +16,9 @@ struct DisplayMenuOption : BasicSelectMenuOption {
 };
 
 struct GameplayMenuOption : BasicSelectMenuOption {
-  void Interact() {}
+  void Interact() { setMenuGameplaySettings(); }
   GameplayMenuOption(int i) {
-    name = "Gameplay Settings";
+    name = U"Gameplay Settings";
     index = i;
     UIcomponent->pos = glm::vec2(16, 12 * (index + 1));
   }
@@ -27,11 +28,21 @@ struct GameplayMenuOption : BasicSelectMenuOption {
 struct SaveSettingsOption : BasicSelectMenuOption {
   void Interact() { SaveSettings(); }
   SaveSettingsOption(int i) {
-    name = "Save Settings";
+    name = U"Save Settings";
     index = i;
     UIcomponent->pos = glm::vec2(16, 12 * (index + 1));
   }
   ~SaveSettingsOption() {}
+};
+
+struct LoadSettingsOption : BasicSelectMenuOption {
+  void Interact() { LoadSettings(); }
+  LoadSettingsOption(int i) {
+    name = U"Load Settings";
+    index = i;
+    UIcomponent->pos = glm::vec2(16, 12 * (index + 1));
+  }
+  ~LoadSettingsOption() {}
 };
 
 void setMenuSettings() {
@@ -42,4 +53,5 @@ void setMenuSettings() {
   MenuOptionsVector.push_back(std::make_unique<DisplayMenuOption>(0));
   MenuOptionsVector.push_back(std::make_unique<GameplayMenuOption>(1));
   MenuOptionsVector.push_back(std::make_unique<SaveSettingsOption>(2));
+  MenuOptionsVector.push_back(std::make_unique<LoadSettingsOption>(3));
 }

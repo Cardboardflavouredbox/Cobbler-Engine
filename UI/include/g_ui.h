@@ -11,24 +11,36 @@ glm::vec2 getrealpos(UIthing::anchorpos anchor, glm::vec2 pos, glm::vec2 size);
 
 // UIcomponents
 struct UITextChanger {
-  std::string* string;
+  std::u32string* string;
   virtual void update() = 0;
   virtual ~UITextChanger() {}
 };
 
 struct TextandNumChanger : UITextChanger {
-  std::string text;
+  std::u32string text;
   int* num;
-  void update() { *string = text + std::to_string(*num); }
+  void update() { *string = text; }
   ~TextandNumChanger() {}
 };
 
 struct MenuOptionTextChanger : UITextChanger {
   int* index;
-  std::string* optionname;
-  void update() { *string = (*index == menuindex ? ">" : " ") + *optionname; }
+  std::u32string* optionname;
+  void update() { *string = (*index == menuindex ? U">" : U" ") + *optionname; }
   MenuOptionTextChanger() {}
   ~MenuOptionTextChanger() {}
+};
+
+struct MenuCheckboxTextChanger : UITextChanger {
+  int* index;
+  bool* enabled;
+  std::u32string* optionname;
+  void update() {
+    *string = (*index == menuindex ? U">" : U" ") + *optionname +
+              (*enabled ? U"▣" : U"□");
+  }
+  MenuCheckboxTextChanger() {}
+  ~MenuCheckboxTextChanger() {}
 };
 
 struct UIImageUVIndexChanger {
@@ -197,7 +209,7 @@ struct UItext : public UIthing {
   unsigned char color;
   glm::vec4 rgba;
   UITextChanger* TextChanger = nullptr;
-  std::string string;
+  std::u32string string;
   void update() {
     if (TextChanger != nullptr) {
       TextChanger->update();

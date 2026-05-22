@@ -417,6 +417,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   tempstr.append("/" + Global->GameName + "/res/" + LoadedData->fontname);
   if (FT_New_Face(Global->FTlibrary, tempstr.c_str(), 0, &(Global->FTface)))
     return false;
+  FT_Select_Charmap(Global->FTface, ft_encoding_unicode);
 
   FT_Set_Pixel_Sizes(Global->FTface, 0, 12);
 

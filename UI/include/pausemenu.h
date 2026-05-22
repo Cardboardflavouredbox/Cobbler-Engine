@@ -3,7 +3,7 @@
 
 struct MenuOptions {
   UIthing* UIcomponent;
-  std::string name;
+  std::u32string name;
   int index;
   virtual void Interact() = 0;
   virtual ~MenuOptions() {}

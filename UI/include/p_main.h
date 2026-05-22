@@ -11,7 +11,7 @@ struct ResumeMenuOption : BasicSelectMenuOption {
     SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);
   }
   ResumeMenuOption(int i) {
-    name = "Resume";
+    name = U"Resume";
     index = i;
     UIcomponent->pos = glm::vec2(16, 12 * (index + 1));
   }
@@ -21,7 +21,7 @@ struct ResumeMenuOption : BasicSelectMenuOption {
 struct SettingsMenuOption : BasicSelectMenuOption {
   void Interact() { setMenuSettings(); }
   SettingsMenuOption(int i) {
-    name = "Settings";
+    name = U"Settings";
     index = i;
     UIcomponent->pos = glm::vec2(16, 12 * (index + 1));
   }
@@ -31,7 +31,7 @@ struct SettingsMenuOption : BasicSelectMenuOption {
 struct QuitMenuOption : BasicSelectMenuOption {
   void Interact() { setMenuQuit(); }
   QuitMenuOption(int i) {
-    name = "Quit";
+    name = U"Quit";
     index = i;
     UIcomponent->pos = glm::vec2(16, 12 * (index + 1));
   }

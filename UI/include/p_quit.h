@@ -6,7 +6,7 @@
 struct QuitYes : BasicSelectMenuOption {
   void Interact() { Global->IsRunning = false; }
   QuitYes(int i) {
-    name = "Yes";
+    name = U"Yes";
     index = i;
     UIcomponent->pos = glm::vec2(0, 12 * (index));
     UIcomponent->anchor = UIthing::middlemiddle;
@@ -17,7 +17,7 @@ struct QuitYes : BasicSelectMenuOption {
 struct QuitNo : BasicSelectMenuOption {
   void Interact() { setMenuMain(); }
   QuitNo(int i) {
-    name = "No";
+    name = U"No";
     index = i;
     UIcomponent->pos = glm::vec2(0, 12 * (index));
     UIcomponent->anchor = UIthing::middlemiddle;
