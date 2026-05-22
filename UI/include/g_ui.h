@@ -19,7 +19,11 @@ struct UITextChanger {
 struct TextandNumChanger : UITextChanger {
   std::u32string text;
   int* num;
-  void update() { *string = text; }
+  void update() {
+    std::string s = std::to_string(*num);
+    std::u32string s32(s.begin(), s.end());
+    *string = text + s32;
+  }
   ~TextandNumChanger() {}
 };
 

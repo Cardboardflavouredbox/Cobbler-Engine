@@ -1,12 +1,13 @@
 #pragma once
 #include "files.h"
+#include "p_displaysettings.h"
 #include "p_gameplaysettings.h"
 #include "p_global.h"
 #include "pausemenu.h"
 #include "ui.h"
 
 struct DisplayMenuOption : BasicSelectMenuOption {
-  void Interact() {}
+  void Interact() { setMenuDisplaySettings(); }
   DisplayMenuOption(int i) {
     name = U"Display Settings";
     index = i;

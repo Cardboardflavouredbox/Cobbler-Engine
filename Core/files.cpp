@@ -79,28 +79,6 @@ void savemap() {
                          SDL_arraysize(filters), NULL);
 }
 
-void freeRenderer() {
-  SDL_DestroyWindow(Global->window);
-
-  switch (Settings->graphicsmode) {
-    case 1: {
-      SDL_GL_DestroyContext(Global->GLstuff->GLContext);
-      delete (Global->GLstuff);
-      break;
-    }
-    default: {
-      SDL_DestroyPalette(Global->SRstuff->palette);
-      SDL_DestroyRenderer(Global->SRstuff->renderer);
-      SDL_DestroySurface(Global->SRstuff->render_target);
-      for (auto& [key, value] : Global->SRstuff->textures) {
-        SDL_DestroySurface(value);
-      }
-      delete (Global->SRstuff);
-      break;
-    }
-  }
-}
-
 void SaveSettings() {
   std::string location =
       SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
@@ -129,6 +107,28 @@ void LoadSettings() {
     return;
   }
   SDL_Log("Loaded settings!");
+}
+
+void freeRenderer() {
+  SDL_DestroyWindow(Global->window);
+
+  switch (Settings->graphicsmode) {
+    case 1: {
+      SDL_GL_DestroyContext(Global->GLstuff->GLContext);
+      delete (Global->GLstuff);
+      break;
+    }
+    default: {
+      SDL_DestroyPalette(Global->SRstuff->palette);
+      SDL_DestroyRenderer(Global->SRstuff->renderer);
+      SDL_DestroySurface(Global->SRstuff->render_target);
+      for (auto& [key, value] : Global->SRstuff->textures) {
+        SDL_DestroySurface(value);
+      }
+      delete (Global->SRstuff);
+      break;
+    }
+  }
 }
 
 bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {

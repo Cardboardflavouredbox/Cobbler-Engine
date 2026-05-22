@@ -37,3 +37,4 @@ void setMenuMain();
 void setMenuQuit();
 void setMenuSettings();
 void setMenuGameplaySettings();
+void setMenuDisplaySettings();
