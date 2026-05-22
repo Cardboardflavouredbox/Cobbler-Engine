@@ -8,7 +8,8 @@ struct QuitYes : BasicSelectMenuOption {
   QuitYes(int i) {
     name = "Yes";
     index = i;
-    UIcomponent->pos = glm::vec2(Settings->resolutionx / 2, 12 * (index + 12));
+    UIcomponent->pos = glm::vec2(0, 12 * (index));
+    UIcomponent->anchor = UIthing::middlemiddle;
   }
   ~QuitYes() {}
 };
@@ -18,7 +19,8 @@ struct QuitNo : BasicSelectMenuOption {
   QuitNo(int i) {
     name = "No";
     index = i;
-    UIcomponent->pos = glm::vec2(Settings->resolutionx / 2, 12 * (index + 12));
+    UIcomponent->pos = glm::vec2(0, 12 * (index));
+    UIcomponent->anchor = UIthing::middlemiddle;
   }
   ~QuitNo() {}
 };

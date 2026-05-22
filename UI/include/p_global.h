@@ -8,6 +8,7 @@ struct BasicSelectMenuOption : MenuOptions {
     temp->optionname = &name;
     temp->index = &index;
     UItext* text = new UItext(temp);
+    text->anchor = UIthing::lefttop;
     text->color = 11;
     text->rgba = glm::vec4(1, 1, 1, 1);
     text->pos = glm::vec2(16, 12 * (index + 1));

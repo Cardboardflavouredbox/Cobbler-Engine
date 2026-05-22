@@ -1,3 +1,4 @@
+#pragma once
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
 #include <string>
@@ -5,6 +6,8 @@
 #include "extern.h"
 #include "pausemenu.h"
 #include "ui.h"
+
+glm::vec2 getrealpos(UIthing::anchorpos anchor, glm::vec2 pos, glm::vec2 size);
 
 // UIcomponents
 struct UITextChanger {
@@ -66,26 +69,27 @@ struct UIbox : public UIthing {
   glm::vec2 size;
   void update() {}
   void render() {
+    glm::vec2 realpos = getrealpos(anchor, pos, size);
     switch (Settings->graphicsmode) {
       case 1: {
         glBegin(GL_QUADS);
 
         glColor4f(rgba.r, rgba.g, rgba.b, rgba.a);
-        glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+        glVertex2f((realpos.x - Settings->resolutionx / 2) * 2 /
                        (float)Settings->resolutionx,
-                   (-pos.y + Settings->resolutiony / 2) * 2 /
+                   (-realpos.y + Settings->resolutiony / 2) * 2 /
                        (float)Settings->resolutiony);
-        glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+        glVertex2f((realpos.x + size.x - Settings->resolutionx / 2) * 2 /
                        (float)Settings->resolutionx,
-                   (-pos.y + Settings->resolutiony / 2) * 2 /
+                   (-realpos.y + Settings->resolutiony / 2) * 2 /
                        (float)Settings->resolutiony);
-        glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+        glVertex2f((realpos.x + size.x - Settings->resolutionx / 2) * 2 /
                        (float)Settings->resolutionx,
-                   (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                   (-realpos.y - size.y + Settings->resolutiony / 2) * 2 /
                        (float)Settings->resolutiony);
-        glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+        glVertex2f((realpos.x - Settings->resolutionx / 2) * 2 /
                        (float)Settings->resolutionx,
-                   (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                   (-realpos.y - size.y + Settings->resolutiony / 2) * 2 /
                        (float)Settings->resolutiony);
 
         glEnd();
@@ -95,11 +99,12 @@ struct UIbox : public UIthing {
         for (int i = 0; i < size.y; i++) {
           for (int j = 0; j < size.x; j++) {
             Global->SRstuff
-                ->pixelsdepth[((int)pos.x + j) +
-                              ((int)pos.y + i) * Global->SRstuff->pitch] = 0;
-            Global->SRstuff->pixels[((int)pos.x + j) +
-                                    ((int)pos.y + i) * Global->SRstuff->pitch] =
-                color;
+                ->pixelsdepth[((int)realpos.x + j) +
+                              ((int)realpos.y + i) * Global->SRstuff->pitch] =
+                0;
+            Global->SRstuff
+                ->pixels[((int)realpos.x + j) +
+                         ((int)realpos.y + i) * Global->SRstuff->pitch] = color;
           }
         }
         break;
@@ -123,6 +128,7 @@ struct UIimage : public UIthing {  // turn stuff into shared pointers!!
     }
   }
   void render() {
+    glm::vec2 realpos = getrealpos(anchor, pos, size);
     switch (Settings->graphicsmode) {
       case 1: {
         glEnable(GL_TEXTURE_2D);
@@ -131,24 +137,24 @@ struct UIimage : public UIthing {  // turn stuff into shared pointers!!
         std::pair<glm::vec2, glm::vec2>* uv = &uvlist[uvindex];
         glColor4f(rgba.r, rgba.g, rgba.b, rgba.a);
         glTexCoord2f(uv->first.x, uv->first.y);
-        glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+        glVertex2f((realpos.x - Settings->resolutionx / 2) * 2 /
                        (float)Settings->resolutionx,
-                   (-pos.y + Settings->resolutiony / 2) * 2 /
+                   (-realpos.y + Settings->resolutiony / 2) * 2 /
                        (float)Settings->resolutiony);
         glTexCoord2f(uv->second.x, uv->first.y);
-        glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+        glVertex2f((realpos.x + size.x - Settings->resolutionx / 2) * 2 /
                        (float)Settings->resolutionx,
-                   (-pos.y + Settings->resolutiony / 2) * 2 /
+                   (-realpos.y + Settings->resolutiony / 2) * 2 /
                        (float)Settings->resolutiony);
         glTexCoord2f(uv->second.x, uv->second.y);
-        glVertex2f((pos.x + size.x - Settings->resolutionx / 2) * 2 /
+        glVertex2f((realpos.x + size.x - Settings->resolutionx / 2) * 2 /
                        (float)Settings->resolutionx,
-                   (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                   (-realpos.y - size.y + Settings->resolutiony / 2) * 2 /
                        (float)Settings->resolutiony);
         glTexCoord2f(uv->first.x, uv->second.y);
-        glVertex2f((pos.x - Settings->resolutionx / 2) * 2 /
+        glVertex2f((realpos.x - Settings->resolutionx / 2) * 2 /
                        (float)Settings->resolutionx,
-                   (-pos.y - size.y + Settings->resolutiony / 2) * 2 /
+                   (-realpos.y - size.y + Settings->resolutiony / 2) * 2 /
                        (float)Settings->resolutiony);
 
         glEnd();
@@ -167,11 +173,13 @@ struct UIimage : public UIthing {  // turn stuff into shared pointers!!
                 uv.first.x + j + surface->pitch * (uv.first.y + i))];
             if (color > 0) {
               Global->SRstuff
-                  ->pixelsdepth[((int)pos.x + j) +
-                                ((int)pos.y + i) * Global->SRstuff->pitch] = 0;
+                  ->pixelsdepth[((int)realpos.x + j) +
+                                ((int)realpos.y + i) * Global->SRstuff->pitch] =
+                  0;
               Global->SRstuff
-                  ->pixels[((int)pos.x + j) +
-                           ((int)pos.y + i) * Global->SRstuff->pitch] = color;
+                  ->pixels[((int)realpos.x + j) +
+                           ((int)realpos.y + i) * Global->SRstuff->pitch] =
+                  color;
             }
           }
         }
@@ -196,13 +204,14 @@ struct UItext : public UIthing {
     }
   }
   void render() {
-    int x = pos.x, y = pos.y;
+    glm::vec2 realpos = getrealpos(anchor, pos, glm::vec2(0, 0));
+    int x = realpos.x, y = realpos.y;
     switch (Settings->graphicsmode) {
       case 1: {  // opengl
         glColor4f(rgba.r, rgba.g, rgba.b, rgba.a);
         for (int i = 0; i < string.length(); i++) {
           if (string[i] == '\n') {
-            x = pos.x;
+            x = realpos.x;
             y += 12;
           } else {
             FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
@@ -253,7 +262,7 @@ struct UItext : public UIthing {
       case 0: {  // software
         for (int i = 0; i < string.length(); i++) {
           if (string[i] == '\n') {
-            x = pos.x;
+            x = realpos.x;
             y += 12;
           } else {
             FT_UInt temp = FT_Get_Char_Index(Global->FTface, string[i]);
