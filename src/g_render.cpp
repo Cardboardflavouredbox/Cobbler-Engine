@@ -1,7 +1,6 @@
 #include <SDL3/SDL_log.h>
 #include <glad/glad.h>
 
-#include <deque>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
@@ -110,8 +109,8 @@ void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
     }
 }
 
-void DrawTri(int texture, glm::vec3 rawvectors[], glm::vec2 UVs[], int xloop,
-             int yloop, std::array<unsigned char, 4> shade) {
+void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
+             int xloop, int yloop, std::array<unsigned char, 4> shade) {
   ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1]),
                             ToScreenSpace(rawvectors[2])};
@@ -225,44 +224,44 @@ glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
 }
 
 void rendergame() {
-  std::deque<Mapface> tempmapfacedeque = Global->mapfaces, addlaterfacedeque;
-  std::deque<glm::vec3> temppointsdeque = Global->Points;
+  std::vector<Mapface> tempmapfacevector = Global->mapfaces, addlaterfacevector;
+  std::vector<glm::vec3> temppointsvector = Global->Points;
 
-  for (int i = 0; i < tempmapfacedeque.size(); i++) {
-    Mapface* tempmapface = &tempmapfacedeque[i];
+  for (int i = 0; i < tempmapfacevector.size(); i++) {
+    Mapface* tempmapface = &tempmapfacevector[i];
     float dist[3] = {};
-    std::deque<int> invisibledeque, visibledeque;
+    std::vector<int> invisiblevector, visiblevector;
     int invisiblecount = 0;
     for (int j = 0; j < 3; j++) {
-      dist[j] = getdistancething(temppointsdeque[tempmapface->points[j]]);
+      dist[j] = getdistancething(temppointsvector[tempmapface->points[j]]);
       if (dist[j] < 0.25f) {
         invisiblecount++;
-        invisibledeque.push_back(j);
+        invisiblevector.push_back(j);
       } else
-        visibledeque.push_back(j);
+        visiblevector.push_back(j);
     }
     switch (invisiblecount) {
       case 3: {
-        tempmapfacedeque.erase(tempmapfacedeque.begin() + i);
+        tempmapfacevector.erase(tempmapfacevector.begin() + i);
         i--;
         break;
       }
       case 2: {
         for (int j = 0; j < 2; j++) {
           glm::vec3 newvec3 = CutLinething(
-              temppointsdeque[tempmapface->points[invisibledeque[j]]],
-              temppointsdeque[tempmapface->points[visibledeque[0]]]);
-          temppointsdeque.push_back(newvec3);
+              temppointsvector[tempmapface->points[invisiblevector[j]]],
+              temppointsvector[tempmapface->points[visiblevector[0]]]);
+          temppointsvector.push_back(newvec3);
 
           float internal = getinternaldivisionthing(
-              temppointsdeque[tempmapface->points[invisibledeque[j]]], newvec3,
-              temppointsdeque[tempmapface->points[visibledeque[0]]]);
+              temppointsvector[tempmapface->points[invisiblevector[j]]],
+              newvec3, temppointsvector[tempmapface->points[visiblevector[0]]]);
 
-          tempmapface->UVs[invisibledeque[j]] =
-              divisiontoVec2(tempmapface->UVs[invisibledeque[j]],
-                             tempmapface->UVs[visibledeque[0]], internal);
+          tempmapface->UVs[invisiblevector[j]] =
+              divisiontoVec2(tempmapface->UVs[invisiblevector[j]],
+                             tempmapface->UVs[visiblevector[0]], internal);
 
-          tempmapface->points[invisibledeque[j]] = temppointsdeque.size() - 1;
+          tempmapface->points[invisiblevector[j]] = temppointsvector.size() - 1;
         }
         break;
       }
@@ -274,68 +273,71 @@ void rendergame() {
         newface.doublesided = tempmapface->doublesided;
         newface.points.resize(3);
         newface.UVs.resize(3);
-        newface.points[visibledeque[0]] = tempmapface->points[visibledeque[0]];
-        newface.UVs[visibledeque[0]] = tempmapface->UVs[visibledeque[0]];
+        newface.points[visiblevector[0]] =
+            tempmapface->points[visiblevector[0]];
+        newface.UVs[visiblevector[0]] = tempmapface->UVs[visiblevector[0]];
         glm::vec3 newvec3;
         newvec3 = CutLinething(
-            temppointsdeque[tempmapface->points[invisibledeque[0]]],
-            temppointsdeque[tempmapface->points[visibledeque[0]]]);
+            temppointsvector[tempmapface->points[invisiblevector[0]]],
+            temppointsvector[tempmapface->points[visiblevector[0]]]);
 
         float internal = getinternaldivisionthing(
-            temppointsdeque[tempmapface->points[invisibledeque[0]]], newvec3,
-            temppointsdeque[tempmapface->points[visibledeque[0]]]);
+            temppointsvector[tempmapface->points[invisiblevector[0]]], newvec3,
+            temppointsvector[tempmapface->points[visiblevector[0]]]);
 
-        newface.UVs[invisibledeque[0]] =
-            divisiontoVec2(tempmapface->UVs[invisibledeque[0]],
-                           tempmapface->UVs[visibledeque[0]], internal);
+        newface.UVs[invisiblevector[0]] =
+            divisiontoVec2(tempmapface->UVs[invisiblevector[0]],
+                           tempmapface->UVs[visiblevector[0]], internal);
 
-        temppointsdeque.push_back(newvec3);
+        temppointsvector.push_back(newvec3);
 
-        newface.points[invisibledeque[0]] = temppointsdeque.size() - 1;
+        newface.points[invisiblevector[0]] = temppointsvector.size() - 1;
         newvec3 = CutLinething(
-            temppointsdeque[tempmapface->points[invisibledeque[0]]],
-            temppointsdeque[tempmapface->points[visibledeque[1]]]);
+            temppointsvector[tempmapface->points[invisiblevector[0]]],
+            temppointsvector[tempmapface->points[visiblevector[1]]]);
 
         internal = getinternaldivisionthing(
-            temppointsdeque[tempmapface->points[invisibledeque[0]]], newvec3,
-            temppointsdeque[tempmapface->points[visibledeque[1]]]);
+            temppointsvector[tempmapface->points[invisiblevector[0]]], newvec3,
+            temppointsvector[tempmapface->points[visiblevector[1]]]);
 
-        newface.UVs[visibledeque[1]] =
-            divisiontoVec2(tempmapface->UVs[invisibledeque[0]],
-                           tempmapface->UVs[visibledeque[1]], internal);
+        newface.UVs[visiblevector[1]] =
+            divisiontoVec2(tempmapface->UVs[invisiblevector[0]],
+                           tempmapface->UVs[visiblevector[1]], internal);
 
-        temppointsdeque.push_back(newvec3);
-        tempmapface->points[invisibledeque[0]] = temppointsdeque.size() - 1;
-        tempmapface->UVs[invisibledeque[0]] = newface.UVs[visibledeque[1]];
-        newface.points[visibledeque[1]] = temppointsdeque.size() - 1;
+        temppointsvector.push_back(newvec3);
+        tempmapface->points[invisiblevector[0]] = temppointsvector.size() - 1;
+        tempmapface->UVs[invisiblevector[0]] = newface.UVs[visiblevector[1]];
+        newface.points[visiblevector[1]] = temppointsvector.size() - 1;
         newface.shade = tempmapface->shade;
-        addlaterfacedeque.push_back(newface);
+        addlaterfacevector.push_back(newface);
         break;
       }
     }
   }
 
-  tempmapfacedeque.insert(tempmapfacedeque.end(), addlaterfacedeque.begin(),
-                          addlaterfacedeque.end());
+  tempmapfacevector.insert(tempmapfacevector.end(), addlaterfacevector.begin(),
+                           addlaterfacevector.end());
 
-  for (int k = 0; k < tempmapfacedeque.size(); k++) {
-    glm::vec3 temp[3] = {temppointsdeque[tempmapfacedeque[k].points[0]],
-                         temppointsdeque[tempmapfacedeque[k].points[1]],
-                         temppointsdeque[tempmapfacedeque[k].points[2]]};
-    glm::vec2 temp2[3] = {tempmapfacedeque[k].UVs[0],
-                          tempmapfacedeque[k].UVs[1],
-                          tempmapfacedeque[k].UVs[2]};
-    DrawTri(tempmapfacedeque[k].texture, temp, temp2, tempmapfacedeque[k].xloop,
-            tempmapfacedeque[k].yloop, tempmapfacedeque[k].shade);
+  for (int k = 0; k < tempmapfacevector.size(); k++) {
+    glm::vec3 temp[3] = {temppointsvector[tempmapfacevector[k].points[0]],
+                         temppointsvector[tempmapfacevector[k].points[1]],
+                         temppointsvector[tempmapfacevector[k].points[2]]};
+    glm::vec2 temp2[3] = {tempmapfacevector[k].UVs[0],
+                          tempmapfacevector[k].UVs[1],
+                          tempmapfacevector[k].UVs[2]};
+    DrawTri(tempmapfacevector[k].texture, temp, temp2,
+            tempmapfacevector[k].xloop, tempmapfacevector[k].yloop,
+            tempmapfacevector[k].shade);
   }
 }
 
 void renderUI() {
-  std::deque<UIthing*>* tempdeque = &Global->UImap[Global->UIname];
-  int len = tempdeque->size();
-  for (int i = 0; i < len; i++) {
-    if (Settings->graphicsmode == 1) glDisable(GL_TEXTURE_2D);
-    tempdeque->at(i)->render();
+  for (int i = 0; i < Global->UIlist.size(); i++) {
+    int len = Global->UImap[Global->UIlist[i]].size();
+    for (int j = 0; j < len; j++) {
+      if (Settings->graphicsmode == 1) glDisable(GL_TEXTURE_2D);
+      Global->UImap[Global->UIlist[i]].at(j)->render();
+    }
   }
 }
 
@@ -415,7 +417,7 @@ void openglrender() {
   lookdir.y = std::sin(glm::radians(Camera->dir.x + 90.f)) *
               std::cos(glm::radians(Camera->dir.y));
   glm::mat4 modelMatrix = glm::perspective(
-      (Settings->fov / 2.0),
+      glm::radians(Settings->fov / 2.0),
       Settings->resolutionx / (double)Settings->resolutiony, 0.25, 256.0);
   glm::mat4 view =
       glm::lookAt(glm::vec3(0), lookdir * 16.f, glm::vec3(0, 0, 1));

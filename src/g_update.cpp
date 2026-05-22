@@ -7,7 +7,6 @@
 #include "entity.h"
 #include "extern.h"
 #include "global.h"
-#include "ui_index.h"
 #include "update.h"
 
 void playermovement() {
@@ -20,11 +19,11 @@ void playermovement() {
   float pc = std::cos(Camera->dir.x * PI / 180.0);
 
   glm::vec3 tempmove = glm::vec3({0, 0, 0});
-  if (P1Inputs->A > 0) {
+  if (P1Inputs->A > 0 && P1Inputs->D == 0) {
     tempmove.x -= std::sin((Camera->dir.x + 90) * PI / 180.0);
     tempmove.y += std::cos((Camera->dir.x + 90) * PI / 180.0);
   }
-  if (P1Inputs->D > 0) {
+  if (P1Inputs->D > 0 && P1Inputs->A == 0) {
     tempmove.x -= std::sin((Camera->dir.x - 90) * PI / 180.0);
     tempmove.y += std::cos((Camera->dir.x - 90) * PI / 180.0);
   }
@@ -67,7 +66,6 @@ void update() {
   if (!Global->pause) {
     playermovement();
     componentsupdate();
-    componentsupdatelate();
   }
-  changeUIindex();
+  componentsupdatelate();
 }

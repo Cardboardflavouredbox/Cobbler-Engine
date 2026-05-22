@@ -5,20 +5,18 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_timer.h>
-#include <dlfcn.h>  // dylib
 #include <ft2build.h>
 #include <glad/glad.h>
 
 #include <sstream>
 #include <unordered_map>
+
 #include FT_FREETYPE_H
 
 #include <glaze/json.hpp>
 
 #include "extern.h"
 #include "global.h"
-
-void* lib_handle[3];
 
 template <>
 struct glz::meta<glm::vec3> {
@@ -81,6 +79,36 @@ void savemap() {
                          SDL_arraysize(filters), NULL);
 }
 
+void SaveSettings() {
+  std::string location =
+      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
+  auto error = glz::write_file_json<glz::opts{.prettify = true}>(
+      Settings, location + "/Settings.json", std::string{});
+  if (error) {
+    SDL_Log("Failed to save!");
+    SDL_Log("%s",
+            glz::format_error(error, (location + "/Settings.json").c_str())
+                .c_str());
+    return;
+  }
+  SDL_Log("Saved settings!");
+}
+
+void LoadSettings() {
+  std::string location =
+      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
+  auto error =
+      glz::read_file_json(Settings, location + "/Settings.json", std::string{});
+  if (error) {
+    SDL_Log("Failed to load settings!");
+    SDL_Log("%s",
+            glz::format_error(error, (location + "/Settings.json").c_str())
+                .c_str());
+    return;
+  }
+  SDL_Log("Loaded settings!");
+}
+
 void freeRenderer() {
   SDL_DestroyWindow(Global->window);
 
@@ -94,8 +122,8 @@ void freeRenderer() {
       SDL_DestroyPalette(Global->SRstuff->palette);
       SDL_DestroyRenderer(Global->SRstuff->renderer);
       SDL_DestroySurface(Global->SRstuff->render_target);
-      for (const auto& i : Global->SRstuff->textures) {
-        SDL_DestroySurface(i);
+      for (auto& [key, value] : Global->SRstuff->textures) {
+        SDL_DestroySurface(value);
       }
       delete (Global->SRstuff);
       break;
@@ -103,7 +131,7 @@ void freeRenderer() {
   }
 }
 
-bool setRenderer(bool IsEditor) {
+bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
   switch (Settings->graphicsmode) {
     case 1: {
       SDL_Surface* surface;
@@ -146,25 +174,27 @@ bool setRenderer(bool IsEditor) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       }
 
-      std::vector<GLuint> tempvector;
-      tempvector.resize(32);
+      std::unordered_map<std::string, GLuint> tempvector;
+      tempvector.reserve(32);
 
       Global->GLstuff->textures = tempvector;
 
       std::string basepath = SDL_GetBasePath(), tempstr = basepath;
-      glGenTextures(LoadedData->texturenames.size(),
-                    &(Global->GLstuff->textures[0]));
       for (int i = 0; i < LoadedData->texturenames.size(); i++) {
+        glGenTextures(
+            1, &(Global->GLstuff->textures[LoadedData->texturenames[i]]));
         tempstr = basepath;
         tempstr.append("/" + Global->GameName + "/textures/" +
                        LoadedData->texturenames[i] + ".bmp");
 
         surface = SDL_LoadBMP(tempstr.c_str());
         if (surface == NULL) return false;
-        SDL_SetSurfaceColorKey(surface, true, 0);
+        SDL_SetSurfaceColorKey(surface, true,
+                               SDL_MapSurfaceRGB(surface, 255, 0, 255));
         surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
 
-        glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[i]);
+        glBindTexture(GL_TEXTURE_2D,
+                      Global->GLstuff->textures[LoadedData->texturenames[i]]);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
                      GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
@@ -182,14 +212,14 @@ bool setRenderer(bool IsEditor) {
     default: {
       SDL_Surface* surface;
       std::string basepath = SDL_GetBasePath(), tempstr = basepath;
-      std::vector<SDL_Surface*> tempvector;
-      tempvector.resize(32);
+      std::unordered_map<std::string, SDL_Surface*> tempvector;
+      tempvector.reserve(32);
 
       Global->SRstuff = new GlobalClass::SoftwareRenderer();
 
       Global->SRstuff->textures = tempvector;
       tempstr = basepath;
-      tempstr.append("/res/Color_palette.bmp");
+      tempstr.append("/" + Global->GameName + "/res/Color_palette.bmp");
       surface = SDL_LoadBMP(tempstr.c_str());
 
       Global->SRstuff->palette = SDL_GetSurfacePalette(surface);
@@ -215,7 +245,7 @@ bool setRenderer(bool IsEditor) {
             surface, SDL_PIXELFORMAT_INDEX8, Global->SRstuff->palette,
             SDL_COLORSPACE_RGB_DEFAULT, 0);
         SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
-        Global->SRstuff->textures[i] = surface;
+        Global->SRstuff->textures[LoadedData->texturenames[i]] = surface;
       }
       Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
                                           Settings->resolutiony);
@@ -242,29 +272,15 @@ enum argenums {
 };
 
 bool init(bool IsEditor, std::vector<std::string> args) {
-  lib_handle[0] = dlopen("./libCobblerGLAD.dylib", RTLD_GLOBAL);
-  if (!lib_handle[0]) {
-    SDL_Log("CobblerGLAD missing!");
-    return false;
-  }
-  lib_handle[1] = dlopen("./libCobblerCore.dylib", RTLD_GLOBAL);
-  if (!lib_handle[1]) {
-    SDL_Log("CobblerCore missing!");
-    return false;
-  }
-  lib_handle[2] = dlopen("./libCobblerUI.dylib", RTLD_GLOBAL);
-  if (!lib_handle[2]) {
-    SDL_Log("CobblerUI missing!");
-    return false;
-  }
-  SDL_Log("Libraries loaded");
-  Global = new GlobalClass();
+  Global = std::make_unique<GlobalClass>();
   if (Global == nullptr) return false;
-  Settings = new SettingsClass();
+  Settings = std::make_unique<SettingsClass>();
   if (Settings == nullptr) return false;
   P1Inputs = new Inputs();
   if (P1Inputs == nullptr) return false;
   Settings->fov = 90;
+
+  LoadSettings();
 
   SDL_Log("Classes initialized");
 
@@ -322,16 +338,15 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   }
   SDL_Log("args done");
 
-  ZipData tempzipdata;
+  std::shared_ptr<ZipData> LoadedData(new ZipData());
   auto error = glz::read_file_json(
-      tempzipdata, Global->GameName + "/resources.json", std::string{});
+      LoadedData, Global->GameName + "/resources.json", std::string{});
   if (error) {
     SDL_Log("%s", glz::format_error(
                       error, (Global->GameName + "/resources.json").c_str())
                       .c_str());
     return false;
   }
-  LoadedData = &tempzipdata;
 
   SDL_Log("Loaded resources data");
 
@@ -341,7 +356,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
     return false;
   SDL_Log("SDL initialized");
 
-  if (!setRenderer(IsEditor)) return false;
+  if (!setRenderer(IsEditor, LoadedData)) return false;
 
   SDL_SetWindowRelativeMouseMode(Global->window, !IsEditor);
   Mapdata tempmapdata;
@@ -386,7 +401,7 @@ bool init(bool IsEditor, std::vector<std::string> args) {
     }
   }
 
-  Camera = new Entity();
+  Camera = std::make_shared<Entity>();
   Camera->hitbox[0] = glm::vec3({-1, -1, -3});
   Camera->hitbox[1] = glm::vec3({1, 1, 0});
   Camera->position = glm::vec3({0, 0, 3});
@@ -399,9 +414,10 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   if (FT_Init_FreeType(&(Global->FTlibrary))) return false;
 
   tempstr = basepath;
-  tempstr.append("/res/Galmuri11.bdf");
+  tempstr.append("/" + Global->GameName + "/res/" + LoadedData->fontname);
   if (FT_New_Face(Global->FTlibrary, tempstr.c_str(), 0, &(Global->FTface)))
     return false;
+  FT_Select_Charmap(Global->FTface, ft_encoding_unicode);
 
   FT_Set_Pixel_Sizes(Global->FTface, 0, 12);
 
@@ -421,21 +437,25 @@ bool init(bool IsEditor, std::vector<std::string> args) {
 }
 
 void quit() {
+  SDL_Log("started quit");
   freeRenderer();
-  delete (Global);
-  delete (Editor);
-  delete (Settings);
-  delete (Camera);
+  SDL_Log("freed renderer");
+
   delete (P1Inputs);
+  SDL_Log("freed P1Inputs");
 
   FT_Done_Face(Global->FTface);
   FT_Done_FreeType(Global->FTlibrary);
 
-  Global->IsRunning = false;
-  SDL_Quit();
-  for (int i = 0; i < 3; i++) {
-    if (dlclose(lib_handle[i]) != 0) {
-      SDL_Log("unabled to close library");
+  SDL_Log("freed Freetype stuff");
+
+  for (auto& [key, value] : Global->UImap) {
+    while (!value.empty()) {
+      delete (value.back());
+      value.pop_back();
     }
   }
+  Global->IsRunning = false;
+  SDL_Quit();
+  SDL_Log("SDL_Quit");
 }

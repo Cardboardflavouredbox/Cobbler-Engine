@@ -1,5 +1,3 @@
-#include <SDL3/SDL_log.h>
-
 #include "entityphysics.h"
 
 glm::vec2 SAT3Dto2D(int normal, glm::vec3 point) {
@@ -63,7 +61,6 @@ bool SATcubetri(glm::vec3 aabb[], glm::vec3 tri[]) {
 
 bool movecollisioncheck(glm::vec3 hitbox[], glm::vec3 startposition,
                         glm::vec3 endposition) {  // true if collided
-
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     glm::vec3 aabb[2];
     if (startposition.x < endposition.x || startposition.y < endposition.y ||
@@ -82,7 +79,7 @@ bool movecollisioncheck(glm::vec3 hitbox[], glm::vec3 startposition,
   return false;
 }
 
-void EntityMove(Entity* tempentity) {
+void EntityMove(std::shared_ptr<Entity> tempentity) {
   tempentity->velocityvec3.z -=
       tempentity->gravity * (Global->deltaTime / 10.f);
 

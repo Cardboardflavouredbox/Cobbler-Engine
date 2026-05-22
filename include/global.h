@@ -4,7 +4,6 @@
 #include <ft2build.h>
 #include <glad/glad.h>
 
-#include <deque>
 #include <string>
 #include <unordered_map>
 
@@ -33,7 +32,7 @@ struct GlobalClass {
     SDL_Renderer* renderer;
     SDL_Surface* render_target;
     SDL_Palette* palette;
-    std::vector<SDL_Surface*> textures;
+    std::unordered_map<std::string, SDL_Surface*> textures;
     unsigned char* pixels;
     int pitch;
     std::vector<unsigned short> pixelsdepth;
@@ -43,28 +42,28 @@ struct GlobalClass {
 
   struct OpenGLRenderer {
     SDL_GLContext GLContext;
-    std::vector<GLuint> textures;
+    std::unordered_map<std::string, GLuint> textures;
   };
   OpenGLRenderer* GLstuff;
 
   bool IsRunning;
   bool pause = false, isopeningfile = false;
   float deltaTime;
-  int skybox;
+  std::string skybox;
   bool IsEditor;
 
   int windowx = 320, windowy = 200;
 
-  std::deque<glm::vec3> Points;
-  std::deque<Mapface> mapfaces;
-  std::deque<Entity*> Entities;
+  std::vector<glm::vec3> Points;
+  std::vector<Mapface> mapfaces;
+  std::vector<std::shared_ptr<Entity>> Entities;
 
   FT_Library FTlibrary;
   FT_Face FTface;
   std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 
-  std::unordered_map<std::string, std::deque<UIthing*>> UImap;
-  std::string UIname = "default";
+  std::unordered_map<std::string, std::vector<UIthing*>> UImap;
+  std::vector<std::string> UIlist = {"default"};
 };
 
 struct EditorClass {
@@ -74,28 +73,28 @@ struct EditorClass {
 };
 
 struct ZipData {
-  std::string startlevel;
-  std::deque<std::string> texturenames;
-  std::deque<std::string> stagenames;
+  std::string startlevel, fontname;
+  std::vector<std::string> texturenames;
+  std::vector<std::string> stagenames;
 };
 
 struct Mapdata {
-  std::deque<glm::vec3> Points;
-  std::deque<Mapface> mapfaces;
-  int skybox;
+  std::vector<glm::vec3> Points;
+  std::vector<Mapface> mapfaces;
+  std::string skybox;
 };
 
 struct Inputs {
  public:
   unsigned char W = 0, A = 0, S = 0, D = 0, ESC = 0, LCTRL = 0, Shift = 0,
                 Space = 0, leftclick = 0, rightclick = 0, numkeys[10] = {},
-                E = 0, F = 0;
+                E = 0, F = 0, Enter = 0;
   glm::vec2 MouseDelta, MousePos, MouseScroll;
 };
 
 struct SettingsClass {
  public:
-  uint16_t resolutionx = 320, resolutiony = 200;
+  uint16_t resolutionx = 480, resolutiony = 270;
   int fov = 90;
   int fps = 60;
   bool vsync = false;

@@ -117,16 +117,16 @@ Global->SRstuff->pixelstransparency[i + j * Global->SRstuff->pitch] <
 }
 
 void rendergame() {
-  std::deque<Mapface> tempmapfacedeque = Global->mapfaces;
-  for (int i = 0; i < tempmapfacedeque.size(); i++) {
-    Mapface* tempmapface = &tempmapfacedeque[i];
+  std::vector<Mapface> tempmapfacevector = Global->mapfaces;
+  for (int i = 0; i < tempmapfacevector.size(); i++) {
+    Mapface* tempmapface = &tempmapfacevector[i];
     int check = 0;
     for (int j = 0; j < 3; j++) {
       if (!pointoffscreen(Global->Points[tempmapface->points[j]])) break;
       check++;
     }
     if (check == 3) {
-      tempmapfacedeque.erase(tempmapfacedeque.begin() + i);
+      tempmapfacevector.erase(tempmapfacevector.begin() + i);
       i--;
     } else
       DrawTri(*tempmapface);
@@ -174,10 +174,12 @@ void renderGrid() {
 }
 
 void renderUI() {
-  std::deque<UIthing*>* tempdeque = &Global->UImap[Global->UIname];
-  int len = tempdeque->size();
-  for (int i = 0; i < len; i++) {
-    tempdeque->at(i)->render();
+  for (int i = 0; i < Global->UIlist.size(); i++) {
+    int len = Global->UImap[Global->UIlist[i]].size();
+    for (int j = 0; j < len; j++) {
+      if (Settings->graphicsmode == 1) glDisable(GL_TEXTURE_2D);
+      Global->UImap[Global->UIlist[i]].at(j)->render();
+    }
   }
 }
 
