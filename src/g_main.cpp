@@ -1,3 +1,4 @@
+#include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_render.h>
@@ -5,6 +6,7 @@
 #include <SDL3/SDL_video.h>
 #include <stdlib.h>
 
+#include <filesystem>
 #include <string>
 
 #include "dylib.hpp"
@@ -23,17 +25,36 @@ int main(int argc, char* argv[]) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }
+  std::string basepath = SDL_GetBasePath();
 
-  dylib::library lib("./" + Global->GameName + "/bin/CobblerGameUI",
+  dylib::library lib(basepath + "/" + Global->GameName + "/bin/CobblerGameUI",
                      dylib::decorations::os_default());
   SDL_Log("UI library loaded");
-  auto UIsetup = lib.get_function<bool()>("UIsetup");
+  bool (*UIsetup)() = lib.get_function<bool()>("UIsetup");
   if (!UIsetup()) {
     SDL_Log("UI load fail");
     return -1;
   }
   SDL_Log("UI loaded");
-  auto changeUIindex = lib.get_function<void()>("changeUIindex");
+  void (*changeUIindex)() = lib.get_function<void()>("changeUIindex");
+
+  SpawnEntities.reserve(16);
+  for (const auto& entry : std::filesystem::directory_iterator(
+           basepath + Global->GameName + "/entities/")) {
+    if (entry.is_directory()) {
+      SDL_Log("Folder: %s", entry.path().filename().c_str());
+      SpawnEntities[entry.path().filename().string()];
+    }
+  }
+  std::vector<dylib::library> entitylibs;
+
+  for (auto& entry : SpawnEntities) {
+    entitylibs.push_back(dylib::library(basepath + "/" + Global->GameName +
+                                            "/entities/" + entry.first + "/" +
+                                            entry.first,
+                                        dylib::decorations::os_default()));
+    entry.second = entitylibs.back().get_function<void()>("SpawnEntity");
+  }
 
   Global->IsEditor = false;
   SDL_Log("Init done");
@@ -50,7 +71,7 @@ int main(int argc, char* argv[]) {
     }
   }
   quit();
-  auto UIfree = lib.get_function<void()>("UIfree");
+  void (*UIfree)() = lib.get_function<void()>("UIfree");
   UIfree();
   SDL_Log("UIfreed");
   return 0;

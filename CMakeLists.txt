@@ -93,3 +93,14 @@ FILE(COPY "$CACHE{GAME}/resources.json" DESTINATION "${CMAKE_BINARY_DIR}/bin/$CA
 FILE(COPY $CACHE{GAME}/map DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/res DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/textures DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
+
+file(GLOB ENTITIES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/entities/*")
+foreach(ENTITYDIR ${ENTITIES})
+    cmake_path(GET ENTITYDIR FILENAME FOLDER_NAME)
+    add_library(${FOLDER_NAME} SHARED "${ENTITYDIR}/entitymain.cpp")
+    set_target_properties(${FOLDER_NAME} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/entities/${FOLDER_NAME}"
+    )
+    target_link_libraries(${FOLDER_NAME} PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD)
+    target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+endforeach()

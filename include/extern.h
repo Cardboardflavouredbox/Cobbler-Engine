@@ -8,3 +8,4 @@ extern Inputs* P1Inputs;
 extern std::shared_ptr<Entity> Camera;
 extern Uint64 lastTime;
 extern Uint64 currentTime;
+extern std::unordered_map<std::string, void (*)()> SpawnEntities;

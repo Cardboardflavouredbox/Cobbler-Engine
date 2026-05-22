@@ -9,6 +9,7 @@ Inputs* P1Inputs;
 std::shared_ptr<Entity> Camera;
 Uint64 lastTime;
 Uint64 currentTime = SDL_GetPerformanceCounter();
+std::unordered_map<std::string, void (*)()> SpawnEntities;
 
 CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
   CustomGlyphthing temp;
