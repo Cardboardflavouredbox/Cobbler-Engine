@@ -341,6 +341,13 @@ void renderUI() {
   }
 }
 
+void renderEntity() {
+  for (int i = 0; i < Global->Entities.size(); i++) {
+    if (Global->Entities[i]->billboardthing != nullptr)
+      Global->Entities[i]->render();
+  }
+}
+
 void renderbackground() {
   int x = Settings->resolutionx, y = Settings->resolutiony;
   for (int i = 0; i < x; i++) {
@@ -374,6 +381,7 @@ void softwarerender() {
   }
   renderUI();
   rendergame();
+  renderEntity();
 
   renderbackground();
 
@@ -462,6 +470,7 @@ void openglrender() {
 
     glEnd();
   }
+  renderEntity();
   renderUI();
 
   glFlush();

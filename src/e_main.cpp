@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
   args.resize(argc);
   for (int i = 0; i < argc; i++) args[i] = argv[i];
 
-  if (!init(true, args) || !editorinit()) {
+  if (!initargs(args) || !init(true) || !editorinit()) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }

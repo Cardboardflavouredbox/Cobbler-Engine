@@ -55,6 +55,7 @@ set(CORE_SOURCES
     Core/input.cpp
     Core/raycast.cpp
     Core/rendermath.cpp
+    Core/entity.cpp
 )
 
 add_library(CobblerGLAD SHARED glad/glad.c "include/glad/glad.h")

@@ -79,8 +79,13 @@ struct ZipData {
 };
 
 struct Mapdata {
+  struct Entitydata {
+    std::string name;
+    glm::vec3 pos;
+  };
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;
+  std::vector<Entitydata> Entities;
   std::string skybox;
 };
 

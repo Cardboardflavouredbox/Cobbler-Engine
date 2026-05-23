@@ -2,7 +2,9 @@
 #include <vector>
 void savemap();
 
-bool init(bool hidemouse, std::vector<std::string> args);
+bool initargs(std::vector<std::string> args);
+
+bool init(bool hidemouse);
 
 void SaveSettings();
 

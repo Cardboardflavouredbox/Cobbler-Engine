@@ -271,7 +271,7 @@ enum argenums {
   SetGame
 };
 
-bool init(bool IsEditor, std::vector<std::string> args) {
+bool initargs(std::vector<std::string> args) {
   Global = std::make_unique<GlobalClass>();
   if (Global == nullptr) return false;
   Settings = std::make_unique<SettingsClass>();
@@ -337,7 +337,10 @@ bool init(bool IsEditor, std::vector<std::string> args) {
     }
   }
   SDL_Log("args done");
+  return true;
+}
 
+bool init(bool IsEditor) {
   std::shared_ptr<ZipData> LoadedData(new ZipData());
   auto error = glz::read_file_json(
       LoadedData, Global->GameName + "/resources.json", std::string{});
@@ -368,6 +371,22 @@ bool init(bool IsEditor, std::vector<std::string> args) {
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
+
+  Camera = std::make_shared<Entity>();
+  Camera->hitbox[0] = glm::vec3({-1, -1, -3});
+  Camera->hitbox[1] = glm::vec3({1, 1, 0});
+  Camera->position = glm::vec3({0, 0, 3});
+  Camera->dir = glm::vec2(0);
+
+  Global->Entities.push_back(Camera);
+
+  for (int i = 0; i < tempmapdata.Entities.size(); i++) {
+    SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
+    if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
+      Global->Entities.push_back(SpawnEntities[tempmapdata.Entities[i].name]());
+      Global->Entities.back()->position = tempmapdata.Entities[i].pos;
+    }
+  }
 
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     if (Global->mapfaces[i].points.size() == 4) {
@@ -400,14 +419,6 @@ bool init(bool IsEditor, std::vector<std::string> args) {
       i--;
     }
   }
-
-  Camera = std::make_shared<Entity>();
-  Camera->hitbox[0] = glm::vec3({-1, -1, -3});
-  Camera->hitbox[1] = glm::vec3({1, 1, 0});
-  Camera->position = glm::vec3({0, 0, 3});
-  Camera->dir = glm::vec2(0);
-
-  Global->Entities.push_back(Camera);
 
   std::string basepath = SDL_GetBasePath(), tempstr = basepath;
 
