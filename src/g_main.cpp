@@ -42,8 +42,7 @@ int main(int argc, char* argv[]) {
                                             "/entities/" + entry.first + "/" +
                                             entry.first,
                                         dylib::decorations::os_default()));
-    entry.second = entitylibs.back().get_function<std::shared_ptr<Entity>()>(
-        "SpawnEntity");
+    entry.second = entitylibs.back().get_function<Entity*()>("SpawnEntity");
   }
 
   if (!init(false)) {

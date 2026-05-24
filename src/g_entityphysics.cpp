@@ -79,7 +79,7 @@ bool movecollisioncheck(glm::vec3 hitbox[], glm::vec3 startposition,
   return false;
 }
 
-void EntityMove(std::shared_ptr<Entity> tempentity) {
+void EntityMove(Entity* tempentity) {
   tempentity->velocityvec3.z -=
       tempentity->gravity * (Global->deltaTime / 10.f);
 

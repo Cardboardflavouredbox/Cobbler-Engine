@@ -372,7 +372,7 @@ bool init(bool IsEditor) {
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
 
-  Camera = std::make_shared<Entity>();
+  Camera = new Entity();
   Camera->hitbox[0] = glm::vec3({-1, -1, -3});
   Camera->hitbox[1] = glm::vec3({1, 1, 0});
   Camera->position = glm::vec3({0, 0, 3});
@@ -466,6 +466,11 @@ void quit() {
       value.pop_back();
     }
   }
+
+  for (auto& i : Global->Entities) {
+    delete (i);
+  }
+
   Global->IsRunning = false;
   SDL_Quit();
   SDL_Log("SDL_Quit");

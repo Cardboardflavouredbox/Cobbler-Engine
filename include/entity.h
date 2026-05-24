@@ -17,10 +17,10 @@ struct Entity {
     std::string sprite;
     glm::vec2 size, uv[2];
   };
-  std::unique_ptr<Billboard> billboardthing;
+  Billboard* billboardthing;
   void render();
 
   ~Entity() {
-    if (billboardthing != nullptr) billboardthing.reset();
+    if (billboardthing != nullptr) delete (billboardthing);
   }
 };

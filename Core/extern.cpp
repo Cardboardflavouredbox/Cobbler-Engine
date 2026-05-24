@@ -6,10 +6,10 @@ std::unique_ptr<GlobalClass> Global;
 std::unique_ptr<EditorClass> Editor;
 std::unique_ptr<SettingsClass> Settings;
 Inputs* P1Inputs;
-std::shared_ptr<Entity> Camera;
+Entity* Camera;
 Uint64 lastTime;
 Uint64 currentTime = SDL_GetPerformanceCounter();
-std::unordered_map<std::string, std::shared_ptr<Entity> (*)()> SpawnEntities;
+std::unordered_map<std::string, Entity* (*)()> SpawnEntities;
 
 CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
   CustomGlyphthing temp;

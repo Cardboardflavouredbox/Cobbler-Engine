@@ -56,7 +56,7 @@ struct GlobalClass {
 
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;
-  std::vector<std::shared_ptr<Entity>> Entities;
+  std::vector<Entity*> Entities;
 
   FT_Library FTlibrary;
   FT_Face FTface;
