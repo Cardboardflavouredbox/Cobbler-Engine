@@ -414,8 +414,9 @@ void softwarerender() {
 }
 
 void openglrender() {
+  glEnable(GL_DEPTH_TEST);
   glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glColor4f(1, 1, 1, 1);
 
   glm::vec3 lookdir;
@@ -451,6 +452,7 @@ void openglrender() {
     }
     glEnd();
   }
+  renderEntity();
 
   glMatrixMode(GL_PROJECTION);
   glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
@@ -470,7 +472,7 @@ void openglrender() {
 
     glEnd();
   }
-  renderEntity();
+
   renderUI();
 
   glFlush();

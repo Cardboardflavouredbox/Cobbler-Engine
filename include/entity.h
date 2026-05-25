@@ -16,6 +16,7 @@ struct Entity {
   struct Billboard {
     std::string sprite;
     glm::vec2 size, uv[2];
+    float offset;
   };
   Billboard* billboardthing;
   void render();

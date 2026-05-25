@@ -1,5 +1,7 @@
 #include "entity.h"
 
+#include <SDL3/SDL_log.h>
+
 #include <cmath>
 
 #include "extern.h"
@@ -7,8 +9,8 @@
 void Entity::render() {
   switch (Settings->graphicsmode) {
     case 1: {
-      float sinthing = std::sin((Camera->dir.x + 90) * PI / 180.0),
-            costhing = std::cos((Camera->dir.x + 90) * PI / 180.0);
+      float sinthing = std::sin((-Camera->dir.x + 90) * PI / 180.0),
+            costhing = std::cos((-Camera->dir.x + 90) * PI / 180.0);
 
       glEnable(GL_TEXTURE_2D);
       glBindTexture(GL_TEXTURE_2D,
@@ -16,24 +18,34 @@ void Entity::render() {
       glBegin(GL_QUADS);
       glColor4f(1, 1, 1, 1);
       glTexCoord2f(billboardthing->uv[0].x, billboardthing->uv[0].y);
-      glVertex3f(position.x - sinthing * billboardthing->size.x,
-                 position.y - costhing * billboardthing->size.x / 2,
-                 position.z + billboardthing->size.y);
+      glVertex3f(position.x - sinthing * (billboardthing->size.x / 2) -
+                     Camera->position.x,
+                 position.y - costhing * billboardthing->size.x / 2 -
+                     Camera->position.y,
+                 position.z + billboardthing->size.y - Camera->position.z +
+                     billboardthing->offset);
       glTexCoord2f(billboardthing->uv[0].x + billboardthing->uv[1].x,
                    billboardthing->uv[0].y);
-      glVertex3f(position.x + sinthing * billboardthing->size.x,
-                 position.y + costhing * billboardthing->size.x / 2,
-                 position.z + billboardthing->size.y);
+      glVertex3f(position.x + sinthing * billboardthing->size.x / 2 -
+                     Camera->position.x,
+                 position.y + costhing * billboardthing->size.x / 2 -
+                     Camera->position.y,
+                 position.z + billboardthing->size.y - Camera->position.z +
+                     billboardthing->offset);
       glTexCoord2f(billboardthing->uv[0].x + billboardthing->uv[1].x,
                    billboardthing->uv[0].y + billboardthing->uv[1].y);
-      glVertex3f(position.x + sinthing * billboardthing->size.x,
-                 position.y + costhing * billboardthing->size.x / 2,
-                 position.z);
+      glVertex3f(position.x + sinthing * billboardthing->size.x / 2 -
+                     Camera->position.x,
+                 position.y + costhing * billboardthing->size.x / 2 -
+                     Camera->position.y,
+                 position.z - Camera->position.z + billboardthing->offset);
       glTexCoord2f(billboardthing->uv[0].x,
                    billboardthing->uv[0].y + billboardthing->uv[1].y);
-      glVertex3f(position.x - sinthing * billboardthing->size.x / 2,
-                 position.y - costhing * billboardthing->size.x / 2,
-                 position.z);
+      glVertex3f(position.x - sinthing * billboardthing->size.x / 2 -
+                     Camera->position.x,
+                 position.y - costhing * billboardthing->size.x / 2 -
+                     Camera->position.y,
+                 position.z - Camera->position.z + billboardthing->offset);
 
       glEnd();
       break;
