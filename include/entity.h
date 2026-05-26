@@ -4,6 +4,12 @@
 #include <glm/vec3.hpp>
 #include <string>
 
+#ifdef _WIN32
+#define LIB_EXPORT __declspec(dllexport)
+#else
+#define LIB_EXPORT
+#endif
+
 struct Entity {
   float hp;
   glm::vec2 dir;
@@ -19,7 +25,7 @@ struct Entity {
     float offset;
   };
   Billboard* billboardthing;
-  void render();
+  LIB_EXPORT void render();
 
   ~Entity() {
     if (billboardthing != nullptr) delete (billboardthing);
