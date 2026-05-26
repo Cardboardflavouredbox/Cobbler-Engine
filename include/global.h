@@ -111,4 +111,5 @@ struct SettingsClass {
   bool vsync = false;
   int graphicsmode = 0;  // 0 = software, 1 = opengl
   bool autorun = false;
+  glm::vec2 mousesensitivity = glm::vec2({1, 1});
 };

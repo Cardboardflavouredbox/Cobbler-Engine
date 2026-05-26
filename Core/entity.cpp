@@ -5,75 +5,71 @@
 #include <cmath>
 
 #include "extern.h"
+#include "render.h"
+
+int GetBillBoardIndex(float angle, int lastIndex) {
+  // front
+  if (angle > -22.5f && angle < 22.6f) return 0;
+  if (angle >= 22.5f && angle < 67.5f) return 7;
+  if (angle >= 67.5f && angle < 112.5f) return 6;
+  if (angle >= 112.5f && angle < 157.5f) return 5;
+
+  // back
+  if (angle <= -157.5 || angle >= 157.5f) return 4;
+  if (angle >= -157.4f && angle < -112.5f) return 3;
+  if (angle >= -112.5f && angle < -67.5f) return 2;
+  if (angle >= -67.5f && angle <= -22.5f) return 1;
+
+  return lastIndex;
+}
 
 void Entity::render() {
+  float sinthing = std::sin((-Camera->dir.x + 90) * PI / 180.0),
+        costhing = std::cos((-Camera->dir.x + 90) * PI / 180.0);
+  glm::vec3 points[4] = {
+      {position.x - sinthing * (billboardthing->size.x / 2),
+       position.y - costhing * billboardthing->size.x / 2,
+       position.z + billboardthing->size.y + billboardthing->offset},
+      {position.x + sinthing * billboardthing->size.x / 2,
+       position.y + costhing * billboardthing->size.x / 2,
+       position.z + billboardthing->size.y + billboardthing->offset},
+      {position.x + sinthing * billboardthing->size.x / 2,
+       position.y + costhing * billboardthing->size.x / 2,
+       position.z + billboardthing->offset},
+      {position.x - sinthing * billboardthing->size.x / 2,
+       position.y - costhing * billboardthing->size.x / 2,
+       position.z + billboardthing->offset}};
   switch (Settings->graphicsmode) {
     case 1: {
-      float sinthing = std::sin((-Camera->dir.x + 90) * PI / 180.0),
-            costhing = std::cos((-Camera->dir.x + 90) * PI / 180.0);
-
+      for (int i = 0; i < 4; i++) points[i] -= Camera->position;
       glEnable(GL_TEXTURE_2D);
       glBindTexture(GL_TEXTURE_2D,
                     Global->GLstuff->textures[billboardthing->sprite]);
       glBegin(GL_QUADS);
       glColor4f(1, 1, 1, 1);
       glTexCoord2f(billboardthing->uv[0].x, billboardthing->uv[0].y);
-      glVertex3f(position.x - sinthing * (billboardthing->size.x / 2) -
-                     Camera->position.x,
-                 position.y - costhing * billboardthing->size.x / 2 -
-                     Camera->position.y,
-                 position.z + billboardthing->size.y - Camera->position.z +
-                     billboardthing->offset);
+      glVertex3f(points[0].x, points[0].y, points[0].z);
       glTexCoord2f(billboardthing->uv[0].x + billboardthing->uv[1].x,
                    billboardthing->uv[0].y);
-      glVertex3f(position.x + sinthing * billboardthing->size.x / 2 -
-                     Camera->position.x,
-                 position.y + costhing * billboardthing->size.x / 2 -
-                     Camera->position.y,
-                 position.z + billboardthing->size.y - Camera->position.z +
-                     billboardthing->offset);
+      glVertex3f(points[1].x, points[1].y, points[1].z);
       glTexCoord2f(billboardthing->uv[0].x + billboardthing->uv[1].x,
                    billboardthing->uv[0].y + billboardthing->uv[1].y);
-      glVertex3f(position.x + sinthing * billboardthing->size.x / 2 -
-                     Camera->position.x,
-                 position.y + costhing * billboardthing->size.x / 2 -
-                     Camera->position.y,
-                 position.z - Camera->position.z + billboardthing->offset);
+      glVertex3f(points[2].x, points[2].y, points[2].z);
       glTexCoord2f(billboardthing->uv[0].x,
                    billboardthing->uv[0].y + billboardthing->uv[1].y);
-      glVertex3f(position.x - sinthing * billboardthing->size.x / 2 -
-                     Camera->position.x,
-                 position.y - costhing * billboardthing->size.x / 2 -
-                     Camera->position.y,
-                 position.z - Camera->position.z + billboardthing->offset);
+      glVertex3f(points[3].x, points[3].y, points[3].z);
 
       glEnd();
       break;
     }
-    case 0: {
-      // SDL_Surface* surface =
-      //     Global->SRstuff->textures[billboardthing->sprite];
-      // uv.first.x *= surface->w;
-      // uv.first.y *= surface->h;
-      // uv.second.x *= surface->w;
-      // uv.second.y *= surface->h;
-      // for (int i = 0; i < size.y; i++) {
-      //   for (int j = 0; j < size.x; j++) {
-      //     Uint8 color = static_cast<Uint8*>(surface->pixels)[int(
-      //         uv.first.x + j + surface->pitch * (uv.first.y + i))];
-      //     if (color > 0) {
-      //       Global->SRstuff
-      //           ->pixelsdepth[((int)realpos.x + j) +
-      //                         ((int)realpos.y + i) *
-      //                         Global->SRstuff->pitch] =
-      //           0;
-      //       Global->SRstuff
-      //           ->pixels[((int)realpos.x + j) +
-      //                    ((int)realpos.y + i) * Global->SRstuff->pitch] =
-      //           color;
-      //     }
-      //   }
-      // }
+    default: {
+      glm::vec3 temp[3] = {points[0], points[1], points[2]};
+      glm::vec2 temp2[3] = {
+          billboardthing->uv[0],
+          glm::vec2({billboardthing->uv[0].x + billboardthing->uv[1].x,
+                     billboardthing->uv[0].y}),
+          billboardthing->uv[0] + billboardthing->uv[1]};
+      DrawTri(billboardthing->sprite, temp, temp2, 1, 1);
       break;
     }
   }

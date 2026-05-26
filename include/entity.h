@@ -10,6 +10,8 @@
 #define LIB_EXPORT
 #endif
 
+LIB_EXPORT int GetBillBoardIndex(float angle, int lastIndex);
+
 struct Entity {
   float hp;
   glm::vec2 dir;
@@ -26,8 +28,16 @@ struct Entity {
   };
   Billboard* billboardthing;
   LIB_EXPORT void render();
+  LIB_EXPORT virtual void update() = 0;
+  LIB_EXPORT virtual void lateupdate() = 0;
 
-  ~Entity() {
+  virtual ~Entity() {
     if (billboardthing != nullptr) delete (billboardthing);
   }
+};
+
+struct CameraEntity : Entity {
+  void update() {}
+  void lateupdate() {}
+  ~CameraEntity() {}
 };

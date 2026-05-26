@@ -10,8 +10,8 @@
 #include "update.h"
 
 void playermovement() {
-  Camera->dir.x += -2.f * P1Inputs->MouseDelta.x;
-  Camera->dir.y += -2.f * P1Inputs->MouseDelta.y;
+  Camera->dir.x += -1 * Settings->mousesensitivity.x * P1Inputs->MouseDelta.x;
+  Camera->dir.y += -1 * Settings->mousesensitivity.y * P1Inputs->MouseDelta.y;
   P1Inputs->MouseDelta.x = 0;
   P1Inputs->MouseDelta.y = 0;
 

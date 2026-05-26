@@ -372,7 +372,7 @@ bool init(bool IsEditor) {
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
 
-  Camera = new Entity();
+  Camera = new CameraEntity();
   Camera->hitbox[0] = glm::vec3({-1, -1, -3});
   Camera->hitbox[1] = glm::vec3({1, 1, 0});
   Camera->position = glm::vec3({0, 0, 3});
