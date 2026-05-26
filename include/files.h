@@ -1,13 +1,20 @@
 #include <string>
 #include <vector>
-void savemap();
 
-bool initargs(std::vector<std::string> args);
+#ifdef _WIN32
+#define LIB_EXPORT __declspec(dllexport)
+#else
+#define LIB_EXPORT
+#endif
 
-bool init(bool hidemouse);
+LIB_EXPORT void savemap();
 
-void SaveSettings();
+LIB_EXPORT bool initargs(std::vector<std::string> args);
 
-void LoadSettings();
+LIB_EXPORT bool init(bool hidemouse);
 
-void quit();
+LIB_EXPORT void SaveSettings();
+
+LIB_EXPORT void LoadSettings();
+
+LIB_EXPORT void quit();

@@ -11,6 +11,12 @@
 #include "ui.h"
 #include FT_FREETYPE_H
 
+#ifdef _WIN32
+#define LIB_EXPORT __declspec(dllexport)
+#else
+#define LIB_EXPORT
+#endif
+
 const double PI =
     3.1415926535897932384626433832795028841971693993751058209749445923078164062;
 
@@ -20,7 +26,7 @@ struct CustomGlyphthing {
   int width, height, pitch, offsetx, offsety, advancex, advancey;
 };
 
-CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
+LIB_EXPORT CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
 
 struct GlobalClass {
  public:

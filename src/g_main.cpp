@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include <filesystem>
-#include <string>
 
 #include "dylib.hpp"
 #include "entity.h"
