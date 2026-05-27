@@ -12,9 +12,13 @@
 #include FT_FREETYPE_H
 
 #ifdef _WIN32
-#define LIB_EXPORT __declspec(dllexport)
+  #ifdef DLLEXPORT
+    #define LIB_API __declspec(dllexport)
+  #else
+    #define LIB_API __declspec(dllimport)
+  #endif
 #else
-#define LIB_EXPORT
+#define LIB_API
 #endif
 
 const double PI =
@@ -26,8 +30,9 @@ struct CustomGlyphthing {
   int width, height, pitch, offsetx, offsety, advancex, advancey;
 };
 
-LIB_EXPORT CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
-
+extern "C" {
+  LIB_API CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
+}
 struct GlobalClass {
  public:
   std::string GameName = "CobblerGame";

@@ -91,6 +91,11 @@ target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # target_include_directories(Cobbler-Engine-Editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+target_compile_definitions(Cobbler-Engine PRIVATE DLLEXPORT=0)
+target_compile_definitions(CobblerGLAD PRIVATE DLLEXPORT=1)
+target_compile_definitions(CobblerGameUI PRIVATE DLLEXPORT=1)
+target_compile_definitions(CobblerCore PRIVATE DLLEXPORT=1)
+
 FILE(COPY "$CACHE{GAME}/resources.json" DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/map DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/res DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")

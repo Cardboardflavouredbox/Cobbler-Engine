@@ -4,9 +4,13 @@
 #include <glm/vec3.hpp>
 
 #ifdef _WIN32
-#define LIB_EXPORT __declspec(dllexport)
+  #ifdef DLLEXPORT
+    #define LIB_API __declspec(dllexport)
+  #else
+    #define LIB_API __declspec(dllimport)
+  #endif
 #else
-#define LIB_EXPORT
+#define LIB_API
 #endif
 
 struct ScreenPoint {
@@ -15,5 +19,7 @@ struct ScreenPoint {
   bool isbehindcamera = false;
 };
 
-LIB_EXPORT ScreenPoint ToScreenSpace(glm::vec3 P);
-LIB_EXPORT glm::vec3 ToWorldSpace(glm::vec2 P);
+extern "C" {
+  LIB_API ScreenPoint ToScreenSpace(glm::vec3 P);
+  LIB_API glm::vec3 ToWorldSpace(glm::vec2 P);
+}

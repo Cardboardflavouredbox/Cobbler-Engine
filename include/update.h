@@ -1,10 +1,16 @@
 #ifdef _WIN32
-#define LIB_EXPORT __declspec(dllexport)
+  #ifdef DLLEXPORT
+    #define LIB_API __declspec(dllexport)
+  #else
+    #define LIB_API __declspec(dllimport)
+  #endif
 #else
-#define LIB_EXPORT
+#define LIB_API
 #endif
 
-LIB_EXPORT void input();
-LIB_EXPORT void update();
-LIB_EXPORT void render();
-LIB_EXPORT void events();
+extern "C" {
+  LIB_API void input();
+  LIB_API void update();
+  LIB_API void render();
+  LIB_API void events();
+}

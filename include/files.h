@@ -2,19 +2,25 @@
 #include <vector>
 
 #ifdef _WIN32
-#define LIB_EXPORT __declspec(dllexport)
+  #ifdef DLLEXPORT
+    #define LIB_API __declspec(dllexport)
+  #else
+    #define LIB_API __declspec(dllimport)
+  #endif
 #else
-#define LIB_EXPORT
+#define LIB_API
 #endif
 
-LIB_EXPORT void savemap();
-
-LIB_EXPORT bool initargs(std::vector<std::string> args);
-
-LIB_EXPORT bool init(bool hidemouse);
-
-LIB_EXPORT void SaveSettings();
-
-LIB_EXPORT void LoadSettings();
-
-LIB_EXPORT void quit();
+extern "C" {
+  LIB_API void savemap();
+  
+  LIB_API bool initargs(std::vector<std::string> args);
+  
+  LIB_API bool init(bool hidemouse);
+  
+  LIB_API void SaveSettings();
+  
+  LIB_API void LoadSettings();
+  
+  LIB_API void quit();
+}

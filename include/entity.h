@@ -5,13 +5,18 @@
 #include <string>
 
 #ifdef _WIN32
-#define LIB_EXPORT __declspec(dllexport)
+  #ifdef DLLEXPORT
+    #define LIB_API __declspec(dllexport)
+  #else
+    #define LIB_API __declspec(dllimport)
+  #endif
 #else
-#define LIB_EXPORT
+#define LIB_API
 #endif
 
-LIB_EXPORT int GetBillBoardIndex(float angle, int lastIndex);
-
+extern "C" {
+  LIB_API int GetBillBoardIndex(float angle, int lastIndex);
+}
 struct Entity {
   float hp;
   glm::vec2 dir;
@@ -27,9 +32,9 @@ struct Entity {
     float offset;
   };
   Billboard* billboardthing;
-  LIB_EXPORT void render();
-  LIB_EXPORT virtual void update() = 0;
-  LIB_EXPORT virtual void lateupdate() = 0;
+  LIB_API void render();
+  LIB_API virtual void update() = 0;
+  LIB_API virtual void lateupdate() = 0;
 
   virtual ~Entity() {
     if (billboardthing != nullptr) delete (billboardthing);

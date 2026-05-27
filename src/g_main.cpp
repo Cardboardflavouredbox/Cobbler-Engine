@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
   for (const auto& entry : std::filesystem::directory_iterator(
            basepath + Global->GameName + "/entities/")) {
     if (entry.is_directory()) {
-      SDL_Log("Folder: %s", entry.path().filename().c_str());
+      SDL_Log("Folder: %s", entry.path().filename().string().c_str());
       SpawnEntities[entry.path().filename().string()];
     }
   }
