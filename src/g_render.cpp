@@ -249,9 +249,8 @@ void openglrender() {
   lookdir.z = std::sin(glm::radians(Camera->dir.y));
   lookdir.y = std::sin(glm::radians(Camera->dir.x + 90.f)) *
               std::cos(glm::radians(Camera->dir.y));
-  glm::mat4 modelMatrix = glm::perspective(
-      glm::radians(Settings->fov / 2.0),
-      Settings->resolutionx / (double)Settings->resolutiony, 0.25, 256.0);
+  glm::mat4 modelMatrix = Global->perspectivematrix;
+
   glm::mat4 view =
       glm::lookAt(glm::vec3(0), lookdir * 16.f, glm::vec3(0, 0, 1));
 

@@ -8,6 +8,7 @@
 #include <ft2build.h>
 #include <glad/glad.h>
 
+#include <glm/gtc/type_ptr.hpp>
 #include <sstream>
 #include <unordered_map>
 
@@ -371,6 +372,9 @@ bool init(bool IsEditor) {
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
+  Global->perspectivematrix = glm::perspective(
+      glm::radians(Settings->fov / 2.0),
+      Settings->resolutionx / (double)Settings->resolutiony, 0.25, 256.0);
 
   Camera = new CameraEntity();
   Camera->hitbox[0] = glm::vec3({-1, -1, -3});

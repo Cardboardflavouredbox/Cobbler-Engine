@@ -4,6 +4,7 @@
 #include <ft2build.h>
 #include <glad/glad.h>
 
+#include <glm/glm.hpp>
 #include <string>
 #include <unordered_map>
 
@@ -12,11 +13,11 @@
 #include FT_FREETYPE_H
 
 #ifdef _WIN32
-  #ifdef DLLEXPORT
-    #define LIB_API __declspec(dllexport)
-  #else
-    #define LIB_API __declspec(dllimport)
-  #endif
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
+#else
+#define LIB_API __declspec(dllimport)
+#endif
 #else
 #define LIB_API
 #endif
@@ -31,7 +32,7 @@ struct CustomGlyphthing {
 };
 
 extern "C" {
-  LIB_API CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
+LIB_API CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
 }
 struct GlobalClass {
  public:
@@ -75,6 +76,7 @@ struct GlobalClass {
 
   std::unordered_map<std::string, std::vector<UIthing*>> UImap;
   std::vector<std::string> UIlist = {"default"};
+  glm::mat4 perspectivematrix;
 };
 
 struct EditorClass {
