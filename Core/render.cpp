@@ -146,32 +146,35 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
             uvresult = (uvresult * (1 / (uvw.x * vectors[0].dist +
                                          uvw.y * vectors[1].dist +
                                          uvw.z * vectors[2].dist)));
+            int texturew = Global->SRstuff->textures[texture]->w,
+                textureh = Global->SRstuff->textures[texture]->h;
+            int uvxthing = (int(texturew * (uvresult.x)) * xloop) % texturew;
+            int uvything = (int(textureh * (uvresult.y)) * yloop) % textureh;
+            Uint8 color = static_cast<Uint8*>(
+                Global->SRstuff->textures[texture]
+                    ->pixels)[uvxthing + uvything * texturew];
 
-            int uvxthing = (int(128 * (uvresult.x)) * xloop) % 128;
-            int uvything = (int(128 * (uvresult.y)) * yloop) % 128;
-            Uint8 color =
-                static_cast<Uint8*>(Global->SRstuff->textures[texture]
-                                        ->pixels)[uvxthing + uvything * 128];
-
-            glm::vec3 tempvec3;
-            tempvec3.x = rawvectors[0].x * uvw.x + rawvectors[1].x * uvw.y +
-                         rawvectors[2].x * uvw.z;
-            tempvec3.y = rawvectors[0].y * uvw.x + rawvectors[1].y * uvw.y +
-                         rawvectors[2].y * uvw.z;
-            tempvec3.z = rawvectors[0].z * uvw.x + rawvectors[1].z * uvw.y +
-                         rawvectors[2].z * uvw.z;
-            tempvec3.x -= Camera->position.x;
-            tempvec3.y -= Camera->position.y;
-            tempvec3.z -= Camera->position.z;
-            float dist =
-                std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
-                          tempvec3.z * tempvec3.z);
-            if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >
-                dist * 3) {
-              Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
-              if (dist < 0) dist = 0;
-              Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
-                  (unsigned char)dist * 4;
+            if (color > 0) {
+              glm::vec3 tempvec3;
+              tempvec3.x = rawvectors[0].x * uvw.x + rawvectors[1].x * uvw.y +
+                           rawvectors[2].x * uvw.z;
+              tempvec3.y = rawvectors[0].y * uvw.x + rawvectors[1].y * uvw.y +
+                           rawvectors[2].y * uvw.z;
+              tempvec3.z = rawvectors[0].z * uvw.x + rawvectors[1].z * uvw.y +
+                           rawvectors[2].z * uvw.z;
+              tempvec3.x -= Camera->position.x;
+              tempvec3.y -= Camera->position.y;
+              tempvec3.z -= Camera->position.z;
+              float dist =
+                  std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
+                            tempvec3.z * tempvec3.z);
+              if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >
+                  dist * 3) {
+                Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
+                if (dist < 0) dist = 0;
+                Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
+                    (unsigned char)dist * 4;
+              }
             }
           }
           uvw += A;

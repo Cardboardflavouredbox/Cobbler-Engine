@@ -70,6 +70,14 @@ void Entity::render() {
                      billboardthing->uv[0].y}),
           billboardthing->uv[0] + billboardthing->uv[1]};
       DrawTri(billboardthing->sprite, temp, temp2, 1, 1);
+      temp[0] = points[2];
+      temp[1] = points[3];
+      temp[2] = points[0];
+      temp2[0] = billboardthing->uv[0] + billboardthing->uv[1];
+      temp2[1] = glm::vec2({billboardthing->uv[0].x,
+                            billboardthing->uv[0].y + billboardthing->uv[1].y});
+      temp2[2] = billboardthing->uv[0];
+      DrawTri(billboardthing->sprite, temp, temp2, 1, 1);
       break;
     }
   }
