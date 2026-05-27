@@ -16,8 +16,11 @@ float getdistancething(glm::vec3 P) {
   glm::vec3 p1 = P - Camera->position;
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
-  float what = std::sin(Camera->dir.y * PI / 180.f);
-  return p1.y * pc - p1.x * ps + p1.z * what;
+  glm::quat q =
+      glm::angleAxis(glm::radians(Camera->dir.y), glm::vec3(-pc, -ps, 0.0f));
+
+  p1 = q * p1;
+  return p1.y * pc - p1.x * ps;
 }
 
 float getinternaldivisionthing(glm::vec3 p1, glm::vec3 d, glm::vec3 p2) {

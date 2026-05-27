@@ -1,6 +1,7 @@
 #include "render.h"
 
 #include <cmath>
+#include <glm/gtc/quaternion.hpp>
 
 #include "extern.h"
 #include "rendermath.h"
@@ -11,11 +12,14 @@ ScreenPoint ToScreenSpace(glm::vec3 P) {
 
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
-  float whats = std::sin(Camera->dir.y * PI / 180.f);
+
+  glm::quat q =
+      glm::angleAxis(glm::radians(Camera->dir.y), glm::vec3(-pc, -ps, 0.0f));
+
+  p1 = q * p1;
 
   float tx = p1.x * pc + p1.y * ps;
-  float ty = p1.y * pc - p1.x * ps + p1.z * whats;
-  float tz = 180 * whats;
+  float ty = p1.y * pc - p1.x * ps;
 
   ScreenPoint screenpos;
   if (ty <= 0.25f) {
@@ -23,8 +27,7 @@ ScreenPoint ToScreenSpace(glm::vec3 P) {
     ty = 0.25f;
   }
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
-  screenpos.p.y =
-      (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2) + tz;
+  screenpos.p.y = (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2);
   screenpos.dist = 1.f / ty;
   return screenpos;
 }
