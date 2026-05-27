@@ -34,18 +34,13 @@ glm::vec2 divisiontoVec2(glm::vec2 p1, glm::vec2 p2, float t) {
 
 glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
   glm::vec3 p1, p2;
-  p1.x = invisible.x - Camera->position.x;
-  p1.y = invisible.y - Camera->position.y;
-  p1.z = invisible.z - Camera->position.z;
-  p2.x = visible.x - Camera->position.x;
-  p2.y = visible.y - Camera->position.y;
-  p2.z = visible.z - Camera->position.z;
+  p1 = invisible - Camera->position;
+  p2 = visible - Camera->position;
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
   float what = std::sin(Camera->dir.y * PI / 180.f);
 
-  float u = (p1.y * pc - p1.x * ps + p1.z * what - 0.25f) /
-            (-ps * (p1.x - p2.x) + pc * (p1.y - p2.y) + what * (p1.z - p2.z));
+  float u = glm::dot(p1, planeNormal) / glm::dot(p2, planeNormal);
 
   glm::vec3 result = (invisible + ((visible - invisible) * u));
   return result;
