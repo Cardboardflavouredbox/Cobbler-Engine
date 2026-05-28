@@ -39,8 +39,13 @@ glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
   float what = std::sin(Camera->dir.y * PI / 180.f);
+  
+  glm::vec3 temp;
+  temp.x = std::cos(Camera->dir.x * PI / 180.f) * std::cos(Camera->dir.y * PI / 180.f);
+  temp.y = std::sin(Camera->dir.x * PI / 180.f) * std::cos(Camera->dir.y * PI / 180.f);
+  temp.z = std::sin(Camera->dir.y * PI / 180.f);
 
-  float u = glm::dot(p1, planeNormal) / glm::dot(p2, planeNormal);
+  float u = glm::dot(p1, temp) / glm::dot(p2, temp);
 
   glm::vec3 result = (invisible + ((visible - invisible) * u));
   return result;
