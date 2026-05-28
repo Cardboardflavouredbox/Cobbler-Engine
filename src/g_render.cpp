@@ -38,14 +38,14 @@ glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
   p2 = visible - Camera->position;
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
-  float what = std::sin(Camera->dir.y * PI / 180.f);
-  
-  glm::vec3 temp;
-  temp.x = std::cos(Camera->dir.x * PI / 180.f) * std::cos(Camera->dir.y * PI / 180.f);
-  temp.y = std::sin(Camera->dir.x * PI / 180.f) * std::cos(Camera->dir.y * PI / 180.f);
-  temp.z = std::sin(Camera->dir.y * PI / 180.f);
+  glm::quat q =
+      glm::angleAxis(glm::radians(Camera->dir.y), glm::vec3(-pc, -ps, 0.0f));
 
-  float u = glm::dot(p1, temp) / glm::dot(p2, temp);
+  p1 = q * p1;
+  p2 = q * p2;
+
+  float u = (p1.y * pc - p1.x * ps - 0.25f) /
+            (-ps * (p1.x - p2.x) + pc * (p1.y - p2.y));
 
   glm::vec3 result = (invisible + ((visible - invisible) * u));
   return result;
