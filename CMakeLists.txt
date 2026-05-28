@@ -71,6 +71,9 @@ add_library(CobblerGameUI SHARED "$CACHE{GAME}/UI/g_ui.cpp" "$CACHE{GAME}/UI/g_u
 set_target_properties(CobblerGameUI PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/bin"
 )
+set_target_properties(CobblerGameUI PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/bin"
+)
 
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/g_render.cpp 
