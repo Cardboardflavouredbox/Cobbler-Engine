@@ -377,9 +377,10 @@ bool init(bool IsEditor) {
       Settings->resolutionx / (double)Settings->resolutiony, 0.25, 256.0);
 
   Camera = new CameraEntity();
-  Camera->hitbox[0] = glm::vec3({-1, -1, -3});
-  Camera->hitbox[1] = glm::vec3({1, 1, 0});
-  Camera->position = glm::vec3({0, 0, 3});
+  Camera->hitbox[0] = glm::vec3({0, 0, -2});
+  Camera->hitbox[1] = glm::vec3({0, 0, 0});
+  Camera->hitboxradius = 1.f;
+  Camera->position = glm::vec3({0, 0, 12});
   Camera->dir = glm::vec2(0);
 
   Global->Entities.push_back(Camera);

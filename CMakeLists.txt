@@ -57,7 +57,7 @@ set(CORE_SOURCES
     Core/extern.cpp
     Core/files.cpp
     Core/input.cpp
-    Core/raycast.cpp
+    Core/physics.cpp
     Core/rendermath.cpp
     Core/entity.cpp
     Core/render.cpp
@@ -77,8 +77,7 @@ set_target_properties(CobblerGameUI PROPERTIES
 
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/g_render.cpp 
-src/g_update.cpp src/g_entityphysics.cpp
-src/g_components.cpp)
+src/g_update.cpp src/g_components.cpp)
 
 # add_executable(Cobbler-Engine-Editor 
 # src/e_main.cpp src/e_render.cpp 

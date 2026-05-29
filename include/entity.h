@@ -5,17 +5,17 @@
 #include <string>
 
 #ifdef _WIN32
-  #ifdef DLLEXPORT
-    #define LIB_API __declspec(dllexport)
-  #else
-    #define LIB_API __declspec(dllimport)
-  #endif
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
+#else
+#define LIB_API __declspec(dllimport)
+#endif
 #else
 #define LIB_API
 #endif
 
 extern "C" {
-  LIB_API int GetBillBoardIndex(float angle, int lastIndex);
+LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
 struct Entity {
   float hp;
@@ -25,6 +25,7 @@ struct Entity {
   float gravity = 9.81f * 8.f;
   float jumpheight = 24, walkspeed = 10.f, runspeed = 1.75f;
   glm::vec3 hitbox[2];
+  float hitboxradius;
   bool IsGrounded;
   struct Billboard {
     std::string sprite;

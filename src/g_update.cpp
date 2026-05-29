@@ -51,6 +51,19 @@ void playermovement() {
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;
   if (Camera->dir.y >= 89) Camera->dir.y = 89;
   if (Camera->dir.y <= -89) Camera->dir.y = -89;
+
+  if (P1Inputs->leftclick == 2) {
+    float ps = std::sin(Camera->dir.x * PI / 180.f);
+    float pc = std::cos(Camera->dir.x * PI / 180.f);
+    float what = std::cos(Camera->dir.y * PI / 180.f);
+    glm::vec3 ray[2];
+    ray[0] = Camera->position;
+    ray[1] = {-ps * what, pc * what, std::sin(Camera->dir.y * PI / 180.f)};
+    ray[1] *= 32.f;
+    ray[1] += Camera->position;
+    for (int i = 0; i < Global->Entities.size(); i++) {
+    }
+  }
 }
 
 void update() {
