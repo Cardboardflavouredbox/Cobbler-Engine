@@ -1,5 +1,7 @@
 #include "physics.h"
 
+#include <SDL3/SDL_log.h>
+
 #include <glm/glm.hpp>
 
 // https://gamedev.stackexchange.com/a/5589
@@ -139,8 +141,21 @@ void EntityMove(Entity* tempentity) {
     if (!movecollisioncheck(tempentity->hitbox, tempposition,
                             tempentity->hitboxradius)) {
       moveresult.x += tempmove.x / (float)temp;
-    } else
-      break;
+    } else {
+      bool check = false;
+      for (int j = 1; j <= 64; j++) {
+        if (!movecollisioncheck(tempentity->hitbox,
+                                tempposition + glm::vec3(0, 0, j / 512.f),
+                                tempentity->hitboxradius)) {
+          moveresult.x += tempmove.x / (float)temp;
+          moveresult.z += j / 512.f;
+          tempposition.z += j / 512.f;
+          check = true;
+          break;
+        }
+      }
+      if (!check) break;
+    }
   }
 
   temp = std::abs(tempmove.y) / tempentity->hitboxradius * 128 + 1;
@@ -150,8 +165,21 @@ void EntityMove(Entity* tempentity) {
     if (!movecollisioncheck(tempentity->hitbox, tempposition,
                             tempentity->hitboxradius)) {
       moveresult.y += tempmove.y / (float)temp;
-    } else
-      break;
+    } else {
+      bool check = false;
+      for (int j = 1; j <= 64; j++) {
+        if (!movecollisioncheck(tempentity->hitbox,
+                                tempposition + glm::vec3(0, 0, j / 512.f),
+                                tempentity->hitboxradius)) {
+          moveresult.y += tempmove.y / (float)temp;
+          moveresult.z += j / 512.f;
+          tempposition.z += j / 512.f;
+          check = true;
+          break;
+        }
+      }
+      if (!check) break;
+    }
   }
 
   tempposition = moveresult + tempentity->position;
