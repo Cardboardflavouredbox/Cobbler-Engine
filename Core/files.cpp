@@ -17,6 +17,7 @@
 #include <glaze/json.hpp>
 
 #include "extern.h"
+#include "font.h"
 #include "global.h"
 
 template <>
@@ -382,6 +383,7 @@ bool init(bool IsEditor) {
   Camera->hitboxradius = 1.f;
   Camera->position = glm::vec3({0, 0, 12});
   Camera->dir = glm::vec2(0);
+  Camera->teamindex = 0;
 
   Global->Entities.push_back(Camera);
 
@@ -424,25 +426,27 @@ bool init(bool IsEditor) {
       i--;
     }
   }
-
+  Freetypething = new FreetypeClass();
   std::string basepath = SDL_GetBasePath(), tempstr = basepath;
 
-  if (FT_Init_FreeType(&(Global->FTlibrary))) return false;
+  if (FT_Init_FreeType(&(Freetypething->FTlibrary))) return false;
 
   tempstr = basepath;
   tempstr.append("/" + Global->GameName + "/res/" + LoadedData->fontname);
-  if (FT_New_Face(Global->FTlibrary, tempstr.c_str(), 0, &(Global->FTface)))
+  if (FT_New_Face(Freetypething->FTlibrary, tempstr.c_str(), 0,
+                  &(Freetypething->FTface)))
     return false;
-  FT_Select_Charmap(Global->FTface, ft_encoding_unicode);
+  FT_Select_Charmap(Freetypething->FTface, ft_encoding_unicode);
 
-  FT_Set_Pixel_Sizes(Global->FTface, 0, 12);
+  FT_Set_Pixel_Sizes(Freetypething->FTface, 0, 12);
 
   for (int i = 0; i < 128; i++) {
-    FT_UInt glyph_index = FT_Get_Char_Index(Global->FTface, i);
-    FT_Load_Glyph(Global->FTface, glyph_index, FT_LOAD_MONOCHROME);
-    FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_MONO);
+    FT_UInt glyph_index = FT_Get_Char_Index(Freetypething->FTface, i);
+    FT_Load_Glyph(Freetypething->FTface, glyph_index, FT_LOAD_MONOCHROME);
+    FT_Render_Glyph(Freetypething->FTface->glyph, FT_RENDER_MODE_MONO);
 
-    Global->Glyphmap[glyph_index] = CreateGlyph(Global->FTface->glyph);
+    Freetypething->Glyphmap[glyph_index] =
+        CreateGlyph(Freetypething->FTface->glyph);
   }
 
   Global->IsRunning = true;
@@ -460,8 +464,10 @@ void quit() {
   delete (P1Inputs);
   SDL_Log("freed P1Inputs");
 
-  FT_Done_Face(Global->FTface);
-  FT_Done_FreeType(Global->FTlibrary);
+  FT_Done_Face(Freetypething->FTface);
+  FT_Done_FreeType(Freetypething->FTlibrary);
+
+  delete (Freetypething);
 
   SDL_Log("freed Freetype stuff");
 

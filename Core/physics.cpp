@@ -55,6 +55,23 @@ bool RayTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
   return true;
 }
 
+bool capsuleraycheck(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4,
+                     float radius) {  // fix this horrid code later
+  if (glm::distance(p1, p3) < radius || glm::distance(p1, p4) < radius ||
+      glm::distance(p2, p3) < radius || glm::distance(p2, p4) < radius)
+    return true;
+  int len1 = glm::distance(p3, p4) / radius + 1,
+      len2 = glm::distance(p1, p2) / radius + 1;
+  for (int i = 0; i < len1; i++) {
+    glm::vec3 temp = p3 + (p4 - p3) * (float)i / (float)len1;
+    for (int j = 0; j < len2; j++) {
+      glm::vec3 temp2 = p1 + (p2 - p1) * (float)j / (float)len2;
+      if (glm::distance(temp, temp2) < radius) return true;
+    }
+  }
+  return false;
+}
+
 // https://stackoverflow.com/a/74395029
 glm::vec3 closestPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3 b,
                                glm::vec3 c) {

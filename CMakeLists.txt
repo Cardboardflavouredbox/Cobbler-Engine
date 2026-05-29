@@ -61,6 +61,7 @@ set(CORE_SOURCES
     Core/rendermath.cpp
     Core/entity.cpp
     Core/render.cpp
+    Core/font.cpp
 )
 
 add_library(CobblerGLAD SHARED glad/glad.c "include/glad/glad.h")
@@ -118,6 +119,6 @@ foreach(ENTITYDIR ${ENTITIES})
     set_target_properties(${FOLDER_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/entities/${FOLDER_NAME}"
     )
-    target_link_libraries(${FOLDER_NAME} PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD freetype)
+    target_link_libraries(${FOLDER_NAME} PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD)
     target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 endforeach()

@@ -7,6 +7,7 @@
 #include "entity.h"
 #include "extern.h"
 #include "global.h"
+#include "physics.h"
 #include "update.h"
 
 void playermovement() {
@@ -61,7 +62,11 @@ void playermovement() {
     ray[1] = {-ps * what, pc * what, std::sin(Camera->dir.y * PI / 180.f)};
     ray[1] *= 32.f;
     ray[1] += Camera->position;
-    for (int i = 0; i < Global->Entities.size(); i++) {
+    for (auto& i : Global->Entities) {
+      if (i->teamindex != Camera->teamindex &&
+          capsuleraycheck(ray[0], ray[1], i->hitbox[0] + i->position,
+                          i->hitbox[1] + i->position, i->hitboxradius))
+        i->velocityvec3.z = 25;
     }
   }
 }

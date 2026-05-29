@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SDL3/SDL_render.h>
-#include <ft2build.h>
 #include <glad/glad.h>
 
 #include <glm/glm.hpp>
@@ -10,7 +9,6 @@
 
 #include "map.h"
 #include "ui.h"
-#include FT_FREETYPE_H
 
 #ifdef _WIN32
 #ifdef DLLEXPORT
@@ -25,15 +23,6 @@
 const double PI =
     3.1415926535897932384626433832795028841971693993751058209749445923078164062;
 
-struct CustomGlyphthing {
-  unsigned char* pixels;
-  GLuint GLTexture;
-  int width, height, pitch, offsetx, offsety, advancex, advancey;
-};
-
-extern "C" {
-LIB_API CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
-}
 struct GlobalClass {
  public:
   std::string GameName = "CobblerGame";
@@ -69,10 +58,6 @@ struct GlobalClass {
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;
   std::vector<Entity*> Entities;
-
-  FT_Library FTlibrary;
-  FT_Face FTface;
-  std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
 
   std::unordered_map<std::string, std::vector<UIthing*>> UImap;
   std::vector<std::string> UIlist = {"default"};

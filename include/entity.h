@@ -22,6 +22,7 @@ struct Entity {
   glm::vec2 dir;
   glm::vec3 position, movevec3 = glm::vec3({0, 0, 0}),
                       velocityvec3 = glm::vec3({0, 0, 0});
+  int teamindex;
   float gravity = 9.81f * 8.f;
   float jumpheight = 24, walkspeed = 10.f, runspeed = 1.75f;
   glm::vec3 hitbox[2];
