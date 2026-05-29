@@ -132,7 +132,7 @@ void EntityMove(Entity* tempentity) {
   glm::vec3 tempposition = tempentity->position,
             moveresult = glm::vec3({0, 0, 0});
 
-  int temp = std::abs(tempmove.x) / tempentity->hitboxradius + 1;
+  int temp = std::abs(tempmove.x) / tempentity->hitboxradius * 128 + 1;
 
   for (int i = 0; i < temp; i++) {
     tempposition.x += tempmove.x / (float)temp;
@@ -143,7 +143,7 @@ void EntityMove(Entity* tempentity) {
       break;
   }
 
-  temp = std::abs(tempmove.y) / tempentity->hitboxradius + 1;
+  temp = std::abs(tempmove.y) / tempentity->hitboxradius * 128 + 1;
   tempposition = moveresult + tempentity->position;
   for (int i = 0; i < temp; i++) {
     tempposition.y += tempmove.y / (float)temp;
@@ -155,17 +155,16 @@ void EntityMove(Entity* tempentity) {
   }
 
   tempposition = moveresult + tempentity->position;
-  temp = std::abs(tempmove.z) / tempentity->hitboxradius + 1;
+  temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 128 + 1;
   for (int i = 0; i < temp; i++) {
     tempposition.z += tempmove.z / (float)temp;
-    // SDL_Log("%f %f %f", tempposition.x, tempposition.y, tempposition.z);
     if (!movecollisioncheck(tempentity->hitbox, tempposition,
                             tempentity->hitboxradius)) {
       tempentity->IsGrounded = false;
       moveresult.z += tempmove.z / (float)temp;
     } else {
       tempentity->IsGrounded = true;
-      tempentity->velocityvec3.z = -2.f;
+      tempentity->velocityvec3.z = -4.f;
       break;
     }
   }
