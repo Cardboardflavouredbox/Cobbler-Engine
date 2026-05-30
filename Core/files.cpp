@@ -373,7 +373,13 @@ bool init(bool IsEditor) {
       tempmapdata,
       Global->GameName + "/map/" + LoadedData->startlevel + ".json",
       std::string{});
-  if (error) return false;
+  if (error) {
+    SDL_Log("%s", glz::format_error(error, (Global->GameName + "/map/" +
+                                            LoadedData->startlevel + ".json")
+                                               .c_str())
+                      .c_str());
+    return false;
+  }
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
@@ -398,6 +404,8 @@ bool init(bool IsEditor) {
       Global->Entities.back()->position = tempmapdata.Entities[i].pos;
     }
   }
+
+  Global->Models = tempmapdata.props;
 
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     if (Global->mapfaces[i].points.size() == 4) {
@@ -462,13 +470,25 @@ bool init(bool IsEditor) {
           fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
           model.normals.push_back(normal);
         } else if (strcmp(lineHeader, "f") == 0) {
-          std::array<unsigned int, 3> a;
-          fscanf(file, "%u %u %u\n", &a[0], &a[1], &a[2]);
-          model.faces.push_back(a);
+          GlobalClass::Model::Face face;
+          int matches = fscanf(file, "%u/%u/%u %u/%u/%u %u/%u/%u\n",
+                               &face.point[0], &face.uv[0], &face.normal[0],
+                               &face.point[1], &face.uv[1], &face.normal[1],
+                               &face.point[2], &face.uv[2], &face.normal[2]);
+          if (matches < 9) {
+            SDL_Log("failed to read obj file. Matches: %d", matches);
+            return false;
+          }
+          for (int i = 0; i < 3; i++) {
+            face.point[i]--;
+            face.uv[i]--;
+            face.normal[i]--;
+          }
+          model.faces.push_back(face);
         }
-        fclose(file);
-        Global->Models[tempstr] = model;
       }
+      fclose(file);
+      Global->Modelmap[tempstr] = model;
     }
   }
 

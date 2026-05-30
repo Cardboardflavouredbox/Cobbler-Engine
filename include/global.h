@@ -23,6 +23,11 @@
 const double PI =
     3.1415926535897932384626433832795028841971693993751058209749445923078164062;
 
+struct Modeltransform {
+  std::string name;
+  glm::vec3 position, size = glm::vec3({1, 1, 1});
+};
+
 struct GlobalClass {
  public:
   std::string GameName = "CobblerGame";
@@ -59,13 +64,17 @@ struct GlobalClass {
     std::vector<glm::vec3> points;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
-    std::vector<std::array<unsigned int, 3>> faces;
+    struct Face {
+      std::array<unsigned int, 3> point, uv, normal;
+    };
+    std::vector<Face> faces;
   };
+  std::unordered_map<std::string, Model> Modelmap;
 
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;
   std::vector<Entity*> Entities;
-  std::unordered_map<std::string, Model> Models;
+  std::vector<Modeltransform> Models;
 
   std::unordered_map<std::string, std::vector<UIthing*>> UImap;
   std::vector<std::string> UIlist = {"default"};
@@ -91,6 +100,7 @@ struct Mapdata {
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;
   std::vector<Entitydata> Entities;
+  std::vector<Modeltransform> props;
   std::string skybox;
 };
 
