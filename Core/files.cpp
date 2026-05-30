@@ -7,7 +7,9 @@
 #include <SDL3/SDL_timer.h>
 #include <ft2build.h>
 #include <glad/glad.h>
+#include <stdio.h>
 
+#include <filesystem>
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
 #include <unordered_map>
@@ -181,31 +183,31 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
 
       Global->GLstuff->textures = tempvector;
 
-      std::string basepath = SDL_GetBasePath(), tempstr = basepath;
-      for (int i = 0; i < LoadedData->texturenames.size(); i++) {
-        glGenTextures(
-            1, &(Global->GLstuff->textures[LoadedData->texturenames[i]]));
-        tempstr = basepath;
-        tempstr.append("/" + Global->GameName + "/textures/" +
-                       LoadedData->texturenames[i] + ".bmp");
+      std::string basepath = SDL_GetBasePath();
+      for (const auto& entry : std::filesystem::directory_iterator(
+               basepath + Global->GameName + "/textures/")) {
+        if (entry.is_regular_file()) {
+          SDL_Log("Texture: %s", entry.path().filename().string().c_str());
+          std::string tempstr = entry.path().filename().string();
+          for (int i = 0; i < 4; i++) tempstr.pop_back();
+          glGenTextures(1, &(Global->GLstuff->textures[tempstr]));
+          surface = SDL_LoadBMP(entry.path().string().c_str());
+          if (surface == NULL) return false;
+          SDL_SetSurfaceColorKey(surface, true,
+                                 SDL_MapSurfaceRGB(surface, 255, 0, 255));
+          surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
 
-        surface = SDL_LoadBMP(tempstr.c_str());
-        if (surface == NULL) return false;
-        SDL_SetSurfaceColorKey(surface, true,
-                               SDL_MapSurfaceRGB(surface, 255, 0, 255));
-        surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
+          glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[tempstr]);
 
-        glBindTexture(GL_TEXTURE_2D,
-                      Global->GLstuff->textures[LoadedData->texturenames[i]]);
+          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
+                       GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        SDL_DestroySurface(surface);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+          SDL_DestroySurface(surface);
+        }
       }
       // glEnable(GL_CULL_FACE);
       SDL_Log("%d", glGetError());
@@ -237,17 +239,19 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
       SDL_SetSurfacePalette(Global->SRstuff->render_target,
                             Global->SRstuff->palette);
 
-      for (int i = 0; i < LoadedData->texturenames.size(); i++) {
-        tempstr = basepath;
-        tempstr.append("/" + Global->GameName + "/textures/" +
-                       LoadedData->texturenames[i] + ".bmp");
-        surface = SDL_LoadBMP(tempstr.c_str());
-        if (surface == NULL) return false;
-        surface = SDL_ConvertSurfaceAndColorspace(
-            surface, SDL_PIXELFORMAT_INDEX8, Global->SRstuff->palette,
-            SDL_COLORSPACE_RGB_DEFAULT, 0);
-        SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
-        Global->SRstuff->textures[LoadedData->texturenames[i]] = surface;
+      for (const auto& entry : std::filesystem::directory_iterator(
+               basepath + Global->GameName + "/textures/")) {
+        if (entry.is_regular_file()) {
+          surface = SDL_LoadBMP(entry.path().string().c_str());
+          if (surface == NULL) return false;
+          surface = SDL_ConvertSurfaceAndColorspace(
+              surface, SDL_PIXELFORMAT_INDEX8, Global->SRstuff->palette,
+              SDL_COLORSPACE_RGB_DEFAULT, 0);
+          SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
+          tempstr = entry.path().filename().string();
+          for (int i = 0; i < 4; i++) tempstr.pop_back();
+          Global->SRstuff->textures[tempstr] = surface;
+        }
       }
       Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
                                           Settings->resolutiony);
@@ -426,8 +430,50 @@ bool init(bool IsEditor) {
       i--;
     }
   }
+
+  std::string basepath = SDL_GetBasePath(), tempstr;
+  for (const auto& entry : std::filesystem::directory_iterator(
+           basepath + Global->GameName + "/models/")) {
+    if (entry.is_regular_file()) {
+      GlobalClass::Model model;
+      SDL_Log("Loading model: %s", entry.path().filename().string().c_str());
+      tempstr = entry.path().filename().string();
+      for (int i = 0; i < 4; i++) tempstr.pop_back();
+
+      FILE* file = fopen(entry.path().string().c_str(), "r");
+      if (file == NULL) {
+        SDL_Log("Impossible to open the file !");
+        return false;
+      }
+      while (true) {
+        char lineHeader[128];
+        // read the first word of the line
+        if (fscanf(file, "%s", lineHeader) == EOF) break;
+        if (strcmp(lineHeader, "vt") == 0) {
+          glm::vec2 uv;
+          fscanf(file, "%f %f\n", &uv.x, &uv.y);
+          model.uvs.push_back(uv);
+        } else if (strcmp(lineHeader, "v") == 0) {
+          glm::vec3 vertex;
+          fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+          model.points.push_back(vertex);
+        } else if (strcmp(lineHeader, "vn") == 0) {
+          glm::vec3 normal;
+          fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+          model.normals.push_back(normal);
+        } else if (strcmp(lineHeader, "f") == 0) {
+          std::array<unsigned int, 3> a;
+          fscanf(file, "%u %u %u\n", &a[0], &a[1], &a[2]);
+          model.faces.push_back(a);
+        }
+        fclose(file);
+        Global->Models[tempstr] = model;
+      }
+    }
+  }
+
   Freetypething = new FreetypeClass();
-  std::string basepath = SDL_GetBasePath(), tempstr = basepath;
+  tempstr = basepath;
 
   if (FT_Init_FreeType(&(Freetypething->FTlibrary))) return false;
 

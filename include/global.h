@@ -55,9 +55,17 @@ struct GlobalClass {
 
   int windowx = 320, windowy = 200;
 
+  struct Model {
+    std::vector<glm::vec3> points;
+    std::vector<glm::vec2> uvs;
+    std::vector<glm::vec3> normals;
+    std::vector<std::array<unsigned int, 3>> faces;
+  };
+
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;
   std::vector<Entity*> Entities;
+  std::unordered_map<std::string, Model> Models;
 
   std::unordered_map<std::string, std::vector<UIthing*>> UImap;
   std::vector<std::string> UIlist = {"default"};
@@ -72,7 +80,6 @@ struct EditorClass {
 
 struct ZipData {
   std::string startlevel, fontname;
-  std::vector<std::string> texturenames;
   std::vector<std::string> stagenames;
 };
 
