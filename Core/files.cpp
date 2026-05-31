@@ -224,7 +224,9 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
 
       Global->GLstuff->textures = tempvector;
 
-      // glEnable(GL_CULL_FACE);
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_BACK);
+      glFrontFace(GL_CW);
       SDL_Log("%d", glGetError());
       break;
     }

@@ -183,13 +183,13 @@ void renderProps() {
       glEnable(GL_TEXTURE_2D);
       glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[model->texture]);
       glBegin(GL_TRIANGLES);
-      for (int k = 0; k < 3; k++) {
+      for (int k = 2; k >= 0; k--) {
         glm::vec3 pos = model->points[model->faces[j].point[k]];
         pos.x /= Global->Models[i].size.x;
         pos.y /= Global->Models[i].size.y;
         pos.z /= Global->Models[i].size.z;
         pos += renderpos;
-        glTexCoord2f(model->faces[j].uv[k].x, model->faces[j].uv[k].y);
+        glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
         glVertex3f(pos.x, pos.y, pos.z);
       }
       glEnd();
