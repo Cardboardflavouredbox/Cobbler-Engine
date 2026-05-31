@@ -442,7 +442,7 @@ bool init(bool IsEditor) {
   std::string basepath = SDL_GetBasePath(), tempstr;
   for (const auto& entry : std::filesystem::directory_iterator(
            basepath + Global->GameName + "/models/")) {
-    if (entry.is_regular_file()) {
+    if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
       GlobalClass::Model model;
       SDL_Log("Loading model: %s", entry.path().filename().string().c_str());
       tempstr = entry.path().filename().string();
@@ -457,32 +457,18 @@ bool init(bool IsEditor) {
         char lineHeader[128];
         // read the first word of the line
         if (fscanf(file, "%s", lineHeader) == EOF) break;
-        if (strcmp(lineHeader, "vt") == 0) {
-          glm::vec2 uv;
-          fscanf(file, "%f %f\n", &uv.x, &uv.y);
-          model.uvs.push_back(uv);
-        } else if (strcmp(lineHeader, "v") == 0) {
+        if (strcmp(lineHeader, "P") == 0) {
           glm::vec3 vertex;
           fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
           model.points.push_back(vertex);
-        } else if (strcmp(lineHeader, "vn") == 0) {
-          glm::vec3 normal;
-          fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-          model.normals.push_back(normal);
-        } else if (strcmp(lineHeader, "f") == 0) {
+        } else if (strcmp(lineHeader, "F") == 0) {
           GlobalClass::Model::Face face;
-          int matches = fscanf(file, "%u/%u/%u %u/%u/%u %u/%u/%u\n",
-                               &face.point[0], &face.uv[0], &face.normal[0],
-                               &face.point[1], &face.uv[1], &face.normal[1],
-                               &face.point[2], &face.uv[2], &face.normal[2]);
-          if (matches < 9) {
+          int matches = fscanf(file, "%u %u %u/%f %f %f\n", &face.point[0],
+                               &face.point[1], &face.point[2], &face.normal[0],
+                               &face.normal[1], &face.normal[2]);
+          if (matches < 6) {
             SDL_Log("failed to read obj file. Matches: %d", matches);
             return false;
-          }
-          for (int i = 0; i < 3; i++) {
-            face.point[i]--;
-            face.uv[i]--;
-            face.normal[i]--;
           }
           model.faces.push_back(face);
         }

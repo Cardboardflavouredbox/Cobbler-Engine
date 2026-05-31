@@ -62,10 +62,10 @@ struct GlobalClass {
 
   struct Model {
     std::vector<glm::vec3> points;
-    std::vector<glm::vec2> uvs;
-    std::vector<glm::vec3> normals;
     struct Face {
-      std::array<unsigned int, 3> point, uv, normal;
+      std::array<unsigned int, 3> point;
+      glm::vec2 uv;
+      glm::vec3 normal;
     };
     std::vector<Face> faces;
   };
