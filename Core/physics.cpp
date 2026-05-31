@@ -130,6 +130,7 @@ bool CapsuleTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
 
 glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                              float radius) {
+  glm::vec3 result = glm::vec3(0);
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     if (CapsuleTriCheck(Global->Points[Global->mapfaces[i].points[0]],
                         Global->Points[Global->mapfaces[i].points[1]],
@@ -140,10 +141,12 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                     Global->Points[Global->mapfaces[i].points[0]],
                 b = Global->Points[Global->mapfaces[i].points[2]] -
                     Global->Points[Global->mapfaces[i].points[0]];
-      return glm::cross(a, b);
+      glm::vec3 temp = glm::cross(a, b);
+      if (result == glm::vec3(0) || std::abs(temp.z) <= std::abs(result.z))
+        result = temp;
     }
   }
-  return glm::vec3(0);
+  return result;
 }
 
 void EntityMove(Entity* tempentity) {
@@ -199,7 +202,6 @@ void EntityMove(Entity* tempentity) {
         } else {
           check = false;
           for (int j = 1; j <= 64; j++) {
-            SDL_Log("%d", j);
             if (movecollisioncheck(tempentity->hitbox,
                                    tempposition + glm::vec3(0, 0, j / 512.f),
                                    tempentity->hitboxradius) == glm::vec3(0)) {
