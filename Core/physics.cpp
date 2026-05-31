@@ -128,18 +128,22 @@ bool CapsuleTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
   return false;
 }
 
-bool movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
-                        float radius) {  // true if collided
+glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
+                             float radius) {
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     if (CapsuleTriCheck(Global->Points[Global->mapfaces[i].points[0]],
                         Global->Points[Global->mapfaces[i].points[1]],
                         Global->Points[Global->mapfaces[i].points[2]],
                         hitbox[0] + checkposition, hitbox[1] + checkposition,
                         radius)) {
-      return true;
+      glm::vec3 a = Global->Points[Global->mapfaces[i].points[1]] -
+                    Global->Points[Global->mapfaces[i].points[0]],
+                b = Global->Points[Global->mapfaces[i].points[2]] -
+                    Global->Points[Global->mapfaces[i].points[0]];
+      return glm::cross(a, b);
     }
   }
-  return false;
+  return glm::vec3(0);
 }
 
 void EntityMove(Entity* tempentity) {
@@ -151,43 +155,25 @@ void EntityMove(Entity* tempentity) {
   glm::vec3 tempposition = tempentity->position,
             moveresult = glm::vec3({0, 0, 0});
 
-  int temp = std::abs(tempmove.x) / tempentity->hitboxradius * 128 + 1;
+  int temp = std::sqrtf(tempmove.x * tempmove.x + tempmove.y * tempmove.y) /
+                 tempentity->hitboxradius * 128 +
+             1;
 
   for (int i = 0; i < temp; i++) {
     tempposition.x += tempmove.x / (float)temp;
-    if (!movecollisioncheck(tempentity->hitbox, tempposition,
-                            tempentity->hitboxradius)) {
-      moveresult.x += tempmove.x / (float)temp;
-    } else {
-      bool check = false;
-      for (int j = 1; j <= 64; j++) {
-        if (!movecollisioncheck(tempentity->hitbox,
-                                tempposition + glm::vec3(0, 0, j / 512.f),
-                                tempentity->hitboxradius)) {
-          moveresult.x += tempmove.x / (float)temp;
-          moveresult.z += j / 512.f;
-          tempposition.z += j / 512.f;
-          check = true;
-          break;
-        }
-      }
-      if (!check) break;
-    }
-  }
-
-  temp = std::abs(tempmove.y) / tempentity->hitboxradius * 128 + 1;
-  tempposition = moveresult + tempentity->position;
-  for (int i = 0; i < temp; i++) {
     tempposition.y += tempmove.y / (float)temp;
-    if (!movecollisioncheck(tempentity->hitbox, tempposition,
-                            tempentity->hitboxradius)) {
+    glm::vec3 normal = movecollisioncheck(tempentity->hitbox, tempposition,
+                                          tempentity->hitboxradius);
+    if (normal == glm::vec3(0)) {
+      moveresult.x += tempmove.x / (float)temp;
       moveresult.y += tempmove.y / (float)temp;
     } else {
       bool check = false;
       for (int j = 1; j <= 64; j++) {
-        if (!movecollisioncheck(tempentity->hitbox,
-                                tempposition + glm::vec3(0, 0, j / 512.f),
-                                tempentity->hitboxradius)) {
+        if (movecollisioncheck(tempentity->hitbox,
+                               tempposition + glm::vec3(0, 0, j / 512.f),
+                               tempentity->hitboxradius) == glm::vec3(0)) {
+          moveresult.x += tempmove.x / (float)temp;
           moveresult.y += tempmove.y / (float)temp;
           moveresult.z += j / 512.f;
           tempposition.z += j / 512.f;
@@ -195,7 +181,38 @@ void EntityMove(Entity* tempentity) {
           break;
         }
       }
-      if (!check) break;
+      if (!check) {
+        tempposition.x -= tempmove.x / (float)temp;
+        tempposition.y -= tempmove.y / (float)temp;
+        glm::vec3 tempmovexy = tempmove;
+        tempmovexy.z = 0;
+        normal.z = 0;
+        normal = glm::cross(normal, glm::vec3({0, 0, 1}));
+        glm::vec3 newmove = (glm::dot(tempmovexy / (float)temp, normal) /
+                             glm::dot(normal, normal)) *
+                            normal;
+
+        tempposition += newmove;
+        if (movecollisioncheck(tempentity->hitbox, tempposition,
+                               tempentity->hitboxradius) == glm::vec3(0)) {
+          moveresult += newmove;
+        } else {
+          check = false;
+          for (int j = 1; j <= 64; j++) {
+            SDL_Log("%d", j);
+            if (movecollisioncheck(tempentity->hitbox,
+                                   tempposition + glm::vec3(0, 0, j / 512.f),
+                                   tempentity->hitboxradius) == glm::vec3(0)) {
+              moveresult += newmove;
+              moveresult.z += j / 512.f;
+              tempposition.z += j / 512.f;
+              check = true;
+              break;
+            }
+          }
+          if (!check) break;
+        }
+      }
     }
   }
 
@@ -203,8 +220,8 @@ void EntityMove(Entity* tempentity) {
   temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 128 + 1;
   for (int i = 0; i < temp; i++) {
     tempposition.z += tempmove.z / (float)temp;
-    if (!movecollisioncheck(tempentity->hitbox, tempposition,
-                            tempentity->hitboxradius)) {
+    if (movecollisioncheck(tempentity->hitbox, tempposition,
+                           tempentity->hitboxradius) == glm::vec3(0)) {
       tempentity->IsGrounded = false;
       moveresult.z += tempmove.z / (float)temp;
     } else {

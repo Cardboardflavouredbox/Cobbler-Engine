@@ -13,8 +13,8 @@ ScreenPoint ToScreenSpace(glm::vec3 P) {
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
 
-  glm::quat q =
-      glm::angleAxis(glm::radians(Camera->dir.y), glm::vec3(-pc, -ps, 0.0f));
+  glm::quat q = glm::angleAxis(float(Camera->dir.y * PI / 180.f),
+                               glm::vec3(-pc, -ps, 0.0f));
 
   p1 = q * p1;
 
