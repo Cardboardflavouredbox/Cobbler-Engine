@@ -135,6 +135,47 @@ void freeRenderer() {
   }
 }
 
+bool loadBMP(std::filesystem::path path) {
+  SDL_Surface* surface;
+  SDL_Log("Texture: %s", path.filename().string().c_str());
+  switch (Settings->graphicsmode) {
+    case 1: {
+      std::string tempstr = path.filename().string();
+      for (int i = 0; i < 4; i++) tempstr.pop_back();
+      glGenTextures(1, &(Global->GLstuff->textures[tempstr]));
+      surface = SDL_LoadBMP(path.string().c_str());
+      if (surface == NULL) return false;
+      SDL_SetSurfaceColorKey(surface, true,
+                             SDL_MapSurfaceRGB(surface, 255, 0, 255));
+      surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
+
+      glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[tempstr]);
+
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
+                   GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      SDL_DestroySurface(surface);
+      break;
+    }
+    default: {
+      surface = SDL_LoadBMP(path.string().c_str());
+      if (surface == NULL) return false;
+      surface = SDL_ConvertSurfaceAndColorspace(surface, SDL_PIXELFORMAT_INDEX8,
+                                                Global->SRstuff->palette,
+                                                SDL_COLORSPACE_RGB_DEFAULT, 0);
+      SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
+      std::string tempstr = path.filename().string();
+      for (int i = 0; i < 4; i++) tempstr.pop_back();
+      Global->SRstuff->textures[tempstr] = surface;
+    }
+  }
+  return true;
+}
+
 bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
   switch (Settings->graphicsmode) {
     case 1: {
@@ -183,32 +224,6 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
 
       Global->GLstuff->textures = tempvector;
 
-      std::string basepath = SDL_GetBasePath();
-      for (const auto& entry : std::filesystem::directory_iterator(
-               basepath + Global->GameName + "/textures/")) {
-        if (entry.is_regular_file()) {
-          SDL_Log("Texture: %s", entry.path().filename().string().c_str());
-          std::string tempstr = entry.path().filename().string();
-          for (int i = 0; i < 4; i++) tempstr.pop_back();
-          glGenTextures(1, &(Global->GLstuff->textures[tempstr]));
-          surface = SDL_LoadBMP(entry.path().string().c_str());
-          if (surface == NULL) return false;
-          SDL_SetSurfaceColorKey(surface, true,
-                                 SDL_MapSurfaceRGB(surface, 255, 0, 255));
-          surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
-
-          glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[tempstr]);
-
-          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
-                       GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
-
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-          SDL_DestroySurface(surface);
-        }
-      }
       // glEnable(GL_CULL_FACE);
       SDL_Log("%d", glGetError());
       break;
@@ -239,23 +254,16 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
       SDL_SetSurfacePalette(Global->SRstuff->render_target,
                             Global->SRstuff->palette);
 
-      for (const auto& entry : std::filesystem::directory_iterator(
-               basepath + Global->GameName + "/textures/")) {
-        if (entry.is_regular_file()) {
-          surface = SDL_LoadBMP(entry.path().string().c_str());
-          if (surface == NULL) return false;
-          surface = SDL_ConvertSurfaceAndColorspace(
-              surface, SDL_PIXELFORMAT_INDEX8, Global->SRstuff->palette,
-              SDL_COLORSPACE_RGB_DEFAULT, 0);
-          SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
-          tempstr = entry.path().filename().string();
-          for (int i = 0; i < 4; i++) tempstr.pop_back();
-          Global->SRstuff->textures[tempstr] = surface;
-        }
-      }
       Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
                                           Settings->resolutiony);
       break;
+    }
+  }
+  std::string basepath = SDL_GetBasePath();
+  for (const auto& entry : std::filesystem::directory_iterator(
+           basepath + Global->GameName + "/textures/")) {
+    if (entry.is_regular_file()) {
+      loadBMP(entry.path());
     }
   }
   return true;
@@ -463,18 +471,27 @@ bool init(bool IsEditor) {
           model.points.push_back(vertex);
         } else if (strcmp(lineHeader, "F") == 0) {
           GlobalClass::Model::Face face;
-          int matches = fscanf(file, "%u %u %u/%f %f %f\n", &face.point[0],
-                               &face.point[1], &face.point[2], &face.normal[0],
-                               &face.normal[1], &face.normal[2]);
-          if (matches < 6) {
+          int matches = fscanf(
+              file, "%u %u %u/%f %f %f/%f %f/%f %f/%f %f\n", &face.point[0],
+              &face.point[1], &face.point[2], &face.normal[0], &face.normal[1],
+              &face.normal[2], &face.uv[0].x, &face.uv[0].y, &face.uv[1].x,
+              &face.uv[1].y, &face.uv[2].x, &face.uv[2].y);
+          if (matches < 12) {
             SDL_Log("failed to read obj file. Matches: %d", matches);
             return false;
           }
           model.faces.push_back(face);
+        } else if (strcmp(lineHeader, "T") == 0) {
+          char temp[256] = {};
+          fscanf(file, "%s\n", temp);
+          std::string tempstr(temp);
+          model.texture = tempstr;
         }
       }
       fclose(file);
       Global->Modelmap[tempstr] = model;
+    } else if (entry.is_regular_file() && entry.path().extension() == ".bmp") {
+      loadBMP(entry.path());
     }
   }
 

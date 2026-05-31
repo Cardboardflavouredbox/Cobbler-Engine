@@ -180,9 +180,8 @@ void renderProps() {
     glm::vec3 renderpos = Global->Models[i].position - Camera->position;
     GlobalClass::Model* model = &Global->Modelmap[Global->Models[i].name];
     for (int j = 0; j < model->faces.size(); j++) {
-      glDisable(GL_TEXTURE_2D);
-      // glBindTexture(GL_TEXTURE_2D,
-      //               Global->GLstuff->textures[Global->mapfaces[i].texture]);
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[model->texture]);
       glBegin(GL_TRIANGLES);
       for (int k = 0; k < 3; k++) {
         glm::vec3 pos = model->points[model->faces[j].point[k]];
@@ -190,7 +189,7 @@ void renderProps() {
         pos.y /= Global->Models[i].size.y;
         pos.z /= Global->Models[i].size.z;
         pos += renderpos;
-        // glTexCoord2f(model->uvs[j].x, model->uvs[j].y);
+        glTexCoord2f(model->faces[j].uv[k].x, model->faces[j].uv[k].y);
         glVertex3f(pos.x, pos.y, pos.z);
       }
       glEnd();

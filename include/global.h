@@ -61,10 +61,11 @@ struct GlobalClass {
   int windowx = 320, windowy = 200;
 
   struct Model {
+    std::string texture;
     std::vector<glm::vec3> points;
     struct Face {
       std::array<unsigned int, 3> point;
-      glm::vec2 uv;
+      std::array<glm::vec2, 3> uv;
       glm::vec3 normal;
     };
     std::vector<Face> faces;
