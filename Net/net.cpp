@@ -19,14 +19,17 @@ struct NetworkStuffClass {
 
 NetworkStuffClass* NetStuff;
 
-LIB_API bool CobblerSetSocket() {
-  NetStuff->Address = NET_ResolveHostname();
-  NET_CreateDatagramSocket(NetStuff->Address, NetStuff->PORT, 0);
+LIB_API bool CobblerSetSocket(char* ipaddress, Uint16 port) {
+  NetStuff->Address = NET_ResolveHostname(ipaddress);
+  NetStuff->PORT = port;
+  NetStuff->Socket =
+      NET_CreateDatagramSocket(NetStuff->Address, NetStuff->PORT, 0);
   return true;
 }
 
 LIB_API void CobblerDestroySocket() {
   NET_DestroyDatagramSocket(NetStuff->Socket);
+  NET_UnrefAddress(NetStuff->Address);
 }
 
 LIB_API bool CobblerInitNet() {
