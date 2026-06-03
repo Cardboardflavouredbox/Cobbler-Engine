@@ -74,7 +74,7 @@ set(CORE_SOURCES
 add_library(CobblerGLAD SHARED glad/glad.c "include/glad/glad.h")
 add_library(CobblerCore SHARED Core/extern.cpp ${CORE_SOURCES})
 add_library(CobblerGameUI SHARED "$CACHE{GAME}/UI/g_ui.cpp" "$CACHE{GAME}/UI/g_ui_index.cpp" "include/ui.h")
-add_library(CobblerNet SHARED Net/net.cpp "Net/net.h")
+add_library(CobblerNet SHARED Net/net.cpp)
 # add_library(CobblerEditorUI SHARED "$CACHE{GAME}/UI/e_ui.cpp" "$CACHE{GAME}/UI/e_ui_index.cpp" "include/ui.h")
 
 set_target_properties(CobblerGameUI PROPERTIES
