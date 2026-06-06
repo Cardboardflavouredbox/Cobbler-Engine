@@ -5,43 +5,65 @@ def write_some_data(context, filepath):
     print("running write_some_data...")
     f = open(filepath, "w", encoding='utf-8')
     
+    scene = bpy.context.scene
+    selected_objects = scene.objects
     
-    selected_objects = bpy.context.scene.objects
     
     for obj in selected_objects:
-        if obj and obj.type == 'MESH':
-            # Get the global transformation matrix
-            matrix_world = obj.matrix_world
-            
-            active_uv_layer = obj.data.uv_layers.active.data
-        
-            f.write(f"O {obj.name}\n")
-            
-            for s in obj.material_slots:
-                if s.material and s.material.use_nodes:
-                    for n in s.material.node_tree.nodes:
-                        if n.type == 'TEX_IMAGE':
-                            f.write(f"T {n.image.name}\n")
-                    
-            for vert in obj.data.vertices:
-                # Convert local coordinate to world coordinate
-                world_coord = matrix_world @ vert.co
-            
-                # Format and save data: Index, X, Y, Z
-                f.write(f"P {world_coord.x:f} {world_coord.y:f} {world_coord.z:f}\n")
-            for face in obj.data.polygons:
-                # Convert local coordinate to world coordinate
-                vertices = list(face.vertices)
-                normal = face.normal
-            
-                # Format and save data: Index, X, Y, Z
-                f.write(f"F {vertices[0]} {vertices[1]} {vertices[2]}/{normal.x:f} {normal.y:f} {normal.z:f}")
+        if obj:
+            if obj.type == 'ARMATURE':
+                bones = obj.data.bones
                 
-                for loop_idx in face.loop_indices:
-                    uv_loop = active_uv_layer[loop_idx]
-                    f.write(f"/{uv_loop.uv[0]:f} {uv_loop.uv[1]:f}")
-                f.write(f"\n")
+                for bone in bones:
+                    parentname = "null"
+                    if bone.parent:parentname = bone.parent.name
+                        
+                    f.write(f"SB {bone.name} {bone.head.x:f} {bone.head.y:f} {bone.head.z:f} {parentname}\n")
+                
+                for frame in range(scene.frame_start, scene.frame_end + 1):
+                    scene.frame_set(frame)  # Update scene evaluation for the frame
     
+                    for p_bone in obj.pose.bones:
+                        f.write(f"PB {p_bone.name} {frame}/{p_bone.location.x:f} {p_bone.location.y:f} {p_bone.location.z:f}/{p_bone.scale.x:f} {p_bone.scale.y:f} {p_bone.scale.z:f}/{p_bone.rotation_euler.x:f} {p_bone.rotation_euler.y:f} {p_bone.rotation_euler.z:f}\n")
+                
+            elif obj.type == 'MESH':
+                # Get the global transformation matrix
+                matrix_world = obj.matrix_world
+            
+                active_uv_layer = obj.data.uv_layers.active.data
+                
+                vgroup_names = {g.index: g.name for g in obj.vertex_groups}
+        
+                f.write(f"O {obj.name}\n")
+            
+                for s in obj.material_slots:
+                    if s.material and s.material.use_nodes:
+                        for n in s.material.node_tree.nodes:
+                            if n.type == 'TEX_IMAGE':
+                                f.write(f"T {n.image.name}\n")
+                    
+                for vert in obj.data.vertices:
+                    # Convert local coordinate to world coordinate
+                    world_coord = matrix_world @ vert.co
+            
+                    # Format and save data: Index, X, Y, Z
+                    f.write(f"P {world_coord.x:f} {world_coord.y:f} {world_coord.z:f}")
+                    for g in vert.groups:
+                        group_name = vgroup_names.get(g.group, "Unknown Group")
+                        if g.weight > 0: f.write(f" {group_name} {g.weight:.4f}")
+                    f.write(f"\n")
+                for face in obj.data.polygons:
+                    # Convert local coordinate to world coordinate
+                    vertices = list(face.vertices)
+                    normal = face.normal
+                
+                    # Format and save data: Index, X, Y, Z
+                    f.write(f"F {vertices[0]} {vertices[1]} {vertices[2]}/{normal.x:f} {normal.y:f} {normal.z:f}")
+                    
+                    for loop_idx in face.loop_indices:
+                        uv_loop = active_uv_layer[loop_idx]
+                        f.write(f"/{uv_loop.uv[0]:f} {uv_loop.uv[1]:f}")
+                    f.write(f"\n")
     
     f.close()
 
