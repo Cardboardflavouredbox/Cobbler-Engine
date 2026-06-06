@@ -72,6 +72,20 @@ struct GlobalClass {
   };
   std::unordered_map<std::string, Model> Modelmap;
 
+  struct ModelGroupClass {
+    std::vector<std::string> Models;
+    struct Bone {
+      glm::vec3 head, tail;
+      std::string parent;
+      struct Pose {
+        glm::vec3 pos, scale, rot;
+      };
+      std::vector<Pose> Poses;
+    };
+    std::unordered_map<std::string, Bone> Bonemap;
+  };
+  std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
+
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;
   std::vector<Entity*> Entities;

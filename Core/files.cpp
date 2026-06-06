@@ -457,6 +457,7 @@ bool init(bool IsEditor) {
                basepath + Global->GameName + "/models/" +
                dir.path().filename().string() + "/")) {
         if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
+          GlobalClass::ModelGroupClass modelgroup;
           GlobalClass::Model model;
           SDL_Log("Loading model: %s",
                   entry.path().filename().string().c_str());
@@ -473,12 +474,33 @@ bool init(bool IsEditor) {
             char lineHeader[128];
             // read the first word of the line
             if (fscanf(file, "%s", lineHeader) == EOF) break;
-            if (strcmp(lineHeader, "O") == 0) {
+            if (strcmp(lineHeader, "SB") == 0) {
+              char name[64], parent[64];
+              glm::vec3 head, tail;
+              fscanf(file, "%s %f %f %f/%f %f %f %s", name, &head.x, &head.y,
+                     &head.z, &tail.x, &tail.y, &tail.z, parent);
+              modelgroup.Bonemap[name].parent = parent;
+              modelgroup.Bonemap[name].head = head;
+              modelgroup.Bonemap[name].tail = tail;
+            } else if (strcmp(lineHeader, "PB") == 0) {
+              char name[64];
+              int index;
+              glm::vec3 pos, scale, rot;
+              fscanf(file, "%s %d/%f %f %f/%f %f %f/%f %f %f", name, &index,
+                     &pos.x, &pos.y, &pos.z, &scale.x, &scale.y, &scale.z,
+                     &rot.x, &rot.y, &rot.z);
+              if (modelgroup.Bonemap[name].Poses.size() == 0)
+                modelgroup.Bonemap[name].Poses.resize(114);
+              modelgroup.Bonemap[name].Poses[index].pos = pos;
+              modelgroup.Bonemap[name].Poses[index].scale = scale;
+              modelgroup.Bonemap[name].Poses[index].rot = rot;
+            } else if (strcmp(lineHeader, "O") == 0) {
               if (namestr != tempstr) {
                 Global->Modelmap[namestr] = model;
+                modelgroup.Models.push_back(namestr);
               }
               char objname[128];
-              if (fscanf(file, "%s", objname) == EOF) break;
+              fscanf(file, "%s", objname);
               SDL_Log("Loading object: %s", objname);
               namestr = objname;
               namestr = tempstr + "/" + namestr;
@@ -511,6 +533,8 @@ bool init(bool IsEditor) {
           }
           fclose(file);
           Global->Modelmap[namestr] = model;
+          modelgroup.Models.push_back(namestr);
+          Global->ModelGroupMap[tempstr] = modelgroup;
         } else if (entry.is_regular_file() &&
                    entry.path().extension() == ".bmp") {
           loadBMP(entry.path());

@@ -18,7 +18,7 @@ def write_some_data(context, filepath):
                     parentname = "null"
                     if bone.parent:parentname = bone.parent.name
                         
-                    f.write(f"SB {bone.name} {bone.head.x:f} {bone.head.y:f} {bone.head.z:f} {parentname}\n")
+                    f.write(f"SB {bone.name} {bone.head.x:f} {bone.head.y:f} {bone.head.z:f}/{bone.tail.x:f} {bone.tail.y:f} {bone.tail.z:f} {parentname}\n")
                 
                 for frame in range(scene.frame_start, scene.frame_end + 1):
                     scene.frame_set(frame)  # Update scene evaluation for the frame
