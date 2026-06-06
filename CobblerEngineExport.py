@@ -15,16 +15,19 @@ def write_some_data(context, filepath):
                 bones = obj.data.bones
                 
                 for bone in bones:
+                    head = bone.head_local
+                    tail = bone.tail_local
                     parentname = "null"
-                    if bone.parent:parentname = bone.parent.name
+                    if bone.parent: 
+                        parentname = bone.parent.name
                         
-                    f.write(f"SB {bone.name} {bone.head.x:f} {bone.head.y:f} {bone.head.z:f}/{bone.tail.x:f} {bone.tail.y:f} {bone.tail.z:f} {parentname}\n")
+                    f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f} {parentname}\n")
                 
                 for frame in range(scene.frame_start, scene.frame_end + 1):
                     scene.frame_set(frame)  # Update scene evaluation for the frame
     
                     for p_bone in obj.pose.bones:
-                        f.write(f"PB {p_bone.name} {frame}/{p_bone.location.x:f} {p_bone.location.y:f} {p_bone.location.z:f}/{p_bone.scale.x:f} {p_bone.scale.y:f} {p_bone.scale.z:f}/{p_bone.rotation_euler.x:f} {p_bone.rotation_euler.y:f} {p_bone.rotation_euler.z:f}\n")
+                        f.write(f"PB {p_bone.name} {frame}/{p_bone.location[0]:f} {p_bone.location[1]:f} {p_bone.location[2]:f}/{p_bone.scale[0]:f} {p_bone.scale[1]:f} {p_bone.scale[2]:f}/{p_bone.rotation_quaternion[0]:f} {p_bone.rotation_quaternion[1]:f} {p_bone.rotation_quaternion[2]:f} {p_bone.rotation_quaternion[3]:f}\n")
                 
             elif obj.type == 'MESH':
                 # Get the global transformation matrix
@@ -47,7 +50,7 @@ def write_some_data(context, filepath):
                     world_coord = matrix_world @ vert.co
             
                     # Format and save data: Index, X, Y, Z
-                    f.write(f"P {world_coord.x:f} {world_coord.y:f} {world_coord.z:f}")
+                    f.write(f"P {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
                     for g in vert.groups:
                         group_name = vgroup_names.get(g.group, "Unknown Group")
                         if g.weight > 0: f.write(f" {group_name} {g.weight:.4f}")
@@ -58,7 +61,7 @@ def write_some_data(context, filepath):
                     normal = face.normal
                 
                     # Format and save data: Index, X, Y, Z
-                    f.write(f"F {vertices[0]} {vertices[1]} {vertices[2]}/{normal.x:f} {normal.y:f} {normal.z:f}")
+                    f.write(f"F {vertices[0]} {vertices[1]} {vertices[2]}/{normal[0]:f} {normal[1]:f} {normal[2]:f}")
                     
                     for loop_idx in face.loop_indices:
                         uv_loop = active_uv_layer[loop_idx]

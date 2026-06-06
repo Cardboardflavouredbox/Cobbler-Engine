@@ -486,15 +486,16 @@ bool init(bool IsEditor) {
             } else if (strcmp(lineHeader, "PB") == 0) {
               char name[64];
               int index;
-              glm::vec3 pos, scale, rot;
-              fscanf(file, "%s %d/%f %f %f/%f %f %f/%f %f %f", name, &index,
+              glm::vec3 pos, scale;
+              glm::quat rot;
+              fscanf(file, "%s %d/%f %f %f/%f %f %f/%f %f %f %f", name, &index,
                      &pos.x, &pos.y, &pos.z, &scale.x, &scale.y, &scale.z,
-                     &rot.x, &rot.y, &rot.z);
+                     &rot[0], &rot[1], &rot[2], &rot[3]);
               if (modelgroup.Bonemap[name].Poses.size() == 0)
                 modelgroup.Bonemap[name].Poses.resize(114);
-              modelgroup.Bonemap[name].Poses[index].pos = pos;
-              modelgroup.Bonemap[name].Poses[index].scale = scale;
-              modelgroup.Bonemap[name].Poses[index].rot = rot;
+              modelgroup.Bonemap[name].Poses[index - 1].pos = pos;
+              modelgroup.Bonemap[name].Poses[index - 1].scale = scale;
+              modelgroup.Bonemap[name].Poses[index - 1].rot = rot;
             } else if (strcmp(lineHeader, "O") == 0) {
               if (namestr != tempstr) {
                 Global->Modelmap[namestr] = model;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 #include <string>
 
@@ -19,7 +20,8 @@ struct ModelGroupClass {
     glm::vec3 head, tail;
     std::string parent;
     struct Pose {
-      glm::vec3 pos, scale, rot;
+      glm::vec3 pos, scale;
+      glm::quat rot;
     };
     std::vector<Pose> Poses;
   };
@@ -31,4 +33,5 @@ LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 struct Modeltransform {
   std::string name;
   glm::vec3 position, size = glm::vec3({1, 1, 1});
+  int frame;
 };

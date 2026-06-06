@@ -181,6 +181,8 @@ void renderEntity() {
 void renderProps() {
   for (int i = 0; i < Global->Models.size(); i++) {
     ModelGroupClass* modelgroup = &ModelGroupMap[Global->Models[i].name];
+    Global->Models[i].frame++;
+    Global->Models[i].frame %= 114;
     renderModelGroup(Global->Models[i], modelgroup);
   }
 }

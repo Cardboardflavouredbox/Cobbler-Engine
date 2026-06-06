@@ -189,13 +189,18 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
 }
 
 glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
-                          ModelGroupClass* modelgroup) {
+                          ModelGroupClass* modelgroup, int frame) {
   glm::vec3 temp = input.pos;
   for (int i = 0; i < input.bones.size(); i++) {
     std::string tempstr = input.bones[i];
     while (tempstr != "null") {
       ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
-      temp += bone->Poses[0].pos;
+      temp = bone->Poses[frame].rot * (temp - bone->head);
+      temp += bone->head;
+      temp += bone->Poses[frame].pos;
+      temp.x *= bone->Poses[frame].scale.x;
+      temp.y *= bone->Poses[frame].scale.y;
+      temp.z *= bone->Poses[frame].scale.z;
       tempstr = bone->parent;
     }
   }
@@ -215,8 +220,9 @@ void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup) {
                         Global->GLstuff->textures[model->texture]);
           glBegin(GL_TRIANGLES);
           for (int k = 2; k >= 0; k--) {
-            glm::vec3 pos = modelapplybones(
-                model->points[model->faces[j].point[k]], modelgroup);
+            glm::vec3 pos =
+                modelapplybones(model->points[model->faces[j].point[k]],
+                                modelgroup, modeltrans.frame);
             pos.x *= modeltrans.size.x;
             pos.y *= modeltrans.size.y;
             pos.z *= modeltrans.size.z;
