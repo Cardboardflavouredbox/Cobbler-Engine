@@ -6,7 +6,7 @@ def write_some_data(context, filepath):
     f = open(filepath, "w", encoding='utf-8')
     
     
-    selected_objects = bpy.context.selected_objects
+    selected_objects = bpy.context.scene.objects
     
     for obj in selected_objects:
         if obj and obj.type == 'MESH':
@@ -15,7 +15,7 @@ def write_some_data(context, filepath):
             
             active_uv_layer = obj.data.uv_layers.active.data
         
-            f.write(f"{obj.name}\n")
+            f.write(f"O {obj.name}\n")
             
             for s in obj.material_slots:
                 if s.material and s.material.use_nodes:

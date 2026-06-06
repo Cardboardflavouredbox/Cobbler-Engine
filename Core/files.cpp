@@ -449,51 +449,73 @@ bool init(bool IsEditor) {
     }
   }
 
-  std::string basepath = SDL_GetBasePath(), tempstr;
-  for (const auto& entry : std::filesystem::directory_iterator(
+  std::string basepath = SDL_GetBasePath(), tempstr, namestr;
+  for (const auto& dir : std::filesystem::directory_iterator(
            basepath + Global->GameName + "/models/")) {
-    if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
-      GlobalClass::Model model;
-      SDL_Log("Loading model: %s", entry.path().filename().string().c_str());
-      tempstr = entry.path().filename().string();
-      for (int i = 0; i < 4; i++) tempstr.pop_back();
+    if (dir.is_directory()) {
+      for (const auto& entry : std::filesystem::directory_iterator(
+               basepath + Global->GameName + "/models/" +
+               dir.path().filename().string() + "/")) {
+        if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
+          GlobalClass::Model model;
+          SDL_Log("Loading model: %s",
+                  entry.path().filename().string().c_str());
+          tempstr = entry.path().filename().string();
+          for (int i = 0; i < 4; i++) tempstr.pop_back();
+          namestr = tempstr;
 
-      FILE* file = fopen(entry.path().string().c_str(), "r");
-      if (file == NULL) {
-        SDL_Log("Impossible to open the file !");
-        return false;
-      }
-      while (true) {
-        char lineHeader[128];
-        // read the first word of the line
-        if (fscanf(file, "%s", lineHeader) == EOF) break;
-        if (strcmp(lineHeader, "P") == 0) {
-          glm::vec3 vertex;
-          fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-          model.points.push_back(vertex);
-        } else if (strcmp(lineHeader, "F") == 0) {
-          GlobalClass::Model::Face face;
-          int matches = fscanf(
-              file, "%u %u %u/%f %f %f/%f %f/%f %f/%f %f\n", &face.point[0],
-              &face.point[1], &face.point[2], &face.normal[0], &face.normal[1],
-              &face.normal[2], &face.uv[0].x, &face.uv[0].y, &face.uv[1].x,
-              &face.uv[1].y, &face.uv[2].x, &face.uv[2].y);
-          if (matches < 12) {
-            SDL_Log("failed to read obj file. Matches: %d", matches);
+          FILE* file = fopen(entry.path().string().c_str(), "r");
+          if (file == NULL) {
+            SDL_Log("Impossible to open the file !");
             return false;
           }
-          model.faces.push_back(face);
-        } else if (strcmp(lineHeader, "T") == 0) {
-          char temp[256] = {};
-          fscanf(file, "%s\n", temp);
-          std::string tempstr(temp);
-          model.texture = tempstr;
+          while (true) {
+            char lineHeader[128];
+            // read the first word of the line
+            if (fscanf(file, "%s", lineHeader) == EOF) break;
+            if (strcmp(lineHeader, "O") == 0) {
+              if (namestr != tempstr) {
+                Global->Modelmap[namestr] = model;
+              }
+              char objname[128];
+              if (fscanf(file, "%s", objname) == EOF) break;
+              SDL_Log("Loading object: %s", objname);
+              namestr = objname;
+              namestr = tempstr + "/" + namestr;
+              model.faces.clear();
+              model.points.clear();
+              model.texture = "";
+            } else if (strcmp(lineHeader, "P") == 0) {
+              glm::vec3 vertex;
+              fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+              model.points.push_back(vertex);
+            } else if (strcmp(lineHeader, "F") == 0) {
+              GlobalClass::Model::Face face;
+              int matches =
+                  fscanf(file, "%u %u %u/%f %f %f/%f %f/%f %f/%f %f\n",
+                         &face.point[0], &face.point[1], &face.point[2],
+                         &face.normal[0], &face.normal[1], &face.normal[2],
+                         &face.uv[0].x, &face.uv[0].y, &face.uv[1].x,
+                         &face.uv[1].y, &face.uv[2].x, &face.uv[2].y);
+              if (matches < 12) {
+                SDL_Log("failed to read cbm file face. Matches: %d", matches);
+                return false;
+              }
+              model.faces.push_back(face);
+            } else if (strcmp(lineHeader, "T") == 0) {
+              char temp[256] = {};
+              fscanf(file, "%s\n", temp);
+              std::string tempstr2(temp);
+              model.texture = tempstr2;
+            }
+          }
+          fclose(file);
+          Global->Modelmap[namestr] = model;
+        } else if (entry.is_regular_file() &&
+                   entry.path().extension() == ".bmp") {
+          loadBMP(entry.path());
         }
       }
-      fclose(file);
-      Global->Modelmap[tempstr] = model;
-    } else if (entry.is_regular_file() && entry.path().extension() == ".bmp") {
-      loadBMP(entry.path());
     }
   }
 
