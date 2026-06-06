@@ -3,6 +3,7 @@
 #include <SDL3/SDL_timer.h>
 
 #include "font.h"
+#include "model.h"
 
 std::unique_ptr<GlobalClass> Global;
 std::unique_ptr<EditorClass> Editor;
@@ -13,3 +14,4 @@ Uint64 lastTime;
 Uint64 currentTime = SDL_GetPerformanceCounter();
 std::unordered_map<std::string, Entity* (*)()> SpawnEntities;
 FreetypeClass* Freetypething;
+std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;

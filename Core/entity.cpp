@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "extern.h"
+#include "model.h"
 #include "render.h"
 
 int GetBillBoardIndex(float angle, int lastIndex) {
@@ -22,8 +23,12 @@ int GetBillBoardIndex(float angle, int lastIndex) {
 
   return lastIndex;
 }
+void Entity::rendermodelgroup() {
+  renderModelGroup(Modelthing->transform,
+                   &ModelGroupMap[Modelthing->modelgroup]);
+}
 
-void Entity::render() {
+void Entity::renderbillboard() {
   float sinthing = std::sin((-Camera->dir.x + 90) * PI / 180.0),
         costhing = std::cos((-Camera->dir.x + 90) * PI / 180.0);
   glm::vec3 points[4] = {

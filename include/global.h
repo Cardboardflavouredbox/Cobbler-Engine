@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "map.h"
+#include "model.h"
 #include "ui.h"
 
 #ifdef _WIN32
@@ -22,11 +23,6 @@
 
 const double PI =
     3.1415926535897932384626433832795028841971693993751058209749445923078164062;
-
-struct Modeltransform {
-  std::string name;
-  glm::vec3 position, size = glm::vec3({1, 1, 1});
-};
 
 struct GlobalClass {
  public:
@@ -62,7 +58,11 @@ struct GlobalClass {
 
   struct Model {
     std::string texture;
-    std::vector<glm::vec3> points;
+    struct Vertex {
+      glm::vec3 pos;
+      std::vector<std::string> bones;
+    };
+    std::vector<Vertex> points;
     struct Face {
       std::array<unsigned int, 3> point;
       std::array<glm::vec2, 3> uv;
@@ -71,20 +71,6 @@ struct GlobalClass {
     std::vector<Face> faces;
   };
   std::unordered_map<std::string, Model> Modelmap;
-
-  struct ModelGroupClass {
-    std::vector<std::string> Models;
-    struct Bone {
-      glm::vec3 head, tail;
-      std::string parent;
-      struct Pose {
-        glm::vec3 pos, scale, rot;
-      };
-      std::vector<Pose> Poses;
-    };
-    std::unordered_map<std::string, Bone> Bonemap;
-  };
-  std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;

@@ -7,6 +7,7 @@
 
 #include "extern.h"
 #include "map.h"
+#include "model.h"
 #include "render.h"
 #include "rendermath.h"
 #include "screen.h"
@@ -171,52 +172,16 @@ void renderUI() {
 void renderEntity() {
   for (int i = 0; i < Global->Entities.size(); i++) {
     if (Global->Entities[i]->billboardthing != nullptr)
-      Global->Entities[i]->render();
+      Global->Entities[i]->renderbillboard();
+    else if (Global->Entities[i]->Modelthing != nullptr)
+      Global->Entities[i]->rendermodelgroup();
   }
 }
 
 void renderProps() {
   for (int i = 0; i < Global->Models.size(); i++) {
-    glm::vec3 renderpos = Global->Models[i].position - Camera->position;
-    GlobalClass::Model* model = &Global->Modelmap[Global->Models[i].name];
-    switch (Settings->graphicsmode) {
-      case 1: {
-        for (int j = 0; j < model->faces.size(); j++) {
-          glEnable(GL_TEXTURE_2D);
-          glBindTexture(GL_TEXTURE_2D,
-                        Global->GLstuff->textures[model->texture]);
-          glBegin(GL_TRIANGLES);
-          for (int k = 2; k >= 0; k--) {
-            glm::vec3 pos = model->points[model->faces[j].point[k]];
-            pos.x *= Global->Models[i].size.x;
-            pos.y *= Global->Models[i].size.y;
-            pos.z *= Global->Models[i].size.z;
-            pos += renderpos;
-            glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
-            glVertex3f(pos.x, pos.y, pos.z);
-          }
-          glEnd();
-        }
-        break;
-      }
-      default: {
-        for (int j = 0; j < model->faces.size(); j++) {
-          glm::vec3 vec[3];
-          glm::vec2 uv[3];
-          for (int k = 0; k < 3; k++) {
-            glm::vec3 pos = model->points[model->faces[j].point[k]];
-            pos.x *= Global->Models[i].size.x;
-            pos.y *= Global->Models[i].size.y;
-            pos.z *= Global->Models[i].size.z;
-            pos += renderpos;
-            vec[k] = pos;
-            uv[k] = glm::vec2(
-                {model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y});
-          }
-          DrawTri(model->texture, vec, uv, 1, 1);
-        }
-      }
-    }
+    ModelGroupClass* modelgroup = &ModelGroupMap[Global->Models[i].name];
+    renderModelGroup(Global->Models[i], modelgroup);
   }
 }
 

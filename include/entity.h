@@ -1,5 +1,7 @@
 #pragma once
 
+#include <model.h>
+
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <string>
@@ -34,12 +36,20 @@ struct Entity {
     float offset;
   };
   Billboard* billboardthing;
-  LIB_API void render();
+  struct Model {
+    std::string modelgroup;
+    float offset;
+    Modeltransform transform;
+  };
+  Model* Modelthing;
+  LIB_API void renderbillboard();
+  LIB_API void rendermodelgroup();
   LIB_API virtual void update() = 0;
   LIB_API virtual void lateupdate() = 0;
 
   virtual ~Entity() {
     if (billboardthing != nullptr) delete (billboardthing);
+    if (Modelthing != nullptr) delete (Modelthing);
   }
 };
 

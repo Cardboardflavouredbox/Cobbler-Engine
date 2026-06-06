@@ -187,3 +187,65 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
     }
   }
 }
+
+glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
+                          ModelGroupClass* modelgroup) {
+  glm::vec3 temp = input.pos;
+  for (int i = 0; i < input.bones.size(); i++) {
+    std::string tempstr = input.bones[i];
+    while (tempstr != "null") {
+      ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
+      temp += bone->Poses[0].pos;
+      tempstr = bone->parent;
+    }
+  }
+  return temp;
+}
+
+void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup) {
+  glm::vec3 renderpos = modeltrans.position - Camera->position;
+  switch (Settings->graphicsmode) {
+    case 1: {
+      glDisable(GL_CULL_FACE);
+      for (int a = 0; a < modelgroup->Models.size(); a++) {
+        GlobalClass::Model* model = &Global->Modelmap[modelgroup->Models[a]];
+        for (int j = 0; j < model->faces.size(); j++) {
+          glEnable(GL_TEXTURE_2D);
+          glBindTexture(GL_TEXTURE_2D,
+                        Global->GLstuff->textures[model->texture]);
+          glBegin(GL_TRIANGLES);
+          for (int k = 2; k >= 0; k--) {
+            glm::vec3 pos = modelapplybones(
+                model->points[model->faces[j].point[k]], modelgroup);
+            pos.x *= modeltrans.size.x;
+            pos.y *= modeltrans.size.y;
+            pos.z *= modeltrans.size.z;
+            pos += renderpos;
+            glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
+            glVertex3f(pos.x, pos.y, pos.z);
+          }
+          glEnd();
+        }
+      }
+      glEnable(GL_CULL_FACE);
+      break;
+    }
+      // default: {
+      //   for (int j = 0; j < model->faces.size(); j++) {
+      //     glm::vec3 vec[3];
+      //     glm::vec2 uv[3];
+      //     for (int k = 0; k < 3; k++) {
+      //       glm::vec3 pos = model->points[model->faces[j].point[k]];
+      //       pos.x *= Global->Models[i].size.x;
+      //       pos.y *= Global->Models[i].size.y;
+      //       pos.z *= Global->Models[i].size.z;
+      //       pos += renderpos;
+      //       vec[k] = pos;
+      //       uv[k] = glm::vec2(
+      //           {model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y});
+      //     }
+      //     DrawTri(model->texture, vec, uv, 1, 1);
+      //   }
+      // }
+  }
+}

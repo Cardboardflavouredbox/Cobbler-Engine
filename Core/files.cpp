@@ -21,6 +21,7 @@
 #include "extern.h"
 #include "font.h"
 #include "global.h"
+#include "model.h"
 
 template <>
 struct glz::meta<glm::vec3> {
@@ -457,7 +458,7 @@ bool init(bool IsEditor) {
                basepath + Global->GameName + "/models/" +
                dir.path().filename().string() + "/")) {
         if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
-          GlobalClass::ModelGroupClass modelgroup;
+          ModelGroupClass modelgroup;
           GlobalClass::Model model;
           SDL_Log("Loading model: %s",
                   entry.path().filename().string().c_str());
@@ -508,8 +509,16 @@ bool init(bool IsEditor) {
               model.points.clear();
               model.texture = "";
             } else if (strcmp(lineHeader, "P") == 0) {
-              glm::vec3 vertex;
-              fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+              GlobalClass::Model::Vertex vertex;
+              char newlinecheck;
+              fscanf(file, "%f %f %f%c", &vertex.pos.x, &vertex.pos.y,
+                     &vertex.pos.z, &newlinecheck);
+              while (newlinecheck != '\n') {
+                char name[64];
+                float temp;
+                fscanf(file, "%s %f%c", name, &temp, &newlinecheck);
+                vertex.bones.push_back(name);
+              }
               model.points.push_back(vertex);
             } else if (strcmp(lineHeader, "F") == 0) {
               GlobalClass::Model::Face face;
@@ -534,7 +543,7 @@ bool init(bool IsEditor) {
           fclose(file);
           Global->Modelmap[namestr] = model;
           modelgroup.Models.push_back(namestr);
-          Global->ModelGroupMap[tempstr] = modelgroup;
+          ModelGroupMap[tempstr] = modelgroup;
         } else if (entry.is_regular_file() &&
                    entry.path().extension() == ".bmp") {
           loadBMP(entry.path());
