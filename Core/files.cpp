@@ -477,14 +477,15 @@ bool init(bool IsEditor) {
             if (fscanf(file, "%s", lineHeader) == EOF) break;
             if (strcmp(lineHeader, "SB") == 0) {
               char name[64], parent[64];
-              glm::vec3 head, tail;
+              glm::vec3 head, tail, z_axis;
               int what =
-                  fscanf(file, "%s %f %f %f/%f %f %f %s", name, &head.x,
-                         &head.y, &head.z, &tail.x, &tail.y, &tail.z, parent);
+                  fscanf(file, "%s %f %f %f/%f %f %f/%f %f %f %s", name,
+                         &z_axis.x, &z_axis.y, &z_axis.z, &head.x, &head.y,
+                         &head.z, &tail.x, &tail.y, &tail.z, parent);
               modelgroup.Bonemap[name].parent = parent;
               modelgroup.Bonemap[name].head = head;
               modelgroup.Bonemap[name].tail = tail;
-
+              modelgroup.Bonemap[name].z_axis = z_axis;
             } else if (strcmp(lineHeader, "EB") == 0) {
               char name[64];
               float roll;
@@ -494,10 +495,10 @@ bool init(bool IsEditor) {
               char name[64];
               int index;
               glm::vec3 pos, scale;
-              glm::vec3 rot;
+              glm::quat rot;
               fscanf(file, "%s %d/%f %f %f/%f %f %f/%f %f %f %f", name, &index,
                      &pos.x, &pos.y, &pos.z, &scale.x, &scale.y, &scale.z,
-                     &rot.x, &rot.y, &rot.z);
+                     &rot.w, &rot.y, &rot.x, &rot.z);
               if (modelgroup.Bonemap[name].Poses.size() == 0)
                 modelgroup.Bonemap[name].Poses.resize(114);
               modelgroup.Bonemap[name].Poses[index - 1].pos = pos;

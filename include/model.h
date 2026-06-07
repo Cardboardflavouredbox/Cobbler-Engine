@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 #include <string>
 
@@ -16,12 +17,12 @@
 struct ModelGroupClass {
   std::vector<std::string> Models;
   struct Bone {
-    glm::vec3 head, tail;
+    glm::vec3 head, tail, z_axis;
     std::string parent;
     float roll;
     struct Pose {
       glm::vec3 pos, scale;
-      glm::vec3 rot;
+      glm::quat rot;
     };
     std::vector<Pose> Poses;
   };
