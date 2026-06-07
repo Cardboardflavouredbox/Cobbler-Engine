@@ -195,9 +195,7 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
     std::string tempstr = input.bones[i];
     while (tempstr != "null") {
       ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
-      temp =
-          (bone->Poses[frame].rot * glm::angleAxis(bone->roll, bone->z_axis)) *
-          (temp - bone->head);
+      temp = (bone->Poses[frame].rot) * (temp - bone->head);
       temp += bone->head;
       temp += bone->Poses[frame].pos;
       temp.x *= bone->Poses[frame].scale.x;

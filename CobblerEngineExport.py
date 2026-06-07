@@ -22,13 +22,7 @@ def write_some_data(context, filepath):
                         parentname = bone.parent.name
                     z_axis = bone.z_axis
                         
-                    f.write(f"SB {bone.name} {z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f} {parentname}\n")
-                
-                bpy.ops.object.mode_set(mode='EDIT')
-                edit_bones = obj.data.edit_bones
-                
-                for bone in edit_bones:
-                    f.write(f"EB {bone.name} {bone.roll:f}\n")
+                    f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f} {parentname}\n")
                 
                 for frame in range(scene.frame_start, scene.frame_end + 1):
                     scene.frame_set(frame)  # Update scene evaluation for the frame

@@ -17,9 +17,8 @@
 struct ModelGroupClass {
   std::vector<std::string> Models;
   struct Bone {
-    glm::vec3 head, tail, z_axis;
+    glm::vec3 head, tail;
     std::string parent;
-    float roll;
     struct Pose {
       glm::vec3 pos, scale;
       glm::quat rot;
