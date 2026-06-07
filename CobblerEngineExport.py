@@ -20,9 +20,8 @@ def write_some_data(context, filepath):
                     parentname = "null"
                     if bone.parent: 
                         parentname = bone.parent.name
-                    z_axis = bone.z_axis
                         
-                    f.write(f"SB {bone.name} {z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f} {parentname}\n")
+                    f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f} {parentname}\n")
                 
                 bpy.ops.object.mode_set(mode='EDIT')
                 edit_bones = obj.data.edit_bones
@@ -34,7 +33,7 @@ def write_some_data(context, filepath):
                     scene.frame_set(frame)  # Update scene evaluation for the frame
     
                     for p_bone in obj.pose.bones:
-                        f.write(f"PB {p_bone.name} {frame}/{p_bone.location[0]:f} {p_bone.location[1]:f} {p_bone.location[2]:f}/{p_bone.scale[0]:f} {p_bone.scale[1]:f} {p_bone.scale[2]:f}/{p_bone.rotation_quaternion[0]:f} {p_bone.rotation_quaternion[1]:f} {p_bone.rotation_quaternion[2]:f} {p_bone.rotation_quaternion[3]:f}\n")
+                        f.write(f"PB {p_bone.name} {frame}/{p_bone.location[0]:f} {p_bone.location[1]:f} {p_bone.location[2]:f}/{p_bone.scale[0]:f} {p_bone.scale[1]:f} {p_bone.scale[2]:f}/{p_bone.rotation_euler[0]:f} {p_bone.rotation_euler[1]:f} {p_bone.rotation_euler[2]:f}\n")
                 
             elif obj.type == 'MESH':
                 # Get the global transformation matrix
