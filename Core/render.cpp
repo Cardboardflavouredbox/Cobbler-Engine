@@ -191,18 +191,17 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
 glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
                           ModelGroupClass* modelgroup, int frame) {
   glm::vec3 temp = input.pos;
-  for (int i = 0; i < input.bones.size(); i++) {
-    std::string tempstr = input.bones[i];
-    while (tempstr != "null") {
-      ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
-      temp = (bone->Poses[frame].rot) * (temp - bone->head);
-      temp += bone->head;
-      temp += bone->Poses[frame].pos;
-      temp.x *= bone->Poses[frame].scale.x;
-      temp.y *= bone->Poses[frame].scale.y;
-      temp.z *= bone->Poses[frame].scale.z;
-      tempstr = bone->parent;
-    }
+
+  std::string tempstr = input.bone;
+  while (tempstr != "null") {
+    ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
+    temp = (bone->Poses[frame].rot) * (temp - bone->head);
+    temp += bone->head;
+    temp += bone->Poses[frame].pos;
+    temp.x *= bone->Poses[frame].scale.x;
+    temp.y *= bone->Poses[frame].scale.y;
+    temp.z *= bone->Poses[frame].scale.z;
+    tempstr = bone->parent;
   }
   return temp;
 }

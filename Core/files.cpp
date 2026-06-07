@@ -519,7 +519,7 @@ bool init(bool IsEditor) {
                 char name[64];
                 float temp;
                 fscanf(file, "%s %f%c", name, &temp, &newlinecheck);
-                vertex.bones.push_back(name);
+                vertex.bone = name;
               }
               model.points.push_back(vertex);
             } else if (strcmp(lineHeader, "F") == 0) {
