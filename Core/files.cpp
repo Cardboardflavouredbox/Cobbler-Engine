@@ -491,7 +491,10 @@ bool init(bool IsEditor) {
               glm::quat rot;
               fscanf(file, "%s %d/%f %f %f/%f %f %f/%f %f %f %f", name, &index,
                      &pos.x, &pos.y, &pos.z, &scale.x, &scale.y, &scale.z,
-                     &rot.w, &rot.x, &rot.y, &rot.z);
+                     &rot.w, &rot.z, &rot.x, &rot.y);
+              rot.x *= -1;
+              rot.y *= -1;
+              rot = glm::normalize(rot);
               if (modelgroup.Bonemap[name].Poses.size() == 0)
                 modelgroup.Bonemap[name].Poses.resize(114);
               modelgroup.Bonemap[name].Poses[index - 1].pos = pos;

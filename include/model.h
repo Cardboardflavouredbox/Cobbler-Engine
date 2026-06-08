@@ -33,5 +33,5 @@ LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 struct Modeltransform {
   std::string name;
   glm::vec3 position, size = glm::vec3({1, 1, 1});
-  int frame;
+  float frame;
 };

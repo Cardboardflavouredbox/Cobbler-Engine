@@ -28,7 +28,8 @@ def write_some_data(context, filepath):
                     scene.frame_set(frame)  # Update scene evaluation for the frame
     
                     for p_bone in obj.pose.bones:
-                        f.write(f"PB {p_bone.name} {frame}/{p_bone.location[0]:f} {p_bone.location[1]:f} {p_bone.location[2]:f}/{p_bone.scale[0]:f} {p_bone.scale[1]:f} {p_bone.scale[2]:f}/{p_bone.rotation_quaternion[0]:f} {p_bone.rotation_quaternion[1]:f} {p_bone.rotation_quaternion[2]:f} {p_bone.rotation_quaternion[3]:f}\n")
+                        quat = p_bone.rotation_quaternion;
+                        f.write(f"PB {p_bone.name} {frame}/{p_bone.location[0]:f} {p_bone.location[1]:f} {p_bone.location[2]:f}/{p_bone.scale[0]:f} {p_bone.scale[1]:f} {p_bone.scale[2]:f}/{quat.w:f} {quat.x:f} {quat.y:f} {quat.z:f}\n")
                 
             elif obj.type == 'MESH':
                 # Get the global transformation matrix
