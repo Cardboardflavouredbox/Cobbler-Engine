@@ -22,7 +22,7 @@ def write_some_data(context, filepath):
         for keyframe in fcurve.keyframe_points:
             frame_number = keyframe.co[0]
             curve_value = keyframe.co[1]
-            f.write(f"{frame_number:.0f}/{curve_value:f} ")
+            f.write(f" {frame_number:.0f}/{curve_value:f}")
         f.write(f"\n")
     
     for obj in selected_objects:

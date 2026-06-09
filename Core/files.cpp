@@ -491,7 +491,7 @@ bool init(bool IsEditor) {
               char name[64], thing[64];
               int index;
               char newlinecheck = 'w';
-              fscanf(file, "%*48[^\"]\"%48[^\"]\"].%s %d\n", name, thing,
+              fscanf(file, "%*48[^\"]\"%48[^\"]\"].%s %d\n ", name, thing,
                      &index);
               SDL_Log("FC: %s %s", name, thing);
               modelgroup.Bonemap.try_emplace(name);

@@ -206,7 +206,6 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
     // SDL_Log("%d %d %s", modelgroup->Bonemap.size(), bone->Poses.size(),
     //         tempstr.c_str());
     for (auto const& [key, val] : bone->Poses) {
-      SDL_Log("key: %u", key);
       if (frame == key) {
         pos = val.pos;
         rot = val.rot;
