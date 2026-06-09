@@ -203,8 +203,6 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
     glm::quat rot = bone->Poses.begin()->second.rot;
     unsigned int framebefore = modelgroup->animstart;
 
-    // SDL_Log("%d %d %s", modelgroup->Bonemap.size(), bone->Poses.size(),
-    //         tempstr.c_str());
     for (auto const& [key, val] : bone->Poses) {
       if (frame == key) {
         pos = val.pos;
@@ -215,8 +213,10 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
         pos = val.pos;
         rot = val.rot;
         scale = val.scale;
+        framebefore = key;
       } else {
-        float a = (frame - framebefore) / float(key - framebefore);
+        float a = ((float)frame - (float)framebefore) /
+                  ((float)key - (float)framebefore);
         rot = glm::slerp(rot, val.rot, a);
         pos = pos * (1 - a) + val.pos * a;
         scale = scale * (1 - a) + val.scale * a;
