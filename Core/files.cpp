@@ -475,7 +475,10 @@ bool init(bool IsEditor) {
             char lineHeader[128];
             // read the first word of the line
             if (fscanf(file, "%s", lineHeader) == EOF) break;
-            if (strcmp(lineHeader, "SB") == 0) {
+            if (strcmp(lineHeader, "A") == 0) {
+              fscanf(file, "%d %d\n", &modelgroup.animstart,
+                     &modelgroup.animend);
+            } else if (strcmp(lineHeader, "SB") == 0) {
               char name[64], parent[64];
               glm::vec3 head, tail;
               int what =
@@ -484,22 +487,41 @@ bool init(bool IsEditor) {
               modelgroup.Bonemap[name].parent = parent;
               modelgroup.Bonemap[name].head = head;
               modelgroup.Bonemap[name].tail = tail;
-            } else if (strcmp(lineHeader, "PB") == 0) {
-              char name[64];
+            } else if (strcmp(lineHeader, "FC") == 0) {
+              char name[64], thing[64];
               int index;
-              glm::vec3 pos, scale;
-              glm::quat rot;
-              fscanf(file, "%s %d/%f %f %f/%f %f %f/%f %f %f %f", name, &index,
-                     &pos.x, &pos.y, &pos.z, &scale.x, &scale.y, &scale.z,
-                     &rot.w, &rot.z, &rot.x, &rot.y);
-              rot.x *= -1;
-              rot.y *= -1;
-              rot = glm::normalize(rot);
-              if (modelgroup.Bonemap[name].Poses.size() == 0)
-                modelgroup.Bonemap[name].Poses.resize(114);
-              modelgroup.Bonemap[name].Poses[index - 1].pos = pos;
-              modelgroup.Bonemap[name].Poses[index - 1].scale = scale;
-              modelgroup.Bonemap[name].Poses[index - 1].rot = rot;
+              char newlinecheck = 'w';
+              fscanf(file, "%*48[^\"]\"%48[^\"]\"].%s %d\n", name, thing,
+                     &index);
+              SDL_Log("FC: %s %s", name, thing);
+              modelgroup.Bonemap.try_emplace(name);
+              if (strcmp(thing, "location") == 0) {
+                while (newlinecheck != '\n') {
+                  unsigned int index2;
+                  float temp;
+                  fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+
+                  modelgroup.Bonemap[name].Poses.try_emplace(index2);
+                  modelgroup.Bonemap[name].Poses[index2].pos[index] = temp;
+                }
+              } else if (strcmp(thing, "rotation_quaternion") == 0) {
+                while (newlinecheck != '\n') {
+                  unsigned int index2;
+                  float temp;
+                  fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+                  modelgroup.Bonemap[name].Poses.try_emplace(index2);
+                  modelgroup.Bonemap[name].Poses[index2].rot[(index + 3) % 4] =
+                      temp;
+                }
+              } else if (strcmp(thing, "scale") == 0) {
+                while (newlinecheck != '\n') {
+                  unsigned int index2;
+                  float temp;
+                  fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+                  modelgroup.Bonemap[name].Poses.try_emplace(index2);
+                  modelgroup.Bonemap[name].Poses[index2].scale[index] = temp;
+                }
+              }
             } else if (strcmp(lineHeader, "O") == 0) {
               if (namestr != tempstr) {
                 Global->Modelmap[namestr] = model;

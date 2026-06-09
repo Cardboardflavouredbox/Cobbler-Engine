@@ -7,7 +7,23 @@ def write_some_data(context, filepath):
     
     scene = bpy.context.scene
     selected_objects = scene.objects
+
+    # Get active action
+    action = bpy.context.object.animation_data.action
     
+    start_frame = action.frame_range[0]
+    end_frame = action.frame_range[1]
+    
+    f.write(f"A {start_frame:.0f} {end_frame:.0f}\n")
+
+    # Extract keyframe points for each F-Curve (e.g., location, rotation, scale channels)
+    for fcurve in action.fcurves:
+        f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
+        for keyframe in fcurve.keyframe_points:
+            frame_number = keyframe.co[0]
+            curve_value = keyframe.co[1]
+            f.write(f"{frame_number:.0f}/{curve_value:f} ")
+        f.write(f"\n")
     
     for obj in selected_objects:
         if obj:
@@ -24,12 +40,12 @@ def write_some_data(context, filepath):
                         
                     f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f} {parentname}\n")
                 
-                for frame in range(scene.frame_start, scene.frame_end + 1):
-                    scene.frame_set(frame)  # Update scene evaluation for the frame
-    
-                    for p_bone in obj.pose.bones:
-                        quat = p_bone.rotation_quaternion;
-                        f.write(f"PB {p_bone.name} {frame}/{p_bone.location[0]:f} {p_bone.location[1]:f} {p_bone.location[2]:f}/{p_bone.scale[0]:f} {p_bone.scale[1]:f} {p_bone.scale[2]:f}/{quat.w:f} {quat.x:f} {quat.y:f} {quat.z:f}\n")
+#                for frame in range(scene.frame_start, scene.frame_end + 1):
+#                    scene.frame_set(frame)  # Update scene evaluation for the frame
+#    
+#                    for p_bone in obj.pose.bones:
+#                        quat = p_bone.rotation_quaternion;
+#                        f.write(f"PB {p_bone.name} {frame}/{p_bone.location[0]:f} {p_bone.location[1]:f} {p_bone.location[2]:f}/{p_bone.scale[0]:f} {p_bone.scale[1]:f} {p_bone.scale[2]:f}/{quat.w:f} {quat.x:f} {quat.y:f} {quat.z:f}\n")
                 
             elif obj.type == 'MESH':
                 # Get the global transformation matrix

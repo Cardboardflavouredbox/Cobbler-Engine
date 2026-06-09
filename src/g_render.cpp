@@ -182,7 +182,10 @@ void renderProps() {
   for (int i = 0; i < Global->Models.size(); i++) {
     ModelGroupClass* modelgroup = &ModelGroupMap[Global->Models[i].name];
     Global->Models[i].frame += Global->deltaTime * 5 / 2;
-    if (Global->Models[i].frame >= 114) Global->Models[i].frame -= 114;
+    if (Global->Models[i].frame >= modelgroup->animend)
+      Global->Models[i].frame += modelgroup->animstart - modelgroup->animend;
+    if (Global->Models[i].frame < modelgroup->animstart)
+      Global->Models[i].frame = modelgroup->animstart;
     renderModelGroup(Global->Models[i], modelgroup);
   }
 }

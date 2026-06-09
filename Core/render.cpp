@@ -1,5 +1,7 @@
 #include "render.h"
 
+#include <SDL3/SDL_log.h>
+
 #include <cmath>
 #include <glm/gtc/quaternion.hpp>
 
@@ -189,18 +191,48 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
 }
 
 glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
-                          ModelGroupClass* modelgroup, int frame) {
+                          ModelGroupClass* modelgroup, unsigned int frame) {
   glm::vec3 temp = input.pos;
 
   std::string tempstr = input.bone;
   while (tempstr != "null") {
     ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
-    temp = (bone->Poses[frame].rot) * (temp - bone->head);
+
+    glm::vec3 pos = bone->Poses.begin()->second.pos,
+              scale = bone->Poses.begin()->second.scale;
+    glm::quat rot = bone->Poses.begin()->second.rot;
+    unsigned int framebefore = modelgroup->animstart;
+
+    // SDL_Log("%d %d %s", modelgroup->Bonemap.size(), bone->Poses.size(),
+    //         tempstr.c_str());
+    for (auto const& [key, val] : bone->Poses) {
+      SDL_Log("key: %u", key);
+      if (frame == key) {
+        pos = val.pos;
+        rot = val.rot;
+        scale = val.scale;
+        break;
+      } else if (frame > key) {
+        pos = val.pos;
+        rot = val.rot;
+        scale = val.scale;
+      } else {
+        float a = (frame - framebefore) / float(key - framebefore);
+        rot = glm::slerp(rot, val.rot, a);
+        pos = pos * (1 - a) + val.pos * a;
+        scale = scale * (1 - a) + val.scale * a;
+        break;
+      }
+    }
+
+    glm::quat final_quat = rot;
+
+    temp = (final_quat) * (temp - bone->head);
     temp += bone->head;
-    temp += bone->Poses[frame].pos;
-    temp.x *= bone->Poses[frame].scale.x;
-    temp.y *= bone->Poses[frame].scale.y;
-    temp.z *= bone->Poses[frame].scale.z;
+    temp += pos;
+    temp.x *= scale.x;
+    temp.y *= scale.y;
+    temp.z *= scale.z;
     tempstr = bone->parent;
   }
   return temp;
@@ -221,7 +253,7 @@ void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup) {
           for (int k = 2; k >= 0; k--) {
             glm::vec3 pos =
                 modelapplybones(model->points[model->faces[j].point[k]],
-                                modelgroup, modeltrans.frame);
+                                modelgroup, (unsigned int)(modeltrans.frame));
             pos.x *= modeltrans.size.x;
             pos.y *= modeltrans.size.y;
             pos.z *= modeltrans.size.z;

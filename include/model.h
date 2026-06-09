@@ -2,6 +2,7 @@
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
+#include <map>
 #include <string>
 
 #ifdef _WIN32
@@ -23,9 +24,10 @@ struct ModelGroupClass {
       glm::vec3 pos, scale;
       glm::quat rot;
     };
-    std::vector<Pose> Poses;
+    std::map<unsigned int, Pose> Poses;
   };
   std::unordered_map<std::string, Bone> Bonemap;
+  unsigned int animstart, animend;
 };
 
 LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
