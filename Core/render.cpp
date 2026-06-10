@@ -224,6 +224,12 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
       }
     }
 
+    float angle = glm::angle(rot);
+    glm::vec3 axis = glm::quatLookAt(glm::vec3(0, 1, 0),
+                                     glm::normalize(bone->tail - bone->head)) *
+                     glm::axis(rot);
+    rot = glm::angleAxis(angle, axis);
+
     glm::quat final_quat = rot;
 
     temp = (final_quat) * (temp - bone->head);

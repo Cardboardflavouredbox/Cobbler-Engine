@@ -183,12 +183,11 @@ void renderProps() {
     ModelGroupClass* modelgroup = &ModelGroupMap[Global->Models[i].name];
 
     Global->Models[i].frame += Global->deltaTime * 5 / 2;
-    if (Global->Models[i].frame >= (float)modelgroup->animend)
+    while (Global->Models[i].frame >= (float)modelgroup->animend)
       Global->Models[i].frame +=
           ((float)modelgroup->animstart - (float)modelgroup->animend);
     if (Global->Models[i].frame < (float)modelgroup->animstart)
       Global->Models[i].frame = (float)modelgroup->animstart;
-    SDL_Log("%f", Global->Models[i].frame);
 
     renderModelGroup(Global->Models[i], modelgroup);
   }
