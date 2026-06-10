@@ -218,8 +218,8 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
         float a = ((float)frame - (float)framebefore) /
                   ((float)key - (float)framebefore);
         rot = glm::slerp(rot, val.rot, a);
-        pos = pos * (1 - a) + val.pos * a;
-        scale = scale * (1 - a) + val.scale * a;
+        pos = glm::mix(pos, val.pos, a);
+        scale = glm::mix(scale, val.scale, a);
         break;
       }
     }
@@ -228,13 +228,13 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
     glm::vec3 axis = glm::quatLookAt(glm::vec3(0, 1, 0),
                                      glm::normalize(-bone->tail + bone->head)) *
                      glm::axis(rot);
-    rot = glm::angleAxis(angle, axis);
 
-    glm::quat final_quat = rot;
-
+    glm::quat final_quat = glm::angleAxis(angle, axis);
     temp = (final_quat) * (temp - bone->head);
     temp += bone->head;
-    temp += pos;
+    temp += glm::quatLookAt(glm::vec3(0, 1, 0),
+                            glm::normalize(bone->tail - bone->head)) *
+            pos;
     temp.x *= scale.x;
     temp.y *= scale.y;
     temp.z *= scale.z;
