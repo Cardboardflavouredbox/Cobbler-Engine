@@ -22,6 +22,7 @@
 #include "font.h"
 #include "global.h"
 #include "model.h"
+#include "network.h"
 
 template <>
 struct glz::meta<glm::vec3> {
@@ -285,7 +286,8 @@ enum argenums {
   SetFPS,
   SetFOV,
   SetVsync,
-  SetGame
+  SetGame,
+  SetLogin
 };
 
 bool initargs(std::vector<std::string> args) {
@@ -311,7 +313,8 @@ bool initargs(std::vector<std::string> args) {
       {"-fps", SetFPS},
       {"-fov", SetFOV},
       {"-vsync", SetVsync},
-      {"-game", SetGame}};
+      {"-game", SetGame},
+      {"-login", SetLogin}};
 
   for (int i = 0; i < args.size(); i++) {
     if (stringtoenums.contains(args[i])) {
@@ -350,6 +353,25 @@ bool initargs(std::vector<std::string> args) {
           }
           Global->GameName = args[i];
           break;
+        case SetLogin:
+          std::string username, password;
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(username)");
+            return false;
+          }
+          username = args[i];
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(password)");
+            return false;
+          }
+          password = args[i];
+
+          curlpostfields =
+              "IsGame=True&username=" + username + "&password=" + password;
+
+          break;
       }
     }
   }
@@ -375,6 +397,20 @@ bool init(bool IsEditor) {
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
   SDL_Log("SDL initialized");
+
+  if (!CobblerInitNet()) {
+    return false;
+  }
+  SDL_Log("Net Loaded");
+  if (curlpostfields != "") {
+    if (!CobblerCurlLogin()) {
+      SDL_Log("Login failed");
+      Global->LoggedIn = false;
+    } else {
+      SDL_Log("Login successful");
+      Global->LoggedIn = true;
+    }
+  }
 
   if (!setRenderer(IsEditor, LoadedData)) return false;
 
@@ -634,6 +670,9 @@ void quit() {
   for (auto& i : Global->Entities) {
     delete (i);
   }
+
+  CobblerQuitNet();
+  SDL_Log("Netfreed");
 
   Global->IsRunning = false;
   SDL_Quit();

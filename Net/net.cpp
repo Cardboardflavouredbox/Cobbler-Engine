@@ -1,7 +1,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3_net/SDL_net.h>
 #include <curl/curl.h>
-#include <stdlib.h>
+
+#include <sstream>
 
 #include "network.h"
 
@@ -15,22 +16,17 @@ struct NetworkStuffClass {
 };
 
 NetworkStuffClass* NetStuff;
+std::string curlpostfields;
 
 static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
-                                  char* clientp) {
-  size_t realsize = nmemb;
+                                  void* clientp) {
+  size_t totalSize = size * nmemb;
 
-  size_t memsize;
+  std::ostringstream* stream = (std::ostringstream*)clientp;
 
-  char* ptr = (char*)realloc(clientp, memsize + realsize + 1);
-  if (!ptr) return 0; /* out of memory */
+  stream->write(data, totalSize);
 
-  clientp = ptr;
-  memcpy(&(clientp[memsize]), data, realsize);
-  memsize += realsize;
-  clientp[memsize] = 0;
-
-  return realsize;
+  return totalSize;
 }
 
 bool CobblerSetSocket(char* ipaddress, Uint16 port) {
@@ -73,10 +69,10 @@ void CobblerQuitNet() {
   NET_Quit();
 }
 
-bool CobblerSendCurlData(char postfields[]) {
+bool CobblerSendCurlData() {
   curl_easy_setopt(NetStuff->curl, CURLOPT_URL,
                    "http://127.0.0.1:5000/gamedata");
-  curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, postfields);
+  curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, curlpostfields.c_str());
 
   NetStuff->res = curl_easy_perform(NetStuff->curl);
 
@@ -88,24 +84,23 @@ bool CobblerSendCurlData(char postfields[]) {
   return true;
 }
 
-bool CobblerCurlLogin(char postfields[]) {
-  char* response;
+bool CobblerCurlLogin() {
+  SDL_Log("logging in...");
+  std::ostringstream stream;
   curl_easy_setopt(NetStuff->curl, CURLOPT_NOPROGRESS, 1L);
   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEFUNCTION, CobblerCurlCallback);
-  curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA, &response);
+  curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA, &stream);
   curl_easy_setopt(NetStuff->curl, CURLOPT_URL, "http://127.0.0.1:5000/login");
-  curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, postfields);
+  curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, curlpostfields.c_str());
 
   NetStuff->res = curl_easy_perform(NetStuff->curl);
 
   if (NetStuff->res != CURLE_OK) {
     SDL_Log("curl_easy_perform() failed: %s\n",
             curl_easy_strerror(NetStuff->res));
-    free(response);
     return false;
   }
 
-  bool result = (response[0] == 'S');
-  free(response);
+  bool result = (stream.str() == "Success");
   return result;
 }

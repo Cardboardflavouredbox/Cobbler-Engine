@@ -105,10 +105,10 @@ src/g_update.cpp src/g_components.cpp)
 # src/e_update.cpp src/e_components.cpp)
 
 target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net CURL::libcurl)
-target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 glaze::glaze glm::glm freetype CobblerGLAD)
-target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD CobblerNet)
+target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 glaze::glaze glm::glm freetype CobblerGLAD CobblerNet)
+target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
-target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib CobblerNet)
+target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib)
 # target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib)
 
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

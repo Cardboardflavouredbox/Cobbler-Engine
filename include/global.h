@@ -80,6 +80,8 @@ struct GlobalClass {
   std::unordered_map<std::string, std::vector<UIthing*>> UImap;
   std::vector<std::string> UIlist = {"default"};
   glm::mat4 perspectivematrix;
+
+  bool LoggedIn = false;
 };
 
 struct EditorClass {

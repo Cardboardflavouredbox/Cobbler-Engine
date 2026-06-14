@@ -13,7 +13,6 @@
 #include "extern.h"
 #include "files.h"
 #include "global.h"
-#include "network.h"
 #include "update.h"
 
 int main(int argc, char* argv[]) {
@@ -49,12 +48,6 @@ int main(int argc, char* argv[]) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }
-
-  if (!CobblerInitNet()) {
-    SDL_Log("%s", SDL_GetError());
-    return -1;
-  }
-  SDL_Log("Net Loaded");
 
   switch (Settings->graphicsmode) {
     case 1: {
@@ -127,8 +120,6 @@ int main(int argc, char* argv[]) {
     }
   }
   quit();
-  CobblerQuitNet();
-  SDL_Log("Netfreed");
   void (*UIfree)() = UIlib.get_function<void()>("UIfree");
   UIfree();
   SDL_Log("UIfreed");

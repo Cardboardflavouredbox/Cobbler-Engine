@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #ifdef _WIN32
 #ifdef DLLEXPORT
 #define LIB_API __declspec(dllexport)
@@ -9,9 +11,12 @@
 #else
 #define LIB_API
 #endif
+
+LIB_API extern std::string curlpostfields;
+
 extern "C" {
 LIB_API bool CobblerInitNet();
-void CobblerQuitNet();
-bool CobblerSendCurlData(char postfields[]);
-bool CobblerCurlLogin(char postfields[]);
+LIB_API void CobblerQuitNet();
+LIB_API bool CobblerSendCurlData();
+LIB_API bool CobblerCurlLogin();
 }
