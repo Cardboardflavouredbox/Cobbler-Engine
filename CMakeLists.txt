@@ -5,6 +5,9 @@ set(GAME "CobblerGame" CACHE STRING "Name of the Game folder")
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(BUILD_SHARED_LIBS ON)
+set(BUILD_STATIC_LIBS OFF)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -58,6 +61,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(dylib)
 
+FetchContent_Declare(curl
+	URL https://curl.se/download/curl-8.20.0.tar.gz
+	DOWNLOAD_EXTRACT_TIMESTAMP true
+	OVERRIDE_FIND_PACKAGE
+)
+FetchContent_MakeAvailable(curl)
+
+find_package(curl)
+
 set(CORE_SOURCES 
     Core/components.cpp 
     Core/events.cpp
@@ -74,7 +86,7 @@ set(CORE_SOURCES
 add_library(CobblerGLAD SHARED glad/glad.c "include/glad/glad.h")
 add_library(CobblerCore SHARED Core/extern.cpp ${CORE_SOURCES})
 add_library(CobblerGameUI SHARED "$CACHE{GAME}/UI/g_ui.cpp" "$CACHE{GAME}/UI/g_ui_index.cpp" "include/ui.h")
-add_library(CobblerNet SHARED Net/net.cpp)
+add_library(CobblerNet SHARED Net/net.cpp "include/network.h")
 # add_library(CobblerEditorUI SHARED "$CACHE{GAME}/UI/e_ui.cpp" "$CACHE{GAME}/UI/e_ui_index.cpp" "include/ui.h")
 
 set_target_properties(CobblerGameUI PROPERTIES
@@ -92,12 +104,12 @@ src/g_update.cpp src/g_components.cpp)
 # src/e_main.cpp src/e_render.cpp 
 # src/e_update.cpp src/e_components.cpp)
 
+target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net CURL::libcurl)
 target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 glaze::glaze glm::glm freetype CobblerGLAD)
-target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
+target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD CobblerNet)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
-target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib)
+target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib CobblerNet)
 # target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib)
-target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net)
 
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
