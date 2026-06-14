@@ -1,6 +1,7 @@
 #include "components.h"
 
 #include "extern.h"
+#include "physics.h"
 #include "ui.h"
 
 void componentsupdatelate() {
@@ -12,5 +13,12 @@ void componentsupdatelate() {
     for (int j = 0; j < len; j++) {
       Global->UImap[Global->UIlist[i]].at(j)->update();
     }
+  }
+}
+
+void componentsupdate() {
+  for (int i = 0; i < Global->Entities.size(); i++) {
+    EntityMove(Global->Entities[i]);
+    Global->Entities[i]->update();
   }
 }

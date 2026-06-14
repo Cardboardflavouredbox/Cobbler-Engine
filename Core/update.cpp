@@ -1,3 +1,5 @@
+#include "update.h"
+
 #include <SDL3/SDL_timer.h>
 
 #include <cmath>
@@ -7,8 +9,8 @@
 #include "entity.h"
 #include "extern.h"
 #include "global.h"
+#include "network.h"
 #include "physics.h"
-#include "update.h"
 
 void playermovement() {
   Camera->dir.x += -1 * Settings->mousesensitivity.x * P1Inputs->MouseDelta.x;
@@ -65,8 +67,11 @@ void playermovement() {
     for (auto& i : Global->Entities) {
       if (i->teamindex != Camera->teamindex &&
           capsuleraycheck(ray[0], ray[1], i->hitbox[0] + i->position,
-                          i->hitbox[1] + i->position, i->hitboxradius))
+                          i->hitbox[1] + i->position, i->hitboxradius)) {
         i->velocityvec3.z = 25;
+        curlpostfield->Kills++;
+        curlpostfield->hasdata = true;
+      }
     }
   }
 }
@@ -86,4 +91,6 @@ void update() {
     componentsupdate();
   }
   componentsupdatelate();
+
+  if (curlpostfield->hasdata) CobblerSendCurlData();
 }

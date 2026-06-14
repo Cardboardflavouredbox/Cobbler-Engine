@@ -16,7 +16,8 @@ struct NetworkStuffClass {
 };
 
 NetworkStuffClass* NetStuff;
-std::string curlpostfields;
+PostField* curlpostfield;
+std::string curlloginstring;
 
 static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
                                   void* clientp) {
@@ -65,6 +66,8 @@ void CobblerQuitNet() {
   if (NetStuff->curl) curl_easy_cleanup(NetStuff->curl);
   curl_global_cleanup();
 
+  if (curlpostfield != nullptr) delete (curlpostfield);
+
   delete (NetStuff);
   NET_Quit();
 }
@@ -72,7 +75,10 @@ void CobblerQuitNet() {
 bool CobblerSendCurlData() {
   curl_easy_setopt(NetStuff->curl, CURLOPT_URL,
                    "http://127.0.0.1:5000/gamedata");
-  curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, curlpostfields.c_str());
+  std::ostringstream stream;
+  curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA, &stream);
+  std::string tempstr = curlpostfield->ToField();
+  curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, tempstr.c_str());
 
   NetStuff->res = curl_easy_perform(NetStuff->curl);
 
@@ -81,6 +87,8 @@ bool CobblerSendCurlData() {
             curl_easy_strerror(NetStuff->res));
     return false;
   }
+  curlpostfield->reset();
+  SDL_Log("CurlData Sent Successfully");
   return true;
 }
 
@@ -91,7 +99,7 @@ bool CobblerCurlLogin() {
   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEFUNCTION, CobblerCurlCallback);
   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA, &stream);
   curl_easy_setopt(NetStuff->curl, CURLOPT_URL, "http://127.0.0.1:5000/login");
-  curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, curlpostfields.c_str());
+  curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, curlloginstring.c_str());
 
   NetStuff->res = curl_easy_perform(NetStuff->curl);
 
@@ -102,5 +110,8 @@ bool CobblerCurlLogin() {
   }
 
   bool result = (stream.str() == "Success");
+  if (result) {
+    curlloginstring.clear();
+  }
   return result;
 }

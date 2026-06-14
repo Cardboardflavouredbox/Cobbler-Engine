@@ -12,7 +12,29 @@
 #define LIB_API
 #endif
 
-LIB_API extern std::string curlpostfields;
+struct PostField {
+  std::string username;
+  bool hasdata = false;
+  int Kills = 0;
+
+  void reset() {
+    Kills = 0;
+    hasdata = false;
+  }
+
+  std::string ToField() {
+    std::string result = "username=" + username + "&";
+    if (Kills > 0) {
+      result += "Kills=" + std::to_string(Kills) + "&";
+    }
+
+    if (!result.empty()) result.pop_back();
+    return result;
+  }
+};
+
+LIB_API extern PostField* curlpostfield;
+LIB_API extern std::string curlloginstring;
 
 extern "C" {
 LIB_API bool CobblerInitNet();

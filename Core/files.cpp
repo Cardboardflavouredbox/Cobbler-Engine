@@ -299,6 +299,9 @@ bool initargs(std::vector<std::string> args) {
   if (P1Inputs == nullptr) return false;
   Settings->fov = 90;
 
+  curlpostfield = new PostField();
+  if (curlpostfield == nullptr) return false;
+
   LoadSettings();
 
   SDL_Log("Classes initialized");
@@ -354,13 +357,13 @@ bool initargs(std::vector<std::string> args) {
           Global->GameName = args[i];
           break;
         case SetLogin:
-          std::string username, password;
+          std::string password;
           i++;
           if (i >= args.size()) {
             SDL_Log("Wrong Arguements!(username)");
             return false;
           }
-          username = args[i];
+          curlpostfield->username = args[i];
           i++;
           if (i >= args.size()) {
             SDL_Log("Wrong Arguements!(password)");
@@ -368,8 +371,8 @@ bool initargs(std::vector<std::string> args) {
           }
           password = args[i];
 
-          curlpostfields =
-              "IsGame=True&username=" + username + "&password=" + password;
+          curlloginstring = "IsGame=True&username=" + curlpostfield->username +
+                            "&password=" + password;
 
           break;
       }
@@ -402,7 +405,7 @@ bool init(bool IsEditor) {
     return false;
   }
   SDL_Log("Net Loaded");
-  if (curlpostfields != "") {
+  if (curlloginstring != "") {
     if (!CobblerCurlLogin()) {
       SDL_Log("Login failed");
       Global->LoggedIn = false;

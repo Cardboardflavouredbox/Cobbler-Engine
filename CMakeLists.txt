@@ -71,6 +71,7 @@ FetchContent_MakeAvailable(curl)
 find_package(curl)
 
 set(CORE_SOURCES 
+    Core/update.cpp
     Core/components.cpp 
     Core/events.cpp
     Core/extern.cpp
@@ -97,8 +98,7 @@ set_target_properties(CobblerGameUI PROPERTIES
 )
 
 add_executable(Cobbler-Engine 
-src/g_main.cpp src/g_render.cpp 
-src/g_update.cpp src/g_components.cpp)
+src/g_main.cpp src/g_render.cpp)
 
 # add_executable(Cobbler-Engine-Editor 
 # src/e_main.cpp src/e_render.cpp 
