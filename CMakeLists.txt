@@ -61,14 +61,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(dylib)
 
-FetchContent_Declare(curl
-	URL https://curl.se/download/curl-8.20.0.tar.gz
-	DOWNLOAD_EXTRACT_TIMESTAMP true
-	OVERRIDE_FIND_PACKAGE
+FetchContent_Declare(
+	curl
+	GIT_REPOSITORY https://github.com/curl/curl.git 
+	GIT_TAG curl-8_20_0
 )
 FetchContent_MakeAvailable(curl)
-
-find_package(curl)
 
 set(CORE_SOURCES 
     Core/update.cpp
