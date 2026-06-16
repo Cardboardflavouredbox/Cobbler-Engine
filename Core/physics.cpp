@@ -1,7 +1,7 @@
 #include "physics.h"
 
 #include <SDL3/SDL_log.h>
-
+#include <cmath>
 #include <glm/glm.hpp>
 
 // https://gamedev.stackexchange.com/a/5589
@@ -158,7 +158,7 @@ void EntityMove(Entity* tempentity) {
   glm::vec3 tempposition = tempentity->position,
             moveresult = glm::vec3({0, 0, 0});
 
-  int temp = std::sqrtf(tempmove.x * tempmove.x + tempmove.y * tempmove.y) /
+  int temp = sqrtf(tempmove.x * tempmove.x + tempmove.y * tempmove.y) /
                  tempentity->hitboxradius * 128 +
              1;
 
