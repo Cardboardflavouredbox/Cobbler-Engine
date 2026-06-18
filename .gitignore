@@ -40,6 +40,7 @@
 # debug information files
 *.dwo
 build/
+amd64_build/
 
 .DS_Store
 ._.DS_Store

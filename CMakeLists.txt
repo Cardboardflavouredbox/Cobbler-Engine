@@ -63,8 +63,9 @@ FetchContent_MakeAvailable(dylib)
 
 FetchContent_Declare(
 	curl
-	GIT_REPOSITORY https://github.com/curl/curl.git 
-	GIT_TAG curl-8_20_0
+	URL https://curl.se/download/curl-8.20.0.tar.gz
+    DOWNLOAD_EXTRACT_TIMESTAMP true
+    OVERRIDE_FIND_PACKAGE # this one
 )
 FetchContent_MakeAvailable(curl)
 

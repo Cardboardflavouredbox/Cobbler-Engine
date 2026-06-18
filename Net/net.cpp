@@ -88,8 +88,12 @@ bool CobblerSendCurlData() {
     return false;
   }
   curlpostfield->reset();
-  SDL_Log("CurlData Sent Successfully");
-  return true;
+  bool result = (stream.str() == "Success");
+  if (result)
+    SDL_Log("CurlData Sent Successfully");
+  else
+    SDL_Log("CurlData Send Failed");
+  return result;
 }
 
 bool CobblerCurlLogin() {
