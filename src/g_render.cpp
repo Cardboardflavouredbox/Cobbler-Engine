@@ -159,7 +159,18 @@ void rendergame() {
   }
 }
 
-void renderUI() {
+void render3DUI() {
+  for (int i = 0; i < Global->UIlist.size(); i++) {
+    int len = Global->UImap3D[Global->UIlist[i]].size();
+    for (int j = 0; j < len; j++) {
+      renderModelGroup(
+          *Global->UImap3D[Global->UIlist[i]].at(j),
+          &ModelGroupMap[Global->UImap3D[Global->UIlist[i]].at(j)->name]);
+    }
+  }
+}
+
+void render2DUI() {
   for (int i = 0; i < Global->UIlist.size(); i++) {
     int len = Global->UImap[Global->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
@@ -224,7 +235,8 @@ void softwarerender() {
       Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 65535;
     }
   }
-  renderUI();
+  render2DUI();
+  render3DUI();
   rendergame();
   renderProps();
   renderEntity();
@@ -300,6 +312,10 @@ void openglrender() {
   renderProps();
   renderEntity();
 
+  glClear(GL_DEPTH_BUFFER_BIT);
+
+  render3DUI();
+
   glMatrixMode(GL_PROJECTION);
   glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
   glLoadIdentity();
@@ -319,7 +335,7 @@ void openglrender() {
     glEnd();
   }
 
-  renderUI();
+  render2DUI();
 
   glFlush();
 

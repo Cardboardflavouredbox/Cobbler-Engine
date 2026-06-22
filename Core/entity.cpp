@@ -24,8 +24,7 @@ int GetBillBoardIndex(float angle, int lastIndex) {
   return lastIndex;
 }
 void Entity::rendermodelgroup() {
-  renderModelGroup(Modelthing->transform,
-                   &ModelGroupMap[Modelthing->modelgroup]);
+  renderModelGroup(*Modelthing, &ModelGroupMap[Modelthing->name]);
 }
 
 void Entity::renderbillboard() {

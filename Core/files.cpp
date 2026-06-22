@@ -680,6 +680,13 @@ void quit() {
     }
   }
 
+  for (auto& [key, value] : Global->UImap3D) {
+    while (!value.empty()) {
+      delete (value.back());
+      value.pop_back();
+    }
+  }
+
   for (auto& i : Global->Entities) {
     delete (i);
   }

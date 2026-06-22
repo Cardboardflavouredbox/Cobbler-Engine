@@ -79,6 +79,8 @@ struct GlobalClass {
 
   std::unordered_map<std::string, std::vector<UIthing*>> UImap;
   std::vector<std::string> UIlist = {"default"};
+
+  std::unordered_map<std::string, std::vector<Modeltransform*>> UImap3D;
   glm::mat4 perspectivematrix;
 
   bool LoggedIn = false;

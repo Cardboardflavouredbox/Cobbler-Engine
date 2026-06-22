@@ -36,12 +36,7 @@ struct Entity {
     float offset;
   };
   Billboard* billboardthing;
-  struct Model {
-    std::string modelgroup;
-    float offset;
-    Modeltransform transform;
-  };
-  Model* Modelthing;
+  Modeltransform* Modelthing;
   LIB_API void renderbillboard();
   LIB_API void rendermodelgroup();
   LIB_API virtual void update() = 0;
