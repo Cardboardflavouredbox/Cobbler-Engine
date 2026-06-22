@@ -13,7 +13,7 @@
 #endif
 
 struct PostField {
-  std::string username;
+  std::string username, websiteaddr = "127.0.0.1:80";
   bool hasdata = false;
   int Kills = 0;
 

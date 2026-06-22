@@ -287,7 +287,8 @@ enum argenums {
   SetFOV,
   SetVsync,
   SetGame,
-  SetLogin
+  SetLogin,
+  SetWebsite
 };
 
 bool initargs(std::vector<std::string> args) {
@@ -317,7 +318,8 @@ bool initargs(std::vector<std::string> args) {
       {"-fov", SetFOV},
       {"-vsync", SetVsync},
       {"-game", SetGame},
-      {"-login", SetLogin}};
+      {"-login", SetLogin},
+      {"-website", SetWebsite}};
 
   for (int i = 0; i < args.size(); i++) {
     if (stringtoenums.contains(args[i])) {
@@ -356,6 +358,15 @@ bool initargs(std::vector<std::string> args) {
           }
           Global->GameName = args[i];
           break;
+
+        case SetWebsite:
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(Website)");
+            return false;
+          }
+          curlpostfield->websiteaddr = args[i];
+          break;
         case SetLogin:
           std::string password;
           i++;
@@ -373,7 +384,6 @@ bool initargs(std::vector<std::string> args) {
 
           curlloginstring = "IsGame=True&username=" + curlpostfield->username +
                             "&password=" + password;
-
           break;
       }
     }
