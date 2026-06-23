@@ -5,6 +5,7 @@ set(GAME "CobblerGame" CACHE STRING "Name of the Game folder")
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
 set(BUILD_SHARED_LIBS ON)
 set(BUILD_STATIC_LIBS OFF)
 
