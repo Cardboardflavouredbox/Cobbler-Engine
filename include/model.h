@@ -24,7 +24,7 @@ struct ModelGroupClass {
       glm::vec3 pos, scale;
       glm::quat rot;
     };
-    std::map<unsigned int, Pose> Poses;
+    std::unordered_map<std::string, std::map<unsigned int, Pose>> Poses;
   };
   std::unordered_map<std::string, Bone> Bonemap;
   unsigned int animstart, animend;
@@ -33,7 +33,7 @@ struct ModelGroupClass {
 LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 
 struct Modeltransform {
-  std::string name;
+  std::string name, actionname = "default";
   glm::vec3 position, size = glm::vec3({1, 1, 1});
   float frame;
 };

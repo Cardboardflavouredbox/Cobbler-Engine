@@ -9,21 +9,21 @@ def write_some_data(context, filepath):
     selected_objects = scene.objects
 
     # Get active action
-    action = bpy.context.object.animation_data.action
     
-    start_frame = action.frame_range[0]
-    end_frame = action.frame_range[1]
-    
-    f.write(f"A {start_frame:.0f} {end_frame:.0f}\n")
+    for action in bpy.data.actions:
+        start_frame = action.frame_range[0]
+        end_frame = action.frame_range[1]
+        
+        f.write(f"A {action.name} {start_frame:.0f} {end_frame:.0f}\n")
 
-    # Extract keyframe points for each F-Curve (e.g., location, rotation, scale channels)
-    for fcurve in action.fcurves:
-        f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
-        for keyframe in fcurve.keyframe_points:
-            frame_number = keyframe.co[0]
-            curve_value = keyframe.co[1]
-            f.write(f" {frame_number:.0f}/{curve_value:f}")
-        f.write(f"\n")
+        # Extract keyframe points for each F-Curve (e.g., location, rotation, scale channels)
+        for fcurve in action.fcurves:
+            f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
+            for keyframe in fcurve.keyframe_points:
+                frame_number = keyframe.co[0]
+                curve_value = keyframe.co[1]
+                f.write(f" {frame_number:.0f}/{curve_value:f}")
+            f.write(f"\n")
     
     for obj in selected_objects:
         if obj:

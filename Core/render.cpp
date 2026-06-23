@@ -191,19 +191,20 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
 }
 
 glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
-                          ModelGroupClass* modelgroup, float frame) {
+                          std::string actionname, ModelGroupClass* modelgroup,
+                          float frame) {
   glm::vec3 temp = input.pos;
 
   std::string tempstr = input.bone;
   while (tempstr != "null") {
     ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
 
-    glm::vec3 pos = bone->Poses.begin()->second.pos,
-              scale = bone->Poses.begin()->second.scale;
-    glm::quat rot = bone->Poses.begin()->second.rot;
+    glm::vec3 pos = bone->Poses[actionname].begin()->second.pos,
+              scale = bone->Poses[actionname].begin()->second.scale;
+    glm::quat rot = bone->Poses[actionname].begin()->second.rot;
     unsigned int framebefore = modelgroup->animstart;
 
-    for (auto const& [key, val] : bone->Poses) {
+    for (auto const& [key, val] : bone->Poses[actionname]) {
       if (frame == key) {
         pos = val.pos;
         rot = val.rot;
@@ -258,9 +259,9 @@ void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup,
                         Global->GLstuff->textures[model->texture]);
           glBegin(GL_TRIANGLES);
           for (int k = 2; k >= 0; k--) {
-            glm::vec3 pos =
-                modelapplybones(model->points[model->faces[j].point[k]],
-                                modelgroup, modeltrans.frame);
+            glm::vec3 pos = modelapplybones(
+                model->points[model->faces[j].point[k]], modeltrans.actionname,
+                modelgroup, modeltrans.frame);
             pos.x *= modeltrans.size.x;
             pos.y *= modeltrans.size.y;
             pos.z *= modeltrans.size.z;

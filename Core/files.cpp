@@ -448,7 +448,7 @@ bool init(bool IsEditor) {
       Settings->resolutionx / (double)Settings->resolutiony, 0.25, 256.0);
 
   Camera = new CameraEntity();
-  Camera->hitbox[0] = glm::vec3({0, 0, -2});
+  Camera->hitbox[0] = glm::vec3({0, 0, -3.375});
   Camera->hitbox[1] = glm::vec3({0, 0, 0});
   Camera->hitboxradius = 1.f;
   Camera->position = glm::vec3({0, 0, 12});
@@ -514,7 +514,7 @@ bool init(bool IsEditor) {
           tempstr = entry.path().filename().string();
           for (int i = 0; i < 4; i++) tempstr.pop_back();
           namestr = tempstr;
-
+          std::string posename = "default";
           FILE* file = fopen(entry.path().string().c_str(), "r");
           if (file == NULL) {
             SDL_Log("Impossible to open the file !");
@@ -525,8 +525,10 @@ bool init(bool IsEditor) {
             // read the first word of the line
             if (fscanf(file, "%s", lineHeader) == EOF) break;
             if (strcmp(lineHeader, "A") == 0) {
-              fscanf(file, "%d %d\n", &modelgroup.animstart,
+              char name[64];
+              fscanf(file, "%s %d %d\n", name, &modelgroup.animstart,
                      &modelgroup.animend);
+              posename = name;
             } else if (strcmp(lineHeader, "SB") == 0) {
               char name[64], parent[64];
               glm::vec3 head, tail;
@@ -550,25 +552,29 @@ bool init(bool IsEditor) {
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
-                  modelgroup.Bonemap[name].Poses.try_emplace(index2);
-                  modelgroup.Bonemap[name].Poses[index2].pos[index] = temp;
+                  modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);
+                  modelgroup.Bonemap[name].Poses[posename][index2].pos[index] =
+                      temp;
                 }
               } else if (strcmp(thing, "rotation_quaternion") == 0) {
                 while (newlinecheck != '\n') {
                   unsigned int index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-                  modelgroup.Bonemap[name].Poses.try_emplace(index2);
-                  modelgroup.Bonemap[name].Poses[index2].rot[(index + 3) % 4] =
-                      temp;
+                  modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);
+                  modelgroup.Bonemap[name]
+                      .Poses[posename][index2]
+                      .rot[(index + 3) % 4] = temp;
                 }
               } else if (strcmp(thing, "scale") == 0) {
                 while (newlinecheck != '\n') {
                   unsigned int index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-                  modelgroup.Bonemap[name].Poses.try_emplace(index2);
-                  modelgroup.Bonemap[name].Poses[index2].scale[index] = temp;
+                  modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);
+                  modelgroup.Bonemap[name]
+                      .Poses[posename][index2]
+                      .scale[index] = temp;
                 }
               }
             } else if (strcmp(lineHeader, "O") == 0) {
