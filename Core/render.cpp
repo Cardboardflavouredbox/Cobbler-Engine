@@ -243,8 +243,10 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
   return temp;
 }
 
-void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup) {
-  glm::vec3 renderpos = modeltrans.position - Camera->position;
+void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup,
+                      bool isUI) {
+  glm::vec3 renderpos =
+      modeltrans.position - (isUI ? glm::vec3(0) : Camera->position);
   switch (Settings->graphicsmode) {
     case 1: {
       glDisable(GL_CULL_FACE);

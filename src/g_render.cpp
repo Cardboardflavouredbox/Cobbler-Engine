@@ -163,9 +163,18 @@ void render3DUI() {
   for (int i = 0; i < Global->UIlist.size(); i++) {
     int len = Global->UImap3D[Global->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
-      renderModelGroup(
-          *Global->UImap3D[Global->UIlist[i]].at(j),
-          &ModelGroupMap[Global->UImap3D[Global->UIlist[i]].at(j)->name]);
+      ModelGroupClass* modelgroup =
+          &ModelGroupMap[Global->UImap3D[Global->UIlist[i]].at(j)->name];
+      Modeltransform* model = Global->UImap3D[Global->UIlist[i]].at(j);
+
+      model->frame += Global->deltaTime * 5 / 2;
+      while (model->frame >= (float)modelgroup->animend)
+        model->frame +=
+            ((float)modelgroup->animstart - (float)modelgroup->animend);
+      if (model->frame < (float)modelgroup->animstart)
+        model->frame = (float)modelgroup->animstart;
+
+      renderModelGroup(*model, modelgroup, true);
     }
   }
 }
@@ -200,7 +209,7 @@ void renderProps() {
     if (Global->Models[i].frame < (float)modelgroup->animstart)
       Global->Models[i].frame = (float)modelgroup->animstart;
 
-    renderModelGroup(Global->Models[i], modelgroup);
+    renderModelGroup(Global->Models[i], modelgroup, false);
   }
 }
 

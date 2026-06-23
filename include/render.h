@@ -17,7 +17,7 @@
 #endif
 
 LIB_API void renderModelGroup(Modeltransform modeltrans,
-                              ModelGroupClass* modelgroup);
+                              ModelGroupClass* modelgroup, bool isUI);
 
 LIB_API void DrawLine(unsigned char color, glm::vec3 rawvectors[]);
 
