@@ -323,6 +323,9 @@ void openglrender() {
 
   glClear(GL_DEPTH_BUFFER_BIT);
 
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(glm::value_ptr(Global->perspectivematrix));
+  glLoadIdentity();
   render3DUI();
 
   glMatrixMode(GL_PROJECTION);

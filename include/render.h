@@ -16,6 +16,7 @@
 #define LIB_API
 #endif
 
+extern "C" {
 LIB_API void renderModelGroup(Modeltransform modeltrans,
                               ModelGroupClass* modelgroup, bool isUI);
 
@@ -25,3 +26,4 @@ LIB_API void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius);
 
 LIB_API void DrawTri(std::string texture, glm::vec3 rawvectors[],
                      glm::vec2 UVs[], int xloop, int yloop);
+}
