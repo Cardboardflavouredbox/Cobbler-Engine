@@ -3,7 +3,8 @@ project(Cobbler-Engine)
 
 set(GAME "CobblerGame" CACHE STRING "Name of the Game folder")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
 set(BUILD_SHARED_LIBS ON)
@@ -64,9 +65,9 @@ FetchContent_MakeAvailable(dylib)
 
 FetchContent_Declare(
 	curl
-	URL https://curl.se/download/curl-8.20.0.tar.gz
     DOWNLOAD_EXTRACT_TIMESTAMP true
     OVERRIDE_FIND_PACKAGE # this one
+	URL "https://curl.se/download/curl-8.20.0.tar.gz"
 )
 FetchContent_MakeAvailable(curl)
 
