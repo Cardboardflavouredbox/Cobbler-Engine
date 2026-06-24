@@ -17,7 +17,8 @@
 struct CustomGlyphthing {
   unsigned char* pixels;
   GLuint GLTexture;
-  int width, height, pitch, offsetx, offsety, advancex, advancey;
+  unsigned int width, height;
+  int pitch, offsetx, offsety, advancex, advancey;
 };
 
 extern "C" {

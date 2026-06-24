@@ -266,6 +266,9 @@ void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup,
             pos.y *= modeltrans.size.y;
             pos.z *= modeltrans.size.z;
             pos += renderpos;
+            if (isUI) {
+              pos.y *= -1;
+            }
             glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
             glVertex3f(pos.x, pos.y, pos.z);
           }

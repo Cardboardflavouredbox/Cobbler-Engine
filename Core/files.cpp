@@ -675,6 +675,10 @@ void quit() {
   FT_Done_Face(Freetypething->FTface);
   FT_Done_FreeType(Freetypething->FTlibrary);
 
+  for (auto& [key, value] : Freetypething->Glyphmap) {
+    delete[] (value.pixels);
+  }
+
   delete (Freetypething);
 
   SDL_Log("freed Freetype stuff");

@@ -163,10 +163,11 @@ void render3DUI() {
   for (int i = 0; i < Global->UIlist.size(); i++) {
     int len = Global->UImap3D[Global->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
-      ModelGroupClass* modelgroup =
-          &ModelGroupMap[Global->UImap3D[Global->UIlist[i]].at(j)->name];
-      Modeltransform* model = Global->UImap3D[Global->UIlist[i]].at(j);
+      Modeltransform* model = Global->UImap3D[Global->UIlist[i]][j];
+      ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
+      // SDL_Log("%f %f %f", model->position.x, model->position.y,
+      //         model->position.z);
       model->frame += Global->deltaTime * 5 / 2;
       while (model->frame >= (float)modelgroup->animend)
         model->frame +=
@@ -321,11 +322,17 @@ void openglrender() {
   renderProps();
   renderEntity();
 
-  glClear(GL_DEPTH_BUFFER_BIT);
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadMatrixf(glm::value_ptr(Global->perspectivematrix));
   glLoadIdentity();
+
+  glClear(GL_DEPTH_BUFFER_BIT);
+  glMatrixMode(GL_PROJECTION);
+  modelMatrix = Global->perspectivematrix;
+
+  view = glm::lookAt(glm::vec3(0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+
+  modelMatrix = modelMatrix * view;
+
+  glLoadMatrixf(glm::value_ptr(modelMatrix));
   render3DUI();
 
   glMatrixMode(GL_PROJECTION);

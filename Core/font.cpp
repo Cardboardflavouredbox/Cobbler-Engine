@@ -14,11 +14,18 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
 
   switch (Settings->graphicsmode) {
     case 1: {
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
       glGenTextures(1, &temp.GLTexture);
-      temp.pixels = new unsigned char[8 * temp.pitch * temp.height]();
-      for (int i = 0; i < 8 * temp.pitch * temp.height; i++) {
-        temp.pixels[i] =
-            (glyph->bitmap.buffer[i / 8] & (0x01 << (7 - i % 8))) ? 255 : 0;
+      temp.pixels = new unsigned char[8 * temp.pitch * temp.height];
+      for (int j = 0; j < temp.height; j++) {
+        for (int i = 0; i < temp.width; i++) {
+          temp.pixels[i + j * temp.width] =
+              (glyph->bitmap.buffer[i / 8 + j * temp.pitch] &
+               (0x01 << (7 - i % 8)))
+                  ? 255
+                  : 0;
+        }
       }
 
       glBindTexture(GL_TEXTURE_2D, temp.GLTexture);
