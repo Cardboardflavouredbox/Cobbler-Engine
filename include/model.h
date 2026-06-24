@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 #include <map>
@@ -27,7 +28,7 @@ struct ModelGroupClass {
     std::unordered_map<std::string, std::map<unsigned int, Pose>> Poses;
   };
   std::unordered_map<std::string, Bone> Bonemap;
-  unsigned int animstart, animend;
+  std::unordered_map<std::string, std::array<unsigned int, 2>> anim;
 };
 
 LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;

@@ -169,11 +169,11 @@ void render3DUI() {
       // SDL_Log("%f %f %f", model->position.x, model->position.y,
       //         model->position.z);
       model->frame += Global->deltaTime * 5 / 2;
-      while (model->frame >= (float)modelgroup->animend)
-        model->frame +=
-            ((float)modelgroup->animstart - (float)modelgroup->animend);
-      if (model->frame < (float)modelgroup->animstart)
-        model->frame = (float)modelgroup->animstart;
+      while (model->frame >= (float)modelgroup->anim[model->actionname][1])
+        model->frame += ((float)modelgroup->anim[model->actionname][0] -
+                         (float)modelgroup->anim[model->actionname][1]);
+      if (model->frame < (float)modelgroup->anim[model->actionname][0])
+        model->frame = (float)modelgroup->anim[model->actionname][0];
 
       renderModelGroup(*model, modelgroup, true);
     }
@@ -201,16 +201,19 @@ void renderEntity() {
 
 void renderProps() {
   for (int i = 0; i < Global->Models.size(); i++) {
-    ModelGroupClass* modelgroup = &ModelGroupMap[Global->Models[i].name];
+    Modeltransform* model = &Global->Models[i];
+    ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
     Global->Models[i].frame += Global->deltaTime * 5 / 2;
-    while (Global->Models[i].frame >= (float)modelgroup->animend)
+    while (Global->Models[i].frame >=
+           (float)modelgroup->anim[model->actionname][1])
       Global->Models[i].frame +=
-          ((float)modelgroup->animstart - (float)modelgroup->animend);
-    if (Global->Models[i].frame < (float)modelgroup->animstart)
-      Global->Models[i].frame = (float)modelgroup->animstart;
+          ((float)modelgroup->anim[model->actionname][0] -
+           (float)modelgroup->anim[model->actionname][1]);
+    if (Global->Models[i].frame < (float)modelgroup->anim[model->actionname][0])
+      Global->Models[i].frame = (float)modelgroup->anim[model->actionname][0];
 
-    renderModelGroup(Global->Models[i], modelgroup, false);
+    renderModelGroup(*model, modelgroup, false);
   }
 }
 

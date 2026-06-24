@@ -120,7 +120,11 @@ void freeRenderer() {
 
   switch (Settings->graphicsmode) {
     case 1: {
+      // for (auto& [key, value] : Global->GLstuff->textures) {
+      //   glDeleteTextures(1, &value);
+      // }
       SDL_GL_DestroyContext(Global->GLstuff->GLContext);
+
       delete (Global->GLstuff);
       break;
     }
@@ -444,11 +448,11 @@ bool init(bool IsEditor) {
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
   Global->perspectivematrix = glm::perspective(
-      glm::radians(Settings->fov / 2.0),
+      glm::radians((double)Settings->fov),
       Settings->resolutionx / (double)Settings->resolutiony, 0.25, 256.0);
 
   Camera = new CameraEntity();
-  Camera->hitbox[0] = glm::vec3({0, 0, -3.375});
+  Camera->hitbox[0] = glm::vec3({0, 0, -1.75f});
   Camera->hitbox[1] = glm::vec3({0, 0, 0});
   Camera->hitboxradius = 1.f;
   Camera->position = glm::vec3({0, 0, 12});
@@ -526,8 +530,10 @@ bool init(bool IsEditor) {
             if (fscanf(file, "%s", lineHeader) == EOF) break;
             if (strcmp(lineHeader, "A") == 0) {
               char name[64];
-              fscanf(file, "%s %d %d\n", name, &modelgroup.animstart,
-                     &modelgroup.animend);
+              unsigned int animend, animstart;
+              fscanf(file, "%s %u %u\n", name, &animstart, &animend);
+              modelgroup.anim[name][0] = animstart;
+              modelgroup.anim[name][1] = animend;
               posename = name;
             } else if (strcmp(lineHeader, "SB") == 0) {
               char name[64], parent[64];

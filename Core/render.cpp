@@ -202,7 +202,7 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
     glm::vec3 pos = bone->Poses[actionname].begin()->second.pos,
               scale = bone->Poses[actionname].begin()->second.scale;
     glm::quat rot = bone->Poses[actionname].begin()->second.rot;
-    unsigned int framebefore = modelgroup->animstart;
+    unsigned int framebefore = modelgroup->anim[actionname][0];
 
     for (auto const& [key, val] : bone->Poses[actionname]) {
       if (frame == key) {
@@ -265,10 +265,10 @@ void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup,
             pos.x *= modeltrans.size.x;
             pos.y *= modeltrans.size.y;
             pos.z *= modeltrans.size.z;
-            pos += renderpos;
             if (isUI) {
               pos.y *= -1;
             }
+            pos += renderpos;
             glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
             glVertex3f(pos.x, pos.y, pos.z);
           }
