@@ -23,3 +23,4 @@ LIB_API extern CameraEntity* Camera;
 LIB_API extern Uint64 lastTime;
 LIB_API extern Uint64 currentTime;
 LIB_API extern std::unordered_map<std::string, Entity* (*)()> SpawnEntities;
+LIB_API extern std::unordered_map<std::string, void (*)()> PlayerClassUpdate;

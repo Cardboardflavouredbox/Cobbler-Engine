@@ -44,7 +44,25 @@ int main(int argc, char* argv[]) {
     entry.second = entitylibs.back().get_function<Entity*()>("SpawnEntity");
   }
 
-  if (!init(false)) {
+  entitylibs.clear();
+  PlayerClassUpdate.reserve(16);
+  for (const auto& entry : std::filesystem::directory_iterator(
+           basepath + Global->GameName + "/class/")) {
+    if (entry.is_directory()) {
+      SDL_Log("Folder: %s", entry.path().filename().string().c_str());
+      PlayerClassUpdate[entry.path().filename().string()];
+    }
+  }
+
+  for (auto& entry : SpawnEntities) {
+    entitylibs.push_back(dylib::library(basepath + "/" + Global->GameName +
+                                            "/class/" + entry.first + "/" +
+                                            entry.first,
+                                        dylib::decorations::os_default()));
+    entry.second = entitylibs.back().get_function<void()>("Update");
+  }
+
+  if (!init()) {
     SDL_Log("%s", SDL_GetError());
     return -1;
   }
@@ -105,7 +123,6 @@ int main(int argc, char* argv[]) {
   SDL_Log("UI loaded");
   void (*changeUIindex)() = UIlib.get_function<void()>("changeUIindex");
 
-  Global->IsEditor = false;
   SDL_Log("Init done");
   while (Global->IsRunning) {
     Uint64 start = SDL_GetPerformanceCounter();

@@ -182,7 +182,7 @@ bool loadBMP(std::filesystem::path path) {
   return true;
 }
 
-bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
+bool setRenderer(std::shared_ptr<ZipData> LoadedData) {
   switch (Settings->graphicsmode) {
     case 1: {
       SDL_Surface* surface;
@@ -207,23 +207,12 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
 
       if (!SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0)) return false;
 
-      if (IsEditor) {
-        // Enable 2D rendering
-        glMatrixMode(GL_PROJECTION);
-        glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
-        glLoadIdentity();
-        glDisable(GL_DEPTH_TEST);
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      } else {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      }
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       std::unordered_map<std::string, GLuint> tempvector;
       tempvector.reserve(32);
@@ -396,7 +385,7 @@ bool initargs(std::vector<std::string> args) {
   return true;
 }
 
-bool init(bool IsEditor) {
+bool init() {
   std::shared_ptr<ZipData> LoadedData(new ZipData());
   auto error = glz::read_file_json(
       LoadedData, Global->GameName + "/resources.json", std::string{});
@@ -429,9 +418,9 @@ bool init(bool IsEditor) {
     }
   }
 
-  if (!setRenderer(IsEditor, LoadedData)) return false;
+  if (!setRenderer(LoadedData)) return false;
 
-  SDL_SetWindowRelativeMouseMode(Global->window, !IsEditor);
+  SDL_SetWindowRelativeMouseMode(Global->window, true);
   Mapdata tempmapdata;
   error = glz::read_file_json(
       tempmapdata,

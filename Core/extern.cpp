@@ -13,5 +13,6 @@ CameraEntity* Camera;
 Uint64 lastTime;
 Uint64 currentTime = SDL_GetPerformanceCounter();
 std::unordered_map<std::string, Entity* (*)()> SpawnEntities;
+std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
 FreetypeClass* Freetypething;
 std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;

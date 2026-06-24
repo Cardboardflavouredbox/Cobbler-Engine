@@ -16,7 +16,7 @@ LIB_API void savemap();
 
 LIB_API bool initargs(std::vector<std::string> args);
 
-LIB_API bool init(bool hidemouse);
+LIB_API bool init();
 
 LIB_API void SaveSettings();
 

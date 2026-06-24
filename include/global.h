@@ -52,7 +52,6 @@ struct GlobalClass {
   bool pause = false, isopeningfile = false;
   float deltaTime;
   std::string skybox;
-  bool IsEditor;
 
   int windowx = 320, windowy = 200;
 

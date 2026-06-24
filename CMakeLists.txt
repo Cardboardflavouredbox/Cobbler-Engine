@@ -134,7 +134,7 @@ FILE(COPY $CACHE{GAME}/res DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/textures DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 
 file(GLOB ENTITIES LIST_DIRECTORIES true CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/entities/*")
-file(GLOB ENTITIES LIST_DIRECTORIES true )
+file(GLOB ENTITIES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/entities/*")
 foreach(ENTITYDIR ${ENTITIES})
     cmake_path(GET ENTITYDIR FILENAME FOLDER_NAME)
     if(IS_DIRECTORY "${ENTITYDIR}")
@@ -148,5 +148,24 @@ foreach(ENTITYDIR ${ENTITIES})
         )
         target_link_libraries(${FOLDER_NAME} PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD)
         target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    endif()
+endforeach()
+
+
+file(GLOB CLASSES LIST_DIRECTORIES true CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/class/*")
+file(GLOB CLASSES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/class/*")
+foreach(CLASSDIR ${CLASSES})
+    cmake_path(GET CLASSDIR FILENAME FOLDER_NAME)
+    if(IS_DIRECTORY "${CLASSDIR}")
+        add_library(${FOLDER_NAME} SHARED "${CLASSDIR}/classmain.cpp" "${CLASSDIR}/ui.cpp")
+        set_target_properties(${FOLDER_NAME} PROPERTIES
+            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/class/${FOLDER_NAME}"
+        )
+        set_target_properties(${FOLDER_NAME} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/class/${FOLDER_NAME}"
+        )
+        target_link_libraries(${FOLDER_NAME} PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGameUI freetype CobblerGLAD)
+        target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+        target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/UI/include)
     endif()
 endforeach()

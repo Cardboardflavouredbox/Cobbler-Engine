@@ -10,9 +10,9 @@
 #include "extern.h"
 #include "global.h"
 #include "network.h"
-#include "physics.h"
+#include "player.h"
 
-void playermovement() {
+void playermovement(float jumpheight, float movespeed) {
   Camera->dir.x += -1 * Settings->mousesensitivity.x * P1Inputs->MouseDelta.x;
   Camera->dir.y += -1 * Settings->mousesensitivity.y * P1Inputs->MouseDelta.y;
   P1Inputs->MouseDelta.x = 0;
@@ -41,39 +41,19 @@ void playermovement() {
 
   if (tempmove != glm::vec3(0)) tempmove = glm::normalize(tempmove);
 
-  Camera->movevec3 = (tempmove * Camera->walkspeed);
+  Camera->movevec3 = (tempmove * movespeed);
 
-  if ((P1Inputs->Shift == 0 && Settings->autorun) ||
-      (P1Inputs->Shift > 0 && !Settings->autorun))
-    Camera->movevec3 = (Camera->movevec3 * Camera->runspeed);
+  // if ((P1Inputs->Shift == 0 && Settings->autorun) ||
+  //     (P1Inputs->Shift > 0 && !Settings->autorun))
+  //   Camera->movevec3 = (Camera->movevec3 * runspeed);
 
   if (P1Inputs->Space == 2 && Camera->IsGrounded)
-    Camera->velocityvec3.z = Camera->jumpheight;
+    Camera->velocityvec3.z = jumpheight;
 
   if (Camera->dir.x < 0) Camera->dir.x += 360;
   if (Camera->dir.x >= 360) Camera->dir.x -= 360;
   if (Camera->dir.y >= 89) Camera->dir.y = 89;
   if (Camera->dir.y <= -89) Camera->dir.y = -89;
-
-  if (P1Inputs->leftclick == 2) {
-    float ps = std::sin(Camera->dir.x * PI / 180.f);
-    float pc = std::cos(Camera->dir.x * PI / 180.f);
-    float what = std::cos(Camera->dir.y * PI / 180.f);
-    glm::vec3 ray[2];
-    ray[0] = Camera->position;
-    ray[1] = {-ps * what, pc * what, std::sin(Camera->dir.y * PI / 180.f)};
-    ray[1] *= 32.f;
-    ray[1] += Camera->position;
-    for (auto& i : Global->Entities) {
-      if (i->teamindex != Camera->teamindex &&
-          capsuleraycheck(ray[0], ray[1], i->hitbox[0] + i->position,
-                          i->hitbox[1] + i->position, i->hitboxradius)) {
-        i->velocityvec3.z = 25;
-        curlpostfield->Kills++;
-        curlpostfield->hasdata = true;
-      }
-    }
-  }
 }
 
 void update() {
@@ -87,10 +67,9 @@ void update() {
     SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);
   }
   if (!Global->pause) {
-    playermovement();
     componentsupdate();
   }
   componentsupdatelate();
 
-  if (curlpostfield->hasdata) CobblerSendCurlData();
+  if (curlpostfield->hasdata && Global->LoggedIn) CobblerSendCurlData();
 }
