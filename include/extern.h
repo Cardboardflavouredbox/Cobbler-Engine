@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "entity.h"
 #include "global.h"
+#include "player.h"
 
 #ifdef _WIN32
 #ifdef DLLEXPORT
@@ -18,7 +18,8 @@
 LIB_API extern std::unique_ptr<GlobalClass> Global;
 LIB_API extern std::unique_ptr<EditorClass> Editor;
 LIB_API extern std::unique_ptr<SettingsClass> Settings;
-LIB_API extern Inputs* P1Inputs;
+LIB_API extern Inputs* LocalInputs;
+LIB_API extern playerinputs* P1PlayerInputs;
 LIB_API extern CameraEntity* Camera;
 LIB_API extern Uint64 lastTime;
 LIB_API extern Uint64 currentTime;

@@ -3,8 +3,8 @@
 #include "extern.h"
 #include "update.h"
 void events() {
-  if (P1Inputs->leftclick == 2) P1Inputs->leftclick = 1;
-  if (P1Inputs->rightclick == 2) P1Inputs->rightclick = 1;
+  if (LocalInputs->leftclick == 2) LocalInputs->leftclick = 1;
+  if (LocalInputs->rightclick == 2) LocalInputs->rightclick = 1;
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
@@ -41,21 +41,21 @@ void events() {
         break;
       case SDL_EVENT_MOUSE_BUTTON_DOWN:
         if (event.button.button == SDL_BUTTON_LEFT) {
-          P1Inputs->leftclick = 2;
+          LocalInputs->leftclick = 2;
         } else if (event.button.button == SDL_BUTTON_RIGHT) {
-          P1Inputs->rightclick = 2;
+          LocalInputs->rightclick = 2;
         }
         break;
       case SDL_EVENT_MOUSE_BUTTON_UP:
         if (event.button.button == SDL_BUTTON_LEFT) {
-          P1Inputs->leftclick = 0;
+          LocalInputs->leftclick = 0;
         } else if (event.button.button == SDL_BUTTON_RIGHT) {
-          P1Inputs->rightclick = 0;
+          LocalInputs->rightclick = 0;
         }
         break;
       case SDL_EVENT_MOUSE_WHEEL:
-        P1Inputs->MouseScroll.x = event.wheel.x;
-        P1Inputs->MouseScroll.y = event.wheel.y;
+        LocalInputs->MouseScroll.x = event.wheel.x;
+        LocalInputs->MouseScroll.y = event.wheel.y;
         break;
     }
   }

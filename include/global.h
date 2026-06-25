@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "entity.h"
 #include "map.h"
 #include "model.h"
 #include "ui.h"
@@ -83,6 +84,7 @@ struct GlobalClass {
   glm::mat4 perspectivematrix;
 
   bool LoggedIn = false;
+  std::string playerclass = "default";
 };
 
 struct EditorClass {

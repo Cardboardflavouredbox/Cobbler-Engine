@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     entry.second = entitylibs.back().get_function<Entity*()>("SpawnEntity");
   }
 
-  entitylibs.clear();
+  Global->playerclass = "Gardner";
   PlayerClassUpdate.reserve(16);
   for (const auto& entry : std::filesystem::directory_iterator(
            basepath + Global->GameName + "/class/")) {
@@ -54,12 +54,13 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  for (auto& entry : SpawnEntities) {
-    entitylibs.push_back(dylib::library(basepath + "/" + Global->GameName +
-                                            "/class/" + entry.first + "/" +
-                                            entry.first,
-                                        dylib::decorations::os_default()));
-    entry.second = entitylibs.back().get_function<void()>("Update");
+  std::vector<dylib::library> classlibs;
+  for (auto& entry : PlayerClassUpdate) {
+    classlibs.push_back(dylib::library(basepath + "/" + Global->GameName +
+                                           "/class/" + entry.first + "/" +
+                                           entry.first,
+                                       dylib::decorations::os_default()));
+    entry.second = classlibs.back().get_function<void()>("Update");
   }
 
   if (!init()) {

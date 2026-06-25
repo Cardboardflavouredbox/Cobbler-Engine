@@ -83,6 +83,7 @@ set(CORE_SOURCES
     Core/entity.cpp
     Core/render.cpp
     Core/font.cpp
+    Core/player.cpp
 )
 
 add_library(CobblerGLAD SHARED glad/glad.c "include/glad/glad.h")

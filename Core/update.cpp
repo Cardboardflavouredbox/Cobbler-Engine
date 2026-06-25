@@ -12,48 +12,43 @@
 #include "network.h"
 #include "player.h"
 
-void playermovement(float jumpheight, float movespeed) {
-  Camera->dir.x += -1 * Settings->mousesensitivity.x * P1Inputs->MouseDelta.x;
-  Camera->dir.y += -1 * Settings->mousesensitivity.y * P1Inputs->MouseDelta.y;
-  P1Inputs->MouseDelta.x = 0;
-  P1Inputs->MouseDelta.y = 0;
+void processinputs() {
+  P1PlayerInputs->lookdir.x +=
+      -1 * Settings->mousesensitivity.x * LocalInputs->MouseDelta.x;
+  P1PlayerInputs->lookdir.y +=
+      -1 * Settings->mousesensitivity.y * LocalInputs->MouseDelta.y;
 
+  if (P1PlayerInputs->lookdir.x < 0) Camera->dir.x += 360;
+  if (P1PlayerInputs->lookdir.x >= 360) Camera->dir.x -= 360;
+  if (P1PlayerInputs->lookdir.y >= 89) Camera->dir.y = 89;
+  if (P1PlayerInputs->lookdir.y <= -89) Camera->dir.y = -89;
+
+  LocalInputs->MouseDelta.x = 0;
+  LocalInputs->MouseDelta.y = 0;
   float ps = std::sin(Camera->dir.x * PI / 180.0);
   float pc = std::cos(Camera->dir.x * PI / 180.0);
 
   glm::vec3 tempmove = glm::vec3({0, 0, 0});
-  if (P1Inputs->A > 0 && P1Inputs->D == 0) {
+  if (LocalInputs->A > 0 && LocalInputs->D == 0) {
     tempmove.x -= std::sin((Camera->dir.x + 90) * PI / 180.0);
     tempmove.y += std::cos((Camera->dir.x + 90) * PI / 180.0);
   }
-  if (P1Inputs->D > 0 && P1Inputs->A == 0) {
+  if (LocalInputs->D > 0 && LocalInputs->A == 0) {
     tempmove.x -= std::sin((Camera->dir.x - 90) * PI / 180.0);
     tempmove.y += std::cos((Camera->dir.x - 90) * PI / 180.0);
   }
-  if (P1Inputs->W > 0) {
+  if (LocalInputs->W > 0) {
     tempmove.x -= ps;
     tempmove.y += pc;
   }
-  if (P1Inputs->S > 0) {
+  if (LocalInputs->S > 0) {
     tempmove.x += ps;
     tempmove.y -= pc;
   }
 
   if (tempmove != glm::vec3(0)) tempmove = glm::normalize(tempmove);
-
-  Camera->movevec3 = (tempmove * movespeed);
-
-  // if ((P1Inputs->Shift == 0 && Settings->autorun) ||
-  //     (P1Inputs->Shift > 0 && !Settings->autorun))
-  //   Camera->movevec3 = (Camera->movevec3 * runspeed);
-
-  if (P1Inputs->Space == 2 && Camera->IsGrounded)
-    Camera->velocityvec3.z = jumpheight;
-
-  if (Camera->dir.x < 0) Camera->dir.x += 360;
-  if (Camera->dir.x >= 360) Camera->dir.x -= 360;
-  if (Camera->dir.y >= 89) Camera->dir.y = 89;
-  if (Camera->dir.y <= -89) Camera->dir.y = -89;
+  P1PlayerInputs->movevec3 = tempmove;
+  P1PlayerInputs->jump = LocalInputs->Space;
 }
 
 void update() {
@@ -62,11 +57,15 @@ void update() {
   Global->deltaTime =
       ((currentTime - lastTime) * 10) / (double)SDL_GetPerformanceFrequency();
 
-  if (P1Inputs->ESC == 2) {
+  if (LocalInputs->ESC == 2) {
     Global->pause = !Global->pause;
     SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);
   }
+
   if (!Global->pause) {
+    processinputs();
+    inputtoentity(*P1PlayerInputs, Camera);
+    PlayerClassUpdate[Global->playerclass]();
     componentsupdate();
   }
   componentsupdatelate();

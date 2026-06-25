@@ -20,13 +20,13 @@ extern "C" {
 LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
 struct Entity {
-  float hp;
+  float hp, maxhp;
+  float movespeed = 17.5f, jumpheight = 24.f;
   glm::vec2 dir;
   glm::vec3 position, movevec3 = glm::vec3({0, 0, 0}),
                       velocityvec3 = glm::vec3({0, 0, 0});
   int teamindex;
   float gravity = 9.81f * 8.f;
-  float jumpheight = 24, walkspeed = 10.f, runspeed = 1.75f;
   glm::vec3 hitbox[2];
   float hitboxradius;
   bool IsGrounded;

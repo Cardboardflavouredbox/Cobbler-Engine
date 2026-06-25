@@ -289,8 +289,11 @@ bool initargs(std::vector<std::string> args) {
   if (Global == nullptr) return false;
   Settings = std::make_unique<SettingsClass>();
   if (Settings == nullptr) return false;
-  P1Inputs = new Inputs();
-  if (P1Inputs == nullptr) return false;
+  LocalInputs = new Inputs();
+  if (LocalInputs == nullptr) return false;
+  P1PlayerInputs = new playerinputs();
+  if (P1PlayerInputs == nullptr) return false;
+
   Settings->fov = 90;
 
   curlpostfield = new PostField();
@@ -664,8 +667,9 @@ void quit() {
   freeRenderer();
   SDL_Log("freed renderer");
 
-  delete (P1Inputs);
-  SDL_Log("freed P1Inputs");
+  delete (LocalInputs);
+  delete (P1PlayerInputs);
+  SDL_Log("freed LocalInputs");
 
   FT_Done_Face(Freetypething->FTface);
   FT_Done_FreeType(Freetypething->FTlibrary);
