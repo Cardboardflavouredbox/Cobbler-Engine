@@ -163,7 +163,7 @@ void render3DUI() {
   for (int i = 0; i < Global->UIlist.size(); i++) {
     int len = Global->UImap3D[Global->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
-      Modeltransform* model = Global->UImap3D[Global->UIlist[i]][j];
+      Modeltransform* model = Global->UImap3D[Global->UIlist[i]][j]->modeltrans;
       ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
       // SDL_Log("%f %f %f", model->position.x, model->position.y,

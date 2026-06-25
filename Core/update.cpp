@@ -67,6 +67,11 @@ void update() {
     inputtoentity(*P1PlayerInputs, Camera);
     PlayerClassUpdate[Global->playerclass]();
     componentsupdate();
+    for (auto& [key, value] : Global->UImap3D) {
+      for (auto& i : value) {
+        i->update();
+      }
+    }
   }
   componentsupdatelate();
 

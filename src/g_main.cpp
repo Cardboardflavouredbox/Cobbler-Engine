@@ -44,25 +44,6 @@ int main(int argc, char* argv[]) {
     entry.second = entitylibs.back().get_function<Entity*()>("SpawnEntity");
   }
 
-  Global->playerclass = "Gardner";
-  PlayerClassUpdate.reserve(16);
-  for (const auto& entry : std::filesystem::directory_iterator(
-           basepath + Global->GameName + "/class/")) {
-    if (entry.is_directory()) {
-      SDL_Log("Folder: %s", entry.path().filename().string().c_str());
-      PlayerClassUpdate[entry.path().filename().string()];
-    }
-  }
-
-  std::vector<dylib::library> classlibs;
-  for (auto& entry : PlayerClassUpdate) {
-    classlibs.push_back(dylib::library(basepath + "/" + Global->GameName +
-                                           "/class/" + entry.first + "/" +
-                                           entry.first,
-                                       dylib::decorations::os_default()));
-    entry.second = classlibs.back().get_function<void()>("Update");
-  }
-
   if (!init()) {
     SDL_Log("%s", SDL_GetError());
     return -1;
@@ -124,6 +105,27 @@ int main(int argc, char* argv[]) {
   SDL_Log("UI loaded");
   void (*changeUIindex)() = UIlib.get_function<void()>("changeUIindex");
 
+  Global->playerclass = "Gardner";
+  PlayerClassUpdate.reserve(16);
+  for (const auto& entry : std::filesystem::directory_iterator(
+           basepath + Global->GameName + "/class/")) {
+    if (entry.is_directory()) {
+      SDL_Log("Folder: %s", entry.path().filename().string().c_str());
+      PlayerClassUpdate[entry.path().filename().string()];
+    }
+  }
+
+  std::vector<dylib::library> classlibs;
+  for (auto& entry : PlayerClassUpdate) {
+    classlibs.push_back(dylib::library(basepath + "/" + Global->GameName +
+                                           "/class/" + entry.first + "/" +
+                                           entry.first,
+                                       dylib::decorations::os_default()));
+    entry.second = classlibs.back().get_function<void()>("Update");
+    if (!classlibs.back().get_function<bool()>("UIsetup")()) return -1;
+    classlibs.back().get_function<void()>("Init")();
+  }
+
   SDL_Log("Init done");
   while (Global->IsRunning) {
     Uint64 start = SDL_GetPerformanceCounter();
@@ -136,6 +138,9 @@ int main(int argc, char* argv[]) {
     if (!Settings->vsync && result < 1000000000 / (double)Settings->fps) {
       SDL_DelayNS(1000000000 / (double)Settings->fps - result);
     }
+  }
+  for (auto& entry : classlibs) {
+    entry.get_function<void()>("Quit")();
   }
   quit();
   void (*UIfree)() = UIlib.get_function<void()>("UIfree");
