@@ -441,7 +441,7 @@ bool init() {
   Global->skybox = tempmapdata.skybox;
   Global->perspectivematrix = glm::perspective(
       glm::radians((double)Settings->fov),
-      Settings->resolutionx / (double)Settings->resolutiony, 0.25, 256.0);
+      Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
 
   Camera = new CameraEntity();
   Camera->hitbox[0] = glm::vec3({0, 0, -1.75f});

@@ -18,24 +18,24 @@ void processinputs() {
   P1PlayerInputs->lookdir.y +=
       -1 * Settings->mousesensitivity.y * LocalInputs->MouseDelta.y;
 
-  if (P1PlayerInputs->lookdir.x < 0) Camera->dir.x += 360;
-  if (P1PlayerInputs->lookdir.x >= 360) Camera->dir.x -= 360;
-  if (P1PlayerInputs->lookdir.y >= 89) Camera->dir.y = 89;
-  if (P1PlayerInputs->lookdir.y <= -89) Camera->dir.y = -89;
+  if (P1PlayerInputs->lookdir.x < 0) P1PlayerInputs->lookdir.x += 360;
+  if (P1PlayerInputs->lookdir.x >= 360) P1PlayerInputs->lookdir.x -= 360;
+  if (P1PlayerInputs->lookdir.y >= 89) P1PlayerInputs->lookdir.y = 89;
+  if (P1PlayerInputs->lookdir.y <= -89) P1PlayerInputs->lookdir.y = -89;
 
   LocalInputs->MouseDelta.x = 0;
   LocalInputs->MouseDelta.y = 0;
-  float ps = std::sin(Camera->dir.x * PI / 180.0);
-  float pc = std::cos(Camera->dir.x * PI / 180.0);
+  float ps = std::sin(P1PlayerInputs->lookdir.x * PI / 180.0);
+  float pc = std::cos(P1PlayerInputs->lookdir.x * PI / 180.0);
 
   glm::vec3 tempmove = glm::vec3({0, 0, 0});
   if (LocalInputs->A > 0 && LocalInputs->D == 0) {
-    tempmove.x -= std::sin((Camera->dir.x + 90) * PI / 180.0);
-    tempmove.y += std::cos((Camera->dir.x + 90) * PI / 180.0);
+    tempmove.x -= std::sin((P1PlayerInputs->lookdir.x + 90) * PI / 180.0);
+    tempmove.y += std::cos((P1PlayerInputs->lookdir.x + 90) * PI / 180.0);
   }
   if (LocalInputs->D > 0 && LocalInputs->A == 0) {
-    tempmove.x -= std::sin((Camera->dir.x - 90) * PI / 180.0);
-    tempmove.y += std::cos((Camera->dir.x - 90) * PI / 180.0);
+    tempmove.x -= std::sin((P1PlayerInputs->lookdir.x - 90) * PI / 180.0);
+    tempmove.y += std::cos((P1PlayerInputs->lookdir.x - 90) * PI / 180.0);
   }
   if (LocalInputs->W > 0) {
     tempmove.x -= ps;

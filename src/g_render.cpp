@@ -168,7 +168,7 @@ void render3DUI() {
 
       // SDL_Log("%f %f %f", model->position.x, model->position.y,
       //         model->position.z);
-      model->frame += Global->deltaTime * 5 / 2;
+      model->frame += Global->deltaTime * 5 / 2.f;
       while (model->frame >= (float)modelgroup->anim[model->actionname][1])
         model->frame += ((float)modelgroup->anim[model->actionname][0] -
                          (float)modelgroup->anim[model->actionname][1]);
