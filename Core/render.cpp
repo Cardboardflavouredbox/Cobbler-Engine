@@ -218,7 +218,7 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
       } else {
         float a = ((float)frame - (float)framebefore) /
                   ((float)key - (float)framebefore);
-        rot = glm::slerp(rot, val.rot, a);
+        rot = glm::mix(rot, val.rot, a);
         pos = glm::mix(pos, val.pos, a);
         scale = glm::mix(scale, val.scale, a);
         break;
@@ -226,16 +226,15 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
     }
 
     float angle = glm::angle(rot);
-    glm::vec3 axis = glm::quatLookAt(glm::vec3(0, 1, 0),
-                                     glm::normalize(bone->tail - bone->head)) *
-                     glm::axis(rot);
+    glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
 
-    glm::quat final_quat = glm::angleAxis(angle, axis);
+    glm::vec3 axis =
+        glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * glm::axis(rot);
+
+    glm::quat final_quat = glm::angleAxis(angle, glm::normalize(axis));
     temp = (final_quat) * (temp - bone->head);
     temp += bone->head;
-    temp += glm::quatLookAt(glm::vec3(0, 1, 0),
-                            glm::normalize(bone->tail - bone->head)) *
-            pos;
+    temp += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * pos;
     temp.x *= scale.x;
     temp.y *= scale.y;
     temp.z *= scale.z;
@@ -265,6 +264,9 @@ void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup,
             pos.x *= modeltrans.size.x;
             pos.y *= modeltrans.size.y;
             pos.z *= modeltrans.size.z;
+            // if (isUI) {
+            //   pos.y *= -1;
+            // }
             pos += renderpos;
             glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
             glVertex3f(pos.x, pos.y, pos.z);
