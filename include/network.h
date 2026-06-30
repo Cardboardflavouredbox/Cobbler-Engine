@@ -51,6 +51,6 @@ LIB_API bool CobblerSetSocket();
 LIB_API void CobblerQuitNet();
 LIB_API bool CobblerSendCurlData();
 LIB_API bool CobblerCurlLogin();
-LIB_API bool CobblerSendNet(char* name, std::vector<std::byte> buf);
+LIB_API bool CobblerSendNet(const char* name, std::vector<std::byte> buf);
 LIB_API CobblerNetData* CobblerRecvNet();
 }

@@ -70,7 +70,14 @@ void update() {
   if (Global->IsOnline) {  // recieve net data
     CobblerNetData* tempdata = CobblerRecvNet();
     if (tempdata != NULL) {
-      tempdata->name;
+      if (tempdata->name == "Player") {
+        playerdatapacket temp;
+        auto ec = glz::read_beve(temp, tempdata->buffer);
+        if (!ec) {
+          playerinputs tempinputs = Loadinputdata(temp);
+          inputtoentity(tempinputs, Global->Entities[0]);
+        }
+      }
       delete tempdata;
     }
   }

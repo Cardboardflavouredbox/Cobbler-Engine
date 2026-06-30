@@ -61,7 +61,7 @@ bool CobblerInitNet() {
   return true;
 }
 
-bool CobblerSendNet(char* name, std::vector<std::byte> buf) {
+bool CobblerSendNet(const char* name, std::vector<std::byte> buf) {
   std::vector<std::byte> buffer;
   buffer.reserve(256);
   int len = std::strlen(name);
