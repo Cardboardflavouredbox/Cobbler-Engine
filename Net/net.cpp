@@ -3,6 +3,7 @@
 #include <curl/curl.h>
 
 #include <sstream>
+#include <vector>
 
 #include "network.h"
 
@@ -18,6 +19,9 @@ struct NetworkStuffClass {
 NetworkStuffClass* NetStuff;
 PostField* curlpostfield;
 std::string curlloginstring;
+std::string ServerIP = "";
+unsigned int ServerPort;
+bool IsServer = false;
 
 static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
                                   void* clientp) {
@@ -30,9 +34,9 @@ static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
   return totalSize;
 }
 
-bool CobblerSetSocket(char* ipaddress, Uint16 port) {
-  NetStuff->Address = NET_ResolveHostname(ipaddress);
-  NetStuff->PORT = port;
+bool CobblerSetSocket() {
+  NetStuff->Address = NET_ResolveHostname(ServerIP.c_str());
+  NetStuff->PORT = ServerPort;
   NetStuff->Socket =
       NET_CreateDatagramSocket(NetStuff->Address, NetStuff->PORT, 0);
   return true;
@@ -57,6 +61,45 @@ bool CobblerInitNet() {
   // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEJAR, MyCookieFileName);
 
   return true;
+}
+
+bool CobblerClientSendNet(char* name, std::vector<std::byte> buf) {
+  std::vector<std::byte> buffer;
+  buffer.reserve(256);
+  int len = std::strlen(name);
+  for (int i = 0; i < len; i++) {
+    buffer.push_back(std::byte(name[i]));
+  }
+  buffer.push_back(std::byte('\0'));
+  buffer.insert(buffer.end(), buf.begin(), buf.end());
+  return NET_SendDatagram(NetStuff->Socket, NetStuff->Address, NetStuff->PORT,
+                          buffer.data(), buffer.size());
+}
+
+CobblerNetData* CobblerRecvNet() {
+  CobblerNetData* temp = new CobblerNetData();
+  NET_Datagram* dgram = NULL;
+  if (NET_ReceiveDatagram(NetStuff->Socket, &dgram) && (dgram != NULL)) {
+    SDL_Log("SERVER: got %d-byte datagram from %s:%d", (int)dgram->buflen,
+            NET_GetAddressString(dgram->addr), (int)dgram->port);
+    temp->IP = NET_GetAddressString(dgram->addr);
+    temp->PORT = dgram->port;
+
+    int i = 0;
+    while (dgram->buf[i] != '\0' && i < dgram->buflen) {
+      temp->name.push_back(char(dgram->buf[i]));
+      i++;
+    }
+    i++;
+    while (i < dgram->buflen) {
+      temp->buffer.push_back(std::byte(dgram->buf[i]));
+      i++;
+    }
+    NET_DestroyDatagram(dgram);
+    return temp;
+  }
+  delete (temp);
+  return NULL;
 }
 
 void CobblerQuitNet() {

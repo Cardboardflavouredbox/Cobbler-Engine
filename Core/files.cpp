@@ -284,7 +284,9 @@ enum argenums {
   SetVsync,
   SetGame,
   SetLogin,
-  SetWebsite
+  SetWebsite,
+  SetServerIP,
+  SetIsServer
 };
 
 bool initargs(std::vector<std::string> args) {
@@ -318,7 +320,12 @@ bool initargs(std::vector<std::string> args) {
       {"-vsync", SetVsync},
       {"-game", SetGame},
       {"-login", SetLogin},
-      {"-website", SetWebsite}};
+      {"-website", SetWebsite},
+      {"-IP", SetServerIP},
+      {"-ip", SetServerIP},
+      {"-ServerIP", SetServerIP},
+      {"-Server", SetIsServer},
+      {"-server", SetIsServer}};
 
   for (int i = 0; i < args.size(); i++) {
     if (stringtoenums.contains(args[i])) {
@@ -357,16 +364,7 @@ bool initargs(std::vector<std::string> args) {
           }
           Global->GameName = args[i];
           break;
-
-        case SetWebsite:
-          i++;
-          if (i >= args.size()) {
-            SDL_Log("Wrong Arguements!(Website)");
-            return false;
-          }
-          curlpostfield->websiteaddr = args[i];
-          break;
-        case SetLogin:
+        case SetLogin: {
           std::string password;
           i++;
           if (i >= args.size()) {
@@ -383,6 +381,46 @@ bool initargs(std::vector<std::string> args) {
 
           curlloginstring = "IsGame=True&username=" + curlpostfield->username +
                             "&password=" + password;
+          break;
+        }
+        case SetWebsite:
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(Website)");
+            return false;
+          }
+          curlpostfield->websiteaddr = args[i];
+          break;
+        case SetServerIP: {
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(IP)");
+            return false;
+          }
+          int j = 0;
+          while (args[i][j] != ':') {
+            if (args[i][j] == '\0') {
+              SDL_Log("Wrong Arguements!(IP)");
+              return false;
+            }
+            ServerIP += args[i][j];
+            j++;
+          }
+          j++;
+          while (args[i][j] != '\0') {
+            int temp = args[i][j] - '0';
+            if (temp < 0 || temp > 9) {
+              SDL_Log("Wrong Arguements!(PORT)");
+              return false;
+            }
+            ServerPort *= 10;
+            ServerPort += temp;
+            j++;
+          }
+          break;
+        }
+        case SetIsServer:
+          IsServer = true;
           break;
       }
     }
@@ -421,6 +459,13 @@ bool init() {
     } else {
       SDL_Log("Login successful");
       Global->LoggedIn = true;
+    }
+  }
+  if (ServerIP != "") {
+    if (!CobblerSetSocket()) {
+      SDL_Log("Server connection failed");
+    } else {
+      SDL_Log("Connected to server");
     }
   }
 

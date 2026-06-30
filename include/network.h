@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #ifdef _WIN32
 #ifdef DLLEXPORT
@@ -33,12 +34,23 @@ struct PostField {
   }
 };
 
+struct CobblerNetData {
+  std::string name, IP;
+  std::vector<std::byte> buffer;
+  Uint16 PORT;
+};
+
 LIB_API extern PostField* curlpostfield;
 LIB_API extern std::string curlloginstring;
+LIB_API extern std::string ServerIP;
+LIB_API extern unsigned int ServerPort;
+LIB_API extern bool IsServer;
 
 extern "C" {
 LIB_API bool CobblerInitNet();
+LIB_API bool CobblerSetSocket();
 LIB_API void CobblerQuitNet();
 LIB_API bool CobblerSendCurlData();
 LIB_API bool CobblerCurlLogin();
+LIB_API bool CobblerClientSendNet(const void* buf, int buflen);
 }
