@@ -193,6 +193,9 @@ bool setRenderer(std::shared_ptr<ZipData> LoadedData) {
 
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                           SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+      // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+      // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
       Global->window = SDL_CreateWindow(
           "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
           SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -209,7 +212,7 @@ bool setRenderer(std::shared_ptr<ZipData> LoadedData) {
 
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
-      glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
+      glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 256.f);
 
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
