@@ -3,6 +3,7 @@
 #include <SDL3/SDL_timer.h>
 
 #include <cmath>
+#include <glaze/beve.hpp>
 #include <glm/glm.hpp>
 
 #include "components.h"
@@ -11,6 +12,20 @@
 #include "global.h"
 #include "network.h"
 #include "player.h"
+
+playerinputs Loadinputdata(playerdatapacket input) {
+  playerinputs temp;
+  for (int i = 0; i < 3; i++) {
+    temp.movevec3[i] = input.movevec3[i];
+  }
+  for (int i = 0; i < 2; i++) {
+    temp.lookdir[i] = input.lookdir[i];
+  }
+  temp.jump = input.jump;
+  temp.attack = input.attack;
+  temp.altattack = input.altattack;
+  return temp;
+}
 
 void processinputs() {
   P1PlayerInputs->lookdir.x +=
@@ -52,6 +67,14 @@ void processinputs() {
 }
 
 void update() {
+  if (Global->IsOnline) {  // recieve net data
+    CobblerNetData* tempdata = CobblerRecvNet();
+    if (tempdata != NULL) {
+      tempdata->name;
+      delete tempdata;
+    }
+  }
+
   lastTime = currentTime;
   currentTime = SDL_GetPerformanceCounter();
   Global->deltaTime =
@@ -74,6 +97,16 @@ void update() {
     }
   }
   componentsupdatelate();
+
+  if (Global->IsOnline) {  // send net data
+    std::vector<std::byte> buffer{};
+    playerdatapacket temp;
+    temp.Set(P1PlayerInputs);
+    auto ec = glz::write_beve(temp, buffer);
+    if (!ec) {
+      CobblerSendNet("Player", buffer);
+    }
+  }
 
   if (curlpostfield->hasdata && Global->LoggedIn) CobblerSendCurlData();
 }

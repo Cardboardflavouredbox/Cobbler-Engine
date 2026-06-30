@@ -24,6 +24,9 @@
 #include "model.h"
 #include "network.h"
 
+std::string ServerIP;
+unsigned int ServerPort;
+
 template <>
 struct glz::meta<glm::vec3> {
   using mimic = std::array<float, 3>;
@@ -420,6 +423,7 @@ bool initargs(std::vector<std::string> args) {
           break;
         }
         case SetIsServer:
+          Global->IsOnline = true;
           IsServer = true;
           break;
       }
@@ -467,6 +471,8 @@ bool init() {
     } else {
       SDL_Log("Connected to server");
     }
+    CobblerAddIP(ServerIP, ServerPort);
+    Global->IsOnline = true;
   }
 
   if (!setRenderer(LoadedData)) return false;

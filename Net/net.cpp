@@ -8,8 +8,8 @@
 #include "network.h"
 
 struct NetworkStuffClass {
-  Uint16 PORT = 12093;
-  NET_Address* Address;
+  std::vector<Uint16> PORT;
+  std::vector<NET_Address*> Addresses;
   NET_DatagramSocket* Socket;
 
   CURL* curl;
@@ -19,8 +19,7 @@ struct NetworkStuffClass {
 NetworkStuffClass* NetStuff;
 PostField* curlpostfield;
 std::string curlloginstring;
-std::string ServerIP = "";
-unsigned int ServerPort;
+
 bool IsServer = false;
 
 static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
@@ -34,18 +33,17 @@ static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
   return totalSize;
 }
 
+void CobblerAddIP(std::string IP, unsigned int Port) {
+  NetStuff->Addresses.push_back(NET_ResolveHostname(IP.c_str()));
+  NetStuff->PORT.push_back(Port);
+}
+
 bool CobblerSetSocket() {
-  NetStuff->Address = NET_ResolveHostname(ServerIP.c_str());
-  NetStuff->PORT = ServerPort;
-  NetStuff->Socket =
-      NET_CreateDatagramSocket(NetStuff->Address, NetStuff->PORT, 0);
+  NetStuff->Socket = NET_CreateDatagramSocket(NULL, 0, 0);
   return true;
 }
 
-void CobblerDestroySocket() {
-  NET_DestroyDatagramSocket(NetStuff->Socket);
-  NET_UnrefAddress(NetStuff->Address);
-}
+void CobblerDestroySocket() { NET_DestroyDatagramSocket(NetStuff->Socket); }
 
 bool CobblerInitNet() {
   if (!NET_Init()) return false;
@@ -63,7 +61,7 @@ bool CobblerInitNet() {
   return true;
 }
 
-bool CobblerClientSendNet(char* name, std::vector<std::byte> buf) {
+bool CobblerSendNet(char* name, std::vector<std::byte> buf) {
   std::vector<std::byte> buffer;
   buffer.reserve(256);
   int len = std::strlen(name);
@@ -72,14 +70,19 @@ bool CobblerClientSendNet(char* name, std::vector<std::byte> buf) {
   }
   buffer.push_back(std::byte('\0'));
   buffer.insert(buffer.end(), buf.begin(), buf.end());
-  return NET_SendDatagram(NetStuff->Socket, NetStuff->Address, NetStuff->PORT,
-                          buffer.data(), buffer.size());
+
+  for (int i = 0; i < NetStuff->Addresses.size(); i++) {
+    if (!NET_SendDatagram(NetStuff->Socket, NetStuff->Addresses[i],
+                          NetStuff->PORT[i], buffer.data(), buffer.size()))
+      return false;
+  }
+  return true;
 }
 
 CobblerNetData* CobblerRecvNet() {
-  CobblerNetData* temp = new CobblerNetData();
   NET_Datagram* dgram = NULL;
   if (NET_ReceiveDatagram(NetStuff->Socket, &dgram) && (dgram != NULL)) {
+    CobblerNetData* temp = new CobblerNetData();
     SDL_Log("SERVER: got %d-byte datagram from %s:%d", (int)dgram->buflen,
             NET_GetAddressString(dgram->addr), (int)dgram->port);
     temp->IP = NET_GetAddressString(dgram->addr);
@@ -98,13 +101,13 @@ CobblerNetData* CobblerRecvNet() {
     NET_DestroyDatagram(dgram);
     return temp;
   }
-  delete (temp);
   return NULL;
 }
 
 void CobblerQuitNet() {
   if (NetStuff->Socket != nullptr) NET_DestroyDatagramSocket(NetStuff->Socket);
-  if (NetStuff->Address != nullptr) NET_UnrefAddress(NetStuff->Address);
+  for (int i = 0; i < NetStuff->Addresses.size(); i++)
+    NET_UnrefAddress(NetStuff->Addresses[i]);
 
   if (NetStuff->curl) curl_easy_cleanup(NetStuff->curl);
   curl_global_cleanup();

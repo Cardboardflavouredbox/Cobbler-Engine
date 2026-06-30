@@ -84,6 +84,7 @@ struct GlobalClass {
   glm::mat4 perspectivematrix;
 
   bool LoggedIn = false;
+  bool IsOnline = false;
   std::string playerclass = "default";
 };
 
