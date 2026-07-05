@@ -1,5 +1,6 @@
 #include "update.h"
 
+#include <SDL3/SDL_log.h>
 #include <SDL3/SDL_timer.h>
 
 #include <cmath>
@@ -75,7 +76,12 @@ void update() {
         auto ec = glz::read_beve(temp, tempdata->buffer);
         if (!ec) {
           playerinputs tempinputs = Loadinputdata(temp);
-          inputtoentity(tempinputs, Global->Entities[0]);
+          for (int i = 0; i < 3; i++) {
+            Global->Entities[1]->velocityvec3[i] = temp.velocityvec3[i];
+            Global->Entities[1]->position[i] = temp.position[i];
+          }
+          Global->Entities[1]->IsGrounded = temp.IsGrounded;
+          inputtoentity(tempinputs, Global->Entities[1]);
         }
       } else if (tempdata->name == "PlayerAdd") {
         Global->Playerlist.push_back("Client");
@@ -108,6 +114,9 @@ void update() {
   }
   componentsupdatelate();
 
+  SDL_Log("%f %f %f", Global->Entities[1]->position[0],
+          Global->Entities[1]->position[1], Global->Entities[1]->position[2]);
+
   if (Global->IsOnline) {  // send net data
     if (IsServer) {
       std::vector<std::byte> buffer{};
@@ -119,6 +128,11 @@ void update() {
     std::vector<std::byte> buffer{};
     playerdatapacket temp;
     temp.Set(P1PlayerInputs);
+    temp.IsGrounded = Camera->IsGrounded;
+    for (int i = 0; i < 3; i++) {
+      temp.position[i] = Camera->position[i];
+      temp.velocityvec3[i] = Camera->velocityvec3[i];
+    }
     auto ec = glz::write_beve(temp, buffer);
     if (!ec) {
       CobblerSendNet("Player", buffer);

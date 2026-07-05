@@ -39,7 +39,11 @@ void CobblerAddIP(std::string IP, unsigned int Port) {
 }
 
 bool CobblerSetSocket(unsigned int port) {
+  // SDL_PropertiesID props = SDL_CreateProperties();
+  // SDL_SetBooleanProperty(props, NET_PROP_DATAGRAM_SOCKET_REUSEADDR_BOOLEAN,
+  //                        true);
   NetStuff->Socket = NET_CreateDatagramSocket(NULL, port, 0);
+  // SDL_DestroyProperties(props);
   if (NetStuff->Socket == NULL) {
     SDL_Log("%s", SDL_GetError());
     return false;
@@ -90,8 +94,8 @@ CobblerNetData* CobblerRecvNet() {
   if (NET_ReceiveDatagram(NetStuff->Socket, &dgram)) {
     if (dgram != NULL) {
       CobblerNetData* temp = new CobblerNetData();
-      SDL_Log("SERVER: got %d-byte datagram from %s:%d", (int)dgram->buflen,
-              NET_GetAddressString(dgram->addr), (int)dgram->port);
+      // SDL_Log("SERVER: got %d-byte datagram from %s:%d", (int)dgram->buflen,
+      //         NET_GetAddressString(dgram->addr), (int)dgram->port);
       temp->IP = NET_GetAddressString(dgram->addr);
       temp->PORT = dgram->port;
 

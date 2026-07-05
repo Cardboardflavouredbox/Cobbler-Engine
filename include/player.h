@@ -15,6 +15,7 @@ struct playerdatapacket {
   std::array<float, 3> movevec3, position, velocityvec3;
   std::array<float, 2> lookdir;
   unsigned char jump, attack, altattack;
+  bool IsGrounded;
   void Set(playerinputs* input) {
     for (int i = 0; i < 3; i++) {
       movevec3[i] = input->movevec3[i];
