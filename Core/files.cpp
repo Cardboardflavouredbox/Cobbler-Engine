@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #include <filesystem>
+#include <glaze/beve.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
 #include <unordered_map>
@@ -23,6 +24,7 @@
 #include "global.h"
 #include "model.h"
 #include "network.h"
+#include "update.h"
 
 std::string ServerIP;
 unsigned int ServerPort;
@@ -395,6 +397,12 @@ bool initargs(std::vector<std::string> args) {
           curlpostfield->websiteaddr = args[i];
           break;
         case SetServerIP: {
+          if (IsServer) {
+            SDL_Log(
+                "Wrong Arguements!(Cannot be Server and have IP input at the "
+                "same time)");
+            return false;
+          }
           i++;
           if (i >= args.size()) {
             SDL_Log("Wrong Arguements!(IP)");
@@ -423,6 +431,13 @@ bool initargs(std::vector<std::string> args) {
           break;
         }
         case SetIsServer:
+          Global->Playerlist.push_back("Server");
+          if (ServerIP != "") {
+            SDL_Log(
+                "Wrong Arguements!(Cannot be Server and have IP input at the "
+                "same time)");
+            return false;
+          }
           Global->IsOnline = true;
           IsServer = true;
           break;
@@ -468,11 +483,31 @@ bool init() {
   if (ServerIP != "") {
     if (!CobblerSetSocket()) {
       SDL_Log("Server connection failed");
-    } else {
-      SDL_Log("Connected to server");
     }
     CobblerAddIP(ServerIP, ServerPort);
     Global->IsOnline = true;
+    std::vector<std::byte> buffer{};
+    Global->IsRunning = true;
+    while (Global->IsRunning) {
+      events();
+      CobblerSendNet("PlayerAdd", buffer);
+      CobblerNetData* tempdata = CobblerRecvNet();
+      if (tempdata != NULL) {
+        if (tempdata->name == "PlayerList") {
+          std::vector<std::string> tempstrvec;
+          auto ec = glz::read_beve(tempstrvec, tempdata->buffer);
+          if (!ec) {
+            for (int i = 0; i < tempstrvec.size(); i++) {
+              if (tempstrvec[i] == "Client") {
+                SDL_Log("Connected to server");
+                break;
+              }
+            }
+          }
+        }
+        delete tempdata;
+      }
+    }
   }
 
   if (!setRenderer(LoadedData)) return false;
@@ -508,7 +543,7 @@ bool init() {
   Global->Entities.push_back(Camera);
 
   for (int i = 0; i < tempmapdata.Entities.size(); i++) {
-    SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
+    // SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
     if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
       Global->Entities.push_back(SpawnEntities[tempmapdata.Entities[i].name]());
       Global->Entities.back()->position = tempmapdata.Entities[i].pos;
@@ -559,8 +594,7 @@ bool init() {
         if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
           ModelGroupClass modelgroup;
           GlobalClass::Model model;
-          SDL_Log("Loading model: %s",
-                  entry.path().filename().string().c_str());
+
           tempstr = entry.path().filename().string();
           for (int i = 0; i < 4; i++) tempstr.pop_back();
           namestr = tempstr;
@@ -596,7 +630,6 @@ bool init() {
               char newlinecheck = 'w';
               fscanf(file, "%*48[^\"]\"%48[^\"]\"].%s %d\n ", name, thing,
                      &index);
-              SDL_Log("FC: %s %s", name, thing);
               modelgroup.Bonemap.try_emplace(name);
               if (strcmp(thing, "location") == 0) {
                 while (newlinecheck != '\n') {
@@ -636,7 +669,6 @@ bool init() {
               }
               char objname[128];
               fscanf(file, "%s", objname);
-              SDL_Log("Loading object: %s", objname);
               namestr = objname;
               namestr = tempstr + "/" + namestr;
               model.faces.clear();

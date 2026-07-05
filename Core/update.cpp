@@ -77,6 +77,9 @@ void update() {
           playerinputs tempinputs = Loadinputdata(temp);
           inputtoentity(tempinputs, Global->Entities[0]);
         }
+      } else if (tempdata->name == "PlayerAdd") {
+        Global->Playerlist.push_back("Client");
+        CobblerAddIP(tempdata->IP, tempdata->PORT);
       }
       delete tempdata;
     }
@@ -106,6 +109,13 @@ void update() {
   componentsupdatelate();
 
   if (Global->IsOnline) {  // send net data
+    if (IsServer) {
+      std::vector<std::byte> buffer{};
+      auto ec = glz::write_beve(Global->Playerlist, buffer);
+      if (!ec) {
+        CobblerSendNet("PlayerList", buffer);
+      }
+    }
     std::vector<std::byte> buffer{};
     playerdatapacket temp;
     temp.Set(P1PlayerInputs);

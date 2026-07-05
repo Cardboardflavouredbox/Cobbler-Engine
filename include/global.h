@@ -86,6 +86,8 @@ struct GlobalClass {
   bool LoggedIn = false;
   bool IsOnline = false;
   std::string playerclass = "default";
+
+  std::vector<std::string> Playerlist;
 };
 
 struct EditorClass {
