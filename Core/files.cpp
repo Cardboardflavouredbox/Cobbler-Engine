@@ -438,6 +438,22 @@ bool initargs(std::vector<std::string> args) {
                 "same time)");
             return false;
           }
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(ServerPort)");
+            return false;
+          }
+          int j = 0;
+          while (args[i][j] != '\0') {
+            int temp = args[i][j] - '0';
+            if (temp < 0 || temp > 9) {
+              SDL_Log("Wrong Arguements!(ServerPort)");
+              return false;
+            }
+            ServerPort *= 10;
+            ServerPort += temp;
+            j++;
+          }
           Global->IsOnline = true;
           IsServer = true;
           break;
@@ -449,6 +465,7 @@ bool initargs(std::vector<std::string> args) {
 }
 
 bool init() {
+  Global->IsRunning = true;
   std::shared_ptr<ZipData> LoadedData(new ZipData());
   auto error = glz::read_file_json(
       LoadedData, Global->GameName + "/resources.json", std::string{});
@@ -480,14 +497,20 @@ bool init() {
       Global->LoggedIn = true;
     }
   }
+
+  if (IsServer) {
+    if (!CobblerSetSocket(ServerPort)) {
+      SDL_Log("Server Setup failed");
+    }
+  }
+
   if (ServerIP != "") {
-    if (!CobblerSetSocket()) {
+    if (!CobblerSetSocket(0)) {
       SDL_Log("Server connection failed");
     }
     CobblerAddIP(ServerIP, ServerPort);
     Global->IsOnline = true;
     std::vector<std::byte> buffer{};
-    Global->IsRunning = true;
     while (Global->IsRunning) {
       events();
       CobblerSendNet("PlayerAdd", buffer);
@@ -497,16 +520,20 @@ bool init() {
           std::vector<std::string> tempstrvec;
           auto ec = glz::read_beve(tempstrvec, tempdata->buffer);
           if (!ec) {
+            bool check = false;
             for (int i = 0; i < tempstrvec.size(); i++) {
               if (tempstrvec[i] == "Client") {
                 SDL_Log("Connected to server");
+                check = true;
                 break;
               }
             }
+            if (check) break;
           }
         }
         delete tempdata;
       }
+      SDL_DelayNS(1000000000 / (double)Settings->fps);
     }
   }
 
@@ -741,7 +768,6 @@ bool init() {
         CreateGlyph(Freetypething->FTface->glyph);
   }
 
-  Global->IsRunning = true;
   lastTime = SDL_GetTicks();
 
   SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);

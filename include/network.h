@@ -47,7 +47,7 @@ LIB_API extern bool IsServer;
 extern "C" {
 LIB_API bool CobblerInitNet();
 LIB_API void CobblerAddIP(std::string IP, unsigned int Port);
-LIB_API bool CobblerSetSocket();
+LIB_API bool CobblerSetSocket(unsigned int port);
 LIB_API void CobblerQuitNet();
 LIB_API bool CobblerSendCurlData();
 LIB_API bool CobblerCurlLogin();

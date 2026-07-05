@@ -38,8 +38,12 @@ void CobblerAddIP(std::string IP, unsigned int Port) {
   NetStuff->PORT.push_back(Port);
 }
 
-bool CobblerSetSocket() {
-  NetStuff->Socket = NET_CreateDatagramSocket(NULL, 0, 0);
+bool CobblerSetSocket(unsigned int port) {
+  NetStuff->Socket = NET_CreateDatagramSocket(NULL, port, 0);
+  if (NetStuff->Socket == NULL) {
+    SDL_Log("%s", SDL_GetError());
+    return false;
+  }
   return true;
 }
 
@@ -73,33 +77,37 @@ bool CobblerSendNet(const char* name, std::vector<std::byte> buf) {
 
   for (int i = 0; i < NetStuff->Addresses.size(); i++) {
     if (!NET_SendDatagram(NetStuff->Socket, NetStuff->Addresses[i],
-                          NetStuff->PORT[i], buffer.data(), buffer.size()))
+                          NetStuff->PORT[i], buffer.data(), buffer.size())) {
+      SDL_Log("%s", SDL_GetError());
       return false;
+    }
   }
   return true;
 }
 
 CobblerNetData* CobblerRecvNet() {
   NET_Datagram* dgram = NULL;
-  if (NET_ReceiveDatagram(NetStuff->Socket, &dgram) && (dgram != NULL)) {
-    CobblerNetData* temp = new CobblerNetData();
-    SDL_Log("SERVER: got %d-byte datagram from %s:%d", (int)dgram->buflen,
-            NET_GetAddressString(dgram->addr), (int)dgram->port);
-    temp->IP = NET_GetAddressString(dgram->addr);
-    temp->PORT = dgram->port;
+  if (NET_ReceiveDatagram(NetStuff->Socket, &dgram)) {
+    if (dgram != NULL) {
+      CobblerNetData* temp = new CobblerNetData();
+      SDL_Log("SERVER: got %d-byte datagram from %s:%d", (int)dgram->buflen,
+              NET_GetAddressString(dgram->addr), (int)dgram->port);
+      temp->IP = NET_GetAddressString(dgram->addr);
+      temp->PORT = dgram->port;
 
-    int i = 0;
-    while (dgram->buf[i] != '\0' && i < dgram->buflen) {
-      temp->name.push_back(char(dgram->buf[i]));
+      int i = 0;
+      while (dgram->buf[i] != '\0' && i < dgram->buflen) {
+        temp->name.push_back(char(dgram->buf[i]));
+        i++;
+      }
       i++;
+      while (i < dgram->buflen) {
+        temp->buffer.push_back(std::byte(dgram->buf[i]));
+        i++;
+      }
+      NET_DestroyDatagram(dgram);
+      return temp;
     }
-    i++;
-    while (i < dgram->buflen) {
-      temp->buffer.push_back(std::byte(dgram->buf[i]));
-      i++;
-    }
-    NET_DestroyDatagram(dgram);
-    return temp;
   }
   return NULL;
 }
