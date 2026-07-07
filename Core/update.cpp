@@ -73,7 +73,7 @@ void update() {
     if (tempvector != NULL) {
       while (!tempvector->empty()) {
         CobblerNetData* tempdata = &tempvector->back();
-        SDL_Log("%s", tempdata->name.c_str());
+        // SDL_Log("%s", tempdata->name.c_str());
         if (tempdata->name == "Player") {
           playerdatapacket temp;
           auto ec = glz::read_beve(temp, tempdata->buffer);
@@ -85,10 +85,23 @@ void update() {
             }
             Global->Entities[1]->IsGrounded = temp.IsGrounded;
             inputtoentity(tempinputs, Global->Entities[1]);
+            SDL_Log("%f %f %f", temp.position[0], temp.position[1],
+                    temp.position[2]);
+          } else {
+            SDL_Log("what");
           }
         } else if (tempdata->name == "PlayerAdd") {
-          Global->Playerlist.push_back("Client");
-          CobblerAddIP(tempdata->IP, tempdata->PORT);
+          bool check = true;
+          for (int i = 0; i < Global->Playerlist.size(); i++) {
+            if (Global->Playerlist[i] == "Client") {
+              check = false;
+              break;
+            }
+          }
+          if (check) {
+            Global->Playerlist.push_back("Client");
+            CobblerAddIP(tempdata->IP, tempdata->PORT);
+          }
         }
         tempvector->pop_back();
       }

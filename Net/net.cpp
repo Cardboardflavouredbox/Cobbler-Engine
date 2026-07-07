@@ -38,14 +38,15 @@ static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
 void CobblerAddIP(std::string IP, unsigned int Port) {
   NetStuff->Addresses.push_back(NET_ResolveHostname(IP.c_str()));
   NetStuff->PORT.push_back(Port);
+  SDL_Log("%d", NetStuff->Addresses.size());
 }
 
 bool CobblerSetSocket(unsigned int port) {
-  // SDL_PropertiesID props = SDL_CreateProperties();
-  // SDL_SetBooleanProperty(props, NET_PROP_DATAGRAM_SOCKET_REUSEADDR_BOOLEAN,
-  //                        true);
+  SDL_PropertiesID props = SDL_CreateProperties();
+  SDL_SetBooleanProperty(props, NET_PROP_DATAGRAM_SOCKET_REUSEADDR_BOOLEAN,
+                         true);
   NetStuff->Socket = NET_CreateDatagramSocket(NULL, port, 0);
-  // SDL_DestroyProperties(props);
+  SDL_DestroyProperties(props);
   if (NetStuff->Socket == NULL) {
     SDL_Log("%s", SDL_GetError());
     return false;
