@@ -1,6 +1,7 @@
 #include "physics.h"
 
 #include <SDL3/SDL_log.h>
+
 #include <cmath>
 #include <glm/glm.hpp>
 
@@ -194,6 +195,8 @@ void EntityMove(Entity* tempentity) {
         glm::vec3 newmove = (glm::dot(tempmovexy / (float)temp, normal) /
                              glm::dot(normal, normal)) *
                             normal;
+
+        if (normal == glm::vec3(0)) newmove = glm::vec3(0);
 
         tempposition += newmove;
         if (movecollisioncheck(tempentity->hitbox, tempposition,

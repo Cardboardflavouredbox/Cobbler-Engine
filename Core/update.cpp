@@ -114,8 +114,9 @@ void update() {
   }
   componentsupdatelate();
 
-  SDL_Log("%f %f %f", Global->Entities[1]->position[0],
-          Global->Entities[1]->position[1], Global->Entities[1]->position[2]);
+  // SDL_Log("%f %f %f", Global->Entities[1]->position[0],
+  //         Global->Entities[1]->position[1],
+  //         Global->Entities[1]->position[2]);
 
   if (Global->IsOnline) {  // send net data
     if (IsServer) {
