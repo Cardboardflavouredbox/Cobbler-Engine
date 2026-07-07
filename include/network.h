@@ -36,7 +36,7 @@ struct PostField {
 
 struct CobblerNetData {
   std::string name, IP;
-  std::vector<std::byte> buffer;
+  std::vector<Uint8> buffer;
   Uint16 PORT;
 };
 
@@ -51,6 +51,7 @@ LIB_API bool CobblerSetSocket(unsigned int port);
 LIB_API void CobblerQuitNet();
 LIB_API bool CobblerSendCurlData();
 LIB_API bool CobblerCurlLogin();
-LIB_API bool CobblerSendNet(const char* name, std::vector<std::byte> buf);
-LIB_API CobblerNetData* CobblerRecvNet();
+LIB_API bool CobblerQueueData(const char* name, std::vector<Uint8> buf);
+LIB_API bool CobblerSendNet();
+LIB_API std::vector<CobblerNetData>* CobblerRecvNet();
 }

@@ -2,6 +2,7 @@
 #include <SDL3_net/SDL_net.h>
 #include <curl/curl.h>
 
+#include <deque>
 #include <sstream>
 #include <vector>
 
@@ -19,6 +20,7 @@ struct NetworkStuffClass {
 NetworkStuffClass* NetStuff;
 PostField* curlpostfield;
 std::string curlloginstring;
+std::vector<Uint8> packetbuffer;
 
 bool IsServer = false;
 
@@ -69,48 +71,73 @@ bool CobblerInitNet() {
   return true;
 }
 
-bool CobblerSendNet(const char* name, std::vector<std::byte> buf) {
-  std::vector<std::byte> buffer;
-  buffer.reserve(256);
+bool CobblerQueueData(const char* name, std::vector<Uint8> buf) {
   int len = std::strlen(name);
   for (int i = 0; i < len; i++) {
-    buffer.push_back(std::byte(name[i]));
+    packetbuffer.push_back(Uint8(name[i]));
   }
-  buffer.push_back(std::byte('\0'));
-  buffer.insert(buffer.end(), buf.begin(), buf.end());
+  packetbuffer.push_back(Uint8('\0'));
 
-  for (int i = 0; i < NetStuff->Addresses.size(); i++) {
-    if (!NET_SendDatagram(NetStuff->Socket, NetStuff->Addresses[i],
-                          NetStuff->PORT[i], buffer.data(), buffer.size())) {
-      SDL_Log("%s", SDL_GetError());
-      return false;
-    }
+  unsigned int buflen = buf.size();
+
+  if (buflen > 255) {
+    SDL_Log("buffer too long!");
+    return false;
   }
+
+  unsigned char templen = buflen;
+
+  packetbuffer.push_back(static_cast<Uint8>(templen));
+
+  packetbuffer.insert(packetbuffer.end(), buf.begin(), buf.begin() + templen);
   return true;
 }
 
-CobblerNetData* CobblerRecvNet() {
+bool CobblerSendNet() {
+  for (int i = 0; i < NetStuff->Addresses.size(); i++) {
+    if (!NET_SendDatagram(NetStuff->Socket, NetStuff->Addresses[i],
+                          NetStuff->PORT[i], packetbuffer.data(),
+                          packetbuffer.size())) {
+      SDL_Log("%s", SDL_GetError());
+    }
+  }
+  packetbuffer.clear();
+  return true;
+}
+
+std::vector<CobblerNetData>* CobblerRecvNet() {
   NET_Datagram* dgram = NULL;
   if (NET_ReceiveDatagram(NetStuff->Socket, &dgram)) {
     if (dgram != NULL) {
-      CobblerNetData* temp = new CobblerNetData();
+      std::vector<CobblerNetData>* tempvec = new std::vector<CobblerNetData>();
+
       // SDL_Log("SERVER: got %d-byte datagram from %s:%d", (int)dgram->buflen,
       //         NET_GetAddressString(dgram->addr), (int)dgram->port);
-      temp->IP = NET_GetAddressString(dgram->addr);
-      temp->PORT = dgram->port;
 
-      int i = 0;
-      while (dgram->buf[i] != '\0' && i < dgram->buflen) {
-        temp->name.push_back(char(dgram->buf[i]));
-        i++;
-      }
-      i++;
-      while (i < dgram->buflen) {
-        temp->buffer.push_back(std::byte(dgram->buf[i]));
-        i++;
+      std::deque<Uint8> datavec(dgram->buf, dgram->buf + dgram->buflen);
+
+      while (!datavec.empty()) {
+        CobblerNetData temp;
+        temp.IP = NET_GetAddressString(dgram->addr);
+        temp.PORT = dgram->port;
+
+        while (datavec.front() != Uint8(0) && !datavec.empty()) {
+          temp.name.push_back(char(datavec.front()));
+          datavec.pop_front();
+        }
+        datavec.pop_front();
+
+        unsigned char len = (unsigned char)datavec.front();
+        datavec.pop_front();
+
+        temp.buffer.insert(temp.buffer.end(), datavec.begin(),
+                           datavec.begin() + len);
+        datavec.erase(datavec.begin(), datavec.begin() + len);
+
+        tempvec->push_back(temp);
       }
       NET_DestroyDatagram(dgram);
-      return temp;
+      return tempvec;
     }
   }
   return NULL;

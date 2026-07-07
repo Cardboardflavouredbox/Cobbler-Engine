@@ -510,29 +510,35 @@ bool init() {
     }
     CobblerAddIP(ServerIP, ServerPort);
     Global->IsOnline = true;
-    std::vector<std::byte> buffer{};
-    while (Global->IsRunning) {
+    std::vector<Uint8> buffer{};
+    bool check = false;
+    while (Global->IsRunning && !check) {
       events();
-      CobblerSendNet("PlayerAdd", buffer);
-      CobblerNetData* tempdata = CobblerRecvNet();
-      if (tempdata != NULL) {
-        if (tempdata->name == "PlayerList") {
-          std::vector<std::string> tempstrvec;
-          auto ec = glz::read_beve(tempstrvec, tempdata->buffer);
-          if (!ec) {
-            bool check = false;
-            for (int i = 0; i < tempstrvec.size(); i++) {
-              if (tempstrvec[i] == "Client") {
-                SDL_Log("Connected to server");
-                check = true;
-                break;
+      CobblerQueueData("PlayerAdd", buffer);
+      std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
+      if (tempvector != NULL) {
+        while (!tempvector->empty()) {
+          CobblerNetData* tempdata = &tempvector->back();
+          SDL_Log("%s", tempdata->name.c_str());
+          if (tempdata->name == "PlayerList") {
+            std::vector<std::string> tempstrvec;
+            auto ec = glz::read_beve(tempstrvec, tempdata->buffer);
+            if (!ec) {
+              for (int i = 0; i < tempstrvec.size(); i++) {
+                if (tempstrvec[i] == "Client") {
+                  SDL_Log("Connected to server");
+                  check = true;
+                  break;
+                }
               }
+              if (check) break;
             }
-            if (check) break;
           }
+          tempvector->pop_back();
         }
-        delete tempdata;
+        delete tempvector;
       }
+      CobblerSendNet();
       SDL_DelayNS(1000000000 / (double)Settings->fps);
     }
   }

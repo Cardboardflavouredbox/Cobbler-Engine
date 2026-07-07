@@ -69,25 +69,30 @@ void processinputs() {
 
 void update() {
   if (Global->IsOnline) {  // recieve net data
-    CobblerNetData* tempdata = CobblerRecvNet();
-    if (tempdata != NULL) {
-      if (tempdata->name == "Player") {
-        playerdatapacket temp;
-        auto ec = glz::read_beve(temp, tempdata->buffer);
-        if (!ec) {
-          playerinputs tempinputs = Loadinputdata(temp);
-          for (int i = 0; i < 3; i++) {
-            Global->Entities[1]->velocityvec3[i] = temp.velocityvec3[i];
-            Global->Entities[1]->position[i] = temp.position[i];
+    std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
+    if (tempvector != NULL) {
+      while (!tempvector->empty()) {
+        CobblerNetData* tempdata = &tempvector->back();
+        SDL_Log("%s", tempdata->name.c_str());
+        if (tempdata->name == "Player") {
+          playerdatapacket temp;
+          auto ec = glz::read_beve(temp, tempdata->buffer);
+          if (!ec) {
+            playerinputs tempinputs = Loadinputdata(temp);
+            for (int i = 0; i < 3; i++) {
+              Global->Entities[1]->velocityvec3[i] = temp.velocityvec3[i];
+              Global->Entities[1]->position[i] = temp.position[i];
+            }
+            Global->Entities[1]->IsGrounded = temp.IsGrounded;
+            inputtoentity(tempinputs, Global->Entities[1]);
           }
-          Global->Entities[1]->IsGrounded = temp.IsGrounded;
-          inputtoentity(tempinputs, Global->Entities[1]);
+        } else if (tempdata->name == "PlayerAdd") {
+          Global->Playerlist.push_back("Client");
+          CobblerAddIP(tempdata->IP, tempdata->PORT);
         }
-      } else if (tempdata->name == "PlayerAdd") {
-        Global->Playerlist.push_back("Client");
-        CobblerAddIP(tempdata->IP, tempdata->PORT);
+        tempvector->pop_back();
       }
-      delete tempdata;
+      delete tempvector;
     }
   }
 
@@ -120,13 +125,13 @@ void update() {
 
   if (Global->IsOnline) {  // send net data
     if (IsServer) {
-      std::vector<std::byte> buffer{};
+      std::vector<Uint8> buffer{};
       auto ec = glz::write_beve(Global->Playerlist, buffer);
       if (!ec) {
-        CobblerSendNet("PlayerList", buffer);
+        CobblerQueueData("PlayerList", buffer);
       }
     }
-    std::vector<std::byte> buffer{};
+    std::vector<Uint8> buffer{};
     playerdatapacket temp;
     temp.Set(P1PlayerInputs);
     temp.IsGrounded = Camera->IsGrounded;
@@ -136,8 +141,9 @@ void update() {
     }
     auto ec = glz::write_beve(temp, buffer);
     if (!ec) {
-      CobblerSendNet("Player", buffer);
+      CobblerQueueData("Player", buffer);
     }
+    CobblerSendNet();
   }
 
   if (curlpostfield->hasdata && Global->LoggedIn) CobblerSendCurlData();
