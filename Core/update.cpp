@@ -121,7 +121,6 @@ void update() {
   currentTime = SDL_GetPerformanceCounter();
   Global->deltaTime = ((double)(currentTime - lastTime)) /
                       (double)SDL_GetPerformanceFrequency();
-  SDL_Log("%f", Global->deltaTime);
   if (LocalInputs->ESC == 2) {
     Global->pause = !Global->pause;
     SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);
@@ -171,7 +170,11 @@ void update() {
       CobblerQueueData("SendTick", buffer);
     }
 
-    CobblerSendNet();
+    Global->Onlinesendwait -= Global->deltaTime;
+    while (Global->Onlinesendwait <= 0) {
+      CobblerSendNet();
+      Global->Onlinesendwait += 0.05f;
+    }
   }
 
   if (curlpostfield->hasdata && Global->LoggedIn) CobblerSendCurlData();

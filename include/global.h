@@ -90,6 +90,7 @@ struct GlobalClass {
   std::vector<Uint64> Playerlist;
 
   Uint64 Onlinerrtime = 0;
+  float Onlinesendwait = 0.05f;
 };
 
 struct EditorClass {
