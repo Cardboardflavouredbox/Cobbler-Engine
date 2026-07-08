@@ -103,14 +103,12 @@ void update() {
         } else if (tempdata->name == "SendTick") {
           CobblerQueueData("ReturnTick", tempdata->buffer);
         } else if (tempdata->name == "ReturnTick") {
-          Uint64 temp;
-          auto ec = glz::read_beve(temp, tempdata->buffer);
+          auto ec = glz::read_beve(Global->Onlinerrtime, tempdata->buffer);
           if (!ec) {
-            temp = SDL_GetPerformanceCounter() - temp;
-            temp /= 2;
             Global->Onlinerrtime =
-                ((temp) * 10) / (double)SDL_GetPerformanceFrequency();
-            SDL_Log("%f", Global->Onlinerrtime);
+                SDL_GetPerformanceCounter() - Global->Onlinerrtime;
+            Global->Onlinerrtime /= 2;
+            SDL_Log("%lld", Global->Onlinerrtime);
           }
         }
         tempvector->pop_back();
@@ -121,9 +119,9 @@ void update() {
 
   lastTime = currentTime;
   currentTime = SDL_GetPerformanceCounter();
-  Global->deltaTime =
-      ((currentTime - lastTime) * 10) / (double)SDL_GetPerformanceFrequency();
-
+  Global->deltaTime = ((double)(currentTime - lastTime)) /
+                      (double)SDL_GetPerformanceFrequency();
+  SDL_Log("%f", Global->deltaTime);
   if (LocalInputs->ESC == 2) {
     Global->pause = !Global->pause;
     SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);

@@ -168,7 +168,7 @@ void render3DUI() {
 
       // SDL_Log("%f %f %f", model->position.x, model->position.y,
       //         model->position.z);
-      model->frame += Global->deltaTime * 5 / 2.f;
+      model->frame += Global->deltaTime * 24;
       while (model->frame >= (float)modelgroup->anim[model->actionname][1])
         model->frame += ((float)modelgroup->anim[model->actionname][0] -
                          (float)modelgroup->anim[model->actionname][1]);
@@ -204,7 +204,7 @@ void renderProps() {
     Modeltransform* model = &Global->Models[i];
     ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
-    Global->Models[i].frame += Global->deltaTime * 5 / 2;
+    Global->Models[i].frame += Global->deltaTime * 24;
     while (Global->Models[i].frame >=
            (float)modelgroup->anim[model->actionname][1])
       Global->Models[i].frame +=

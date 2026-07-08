@@ -151,11 +151,10 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
 }
 
 void EntityMove(Entity* tempentity) {
-  tempentity->velocityvec3.z -=
-      tempentity->gravity * (Global->deltaTime / 10.f);
+  tempentity->velocityvec3.z -= tempentity->gravity * (Global->deltaTime);
 
-  glm::vec3 tempmove = ((tempentity->movevec3 + tempentity->velocityvec3) *
-                        (Global->deltaTime / 10.f));
+  glm::vec3 tempmove =
+      ((tempentity->movevec3 + tempentity->velocityvec3) * (Global->deltaTime));
   glm::vec3 tempposition = tempentity->position,
             moveresult = glm::vec3({0, 0, 0});
 
@@ -240,18 +239,18 @@ void EntityMove(Entity* tempentity) {
   tempentity->movevec3 = glm::vec3({0, 0, 0});
 
   if (tempentity->velocityvec3.x > 0) {
-    tempentity->velocityvec3.x -= Global->deltaTime;
+    tempentity->velocityvec3.x -= Global->deltaTime * 10;
     if (tempentity->velocityvec3.x < 0) tempentity->velocityvec3.x = 0;
   } else if (tempentity->velocityvec3.x < 0) {
-    tempentity->velocityvec3.x += Global->deltaTime;
+    tempentity->velocityvec3.x += Global->deltaTime * 10;
     if (tempentity->velocityvec3.x > 0) tempentity->velocityvec3.x = 0;
   }
 
   if (tempentity->velocityvec3.y > 0) {
-    tempentity->velocityvec3.y -= Global->deltaTime;
+    tempentity->velocityvec3.y -= Global->deltaTime * 10;
     if (tempentity->velocityvec3.y < 0) tempentity->velocityvec3.y = 0;
   } else if (tempentity->velocityvec3.y < 0) {
-    tempentity->velocityvec3.y += Global->deltaTime;
+    tempentity->velocityvec3.y += Global->deltaTime * 10;
     if (tempentity->velocityvec3.y > 0) tempentity->velocityvec3.y = 0;
   }
 }

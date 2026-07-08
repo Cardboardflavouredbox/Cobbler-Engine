@@ -128,15 +128,15 @@ int main(int argc, char* argv[]) {
 
   SDL_Log("Init done");
   while (Global->IsRunning) {
-    Uint64 start = SDL_GetPerformanceCounter();
+    Uint64 start = SDL_GetTicksNS();
     events();
     input();
     update();
     changeUIindex();
     render();
-    Uint64 result = (SDL_GetPerformanceCounter() - start);
-    if (!Settings->vsync && result < 1000000000 / (double)Settings->fps) {
-      SDL_DelayNS(1000000000 / (double)Settings->fps - result);
+    Uint64 result = (SDL_GetTicksNS() - start);
+    if (!Settings->vsync && result < 1000000000 / Settings->fps) {
+      SDL_DelayNS(1000000000 / Settings->fps - result);
     }
   }
   for (auto& entry : classlibs) {

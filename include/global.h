@@ -89,7 +89,7 @@ struct GlobalClass {
 
   std::vector<Uint64> Playerlist;
 
-  float Onlinerrtime = 0;
+  Uint64 Onlinerrtime = 0;
 };
 
 struct EditorClass {
