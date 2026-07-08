@@ -431,7 +431,7 @@ bool initargs(std::vector<std::string> args) {
           break;
         }
         case SetIsServer:
-          Global->Playerlist.push_back("Server");
+          Global->Playerlist.push_back(0);
           if (ServerIP != "") {
             SDL_Log(
                 "Wrong Arguements!(Cannot be Server and have IP input at the "
@@ -521,11 +521,11 @@ bool init() {
           CobblerNetData* tempdata = &tempvector->back();
           SDL_Log("%s", tempdata->name.c_str());
           if (tempdata->name == "PlayerList") {
-            std::vector<std::string> tempstrvec;
+            std::vector<Uint64> tempstrvec;
             auto ec = glz::read_beve(tempstrvec, tempdata->buffer);
             if (!ec) {
               for (int i = 0; i < tempstrvec.size(); i++) {
-                if (tempstrvec[i] == "Client") {
+                if (tempstrvec[i] == 1) {
                   SDL_Log("Connected to server");
                   check = true;
                   break;

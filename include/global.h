@@ -87,7 +87,9 @@ struct GlobalClass {
   bool IsOnline = false;
   std::string playerclass = "default";
 
-  std::vector<std::string> Playerlist;
+  std::vector<Uint64> Playerlist;
+
+  float Onlinerrtime = 0;
 };
 
 struct EditorClass {

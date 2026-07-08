@@ -85,22 +85,32 @@ void update() {
             }
             Global->Entities[1]->IsGrounded = temp.IsGrounded;
             inputtoentity(tempinputs, Global->Entities[1]);
-            SDL_Log("%f %f %f", temp.position[0], temp.position[1],
-                    temp.position[2]);
           } else {
             SDL_Log("what");
           }
         } else if (tempdata->name == "PlayerAdd") {
           bool check = true;
           for (int i = 0; i < Global->Playerlist.size(); i++) {
-            if (Global->Playerlist[i] == "Client") {
+            if (Global->Playerlist[i] == 1) {
               check = false;
               break;
             }
           }
           if (check) {
-            Global->Playerlist.push_back("Client");
+            Global->Playerlist.push_back(1);
             CobblerAddIP(tempdata->IP, tempdata->PORT);
+          }
+        } else if (tempdata->name == "SendTick") {
+          CobblerQueueData("ReturnTick", tempdata->buffer);
+        } else if (tempdata->name == "ReturnTick") {
+          Uint64 temp;
+          auto ec = glz::read_beve(temp, tempdata->buffer);
+          if (!ec) {
+            temp = SDL_GetPerformanceCounter() - temp;
+            temp /= 2;
+            Global->Onlinerrtime =
+                ((temp) * 10) / (double)SDL_GetPerformanceFrequency();
+            SDL_Log("%f", Global->Onlinerrtime);
           }
         }
         tempvector->pop_back();
@@ -156,6 +166,13 @@ void update() {
     if (!ec) {
       CobblerQueueData("Player", buffer);
     }
+    buffer.clear();
+    ec = glz::write_beve(SDL_GetPerformanceCounter(), buffer);
+
+    if (!ec) {
+      CobblerQueueData("SendTick", buffer);
+    }
+
     CobblerSendNet();
   }
 
