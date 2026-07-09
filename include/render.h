@@ -17,7 +17,7 @@
 #endif
 
 extern "C" {
-LIB_API void renderModelGroup(Modeltransform modeltrans,
+LIB_API void renderModelGroup(Modeltransform* modeltrans,
                               ModelGroupClass* modelgroup, bool isUI);
 
 LIB_API void DrawLine(unsigned char color, glm::vec3 rawvectors[]);

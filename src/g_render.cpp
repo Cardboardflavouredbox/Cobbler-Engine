@@ -168,14 +168,8 @@ void render3DUI() {
 
       // SDL_Log("%f %f %f", model->position.x, model->position.y,
       //         model->position.z);
-      model->frame += Global->deltaTime * 24;
-      while (model->frame >= (float)modelgroup->anim[model->actionname][1])
-        model->frame += ((float)modelgroup->anim[model->actionname][0] -
-                         (float)modelgroup->anim[model->actionname][1]);
-      if (model->frame < (float)modelgroup->anim[model->actionname][0])
-        model->frame = (float)modelgroup->anim[model->actionname][0];
 
-      renderModelGroup(*model, modelgroup, true);
+      renderModelGroup(model, modelgroup, true);
     }
   }
 }
@@ -192,9 +186,7 @@ void render2DUI() {
 
 void renderEntity() {
   for (int i = 0; i < Global->Entities.size(); i++) {
-    if (Global->Entities[i]->billboardthing != nullptr)
-      Global->Entities[i]->renderbillboard();
-    else if (Global->Entities[i]->Modelthing != nullptr)
+    if (Global->Entities[i]->Modelthing != nullptr)
       Global->Entities[i]->rendermodelgroup();
   }
 }
@@ -204,16 +196,7 @@ void renderProps() {
     Modeltransform* model = &Global->Models[i];
     ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
-    Global->Models[i].frame += Global->deltaTime * 24;
-    while (Global->Models[i].frame >=
-           (float)modelgroup->anim[model->actionname][1])
-      Global->Models[i].frame +=
-          ((float)modelgroup->anim[model->actionname][0] -
-           (float)modelgroup->anim[model->actionname][1]);
-    if (Global->Models[i].frame < (float)modelgroup->anim[model->actionname][0])
-      Global->Models[i].frame = (float)modelgroup->anim[model->actionname][0];
-
-    renderModelGroup(*model, modelgroup, false);
+    renderModelGroup(model, modelgroup, false);
   }
 }
 

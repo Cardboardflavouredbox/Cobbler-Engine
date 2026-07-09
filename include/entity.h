@@ -30,12 +30,6 @@ struct Entity {
   glm::vec3 hitbox[2];
   float hitboxradius;
   bool IsGrounded;
-  struct Billboard {
-    std::string sprite;
-    glm::vec2 size, uv[2];
-    float offset;
-  };
-  Billboard* billboardthing;
   Modeltransform* Modelthing;
   LIB_API void renderbillboard();
   LIB_API void rendermodelgroup();
@@ -43,7 +37,6 @@ struct Entity {
   LIB_API virtual void lateupdate() = 0;
 
   virtual ~Entity() {
-    if (billboardthing != nullptr) delete (billboardthing);
     if (Modelthing != nullptr) delete (Modelthing);
   }
 };

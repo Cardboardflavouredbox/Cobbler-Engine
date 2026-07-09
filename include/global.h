@@ -4,12 +4,14 @@
 #include <glad/glad.h>
 
 #include <glm/glm.hpp>
+#include <set>
 #include <string>
 #include <unordered_map>
 
 #include "entity.h"
 #include "map.h"
 #include "model.h"
+#include "player.h"
 #include "ui.h"
 
 #ifdef _WIN32
@@ -87,7 +89,9 @@ struct GlobalClass {
   bool IsOnline = false;
   std::string playerclass = "default";
 
-  std::vector<Uint64> Playerlist;
+  std::set<Uint64> Playerlist;
+
+  std::unordered_map<Uint64, playerinputs> PlayerInputList;
 
   Uint64 Onlinerrtime = 0;
   float Onlinesendwait = 0.05f;

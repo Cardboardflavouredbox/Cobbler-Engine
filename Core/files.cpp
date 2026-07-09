@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <glaze/beve.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <set>
 #include <sstream>
 #include <unordered_map>
 
@@ -431,7 +432,7 @@ bool initargs(std::vector<std::string> args) {
           break;
         }
         case SetIsServer:
-          Global->Playerlist.push_back(0);
+          Global->Playerlist.insert(0);
           if (ServerIP != "") {
             SDL_Log(
                 "Wrong Arguements!(Cannot be Server and have IP input at the "
@@ -521,17 +522,14 @@ bool init() {
           CobblerNetData* tempdata = &tempvector->back();
           SDL_Log("%s", tempdata->name.c_str());
           if (tempdata->name == "PlayerList") {
-            std::vector<Uint64> tempstrvec;
-            auto ec = glz::read_beve(tempstrvec, tempdata->buffer);
+            std::set<Uint64> tempset;
+            auto ec = glz::read_beve(tempset, tempdata->buffer);
             if (!ec) {
-              for (int i = 0; i < tempstrvec.size(); i++) {
-                if (tempstrvec[i] == 1) {
-                  SDL_Log("Connected to server");
-                  check = true;
-                  break;
-                }
+              if (tempset.find(1) != tempset.end()) {
+                SDL_Log("Connected to server");
+                check = true;
+                break;
               }
-              if (check) break;
             }
           }
           tempvector->pop_back();

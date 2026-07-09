@@ -243,10 +243,18 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
   return temp;
 }
 
-void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup,
+void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
                       bool isUI) {
+  modeltrans->frame += Global->deltaTime * 24;
+  while (modeltrans->frame >=
+         (float)modelgroup->anim[modeltrans->actionname][1])
+    modeltrans->frame += ((float)modelgroup->anim[modeltrans->actionname][0] -
+                          (float)modelgroup->anim[modeltrans->actionname][1]);
+  if (modeltrans->frame < (float)modelgroup->anim[modeltrans->actionname][0])
+    modeltrans->frame = (float)modelgroup->anim[modeltrans->actionname][0];
+
   glm::vec3 renderpos =
-      modeltrans.position - (isUI ? glm::vec3(0) : Camera->position);
+      modeltrans->position - (isUI ? glm::vec3(0) : Camera->position);
   switch (Settings->graphicsmode) {
     case 1: {
       glDisable(GL_CULL_FACE);
@@ -259,11 +267,11 @@ void renderModelGroup(Modeltransform modeltrans, ModelGroupClass* modelgroup,
           glBegin(GL_TRIANGLES);
           for (int k = 2; k >= 0; k--) {
             glm::vec3 pos = modelapplybones(
-                model->points[model->faces[j].point[k]], modeltrans.actionname,
-                modelgroup, modeltrans.frame);
-            pos.x *= modeltrans.size.x;
-            pos.y *= modeltrans.size.y;
-            pos.z *= modeltrans.size.z;
+                model->points[model->faces[j].point[k]], modeltrans->actionname,
+                modelgroup, modeltrans->frame);
+            pos.x *= modeltrans->size.x;
+            pos.y *= modeltrans->size.y;
+            pos.z *= modeltrans->size.z;
             // if (isUI) {
             //   pos.y *= -1;
             // }

@@ -78,26 +78,18 @@ void update() {
           playerdatapacket temp;
           auto ec = glz::read_beve(temp, tempdata->buffer);
           if (!ec) {
-            playerinputs tempinputs = Loadinputdata(temp);
+            Global->PlayerInputList[1] = Loadinputdata(temp);
             for (int i = 0; i < 3; i++) {
               Global->Entities[1]->velocityvec3[i] = temp.velocityvec3[i];
               Global->Entities[1]->position[i] = temp.position[i];
             }
             Global->Entities[1]->IsGrounded = temp.IsGrounded;
-            inputtoentity(tempinputs, Global->Entities[1]);
           } else {
             SDL_Log("what");
           }
         } else if (tempdata->name == "PlayerAdd") {
-          bool check = true;
-          for (int i = 0; i < Global->Playerlist.size(); i++) {
-            if (Global->Playerlist[i] == 1) {
-              check = false;
-              break;
-            }
-          }
-          if (check) {
-            Global->Playerlist.push_back(1);
+          if (Global->Playerlist.find(1) == Global->Playerlist.end()) {
+            Global->Playerlist.insert(1);
             CobblerAddIP(tempdata->IP, tempdata->PORT);
           }
         } else if (tempdata->name == "SendTick") {
@@ -129,6 +121,7 @@ void update() {
   if (!Global->pause) {
     processinputs();
     inputtoentity(*P1PlayerInputs, Camera);
+    inputtoentity(Global->PlayerInputList[1], Global->Entities[1]);
     PlayerClassUpdate[Global->playerclass]();
     componentsupdate();
     for (auto& [key, value] : Global->UImap3D) {
