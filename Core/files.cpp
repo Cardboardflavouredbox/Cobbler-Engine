@@ -38,6 +38,13 @@ struct glz::meta<glm::vec3> {
 };
 
 template <>
+struct glz::meta<glm::quat> {
+  using mimic = std::array<float, 4>;
+  static constexpr auto value =
+      glz::array(&glm::quat::x, &glm::quat::y, &glm::quat::z, &glm::quat::w);
+};
+
+template <>
 struct glz::meta<glm::vec2> {
   using mimic = std::array<float, 2>;
   static constexpr auto value = glz::array(&glm::vec2::x, &glm::vec2::y);

@@ -269,6 +269,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
             glm::vec3 pos = modelapplybones(
                 model->points[model->faces[j].point[k]], modeltrans->actionname,
                 modelgroup, modeltrans->frame);
+            pos = modeltrans->rot * pos;
             pos.x *= modeltrans->size.x;
             pos.y *= modeltrans->size.y;
             pos.z *= modeltrans->size.z;
