@@ -140,7 +140,6 @@ foreach(ENTITYDIR ${ENTITIES})
     cmake_path(GET ENTITYDIR FILENAME FOLDER_NAME)
     if(IS_DIRECTORY "${ENTITYDIR}")
         add_library(${FOLDER_NAME} SHARED "${ENTITYDIR}/entitymain.cpp")
-        FILE(COPY "${ENTITYDIR}/sprite.bmp" DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/entities/${FOLDER_NAME}")
         set_target_properties(${FOLDER_NAME} PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/entities/${FOLDER_NAME}"
         )

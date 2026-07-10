@@ -18,7 +18,7 @@ void componentsupdatelate() {
 
 void componentsupdate() {
   for (int i = 0; i < Global->Entities.size(); i++) {
-    EntityMove(Global->Entities[i]);
     Global->Entities[i]->update();
+    EntityMove(Global->Entities[i]);
   }
 }
