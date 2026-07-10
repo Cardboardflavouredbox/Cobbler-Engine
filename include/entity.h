@@ -20,6 +20,7 @@ extern "C" {
 LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
 struct Entity {
+  float deltatimelocal = 0;
   float hp, maxhp;
   float movespeed = 17.5f, jumpheight = 24.f;
   glm::vec2 dir;

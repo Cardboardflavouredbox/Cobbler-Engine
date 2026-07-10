@@ -20,5 +20,6 @@ void componentsupdate() {
   for (int i = 0; i < Global->Entities.size(); i++) {
     Global->Entities[i]->update();
     EntityMove(Global->Entities[i]);
+    Global->Entities[i]->deltatimelocal = 0;
   }
 }

@@ -244,8 +244,8 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
 }
 
 void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
-                      bool isUI) {
-  modeltrans->frame += Global->deltaTime * 24;
+                      bool isUI, float deltatime) {
+  modeltrans->frame += deltatime * 24;
   if ((float)modelgroup->anim[modeltrans->actionname][0] ==
       (float)modelgroup->anim[modeltrans->actionname][1]) {
     modeltrans->frame = (float)modelgroup->anim[modeltrans->actionname][0];

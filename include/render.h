@@ -18,7 +18,8 @@
 
 extern "C" {
 LIB_API void renderModelGroup(Modeltransform* modeltrans,
-                              ModelGroupClass* modelgroup, bool isUI);
+                              ModelGroupClass* modelgroup, bool isUI,
+                              float deltatime);
 
 LIB_API void DrawLine(unsigned char color, glm::vec3 rawvectors[]);
 

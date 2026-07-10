@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "deltaTime.h"
 #include "extern.h"
 #include "model.h"
 #include "render.h"
@@ -24,5 +25,6 @@ int GetBillBoardIndex(float angle, int lastIndex) {
   return lastIndex;
 }
 void Entity::rendermodelgroup() {
-  renderModelGroup(Modelthing, &ModelGroupMap[Modelthing->name], false);
+  renderModelGroup(Modelthing, &ModelGroupMap[Modelthing->name], false,
+                   deltatimelocal + deltaTime);
 }

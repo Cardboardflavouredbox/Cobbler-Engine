@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
 
+#include "deltaTime.h"
 #include "extern.h"
 #include "map.h"
 #include "model.h"
@@ -169,7 +170,7 @@ void render3DUI() {
       // SDL_Log("%f %f %f", model->position.x, model->position.y,
       //         model->position.z);
 
-      renderModelGroup(model, modelgroup, true);
+      renderModelGroup(model, modelgroup, true, deltaTime);
     }
   }
 }
@@ -196,7 +197,7 @@ void renderProps() {
     Modeltransform* model = &Global->Models[i];
     ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
-    renderModelGroup(model, modelgroup, false);
+    renderModelGroup(model, modelgroup, false, deltaTime);
   }
 }
 

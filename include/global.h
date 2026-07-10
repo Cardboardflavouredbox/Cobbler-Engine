@@ -53,7 +53,6 @@ struct GlobalClass {
 
   bool IsRunning;
   bool pause = false, isopeningfile = false;
-  float deltaTime;
   std::string skybox;
 
   int windowx = 320, windowy = 200;
@@ -93,7 +92,6 @@ struct GlobalClass {
 
   std::unordered_map<Uint64, playerinputs> PlayerInputList;
 
-  Uint64 Onlinerrtime = 0;
   float Onlinesendwait = 0.05f;
 };
 

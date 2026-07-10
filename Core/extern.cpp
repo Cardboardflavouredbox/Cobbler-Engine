@@ -2,8 +2,11 @@
 
 #include <SDL3/SDL_timer.h>
 
+#include "deltaTime.h"
 #include "font.h"
 #include "model.h"
+
+float deltaTime;
 
 std::unique_ptr<GlobalClass> Global;
 std::unique_ptr<EditorClass> Editor;

@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 
 #include "components.h"
+#include "deltaTime.h"
 #include "entity.h"
 #include "extern.h"
 #include "global.h"
@@ -95,12 +96,14 @@ void update() {
         } else if (tempdata->name == "SendTick") {
           CobblerQueueData("ReturnTick", tempdata->buffer);
         } else if (tempdata->name == "ReturnTick") {
-          auto ec = glz::read_beve(Global->Onlinerrtime, tempdata->buffer);
+          Uint64 temp;
+          auto ec = glz::read_beve(temp, tempdata->buffer);
           if (!ec) {
-            Global->Onlinerrtime =
-                SDL_GetPerformanceCounter() - Global->Onlinerrtime;
-            Global->Onlinerrtime /= 2;
-            SDL_Log("%lld", Global->Onlinerrtime);
+            temp = SDL_GetPerformanceCounter() - temp;
+            temp /= 2;
+            Global->Entities[1]->deltatimelocal =
+                temp / (double)SDL_GetPerformanceFrequency();
+            SDL_Log("%f", Global->Entities[1]->deltatimelocal);
           }
         }
         tempvector->pop_back();
@@ -111,8 +114,8 @@ void update() {
 
   lastTime = currentTime;
   currentTime = SDL_GetPerformanceCounter();
-  Global->deltaTime = ((double)(currentTime - lastTime)) /
-                      (double)SDL_GetPerformanceFrequency();
+  deltaTime = ((double)(currentTime - lastTime)) /
+              (double)SDL_GetPerformanceFrequency();
   if (LocalInputs->ESC == 2) {
     Global->pause = !Global->pause;
     SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);
@@ -163,7 +166,7 @@ void update() {
       CobblerQueueData("SendTick", buffer);
     }
 
-    Global->Onlinesendwait -= Global->deltaTime;
+    Global->Onlinesendwait -= deltaTime;
     while (Global->Onlinesendwait <= 0) {
       CobblerSendNet();
       Global->Onlinesendwait += 0.05f;

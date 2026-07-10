@@ -5,6 +5,8 @@
 #include <cmath>
 #include <glm/glm.hpp>
 
+#include "deltaTime.h"
+
 // https://gamedev.stackexchange.com/a/5589
 bool RayTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
                  glm::vec3 R2, glm::vec3& PIP) {
@@ -151,10 +153,11 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
 }
 
 void EntityMove(Entity* tempentity) {
-  tempentity->velocityvec3.z -= tempentity->gravity * (Global->deltaTime);
+  float dt = tempentity->deltatimelocal + deltaTime;
+  tempentity->velocityvec3.z -= tempentity->gravity * (dt);
 
   glm::vec3 tempmove =
-      ((tempentity->movevec3 + tempentity->velocityvec3) * (Global->deltaTime));
+      ((tempentity->movevec3 + tempentity->velocityvec3) * (dt));
   glm::vec3 tempposition = tempentity->position,
             moveresult = glm::vec3({0, 0, 0});
 
@@ -239,18 +242,18 @@ void EntityMove(Entity* tempentity) {
   tempentity->movevec3 = glm::vec3({0, 0, 0});
 
   if (tempentity->velocityvec3.x > 0) {
-    tempentity->velocityvec3.x -= Global->deltaTime * 10;
+    tempentity->velocityvec3.x -= dt * 10;
     if (tempentity->velocityvec3.x < 0) tempentity->velocityvec3.x = 0;
   } else if (tempentity->velocityvec3.x < 0) {
-    tempentity->velocityvec3.x += Global->deltaTime * 10;
+    tempentity->velocityvec3.x += dt * 10;
     if (tempentity->velocityvec3.x > 0) tempentity->velocityvec3.x = 0;
   }
 
   if (tempentity->velocityvec3.y > 0) {
-    tempentity->velocityvec3.y -= Global->deltaTime * 10;
+    tempentity->velocityvec3.y -= dt * 10;
     if (tempentity->velocityvec3.y < 0) tempentity->velocityvec3.y = 0;
   } else if (tempentity->velocityvec3.y < 0) {
-    tempentity->velocityvec3.y += Global->deltaTime * 10;
+    tempentity->velocityvec3.y += dt * 10;
     if (tempentity->velocityvec3.y > 0) tempentity->velocityvec3.y = 0;
   }
 }
