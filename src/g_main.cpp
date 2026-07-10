@@ -49,51 +49,6 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  switch (Settings->graphicsmode) {
-    case 1: {
-      for (auto& entry : SpawnEntities) {
-        glGenTextures(1, &(Global->GLstuff->textures[entry.first]));
-
-        SDL_Surface* surface =
-            SDL_LoadBMP((basepath + "/" + Global->GameName + "/entities/" +
-                         entry.first + "/sprite.bmp")
-                            .c_str());
-        if (surface == NULL) return -1;
-        SDL_SetSurfaceColorKey(surface, true,
-                               SDL_MapSurfaceRGB(surface, 255, 0, 255));
-        surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
-
-        glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[entry.first]);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        SDL_DestroySurface(surface);
-      }
-      break;
-    }
-    default: {
-      for (auto& entry : SpawnEntities) {
-        SDL_Surface* surface =
-            SDL_LoadBMP((basepath + "/" + Global->GameName + "/entities/" +
-                         entry.first + "/sprite.bmp")
-                            .c_str());
-        if (surface == NULL) return -1;
-
-        surface = SDL_ConvertSurfaceAndColorspace(
-            surface, SDL_PIXELFORMAT_INDEX8, Global->SRstuff->palette,
-            SDL_COLORSPACE_RGB_DEFAULT, 0);
-        SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
-        Global->SRstuff->textures[entry.first] = surface;
-      }
-      break;
-    }
-  }
-
   dylib::library UIlib(basepath + "/" + Global->GameName + "/bin/CobblerGameUI",
                        dylib::decorations::os_default());
   SDL_Log("UI library loaded");

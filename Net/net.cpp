@@ -5,6 +5,7 @@
 #include <deque>
 #include <sstream>
 #include <vector>
+#include <cstring>
 
 #include "network.h"
 
