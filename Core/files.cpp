@@ -7,7 +7,12 @@
 #include <SDL3/SDL_timer.h>
 #include <ft2build.h>
 #include <glad/glad.h>
+#include <stdio.h>
 
+#include <filesystem>
+#include <glaze/beve.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <set>
 #include <sstream>
 #include <unordered_map>
 
@@ -16,13 +21,27 @@
 #include <glaze/json.hpp>
 
 #include "extern.h"
+#include "font.h"
 #include "global.h"
+#include "model.h"
+#include "network.h"
+#include "update.h"
+
+std::string ServerIP;
+unsigned int ServerPort;
 
 template <>
 struct glz::meta<glm::vec3> {
   using mimic = std::array<float, 3>;
   static constexpr auto value =
       glz::array(&glm::vec3::x, &glm::vec3::y, &glm::vec3::z);
+};
+
+template <>
+struct glz::meta<glm::quat> {
+  using mimic = std::array<float, 4>;
+  static constexpr auto value =
+      glz::array(&glm::quat::x, &glm::quat::y, &glm::quat::z, &glm::quat::w);
 };
 
 template <>
@@ -114,7 +133,11 @@ void freeRenderer() {
 
   switch (Settings->graphicsmode) {
     case 1: {
+      // for (auto& [key, value] : Global->GLstuff->textures) {
+      //   glDeleteTextures(1, &value);
+      // }
       SDL_GL_DestroyContext(Global->GLstuff->GLContext);
+
       delete (Global->GLstuff);
       break;
     }
@@ -131,7 +154,48 @@ void freeRenderer() {
   }
 }
 
-bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
+bool loadBMP(std::filesystem::path path) {
+  SDL_Surface* surface;
+  SDL_Log("Texture: %s", path.filename().string().c_str());
+  switch (Settings->graphicsmode) {
+    case 1: {
+      std::string tempstr = path.filename().string();
+      for (int i = 0; i < 4; i++) tempstr.pop_back();
+      glGenTextures(1, &(Global->GLstuff->textures[tempstr]));
+      surface = SDL_LoadBMP(path.string().c_str());
+      if (surface == NULL) return false;
+      SDL_SetSurfaceColorKey(surface, true,
+                             SDL_MapSurfaceRGB(surface, 255, 0, 255));
+      surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
+
+      glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[tempstr]);
+
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
+                   GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      SDL_DestroySurface(surface);
+      break;
+    }
+    default: {
+      surface = SDL_LoadBMP(path.string().c_str());
+      if (surface == NULL) return false;
+      surface = SDL_ConvertSurfaceAndColorspace(surface, SDL_PIXELFORMAT_INDEX8,
+                                                Global->SRstuff->palette,
+                                                SDL_COLORSPACE_RGB_DEFAULT, 0);
+      SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
+      std::string tempstr = path.filename().string();
+      for (int i = 0; i < 4; i++) tempstr.pop_back();
+      Global->SRstuff->textures[tempstr] = surface;
+    }
+  }
+  return true;
+}
+
+bool setRenderer(std::shared_ptr<ZipData> LoadedData) {
   switch (Settings->graphicsmode) {
     case 1: {
       SDL_Surface* surface;
@@ -142,6 +206,9 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
 
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                           SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+      // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+      // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
       Global->window = SDL_CreateWindow(
           "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
           SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -156,56 +223,21 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
 
       if (!SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0)) return false;
 
-      if (IsEditor) {
-        // Enable 2D rendering
-        glMatrixMode(GL_PROJECTION);
-        glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
-        glLoadIdentity();
-        glDisable(GL_DEPTH_TEST);
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 256.f);
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      } else {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.25f, 256.f);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      }
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       std::unordered_map<std::string, GLuint> tempvector;
       tempvector.reserve(32);
 
       Global->GLstuff->textures = tempvector;
 
-      std::string basepath = SDL_GetBasePath(), tempstr = basepath;
-      for (int i = 0; i < LoadedData->texturenames.size(); i++) {
-        glGenTextures(
-            1, &(Global->GLstuff->textures[LoadedData->texturenames[i]]));
-        tempstr = basepath;
-        tempstr.append("/" + Global->GameName + "/textures/" +
-                       LoadedData->texturenames[i] + ".bmp");
-
-        surface = SDL_LoadBMP(tempstr.c_str());
-        if (surface == NULL) return false;
-        SDL_SetSurfaceColorKey(surface, true,
-                               SDL_MapSurfaceRGB(surface, 255, 0, 255));
-        surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
-
-        glBindTexture(GL_TEXTURE_2D,
-                      Global->GLstuff->textures[LoadedData->texturenames[i]]);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        SDL_DestroySurface(surface);
-      }
-      // glEnable(GL_CULL_FACE);
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_BACK);
+      glFrontFace(GL_CW);
       SDL_Log("%d", glGetError());
       break;
     }
@@ -235,21 +267,16 @@ bool setRenderer(bool IsEditor, std::shared_ptr<ZipData> LoadedData) {
       SDL_SetSurfacePalette(Global->SRstuff->render_target,
                             Global->SRstuff->palette);
 
-      for (int i = 0; i < LoadedData->texturenames.size(); i++) {
-        tempstr = basepath;
-        tempstr.append("/" + Global->GameName + "/textures/" +
-                       LoadedData->texturenames[i] + ".bmp");
-        surface = SDL_LoadBMP(tempstr.c_str());
-        if (surface == NULL) return false;
-        surface = SDL_ConvertSurfaceAndColorspace(
-            surface, SDL_PIXELFORMAT_INDEX8, Global->SRstuff->palette,
-            SDL_COLORSPACE_RGB_DEFAULT, 0);
-        SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
-        Global->SRstuff->textures[LoadedData->texturenames[i]] = surface;
-      }
       Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
                                           Settings->resolutiony);
       break;
+    }
+  }
+  std::string basepath = SDL_GetBasePath();
+  for (const auto& entry : std::filesystem::directory_iterator(
+           basepath + Global->GameName + "/textures/")) {
+    if (entry.is_regular_file()) {
+      loadBMP(entry.path());
     }
   }
   return true;
@@ -268,17 +295,27 @@ enum argenums {
   SetFPS,
   SetFOV,
   SetVsync,
-  SetGame
+  SetGame,
+  SetLogin,
+  SetWebsite,
+  SetServerIP,
+  SetIsServer
 };
 
-bool init(bool IsEditor, std::vector<std::string> args) {
+bool initargs(std::vector<std::string> args) {
   Global = std::make_unique<GlobalClass>();
   if (Global == nullptr) return false;
   Settings = std::make_unique<SettingsClass>();
   if (Settings == nullptr) return false;
-  P1Inputs = new Inputs();
-  if (P1Inputs == nullptr) return false;
+  LocalInputs = new Inputs();
+  if (LocalInputs == nullptr) return false;
+  P1PlayerInputs = new playerinputs();
+  if (P1PlayerInputs == nullptr) return false;
+
   Settings->fov = 90;
+
+  curlpostfield = new PostField();
+  if (curlpostfield == nullptr) return false;
 
   LoadSettings();
 
@@ -294,7 +331,14 @@ bool init(bool IsEditor, std::vector<std::string> args) {
       {"-fps", SetFPS},
       {"-fov", SetFOV},
       {"-vsync", SetVsync},
-      {"-game", SetGame}};
+      {"-game", SetGame},
+      {"-login", SetLogin},
+      {"-website", SetWebsite},
+      {"-IP", SetServerIP},
+      {"-ip", SetServerIP},
+      {"-ServerIP", SetServerIP},
+      {"-Server", SetIsServer},
+      {"-server", SetIsServer}};
 
   for (int i = 0; i < args.size(); i++) {
     if (stringtoenums.contains(args[i])) {
@@ -333,11 +377,103 @@ bool init(bool IsEditor, std::vector<std::string> args) {
           }
           Global->GameName = args[i];
           break;
+        case SetLogin: {
+          std::string password;
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(username)");
+            return false;
+          }
+          curlpostfield->username = args[i];
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(password)");
+            return false;
+          }
+          password = args[i];
+
+          curlloginstring = "IsGame=True&username=" + curlpostfield->username +
+                            "&password=" + password;
+          break;
+        }
+        case SetWebsite:
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(Website)");
+            return false;
+          }
+          curlpostfield->websiteaddr = args[i];
+          break;
+        case SetServerIP: {
+          if (IsServer) {
+            SDL_Log(
+                "Wrong Arguements!(Cannot be Server and have IP input at the "
+                "same time)");
+            return false;
+          }
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(IP)");
+            return false;
+          }
+          int j = 0;
+          while (args[i][j] != ':') {
+            if (args[i][j] == '\0') {
+              SDL_Log("Wrong Arguements!(IP)");
+              return false;
+            }
+            ServerIP += args[i][j];
+            j++;
+          }
+          j++;
+          while (args[i][j] != '\0') {
+            int temp = args[i][j] - '0';
+            if (temp < 0 || temp > 9) {
+              SDL_Log("Wrong Arguements!(PORT)");
+              return false;
+            }
+            ServerPort *= 10;
+            ServerPort += temp;
+            j++;
+          }
+          break;
+        }
+        case SetIsServer:
+          Global->Playerlist.insert(0);
+          if (ServerIP != "") {
+            SDL_Log(
+                "Wrong Arguements!(Cannot be Server and have IP input at the "
+                "same time)");
+            return false;
+          }
+          i++;
+          if (i >= args.size()) {
+            SDL_Log("Wrong Arguements!(ServerPort)");
+            return false;
+          }
+          int j = 0;
+          while (args[i][j] != '\0') {
+            int temp = args[i][j] - '0';
+            if (temp < 0 || temp > 9) {
+              SDL_Log("Wrong Arguements!(ServerPort)");
+              return false;
+            }
+            ServerPort *= 10;
+            ServerPort += temp;
+            j++;
+          }
+          Global->IsOnline = true;
+          IsServer = true;
+          break;
       }
     }
   }
   SDL_Log("args done");
+  return true;
+}
 
+bool init() {
+  Global->IsRunning = true;
   std::shared_ptr<ZipData> LoadedData(new ZipData());
   auto error = glz::read_file_json(
       LoadedData, Global->GameName + "/resources.json", std::string{});
@@ -356,18 +492,103 @@ bool init(bool IsEditor, std::vector<std::string> args) {
     return false;
   SDL_Log("SDL initialized");
 
-  if (!setRenderer(IsEditor, LoadedData)) return false;
+  if (!CobblerInitNet()) {
+    return false;
+  }
+  SDL_Log("Net Loaded");
+  if (curlloginstring != "") {
+    if (!CobblerCurlLogin()) {
+      SDL_Log("Login failed");
+      Global->LoggedIn = false;
+    } else {
+      SDL_Log("Login successful");
+      Global->LoggedIn = true;
+    }
+  }
 
-  SDL_SetWindowRelativeMouseMode(Global->window, !IsEditor);
+  if (IsServer) {
+    if (!CobblerSetSocket(ServerPort)) {
+      SDL_Log("Server Setup failed");
+    }
+  }
+
+  if (ServerIP != "") {
+    if (!CobblerSetSocket(0)) {
+      SDL_Log("Server connection failed");
+    }
+    CobblerAddIP(ServerIP, ServerPort);
+    Global->IsOnline = true;
+    std::vector<Uint8> buffer{};
+    bool check = false;
+    while (Global->IsRunning && !check) {
+      events();
+      CobblerQueueData("PlayerAdd", buffer);
+      std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
+      if (tempvector != NULL) {
+        while (!tempvector->empty()) {
+          CobblerNetData* tempdata = &tempvector->back();
+          SDL_Log("%s", tempdata->name.c_str());
+          if (tempdata->name == "PlayerList") {
+            std::set<Uint64> tempset;
+            auto ec = glz::read_beve(tempset, tempdata->buffer);
+            if (!ec) {
+              if (tempset.find(1) != tempset.end()) {
+                SDL_Log("Connected to server");
+                check = true;
+                break;
+              }
+            }
+          }
+          tempvector->pop_back();
+        }
+        delete tempvector;
+      }
+      CobblerSendNet();
+      SDL_DelayNS(1000000000 / (double)Settings->fps);
+    }
+  }
+
+  if (!setRenderer(LoadedData)) return false;
+
+  SDL_SetWindowRelativeMouseMode(Global->window, true);
   Mapdata tempmapdata;
   error = glz::read_file_json(
       tempmapdata,
       Global->GameName + "/map/" + LoadedData->startlevel + ".json",
       std::string{});
-  if (error) return false;
+  if (error) {
+    SDL_Log("%s", glz::format_error(error, (Global->GameName + "/map/" +
+                                            LoadedData->startlevel + ".json")
+                                               .c_str())
+                      .c_str());
+    return false;
+  }
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
+  Global->perspectivematrix = glm::perspective(
+      glm::radians((double)Settings->fov),
+      Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
+
+  Camera = new CameraEntity();
+  Camera->hitbox[0] = glm::vec3({0, 0, -1.75f});
+  Camera->hitbox[1] = glm::vec3({0, 0, 0});
+  Camera->hitboxradius = 1.f;
+  Camera->position = glm::vec3({0, 0, 12});
+  Camera->dir = glm::vec2(0);
+  Camera->teamindex = 0;
+
+  Global->Entities.push_back(Camera);
+
+  for (int i = 0; i < tempmapdata.Entities.size(); i++) {
+    // SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
+    if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
+      Global->Entities.push_back(SpawnEntities[tempmapdata.Entities[i].name]());
+      Global->Entities.back()->position = tempmapdata.Entities[i].pos;
+    }
+  }
+
+  Global->Models = tempmapdata.props;
 
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     if (Global->mapfaces[i].points.size() == 4) {
@@ -401,35 +622,163 @@ bool init(bool IsEditor, std::vector<std::string> args) {
     }
   }
 
-  Camera = std::make_shared<Entity>();
-  Camera->hitbox[0] = glm::vec3({-1, -1, -3});
-  Camera->hitbox[1] = glm::vec3({1, 1, 0});
-  Camera->position = glm::vec3({0, 0, 3});
-  Camera->dir = glm::vec2(0);
+  std::string basepath = SDL_GetBasePath(), tempstr, namestr;
+  for (const auto& dir : std::filesystem::directory_iterator(
+           basepath + Global->GameName + "/models/")) {
+    if (dir.is_directory()) {
+      for (const auto& entry : std::filesystem::directory_iterator(
+               basepath + Global->GameName + "/models/" +
+               dir.path().filename().string() + "/")) {
+        if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
+          ModelGroupClass modelgroup;
+          GlobalClass::Model model;
 
-  Global->Entities.push_back(Camera);
+          tempstr = entry.path().filename().string();
+          for (int i = 0; i < 4; i++) tempstr.pop_back();
+          namestr = tempstr;
+          std::string posename = "default";
+          FILE* file = fopen(entry.path().string().c_str(), "r");
+          if (file == NULL) {
+            SDL_Log("Impossible to open the file !");
+            return false;
+          }
+          while (true) {
+            char lineHeader[128];
+            // read the first word of the line
+            if (fscanf(file, "%s", lineHeader) == EOF) break;
+            if (strcmp(lineHeader, "A") == 0) {
+              char name[64];
+              unsigned int animend, animstart;
+              fscanf(file, "%s %u %u\n", name, &animstart, &animend);
+              modelgroup.anim[name][0] = animstart;
+              modelgroup.anim[name][1] = animend;
+              posename = name;
+            } else if (strcmp(lineHeader, "SB") == 0) {
+              char name[64], parent[64];
+              glm::vec3 head, tail;
+              int what =
+                  fscanf(file, "%s %f %f %f/%f %f %f %s", name, &head.x,
+                         &head.y, &head.z, &tail.x, &tail.y, &tail.z, parent);
+              modelgroup.Bonemap[name].parent = parent;
+              modelgroup.Bonemap[name].head = head;
+              modelgroup.Bonemap[name].tail = tail;
+            } else if (strcmp(lineHeader, "FC") == 0) {
+              char name[64], thing[64];
+              int index;
+              char newlinecheck = 'w';
+              fscanf(file, "%*48[^\"]\"%48[^\"]\"].%s %d\n ", name, thing,
+                     &index);
+              modelgroup.Bonemap.try_emplace(name);
+              if (strcmp(thing, "location") == 0) {
+                while (newlinecheck != '\n') {
+                  unsigned int index2;
+                  float temp;
+                  fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
-  std::string basepath = SDL_GetBasePath(), tempstr = basepath;
+                  modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);
+                  modelgroup.Bonemap[name].Poses[posename][index2].pos[index] =
+                      temp;
+                }
+              } else if (strcmp(thing, "rotation_quaternion") == 0) {
+                while (newlinecheck != '\n') {
+                  unsigned int index2;
+                  float temp;
+                  fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+                  modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);
+                  modelgroup.Bonemap[name]
+                      .Poses[posename][index2]
+                      .rot[(index + 3) % 4] = temp;
+                }
+              } else if (strcmp(thing, "scale") == 0) {
+                while (newlinecheck != '\n') {
+                  unsigned int index2;
+                  float temp;
+                  fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+                  modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);
+                  modelgroup.Bonemap[name]
+                      .Poses[posename][index2]
+                      .scale[index] = temp;
+                }
+              }
+            } else if (strcmp(lineHeader, "O") == 0) {
+              if (namestr != tempstr) {
+                Global->Modelmap[namestr] = model;
+                modelgroup.Models.push_back(namestr);
+              }
+              char objname[128];
+              fscanf(file, "%s", objname);
+              namestr = objname;
+              namestr = tempstr + "/" + namestr;
+              model.faces.clear();
+              model.points.clear();
+              model.texture = "";
+            } else if (strcmp(lineHeader, "P") == 0) {
+              GlobalClass::Model::Vertex vertex;
+              char newlinecheck;
+              fscanf(file, "%f %f %f%c", &vertex.pos.x, &vertex.pos.y,
+                     &vertex.pos.z, &newlinecheck);
+              while (newlinecheck != '\n') {
+                char name[64];
+                float temp;
+                fscanf(file, "%s %f%c", name, &temp, &newlinecheck);
+                vertex.bone = name;
+              }
+              model.points.push_back(vertex);
+            } else if (strcmp(lineHeader, "F") == 0) {
+              GlobalClass::Model::Face face;
+              int matches =
+                  fscanf(file, "%u %u %u/%f %f %f/%f %f/%f %f/%f %f\n",
+                         &face.point[0], &face.point[1], &face.point[2],
+                         &face.normal[0], &face.normal[1], &face.normal[2],
+                         &face.uv[0].x, &face.uv[0].y, &face.uv[1].x,
+                         &face.uv[1].y, &face.uv[2].x, &face.uv[2].y);
+              if (matches < 12) {
+                SDL_Log("failed to read cbm file face. Matches: %d", matches);
+                return false;
+              }
+              model.faces.push_back(face);
+            } else if (strcmp(lineHeader, "T") == 0) {
+              char temp[256] = {};
+              fscanf(file, "%s\n", temp);
+              std::string tempstr2(temp);
+              model.texture = tempstr2;
+            }
+          }
+          fclose(file);
+          Global->Modelmap[namestr] = model;
+          modelgroup.Models.push_back(namestr);
+          ModelGroupMap[tempstr] = modelgroup;
+        } else if (entry.is_regular_file() &&
+                   entry.path().extension() == ".bmp") {
+          loadBMP(entry.path());
+        }
+      }
+    }
+  }
 
-  if (FT_Init_FreeType(&(Global->FTlibrary))) return false;
+  Freetypething = new FreetypeClass();
+  tempstr = basepath;
+
+  if (FT_Init_FreeType(&(Freetypething->FTlibrary))) return false;
 
   tempstr = basepath;
   tempstr.append("/" + Global->GameName + "/res/" + LoadedData->fontname);
-  if (FT_New_Face(Global->FTlibrary, tempstr.c_str(), 0, &(Global->FTface)))
+  if (FT_New_Face(Freetypething->FTlibrary, tempstr.c_str(), 0,
+                  &(Freetypething->FTface)))
     return false;
-  FT_Select_Charmap(Global->FTface, ft_encoding_unicode);
+  FT_Select_Charmap(Freetypething->FTface, ft_encoding_unicode);
 
-  FT_Set_Pixel_Sizes(Global->FTface, 0, 12);
+  FT_Set_Pixel_Sizes(Freetypething->FTface, 0, 12);
 
   for (int i = 0; i < 128; i++) {
-    FT_UInt glyph_index = FT_Get_Char_Index(Global->FTface, i);
-    FT_Load_Glyph(Global->FTface, glyph_index, FT_LOAD_MONOCHROME);
-    FT_Render_Glyph(Global->FTface->glyph, FT_RENDER_MODE_MONO);
+    FT_UInt glyph_index = FT_Get_Char_Index(Freetypething->FTface, i);
+    FT_Load_Glyph(Freetypething->FTface, glyph_index, FT_LOAD_MONOCHROME);
+    FT_Render_Glyph(Freetypething->FTface->glyph, FT_RENDER_MODE_MONO);
 
-    Global->Glyphmap[glyph_index] = CreateGlyph(Global->FTface->glyph);
+    Freetypething->Glyphmap[glyph_index] =
+        CreateGlyph(Freetypething->FTface->glyph);
   }
 
-  Global->IsRunning = true;
   lastTime = SDL_GetTicks();
 
   SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
@@ -441,11 +790,18 @@ void quit() {
   freeRenderer();
   SDL_Log("freed renderer");
 
-  delete (P1Inputs);
-  SDL_Log("freed P1Inputs");
+  delete (LocalInputs);
+  delete (P1PlayerInputs);
+  SDL_Log("freed LocalInputs");
 
-  FT_Done_Face(Global->FTface);
-  FT_Done_FreeType(Global->FTlibrary);
+  FT_Done_Face(Freetypething->FTface);
+  FT_Done_FreeType(Freetypething->FTlibrary);
+
+  for (auto& [key, value] : Freetypething->Glyphmap) {
+    delete[] (value.pixels);
+  }
+
+  delete (Freetypething);
 
   SDL_Log("freed Freetype stuff");
 
@@ -455,6 +811,21 @@ void quit() {
       value.pop_back();
     }
   }
+
+  for (auto& [key, value] : Global->UImap3D) {
+    while (!value.empty()) {
+      delete (value.back());
+      value.pop_back();
+    }
+  }
+
+  for (auto& i : Global->Entities) {
+    delete (i);
+  }
+
+  CobblerQuitNet();
+  SDL_Log("Netfreed");
+
   Global->IsRunning = false;
   SDL_Quit();
   SDL_Log("SDL_Quit");

@@ -1,11 +1,26 @@
 #include <string>
 #include <vector>
-void savemap();
 
-bool init(bool hidemouse, std::vector<std::string> args);
+#ifdef _WIN32
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
+#else
+#define LIB_API __declspec(dllimport)
+#endif
+#else
+#define LIB_API
+#endif
 
-void SaveSettings();
+extern "C" {
+LIB_API void savemap();
 
-void LoadSettings();
+LIB_API bool initargs(std::vector<std::string> args);
 
-void quit();
+LIB_API bool init();
+
+LIB_API void SaveSettings();
+
+LIB_API void LoadSettings();
+
+LIB_API void quit();
+}

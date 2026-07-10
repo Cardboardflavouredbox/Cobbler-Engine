@@ -5,8 +5,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
 
+#include "deltaTime.h"
 #include "extern.h"
 #include "map.h"
+#include "model.h"
+#include "render.h"
 #include "rendermath.h"
 #include "screen.h"
 #include "update.h"
@@ -15,184 +18,11 @@ float getdistancething(glm::vec3 P) {
   glm::vec3 p1 = P - Camera->position;
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
-  float what = std::sin(Camera->dir.y * PI / 180.f);
-  return p1.y * pc - p1.x * ps + p1.z * what;
-}
+  glm::quat q =
+      glm::angleAxis(glm::radians(Camera->dir.y), glm::vec3(-pc, -ps, 0.0f));
 
-ScreenPoint ToScreenSpace(glm::vec3 P) {
-  glm::vec3 p1 = (P - Camera->position);
-
-  float ps = std::sin(Camera->dir.x * PI / 180.f);
-  float pc = std::cos(Camera->dir.x * PI / 180.f);
-  float whats = std::sin(Camera->dir.y * PI / 180.f);
-
-  float tx = p1.x * pc + p1.y * ps;
-  float ty = p1.y * pc - p1.x * ps + p1.z * whats;
-  float tz = 180 * whats;
-
-  ScreenPoint screenpos;
-  if (ty <= 0.25f) {
-    screenpos.isbehindcamera = true;
-    ty = 0.25f;
-  }
-  screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
-  screenpos.p.y =
-      (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2) + tz;
-  screenpos.dist = 1.f / ty;
-  return screenpos;
-}
-
-void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
-  ScreenPoint vectors[2] = {ToScreenSpace(rawvectors[0]),
-                            ToScreenSpace(rawvectors[1])};
-  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
-    int x = vectors[0].p.x, x2 = vectors[1].p.x;
-
-    int y = vectors[0].p.y, y2 = vectors[1].p.y;
-
-    if (std::abs(y2 - y) < std::abs(x2 - x)) {
-      if (x > x2) {
-        x = vectors[1].p.x;
-        x2 = vectors[0].p.x;
-        y = vectors[1].p.y;
-        y2 = vectors[0].p.y;
-      }
-      for (int i = x; i <= x2; i++) {
-        int tempy = y + ((i - x) * (y2 - y) / (x2 - x));
-        if (i >= 0 && tempy >= 0 && i < Settings->resolutionx &&
-            tempy < Settings->resolutiony) {
-          if (Global->SRstuff
-                  ->pixelsdepth[i + tempy * Global->SRstuff->pitch] >= 8) {
-            Global->SRstuff->pixelsdepth[i + tempy * Global->SRstuff->pitch] =
-                8;
-            Global->SRstuff->pixels[i + tempy * Global->SRstuff->pitch] = color;
-          }
-        }
-      }
-    } else {
-      if (y > y2) {
-        x = vectors[1].p.x;
-        x2 = vectors[0].p.x;
-        y = vectors[1].p.y;
-        y2 = vectors[0].p.y;
-      }
-      for (int i = y; i <= y2; i++) {
-        int tempx = x + ((i - y) * (x2 - x) / (y2 - y));
-        if (tempx >= 0 && i >= 0 && tempx < Settings->resolutionx &&
-            i < Settings->resolutiony) {
-          if (Global->SRstuff
-                  ->pixelsdepth[tempx + i * Global->SRstuff->pitch] >= 8) {
-            Global->SRstuff->pixelsdepth[tempx + i * Global->SRstuff->pitch] =
-                8;
-            Global->SRstuff->pixels[tempx + i * Global->SRstuff->pitch] = color;
-          }
-        }
-      }
-    }
-  }
-}
-
-void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
-  ScreenPoint point = ToScreenSpace(rawpoint);
-  if (!point.isbehindcamera)
-    for (int i = point.p.x - radius; i <= point.p.x + radius; i++) {
-      for (int j = point.p.y - radius; j < point.p.y + radius; j++) {
-        if (i > -1 && i < Settings->resolutionx && j > -1 &&
-            j < Settings->resolutiony) {
-          if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >=
-              7) {
-            Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 7;
-            Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
-          }
-        }
-      }
-    }
-}
-
-void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
-             int xloop, int yloop, std::array<unsigned char, 4> shade) {
-  ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
-                            ToScreenSpace(rawvectors[1]),
-                            ToScreenSpace(rawvectors[2])};
-  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
-      !vectors[2].isbehindcamera) {
-    int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
-        y2 = vectors[0].p.y;
-    for (int i = 1; i < 3; i++) {
-      if (vectors[i].p.x < x) x = vectors[i].p.x;
-      if (vectors[i].p.x > x2) x2 = vectors[i].p.x;
-      if (vectors[i].p.y < y) y = vectors[i].p.y;
-      if (vectors[i].p.y > y2) y2 = vectors[i].p.y;
-    }
-    if (x < 0) x = 0;
-    if (x >= Settings->resolutionx - 1) x = Settings->resolutionx - 1;
-    if (x2 < 0) x2 = 0;
-    if (x2 >= Settings->resolutionx - 1) x2 = Settings->resolutionx - 1;
-    if (y < 0) y = 0;
-    if (y >= Settings->resolutiony - 1) y = Settings->resolutiony - 1;
-    if (y2 < 0) y2 = 0;
-    if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
-
-    float det = Areathing(vectors[0].p, vectors[1].p, vectors[2].p);
-    glm::vec3 A = {(vectors[2].p.x - vectors[1].p.x),
-                   (vectors[0].p.x - vectors[2].p.x),
-                   (vectors[1].p.x - vectors[0].p.x)},
-              B = {(vectors[1].p.y - vectors[2].p.y),
-                   (vectors[2].p.y - vectors[0].p.y),
-                   (vectors[0].p.y - vectors[1].p.y)};
-    A /= -det;
-    B /= -det;
-    glm::vec3 uvwrow =
-        GetUV(glm::vec2(x, y), vectors[0].p, vectors[1].p, vectors[2].p);
-    for (int i = x; i <= x2; i++) {
-      glm::vec3 uvw = uvwrow;
-      for (int j = y; j <= y2; j++) {
-        glm::vec2 temp;
-        temp.x = i;
-        temp.y = j;
-        if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
-            temp.y < Settings->resolutiony) {
-          if (Vec2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p)) {
-            glm::vec2 uvresult = ((((UVs[0] * uvw.x) * vectors[0].dist) +
-                                   ((UVs[1] * uvw.y) * vectors[1].dist)) +
-                                  ((UVs[2] * uvw.z) * vectors[2].dist));
-            uvresult = (uvresult * (1 / (uvw.x * vectors[0].dist +
-                                         uvw.y * vectors[1].dist +
-                                         uvw.z * vectors[2].dist)));
-
-            int uvxthing = (int(128 * (uvresult.x)) * xloop) % 128;
-            int uvything = (int(128 * (uvresult.y)) * yloop) % 128;
-            Uint8 color =
-                static_cast<Uint8*>(Global->SRstuff->textures[texture]
-                                        ->pixels)[uvxthing + uvything * 128];
-
-            glm::vec3 tempvec3;
-            tempvec3.x = rawvectors[0].x * uvw.x + rawvectors[1].x * uvw.y +
-                         rawvectors[2].x * uvw.z;
-            tempvec3.y = rawvectors[0].y * uvw.x + rawvectors[1].y * uvw.y +
-                         rawvectors[2].y * uvw.z;
-            tempvec3.z = rawvectors[0].z * uvw.x + rawvectors[1].z * uvw.y +
-                         rawvectors[2].z * uvw.z;
-            tempvec3.x -= Camera->position.x;
-            tempvec3.y -= Camera->position.y;
-            tempvec3.z -= Camera->position.z;
-            float dist =
-                std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
-                          tempvec3.z * tempvec3.z);
-            if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >
-                dist * 3) {
-              Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
-              if (dist < 0) dist = 0;
-              Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
-                  (unsigned char)dist * 4;
-            }
-          }
-          uvw += A;
-        }
-      }
-      uvwrow += B;
-    }
-  }
+  p1 = q * p1;
+  return p1.y * pc - p1.x * ps;
 }
 
 float getinternaldivisionthing(glm::vec3 p1, glm::vec3 d, glm::vec3 p2) {
@@ -206,18 +36,18 @@ glm::vec2 divisiontoVec2(glm::vec2 p1, glm::vec2 p2, float t) {
 
 glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
   glm::vec3 p1, p2;
-  p1.x = invisible.x - Camera->position.x;
-  p1.y = invisible.y - Camera->position.y;
-  p1.z = invisible.z - Camera->position.z;
-  p2.x = visible.x - Camera->position.x;
-  p2.y = visible.y - Camera->position.y;
-  p2.z = visible.z - Camera->position.z;
+  p1 = invisible - Camera->position;
+  p2 = visible - Camera->position;
   float ps = std::sin(Camera->dir.x * PI / 180.f);
   float pc = std::cos(Camera->dir.x * PI / 180.f);
-  float what = std::sin(Camera->dir.y * PI / 180.f);
+  glm::quat q =
+      glm::angleAxis(glm::radians(Camera->dir.y), glm::vec3(-pc, -ps, 0.0f));
 
-  float u = (p1.y * pc - p1.x * ps + p1.z * what - 0.25f) /
-            (-ps * (p1.x - p2.x) + pc * (p1.y - p2.y) + what * (p1.z - p2.z));
+  p1 = q * p1;
+  p2 = q * p2;
+
+  float u = (p1.y * pc - p1.x * ps - 0.25f) /
+            (-ps * (p1.x - p2.x) + pc * (p1.y - p2.y));
 
   glm::vec3 result = (invisible + ((visible - invisible) * u));
   return result;
@@ -326,18 +156,48 @@ void rendergame() {
                           tempmapfacevector[k].UVs[1],
                           tempmapfacevector[k].UVs[2]};
     DrawTri(tempmapfacevector[k].texture, temp, temp2,
-            tempmapfacevector[k].xloop, tempmapfacevector[k].yloop,
-            tempmapfacevector[k].shade);
+            tempmapfacevector[k].xloop, tempmapfacevector[k].yloop);
   }
 }
 
-void renderUI() {
+void render3DUI() {
+  for (int i = 0; i < Global->UIlist.size(); i++) {
+    int len = Global->UImap3D[Global->UIlist[i]].size();
+    for (int j = 0; j < len; j++) {
+      Modeltransform* model = Global->UImap3D[Global->UIlist[i]][j]->modeltrans;
+      ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
+
+      // SDL_Log("%f %f %f", model->position.x, model->position.y,
+      //         model->position.z);
+
+      renderModelGroup(model, modelgroup, true, deltaTime);
+    }
+  }
+}
+
+void render2DUI() {
   for (int i = 0; i < Global->UIlist.size(); i++) {
     int len = Global->UImap[Global->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
       if (Settings->graphicsmode == 1) glDisable(GL_TEXTURE_2D);
       Global->UImap[Global->UIlist[i]].at(j)->render();
     }
+  }
+}
+
+void renderEntity() {
+  for (int i = 0; i < Global->Entities.size(); i++) {
+    if (Global->Entities[i]->Modelthing != nullptr)
+      Global->Entities[i]->rendermodelgroup();
+  }
+}
+
+void renderProps() {
+  for (int i = 0; i < Global->Models.size(); i++) {
+    Modeltransform* model = &Global->Models[i];
+    ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
+
+    renderModelGroup(model, modelgroup, false, deltaTime);
   }
 }
 
@@ -372,8 +232,11 @@ void softwarerender() {
       Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 65535;
     }
   }
-  renderUI();
+  render2DUI();
+  render3DUI();
   rendergame();
+  renderProps();
+  renderEntity();
 
   renderbackground();
 
@@ -406,8 +269,9 @@ void softwarerender() {
 }
 
 void openglrender() {
+  glEnable(GL_DEPTH_TEST);
   glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glColor4f(1, 1, 1, 1);
 
   glm::vec3 lookdir;
@@ -416,9 +280,8 @@ void openglrender() {
   lookdir.z = std::sin(glm::radians(Camera->dir.y));
   lookdir.y = std::sin(glm::radians(Camera->dir.x + 90.f)) *
               std::cos(glm::radians(Camera->dir.y));
-  glm::mat4 modelMatrix = glm::perspective(
-      glm::radians(Settings->fov / 2.0),
-      Settings->resolutionx / (double)Settings->resolutiony, 0.25, 256.0);
+  glm::mat4 modelMatrix = Global->perspectivematrix;
+
   glm::mat4 view =
       glm::lookAt(glm::vec3(0), lookdir * 16.f, glm::vec3(0, 0, 1));
 
@@ -443,6 +306,21 @@ void openglrender() {
     }
     glEnd();
   }
+  renderProps();
+  renderEntity();
+
+  glLoadIdentity();
+
+  glClear(GL_DEPTH_BUFFER_BIT);
+  glMatrixMode(GL_PROJECTION);
+  modelMatrix = Global->perspectivematrix;
+
+  view = glm::lookAt(glm::vec3(0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+
+  modelMatrix = modelMatrix * view;
+
+  glLoadMatrixf(glm::value_ptr(modelMatrix));
+  render3DUI();
 
   glMatrixMode(GL_PROJECTION);
   glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
@@ -462,7 +340,8 @@ void openglrender() {
 
     glEnd();
   }
-  renderUI();
+
+  render2DUI();
 
   glFlush();
 

@@ -2,5 +2,6 @@
     "C_Cpp.errorSquiggles": "disabled",
     "cmake.debugConfig": {
         "args": ["-gl","-vsync"]
-    }
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

@@ -1,0 +1,11 @@
+{
+    // Other properties
+    "build": { 
+        "context": "..",
+        "dockerfile": "linux_amd64.dockerfile",
+        "options": [
+            "--platform=linux/amd64"
+        ]
+    },
+    // Other properties
+}

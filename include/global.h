@@ -1,26 +1,31 @@
 #pragma once
 
 #include <SDL3/SDL_render.h>
-#include <ft2build.h>
 #include <glad/glad.h>
 
+#include <glm/glm.hpp>
+#include <set>
 #include <string>
 #include <unordered_map>
 
+#include "entity.h"
 #include "map.h"
+#include "model.h"
+#include "player.h"
 #include "ui.h"
-#include FT_FREETYPE_H
+
+#ifdef _WIN32
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
+#else
+#define LIB_API __declspec(dllimport)
+#endif
+#else
+#define LIB_API
+#endif
 
 const double PI =
     3.1415926535897932384626433832795028841971693993751058209749445923078164062;
-
-struct CustomGlyphthing {
-  unsigned char* pixels;
-  GLuint GLTexture;
-  int width, height, pitch, offsetx, offsety, advancex, advancey;
-};
-
-CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph);
 
 struct GlobalClass {
  public:
@@ -48,22 +53,46 @@ struct GlobalClass {
 
   bool IsRunning;
   bool pause = false, isopeningfile = false;
-  float deltaTime;
   std::string skybox;
-  bool IsEditor;
 
   int windowx = 320, windowy = 200;
 
+  struct Model {
+    std::string texture;
+    struct Vertex {
+      glm::vec3 pos;
+      std::string bone;
+    };
+    std::vector<Vertex> points;
+    struct Face {
+      std::array<unsigned int, 3> point;
+      std::array<glm::vec2, 3> uv;
+      glm::vec3 normal;
+    };
+    std::vector<Face> faces;
+  };
+  std::unordered_map<std::string, Model> Modelmap;
+
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;
-  std::vector<std::shared_ptr<Entity>> Entities;
-
-  FT_Library FTlibrary;
-  FT_Face FTface;
-  std::unordered_map<uint32_t, CustomGlyphthing> Glyphmap;
+  std::vector<Entity*> Entities;
+  std::vector<Modeltransform> Models;
 
   std::unordered_map<std::string, std::vector<UIthing*>> UImap;
   std::vector<std::string> UIlist = {"default"};
+
+  std::unordered_map<std::string, std::vector<UI3Dthing*>> UImap3D;
+  glm::mat4 perspectivematrix;
+
+  bool LoggedIn = false;
+  bool IsOnline = false;
+  std::string playerclass = "default";
+
+  std::set<Uint64> Playerlist;
+
+  std::unordered_map<Uint64, playerinputs> PlayerInputList;
+
+  float Onlinesendwait = 0.05f;
 };
 
 struct EditorClass {
@@ -74,13 +103,18 @@ struct EditorClass {
 
 struct ZipData {
   std::string startlevel, fontname;
-  std::vector<std::string> texturenames;
   std::vector<std::string> stagenames;
 };
 
 struct Mapdata {
+  struct Entitydata {
+    std::string name;
+    glm::vec3 pos;
+  };
   std::vector<glm::vec3> Points;
   std::vector<Mapface> mapfaces;
+  std::vector<Entitydata> Entities;
+  std::vector<Modeltransform> props;
   std::string skybox;
 };
 
@@ -100,4 +134,5 @@ struct SettingsClass {
   bool vsync = false;
   int graphicsmode = 0;  // 0 = software, 1 = opengl
   bool autorun = false;
+  glm::vec2 mousesensitivity = glm::vec2({1, 1});
 };

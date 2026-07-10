@@ -2,6 +2,8 @@
 
 #include <glm/vec2.hpp>
 
+#include "model.h"
+
 struct UIthing {
   enum anchorpos {
     lefttop,
@@ -19,4 +21,10 @@ struct UIthing {
   virtual void update() = 0;
   virtual void render() = 0;
   virtual ~UIthing() {}  // delete thingy
+};
+
+struct UI3Dthing {
+  Modeltransform* modeltrans;
+  virtual void update() = 0;
+  virtual ~UI3Dthing() { delete modeltrans; }
 };
