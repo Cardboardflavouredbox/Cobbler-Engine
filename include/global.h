@@ -89,6 +89,7 @@ struct GlobalClass {
   std::string playerclass = "default";
 
   std::set<Uint64> UserIDs;
+  std::unordered_map<Uint64, unsigned int> PlayerEntity;
   std::unordered_map<Uint64, playerinputs> PlayerInputList;
 
   float Onlinesendwait = 0.05f;

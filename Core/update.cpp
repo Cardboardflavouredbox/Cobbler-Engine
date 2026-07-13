@@ -76,39 +76,51 @@ void update() {
         CobblerNetData* tempdata = &tempvector->back();
         // SDL_Log("%s", tempdata->name.c_str());
         if (tempdata->name == "Player") {
-          playerdatapacket temp;
-          auto ec = glz::read_beve(temp, tempdata->buffer);
-          if (!ec) {
-            Global->PlayerInputList[1] = Loadinputdata(temp);
-            for (int i = 0; i < 3; i++) {
-              Global->Entities[1]->velocityvec3[i] = temp.velocityvec3[i];
-              Global->Entities[1]->position[i] = temp.position[i];
+          if (Global->PlayerEntity.contains(tempdata->ID)) {
+            playerdatapacket temp;
+            auto ec = glz::read_beve(temp, tempdata->buffer);
+            if (!ec) {
+              Global->PlayerInputList[tempdata->ID] = Loadinputdata(temp);
+              for (int i = 0; i < 3; i++) {
+                Global->Entities[Global->PlayerEntity[tempdata->ID]]
+                    ->velocityvec3[i] = temp.velocityvec3[i];
+                Global->Entities[Global->PlayerEntity[tempdata->ID]]
+                    ->position[i] = temp.position[i];
+              }
+              Global->Entities[Global->PlayerEntity[tempdata->ID]]->IsGrounded =
+                  temp.IsGrounded;
+            } else {
+              SDL_Log("what");
             }
-            Global->Entities[1]->IsGrounded = temp.IsGrounded;
-          } else {
-            SDL_Log("what");
           }
         } else if (tempdata->name == "PlayerAdd") {
           if (!CobblerCheckHasIP(tempdata->IP, tempdata->PORT)) {
-            Uint64 i = 0;
+            Uint64 i = 1;
             while (Global->UserIDs.find(i) != Global->UserIDs.end()) {
               i++;
             }
 
             Global->UserIDs.insert(i);
             CobblerAddIP(tempdata->IP, tempdata->PORT, i);
+
+            Global->Entities.push_back(SpawnEntities["Policeguy"]());
+            Global->PlayerEntity[i] = Global->Entities.size() - 1;
           }
         } else if (tempdata->name == "SendTick") {
           CobblerQueueData("ReturnTick", tempdata->buffer);
         } else if (tempdata->name == "ReturnTick") {
-          Uint64 temp;
-          auto ec = glz::read_beve(temp, tempdata->buffer);
-          if (!ec) {
-            temp = SDL_GetPerformanceCounter() - temp;
-            temp /= 2;
-            Global->Entities[1]->deltatimelocal =
-                temp / (double)SDL_GetPerformanceFrequency();
-            SDL_Log("%f", Global->Entities[1]->deltatimelocal);
+          if (Global->PlayerEntity.contains(tempdata->ID)) {
+            Uint64 temp;
+            auto ec = glz::read_beve(temp, tempdata->buffer);
+            if (!ec) {
+              temp = SDL_GetPerformanceCounter() - temp;
+              temp /= 2;
+              Global->Entities[Global->PlayerEntity[tempdata->ID]]
+                  ->deltatimelocal =
+                  temp / (double)SDL_GetPerformanceFrequency();
+              SDL_Log("%f", Global->Entities[Global->PlayerEntity[tempdata->ID]]
+                                ->deltatimelocal);
+            }
           }
         }
         tempvector->pop_back();
@@ -129,7 +141,9 @@ void update() {
   if (!Global->pause) {
     processinputs();
     inputtoentity(*P1PlayerInputs, Camera);
-    inputtoentity(Global->PlayerInputList[1], Global->Entities[1]);
+    for (const auto& [ID, entity] : Global->PlayerEntity) {
+      inputtoentity(Global->PlayerInputList[ID], Global->Entities[entity]);
+    }
     PlayerClassUpdate[Global->playerclass]();
     componentsupdate();
     for (auto& [key, value] : Global->UImap3D) {

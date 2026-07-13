@@ -474,6 +474,7 @@ bool initargs(std::vector<std::string> args) {
 
 bool init() {
   Global->IsRunning = true;
+
   std::shared_ptr<ZipData> LoadedData(new ZipData());
   auto error = glz::read_file_json(
       LoadedData, Global->GameName + "/resources.json", std::string{});
@@ -517,6 +518,8 @@ bool init() {
       SDL_Log("Server connection failed");
     }
     CobblerAddIP(ServerIP, ServerPort, 0);
+    Global->Entities.push_back(SpawnEntities["Policeguy"]());
+    Global->PlayerEntity[0] = Global->Entities.size() - 1;
     Global->IsOnline = true;
     std::vector<Uint8> buffer{};
     bool check = false;
@@ -537,6 +540,7 @@ bool init() {
       CobblerSendNet();
       SDL_DelayNS(1000000000 / (double)Settings->fps);
     }
+    // SDL_Log("What");
   }
 
   if (!setRenderer(LoadedData)) return false;
@@ -773,6 +777,7 @@ bool init() {
   lastTime = SDL_GetTicks();
 
   SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
+
   return true;
 }
 
