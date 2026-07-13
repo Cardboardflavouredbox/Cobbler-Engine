@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <glm/vec3.hpp>
 
 #include "entity.h"
@@ -12,6 +13,7 @@ struct playerinputs {
 };
 
 struct playerdatapacket {
+  uint64_t ID;
   std::array<float, 3> movevec3, position, velocityvec3;
   std::array<float, 2> lookdir;
   unsigned char jump, attack, altattack;

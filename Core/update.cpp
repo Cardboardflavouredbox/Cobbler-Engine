@@ -80,15 +80,17 @@ void update() {
             playerdatapacket temp;
             auto ec = glz::read_beve(temp, tempdata->buffer);
             if (!ec) {
-              Global->PlayerInputList[tempdata->ID] = Loadinputdata(temp);
-              for (int i = 0; i < 3; i++) {
-                Global->Entities[Global->PlayerEntity[tempdata->ID]]
-                    ->velocityvec3[i] = temp.velocityvec3[i];
-                Global->Entities[Global->PlayerEntity[tempdata->ID]]
-                    ->position[i] = temp.position[i];
+              if (temp.ID != UserID) {
+                Global->PlayerInputList[temp.ID] = Loadinputdata(temp);
+                for (int i = 0; i < 3; i++) {
+                  Global->Entities[Global->PlayerEntity[temp.ID]]
+                      ->velocityvec3[i] = temp.velocityvec3[i];
+                  Global->Entities[Global->PlayerEntity[temp.ID]]->position[i] =
+                      temp.position[i];
+                }
+                Global->Entities[Global->PlayerEntity[temp.ID]]->IsGrounded =
+                    temp.IsGrounded;
               }
-              Global->Entities[Global->PlayerEntity[tempdata->ID]]->IsGrounded =
-                  temp.IsGrounded;
             } else {
               SDL_Log("what");
             }
@@ -106,6 +108,19 @@ void update() {
             Global->Entities.push_back(SpawnEntities["Policeguy"]());
             Global->PlayerEntity[i] = Global->Entities.size() - 1;
           }
+        } else if (tempdata->name == "PlayerList") {
+          std::set<Uint64> tempset;
+          auto ec = glz::read_beve(tempset, tempdata->buffer);
+          if (!ec) {
+            for (auto& key : tempset) {
+              if (key != UserID && key != 0 &&
+                  Global->UserIDs.find(key) == Global->UserIDs.end()) {
+                Global->UserIDs.insert(key);
+                Global->Entities.push_back(SpawnEntities["Policeguy"]());
+                Global->PlayerEntity[key] = Global->Entities.size() - 1;
+              }
+            }
+          }
         } else if (tempdata->name == "SendTick") {
           CobblerQueueData("ReturnTick", tempdata->buffer);
         } else if (tempdata->name == "ReturnTick") {
@@ -118,8 +133,9 @@ void update() {
               Global->Entities[Global->PlayerEntity[tempdata->ID]]
                   ->deltatimelocal =
                   temp / (double)SDL_GetPerformanceFrequency();
-              SDL_Log("%f", Global->Entities[Global->PlayerEntity[tempdata->ID]]
-                                ->deltatimelocal);
+              // SDL_Log("%f",
+              // Global->Entities[Global->PlayerEntity[tempdata->ID]]
+              //                   ->deltatimelocal);
             }
           }
         }
@@ -159,15 +175,36 @@ void update() {
   //         Global->Entities[1]->position[2]);
 
   if (Global->IsOnline) {  // send net data
-    // if (IsServer) {
-    //   std::vector<Uint8> buffer{};
-    //   auto ec = glz::write_beve(Global->UserIDs, buffer);
-    //   if (!ec) {
-    //     CobblerQueueData("PlayerList", buffer);
-    //   }
-    // }
+    if (IsServer) {
+      std::vector<Uint8> buffer{};
+      auto ec = glz::write_beve(Global->UserIDs, buffer);
+      if (!ec) {
+        CobblerQueueData("PlayerList", buffer);
+      }
+      for (const auto& [ID, entity] : Global->PlayerEntity) {
+        if (ID != 0) {
+          std::vector<Uint8> buffer{};
+          playerdatapacket temp;
+          temp.ID = ID;
+          temp.Set(&Global->PlayerInputList[ID]);
+          temp.IsGrounded =
+              Global->Entities[Global->PlayerEntity[ID]]->IsGrounded;
+          for (int i = 0; i < 3; i++) {
+            temp.position[i] =
+                Global->Entities[Global->PlayerEntity[ID]]->position[i];
+            temp.velocityvec3[i] =
+                Global->Entities[Global->PlayerEntity[ID]]->velocityvec3[i];
+          }
+          auto ec = glz::write_beve(temp, buffer);
+          if (!ec) {
+            CobblerQueueData("Player", buffer);
+          }
+        }
+      }
+    }
     std::vector<Uint8> buffer{};
     playerdatapacket temp;
+    temp.ID = UserID;
     temp.Set(P1PlayerInputs);
     temp.IsGrounded = Camera->IsGrounded;
     for (int i = 0; i < 3; i++) {
