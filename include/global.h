@@ -88,8 +88,7 @@ struct GlobalClass {
   bool IsOnline = false;
   std::string playerclass = "default";
 
-  std::set<Uint64> Playerlist;
-
+  std::set<Uint64> UserIDs;
   std::unordered_map<Uint64, playerinputs> PlayerInputList;
 
   float Onlinesendwait = 0.05f;

@@ -2,16 +2,22 @@
 #include <SDL3_net/SDL_net.h>
 #include <curl/curl.h>
 
+#include <array>
+#include <bit>
+#include <cstring>
 #include <deque>
 #include <sstream>
 #include <vector>
-#include <cstring>
 
 #include "network.h"
 
 struct NetworkStuffClass {
-  std::vector<Uint16> PORT;
-  std::vector<NET_Address*> Addresses;
+  struct Clientthing {
+    Uint16 PORT;
+    NET_Address* Address;
+    Uint64 ID;
+  };
+  std::vector<Clientthing> Clients;
   NET_DatagramSocket* Socket;
 
   CURL* curl;
@@ -21,6 +27,7 @@ struct NetworkStuffClass {
 NetworkStuffClass* NetStuff;
 PostField* curlpostfield;
 std::string curlloginstring;
+Uint64 UserID = 0;
 std::vector<Uint8> packetbuffer;
 
 bool IsServer = false;
@@ -36,10 +43,25 @@ static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
   return totalSize;
 }
 
-void CobblerAddIP(std::string IP, unsigned int Port) {
-  NetStuff->Addresses.push_back(NET_ResolveHostname(IP.c_str()));
-  NetStuff->PORT.push_back(Port);
-  SDL_Log("%d", NetStuff->Addresses.size());
+void CobblerAddIP(std::string IP, unsigned int Port, Uint64 ID) {
+  NetworkStuffClass::Clientthing client;
+  client.Address = NET_ResolveHostname(IP.c_str());
+  client.PORT = Port;
+  client.ID = ID;
+  NetStuff->Clients.push_back(client);
+  SDL_Log("%d", (int)NetStuff->Clients.size());
+}
+
+bool CobblerCheckHasIP(std::string IP, unsigned int Port) {
+  NetworkStuffClass::Clientthing client;
+  client.Address = NET_ResolveHostname(IP.c_str());
+  client.PORT = Port;
+  for (int i = 0; i < NetStuff->Clients.size(); i++) {
+    if (NetStuff->Clients[i].Address == client.Address &&
+        NetStuff->Clients[i].PORT == client.PORT)
+      return true;
+  }
+  return false;
 }
 
 bool CobblerSetSocket(unsigned int port) {
@@ -96,10 +118,32 @@ bool CobblerQueueData(const char* name, std::vector<Uint8> buf) {
 }
 
 bool CobblerSendNet() {
-  for (int i = 0; i < NetStuff->Addresses.size(); i++) {
-    if (!NET_SendDatagram(NetStuff->Socket, NetStuff->Addresses[i],
-                          NetStuff->PORT[i], packetbuffer.data(),
-                          packetbuffer.size())) {
+  Uint64 tempID;
+  if constexpr (std::endian::native == std::endian::little) {
+    tempID = std::byteswap(UserID);
+  }
+  auto localID = std::bit_cast<std::array<Uint8, 8>>(tempID);
+
+  for (int i = 0; i < NetStuff->Clients.size(); i++) {
+    Uint64 ID = NetStuff->Clients[i].ID;
+
+    if constexpr (std::endian::native == std::endian::little) {
+      ID = std::byteswap(ID);
+    }
+
+    // 2. Cast directly into a fixed-size byte array safely
+    auto byte_array = std::bit_cast<std::array<Uint8, 8>>(ID);
+
+    std::vector<Uint8> temppacket(localID.begin(), localID.end());
+
+    temppacket.insert(temppacket.end(), byte_array.begin(), byte_array.end());
+
+    temppacket.insert(temppacket.end(), packetbuffer.begin(),
+                      packetbuffer.end());
+
+    if (!NET_SendDatagram(NetStuff->Socket, NetStuff->Clients[i].Address,
+                          NetStuff->Clients[i].PORT, temppacket.data(),
+                          temppacket.size())) {
       SDL_Log("%s", SDL_GetError());
     }
   }
@@ -122,6 +166,34 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
         CobblerNetData temp;
         temp.IP = NET_GetAddressString(dgram->addr);
         temp.PORT = dgram->port;
+
+        std::array<Uint8, 8> tempbytes;
+
+        for (int i = 0; i < 8; i++) {
+          tempbytes[i] = datavec.front();
+          datavec.pop_front();
+        }
+
+        Uint64 ID = std::bit_cast<Uint64>(tempbytes);
+
+        if constexpr (std::endian::native == std::endian::little) {
+          ID = std::byteswap(ID);
+        }
+
+        temp.ID = ID;
+
+        for (int i = 0; i < 8; i++) {
+          tempbytes[i] = datavec.front();
+          datavec.pop_front();
+        }
+
+        ID = std::bit_cast<Uint64>(tempbytes);
+
+        if constexpr (std::endian::native == std::endian::little) {
+          ID = std::byteswap(ID);
+        }
+
+        UserID = ID;
 
         while (datavec.front() != Uint8(0) && !datavec.empty()) {
           temp.name.push_back(char(datavec.front()));
@@ -147,8 +219,8 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
 
 void CobblerQuitNet() {
   if (NetStuff->Socket != nullptr) NET_DestroyDatagramSocket(NetStuff->Socket);
-  for (int i = 0; i < NetStuff->Addresses.size(); i++)
-    NET_UnrefAddress(NetStuff->Addresses[i]);
+  for (int i = 0; i < NetStuff->Clients.size(); i++)
+    NET_UnrefAddress(NetStuff->Clients[i].Address);
 
   if (NetStuff->curl) curl_easy_cleanup(NetStuff->curl);
   curl_global_cleanup();

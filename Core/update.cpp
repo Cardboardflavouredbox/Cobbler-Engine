@@ -89,9 +89,14 @@ void update() {
             SDL_Log("what");
           }
         } else if (tempdata->name == "PlayerAdd") {
-          if (Global->Playerlist.find(1) == Global->Playerlist.end()) {
-            Global->Playerlist.insert(1);
-            CobblerAddIP(tempdata->IP, tempdata->PORT);
+          if (!CobblerCheckHasIP(tempdata->IP, tempdata->PORT)) {
+            Uint64 i = 0;
+            while (Global->UserIDs.find(i) != Global->UserIDs.end()) {
+              i++;
+            }
+
+            Global->UserIDs.insert(i);
+            CobblerAddIP(tempdata->IP, tempdata->PORT, i);
           }
         } else if (tempdata->name == "SendTick") {
           CobblerQueueData("ReturnTick", tempdata->buffer);
@@ -140,13 +145,13 @@ void update() {
   //         Global->Entities[1]->position[2]);
 
   if (Global->IsOnline) {  // send net data
-    if (IsServer) {
-      std::vector<Uint8> buffer{};
-      auto ec = glz::write_beve(Global->Playerlist, buffer);
-      if (!ec) {
-        CobblerQueueData("PlayerList", buffer);
-      }
-    }
+    // if (IsServer) {
+    //   std::vector<Uint8> buffer{};
+    //   auto ec = glz::write_beve(Global->UserIDs, buffer);
+    //   if (!ec) {
+    //     CobblerQueueData("PlayerList", buffer);
+    //   }
+    // }
     std::vector<Uint8> buffer{};
     playerdatapacket temp;
     temp.Set(P1PlayerInputs);

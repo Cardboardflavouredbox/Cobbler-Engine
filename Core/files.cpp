@@ -439,7 +439,7 @@ bool initargs(std::vector<std::string> args) {
           break;
         }
         case SetIsServer:
-          Global->Playerlist.insert(0);
+          Global->UserIDs.insert(0);
           if (ServerIP != "") {
             SDL_Log(
                 "Wrong Arguements!(Cannot be Server and have IP input at the "
@@ -516,7 +516,7 @@ bool init() {
     if (!CobblerSetSocket(0)) {
       SDL_Log("Server connection failed");
     }
-    CobblerAddIP(ServerIP, ServerPort);
+    CobblerAddIP(ServerIP, ServerPort, 0);
     Global->IsOnline = true;
     std::vector<Uint8> buffer{};
     bool check = false;
@@ -528,18 +528,9 @@ bool init() {
         while (!tempvector->empty()) {
           CobblerNetData* tempdata = &tempvector->back();
           SDL_Log("%s", tempdata->name.c_str());
-          if (tempdata->name == "PlayerList") {
-            std::set<Uint64> tempset;
-            auto ec = glz::read_beve(tempset, tempdata->buffer);
-            if (!ec) {
-              if (tempset.find(1) != tempset.end()) {
-                SDL_Log("Connected to server");
-                check = true;
-                break;
-              }
-            }
-          }
+          check = true;
           tempvector->pop_back();
+          break;
         }
         delete tempvector;
       }
