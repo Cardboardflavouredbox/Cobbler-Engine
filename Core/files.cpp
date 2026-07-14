@@ -518,8 +518,6 @@ bool init() {
       SDL_Log("Server connection failed");
     }
     CobblerAddIP(ServerIP, ServerPort, 0);
-    Global->Entities.push_back(SpawnEntities["Policeguy"]());
-    Global->PlayerEntity[0] = Global->Entities.size() - 1;
     Global->IsOnline = true;
     std::vector<Uint8> buffer{};
     bool check = false;

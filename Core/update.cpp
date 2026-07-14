@@ -76,26 +76,25 @@ void update() {
         CobblerNetData* tempdata = &tempvector->back();
         // SDL_Log("%s", tempdata->name.c_str());
         if (tempdata->name == "Player") {
-          if (Global->PlayerEntity.contains(tempdata->ID)) {
-            playerdatapacket temp;
-            auto ec = glz::read_beve(temp, tempdata->buffer);
-            if (!ec) {
-              if (temp.ID != UserID) {
-                Global->PlayerInputList[temp.ID] = Loadinputdata(temp);
-                for (int i = 0; i < 3; i++) {
-                  Global->Entities[Global->PlayerEntity[temp.ID]]
-                      ->velocityvec3[i] = temp.velocityvec3[i];
-                  Global->Entities[Global->PlayerEntity[temp.ID]]->position[i] =
-                      temp.position[i];
-                }
-                Global->Entities[Global->PlayerEntity[temp.ID]]->IsGrounded =
-                    temp.IsGrounded;
+          playerdatapacket temp;
+          auto ec = glz::read_beve(temp, tempdata->buffer);
+          if (!ec) {
+            if (Global->PlayerEntity.contains(temp.ID) && temp.ID != UserID) {
+              Global->PlayerInputList[temp.ID] = Loadinputdata(temp);
+              for (int i = 0; i < 3; i++) {
+                Global->Entities[Global->PlayerEntity[temp.ID]]
+                    ->velocityvec3[i] = temp.velocityvec3[i];
+                Global->Entities[Global->PlayerEntity[temp.ID]]->position[i] =
+                    temp.position[i];
               }
-            } else {
-              SDL_Log("what");
+              Global->Entities[Global->PlayerEntity[temp.ID]]->IsGrounded =
+                  temp.IsGrounded;
             }
+          } else {
+            SDL_Log("what");
           }
-        } else if (tempdata->name == "PlayerAdd") {
+
+        } else if (IsServer && tempdata->name == "PlayerAdd") {
           if (!CobblerCheckHasIP(tempdata->IP, tempdata->PORT)) {
             Uint64 i = 1;
             while (Global->UserIDs.find(i) != Global->UserIDs.end()) {
@@ -113,7 +112,7 @@ void update() {
           auto ec = glz::read_beve(tempset, tempdata->buffer);
           if (!ec) {
             for (auto& key : tempset) {
-              if (key != UserID && key != 0 &&
+              if (key != UserID &&
                   Global->UserIDs.find(key) == Global->UserIDs.end()) {
                 Global->UserIDs.insert(key);
                 Global->Entities.push_back(SpawnEntities["Policeguy"]());
@@ -182,7 +181,7 @@ void update() {
         CobblerQueueData("PlayerList", buffer);
       }
       for (const auto& [ID, entity] : Global->PlayerEntity) {
-        if (ID != 0) {
+        if (ID != UserID) {
           std::vector<Uint8> buffer{};
           playerdatapacket temp;
           temp.ID = ID;
