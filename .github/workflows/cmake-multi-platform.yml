@@ -59,9 +59,9 @@ jobs:
         echo '${{ secrets.ACTION_KEY }}' > $HOME/.ssh/ssh.key &&
         chmod 600 $HOME/.ssh/ssh.key &&
         export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/ssh.key" &&
-        git submodule set-url <path-to-submodule> git@github.com:Cardboardflavouredbox/CobblerGame.git &&
+        git submodule set-url CobblerGame git@github.com:Cardboardflavouredbox/CobblerGame.git &&
         git submodule update --init --recursive &&
-        git submodule set-url <path-to-submodule> https://github.com/Cardboardflavouredbox/CobblerGame.git &&
+        git submodule set-url CobblerGame https://github.com/Cardboardflavouredbox/CobblerGame.git &&
         unset GIT_SSH_COMMAND
 
     - name: Set reusable strings
