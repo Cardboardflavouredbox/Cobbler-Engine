@@ -566,8 +566,8 @@ bool init() {
       Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
 
   Camera = new CameraEntity();
-  Camera->hitbox[0] = glm::vec3({0, 0, -1.75f});
-  Camera->hitbox[1] = glm::vec3({0, 0, 0});
+  Camera->hitbox[0] = glm::vec3({0, 0, -2.25f});
+  Camera->hitbox[1] = glm::vec3({0, 0, 0.25f});
   Camera->hitboxradius = 1.f;
   Camera->position = glm::vec3({0, 0, 12});
   Camera->dir = glm::vec2(0);
