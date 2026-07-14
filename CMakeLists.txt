@@ -10,6 +10,8 @@ set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
 set(BUILD_SHARED_LIBS ON)
 set(BUILD_STATIC_LIBS OFF)
 
+set(CPR_USE_SYSTEM_CURL ON)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -63,13 +65,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(dylib)
 
+include(FetchContent)
 FetchContent_Declare(
-	curl
-    DOWNLOAD_EXTRACT_TIMESTAMP true
-    OVERRIDE_FIND_PACKAGE # this one
-	URL "https://curl.se/download/curl-8.20.0.tar.gz"
+    cpr
+    GIT_REPOSITORY https://github.com/libcpr/cpr.git
+    GIT_TAG 1.14.2
 )
-FetchContent_MakeAvailable(curl)
+FetchContent_MakeAvailable(cpr)
 
 set(CORE_SOURCES 
     Core/update.cpp
@@ -106,7 +108,7 @@ src/g_main.cpp src/g_render.cpp)
 # src/e_main.cpp src/e_render.cpp 
 # src/e_update.cpp src/e_components.cpp)
 
-target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 glaze::glaze SDL3_net::SDL3_net CURL::libcurl)
+target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 glaze::glaze SDL3_net::SDL3_net cpr::cpr)
 target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 glaze::glaze glm::glm freetype CobblerGLAD CobblerNet)
 target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
