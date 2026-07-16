@@ -190,6 +190,9 @@ void renderEntity() {
     if (Global->Entities[i]->Modelthing != nullptr)
       Global->Entities[i]->rendermodelgroup();
   }
+  for (const auto& i : Global->PlayerEntity) {
+    if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();
+  }
 }
 
 void renderProps() {

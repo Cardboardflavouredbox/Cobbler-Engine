@@ -6,6 +6,7 @@
 #include <cmath>
 #include <glaze/beve.hpp>
 #include <glm/glm.hpp>
+#include <queue>
 
 #include "components.h"
 #include "deltaTime.h"
@@ -70,11 +71,17 @@ void processinputs() {
 
 void update() {
   if (Global->IsOnline) {  // recieve net data
+
+    for (auto& i : Global->PlayerTimecounter) {
+      if (i.first != UserID) i.second += deltaTime;
+    }
+
     std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
     if (tempvector != NULL) {
       while (!tempvector->empty()) {
         CobblerNetData* tempdata = &tempvector->back();
         // SDL_Log("%s", tempdata->name.c_str());
+        Global->PlayerTimecounter[tempdata->ID] = 0;
         if (tempdata->name == "Player") {
           playerdatapacket temp;
           auto ec = glz::read_beve(temp, tempdata->buffer);
@@ -82,13 +89,11 @@ void update() {
             if (Global->PlayerEntity.contains(temp.ID) && temp.ID != UserID) {
               Global->PlayerInputList[temp.ID] = Loadinputdata(temp);
               for (int i = 0; i < 3; i++) {
-                Global->Entities[Global->PlayerEntity[temp.ID]]
-                    ->velocityvec3[i] = temp.velocityvec3[i];
-                Global->Entities[Global->PlayerEntity[temp.ID]]->position[i] =
-                    temp.position[i];
+                Global->PlayerEntity[temp.ID]->velocityvec3[i] =
+                    temp.velocityvec3[i];
+                Global->PlayerEntity[temp.ID]->position[i] = temp.position[i];
               }
-              Global->Entities[Global->PlayerEntity[temp.ID]]->IsGrounded =
-                  temp.IsGrounded;
+              Global->PlayerEntity[temp.ID]->IsGrounded = temp.IsGrounded;
             }
           } else {
             SDL_Log("what");
@@ -104,8 +109,7 @@ void update() {
             Global->UserIDs.insert(i);
             CobblerAddIP(tempdata->IP, tempdata->PORT, i);
 
-            Global->Entities.push_back(SpawnEntities["Policeguy"]());
-            Global->PlayerEntity[i] = Global->Entities.size() - 1;
+            Global->PlayerEntity[i] = SpawnEntities["Policeguy"]();
           }
         } else if (tempdata->name == "PlayerList") {
           std::set<Uint64> tempset;
@@ -115,8 +119,7 @@ void update() {
               if (key != UserID &&
                   Global->UserIDs.find(key) == Global->UserIDs.end()) {
                 Global->UserIDs.insert(key);
-                Global->Entities.push_back(SpawnEntities["Policeguy"]());
-                Global->PlayerEntity[key] = Global->Entities.size() - 1;
+                Global->PlayerEntity[key] = SpawnEntities["Policeguy"]();
               }
             }
           }
@@ -129,8 +132,7 @@ void update() {
             if (!ec) {
               temp = SDL_GetPerformanceCounter() - temp;
               temp /= 2;
-              Global->Entities[Global->PlayerEntity[tempdata->ID]]
-                  ->deltatimelocal =
+              Global->PlayerEntity[tempdata->ID]->deltatimelocal =
                   temp / (double)SDL_GetPerformanceFrequency();
               // SDL_Log("%f",
               // Global->Entities[Global->PlayerEntity[tempdata->ID]]
@@ -141,6 +143,27 @@ void update() {
         tempvector->pop_back();
       }
       delete tempvector;
+    }
+
+    std::queue<Uint64> tempque;
+
+    for (auto i : Global->PlayerTimecounter) {
+      if (i.second > 5) {  // timeout player
+        SDL_Log("player%llu timed out", i.first);
+
+        tempque.push(i.first);
+      }
+    }
+
+    while (!tempque.empty()) {
+      Global->UserIDs.erase(tempque.front());
+
+      delete (Global->PlayerEntity[tempque.front()]);
+
+      Global->PlayerEntity.erase(tempque.front());
+      Global->PlayerInputList.erase(tempque.front());
+      Global->PlayerTimecounter.erase(tempque.front());
+      tempque.pop();
     }
   }
 
@@ -157,7 +180,7 @@ void update() {
     processinputs();
     inputtoentity(*P1PlayerInputs, Camera);
     for (const auto& [ID, entity] : Global->PlayerEntity) {
-      inputtoentity(Global->PlayerInputList[ID], Global->Entities[entity]);
+      inputtoentity(Global->PlayerInputList[ID], entity);
     }
     PlayerClassUpdate[Global->playerclass]();
     componentsupdate();
@@ -186,13 +209,10 @@ void update() {
           playerdatapacket temp;
           temp.ID = ID;
           temp.Set(&Global->PlayerInputList[ID]);
-          temp.IsGrounded =
-              Global->Entities[Global->PlayerEntity[ID]]->IsGrounded;
+          temp.IsGrounded = Global->PlayerEntity[ID]->IsGrounded;
           for (int i = 0; i < 3; i++) {
-            temp.position[i] =
-                Global->Entities[Global->PlayerEntity[ID]]->position[i];
-            temp.velocityvec3[i] =
-                Global->Entities[Global->PlayerEntity[ID]]->velocityvec3[i];
+            temp.position[i] = Global->PlayerEntity[ID]->position[i];
+            temp.velocityvec3[i] = Global->PlayerEntity[ID]->velocityvec3[i];
           }
           auto ec = glz::write_beve(temp, buffer);
           if (!ec) {

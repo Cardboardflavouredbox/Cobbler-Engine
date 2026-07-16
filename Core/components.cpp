@@ -8,6 +8,9 @@ void componentsupdatelate() {
   for (int i = 0; i < Global->Entities.size(); i++) {
     Global->Entities[i]->lateupdate();
   }
+  for (auto& i : Global->PlayerEntity) {
+    i.second->lateupdate();
+  }
   for (int i = 0; i < Global->UIlist.size(); i++) {
     int len = Global->UImap[Global->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
@@ -21,5 +24,10 @@ void componentsupdate() {
     Global->Entities[i]->update();
     EntityMove(Global->Entities[i]);
     Global->Entities[i]->deltatimelocal = 0;
+  }
+  for (auto& i : Global->PlayerEntity) {
+    i.second->update();
+    EntityMove(i.second);
+    i.second->deltatimelocal = 0;
   }
 }
