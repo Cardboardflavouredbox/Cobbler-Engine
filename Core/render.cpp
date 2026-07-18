@@ -192,7 +192,7 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
 
 glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
                           std::string actionname, ModelGroupClass* modelgroup,
-                          float frame) {
+                          float frame, float lookdir) {
   glm::vec3 temp = input.pos;
 
   std::string tempstr = input.bone;
@@ -232,6 +232,29 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
         glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * glm::axis(rot);
 
     glm::quat final_quat = glm::angleAxis(angle, glm::normalize(axis));
+
+    if (tempstr == "Spine") {
+      float tempdir = lookdir;
+
+      if (tempdir > 0)
+        tempdir /= 3.f;
+      else
+        tempdir /= 2.f;
+
+      final_quat = final_quat *
+                   glm::angleAxis(glm::radians(tempdir), glm::vec3(1, 0, 0));
+    } else if (tempstr == "Head") {
+      float tempdir = lookdir;
+
+      if (tempdir > 0)
+        tempdir *= 2.f / 3.f;
+      else
+        tempdir /= 2.f;
+
+      final_quat = final_quat *
+                   glm::angleAxis(glm::radians(tempdir), glm::vec3(1, 0, 0));
+    }
+
     temp = (final_quat) * (temp - bone->head);
     temp += bone->head;
     temp += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * pos;
@@ -273,7 +296,12 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
           for (int k = 2; k >= 0; k--) {
             glm::vec3 pos = modelapplybones(
                 model->points[model->faces[j].point[k]], modeltrans->actionname,
-                modelgroup, modeltrans->frame);
+                modelgroup, modeltrans->frame, modeltrans->lookdir.y);
+
+            pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
+                                 glm::vec3(0, 0, 1)) *
+                  pos;
+
             pos = modeltrans->rot * pos;
             pos.x *= modeltrans->size.x;
             pos.y *= modeltrans->size.y;
