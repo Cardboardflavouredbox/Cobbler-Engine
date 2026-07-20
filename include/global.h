@@ -57,6 +57,8 @@ struct GlobalClass {
 
   int windowx = 320, windowy = 200;
 
+  float windowscale = 1.f;
+
   struct Model {
     std::string texture;
     struct Vertex {

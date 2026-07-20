@@ -14,6 +14,9 @@ void events() {
       case SDL_EVENT_WINDOW_RESIZED:
         SDL_GetWindowSizeInPixels(Global->window, &Global->windowx,
                                   &Global->windowy);
+
+        Global->windowscale = SDL_GetWindowDisplayScale(Global->window);
+
         switch (Settings->graphicsmode) {
           case 0: {
             Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *

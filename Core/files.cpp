@@ -544,6 +544,9 @@ bool init() {
   if (!setRenderer(LoadedData)) return false;
 
   SDL_SetWindowRelativeMouseMode(Global->window, true);
+
+  Global->windowscale = SDL_GetWindowDisplayScale(Global->window);
+
   Mapdata tempmapdata;
   error = glz::read_file_json(
       tempmapdata,

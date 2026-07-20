@@ -31,10 +31,10 @@ playerinputs Loadinputdata(playerdatapacket input) {
 }
 
 void processinputs() {
-  P1PlayerInputs->lookdir.x +=
-      -1 * Settings->mousesensitivity.x * LocalInputs->MouseDelta.x;
-  P1PlayerInputs->lookdir.y +=
-      -1 * Settings->mousesensitivity.y * LocalInputs->MouseDelta.y;
+  P1PlayerInputs->lookdir.x += -0.5f * Settings->mousesensitivity.x *
+                               LocalInputs->MouseDelta.x * Global->windowscale;
+  P1PlayerInputs->lookdir.y += -0.5f * Settings->mousesensitivity.y *
+                               LocalInputs->MouseDelta.y * Global->windowscale;
 
   if (P1PlayerInputs->lookdir.x < 0) P1PlayerInputs->lookdir.x += 360;
   if (P1PlayerInputs->lookdir.x >= 360) P1PlayerInputs->lookdir.x -= 360;
