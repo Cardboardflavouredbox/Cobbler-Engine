@@ -1,6 +1,32 @@
 import bpy
 
 
+def actionthing(action, f):
+    if action and action.layers:
+        first_layer = action.layers[0]
+        first_strip = first_layer.strips[0]
+        
+        
+        start_frame = action.frame_range[0]
+        end_frame = action.frame_range[1]
+        
+        f.write(f"A {action.name} {start_frame:.0f} {end_frame:.0f}\n")
+
+        # Extract keyframe points for each F-Curve (e.g., location, rotation, scale channels)
+        
+        for slot in action.slots:
+            # Retrieve the specific channel bag for the slot
+            channel_bag = first_strip.channelbag(slot)
+            
+            if channel_bag and channel_bag.fcurves:
+                for fcurve in channel_bag.fcurves:
+                    f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
+                    for keyframe in fcurve.keyframe_points:
+                        frame_number = keyframe.co[0]
+                        curve_value = keyframe.co[1]
+                        f.write(f" {frame_number:.0f}/{curve_value:f}")
+                    f.write(f"\n")
+
 def write_some_data(context, filepath):
     print("running write_some_data...")
     f = open(filepath, "w", encoding='utf-8')
@@ -10,45 +36,11 @@ def write_some_data(context, filepath):
     
     for obj in selected_objects:
         if obj and obj.library is None:
-            
-            
-                    
-            
             if obj.animation_data:
                 for track in obj.animation_data.nla_tracks:
                     for strip in track.strips:
-                        if strip.action:
-                            action = strip.action
-                            start_frame = action.frame_range[0]
-                            end_frame = action.frame_range[1]
-                            
-                            f.write(f"A {action.name} {start_frame:.0f} {end_frame:.0f}\n")
-
-                            # Extract keyframe points for each F-Curve (e.g., location, rotation, scale channels)
-                            for fcurve in action.fcurves:
-                                f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
-                                for keyframe in fcurve.keyframe_points:
-                                    frame_number = keyframe.co[0]
-                                    curve_value = keyframe.co[1]
-                                    f.write(f" {frame_number:.0f}/{curve_value:f}")
-                                f.write(f"\n")
-                if obj.animation_data.action:
-                    action = obj.animation_data.action
-                    start_frame = action.frame_range[0]
-                    end_frame = action.frame_range[1]
-                    
-                    f.write(f"A {action.name} {start_frame:.0f} {end_frame:.0f}\n")
-
-                    # Extract keyframe points for each F-Curve (e.g., location, rotation, scale channels)
-                    for fcurve in action.fcurves:
-                        f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
-                        for keyframe in fcurve.keyframe_points:
-                            frame_number = keyframe.co[0]
-                            curve_value = keyframe.co[1]
-                            f.write(f" {frame_number:.0f}/{curve_value:f}")
-                        f.write(f"\n")
-            
-            
+                        actionthing(strip.action,f)
+                actionthing(obj.animation_data.action,f)
             
             if obj.type == 'ARMATURE':
                 bones = obj.data.bones
@@ -60,6 +52,8 @@ def write_some_data(context, filepath):
                     parentname = "null"
                     if bone.parent: 
                         parentname = bone.parent.name
+                    elif obj.parent and obj.parent_type == 'BONE':
+                        parentname = obj.parent_bone
                     elif p_bone and p_bone.constraints:
                         for constraint in p_bone.constraints:
                             parentname = constraint.subtarget
