@@ -197,6 +197,7 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
 
   std::string tempstr = input.bone;
   while (tempstr != "null") {
+    // SDL_Log("%s", tempstr.c_str());
     ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
 
     glm::vec3 pos = bone->Poses[actionname].begin()->second.pos,

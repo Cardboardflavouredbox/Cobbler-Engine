@@ -642,6 +642,7 @@ bool init() {
             char lineHeader[128];
             // read the first word of the line
             if (fscanf(file, "%s", lineHeader) == EOF) break;
+
             if (strcmp(lineHeader, "A") == 0) {
               char name[64];
               unsigned int animend, animstart;
