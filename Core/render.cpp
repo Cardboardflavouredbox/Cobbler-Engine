@@ -227,12 +227,16 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
     }
 
     float angle = glm::angle(rot);
+
     glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
 
     glm::vec3 axis =
         glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * glm::axis(rot);
 
-    glm::quat final_quat = glm::angleAxis(angle, glm::normalize(axis));
+    axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
+                                         : glm::vec3(0, 1, 0);
+
+    glm::quat final_quat = glm::angleAxis(angle, axis);
 
     if (tempstr == "Spine") {
       float tempdir = lookdir;
@@ -298,6 +302,9 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
             glm::vec3 pos = modelapplybones(
                 model->points[model->faces[j].point[k]], modeltrans->actionname,
                 modelgroup, modeltrans->frame, modeltrans->lookdir.y);
+            if (std::isnan(pos.x))
+              SDL_Log("%s has nan",
+                      model->points[model->faces[j].point[k]].bone.c_str());
 
             pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
                                  glm::vec3(0, 0, 1)) *
@@ -312,6 +319,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
             // }
             pos += renderpos;
             glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
+
             glVertex3f(pos.x, pos.y, pos.z);
           }
           glEnd();
