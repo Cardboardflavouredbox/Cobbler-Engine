@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <glm/gtc/quaternion.hpp>
+#include <utility>
 
 #include "extern.h"
 #include "rendermath.h"
@@ -190,10 +191,13 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
   }
 }
 
-glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
-                          std::string actionname, ModelGroupClass* modelgroup,
-                          float frame, float lookdir) {
+std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
+                                           std::string actionname,
+                                           ModelGroupClass* modelgroup,
+                                           float frame, float lookdir) {
   glm::vec3 temp = input.pos;
+
+  bool check = false;
 
   std::string tempstr = input.bone;
   while (tempstr != "null") {
@@ -238,6 +242,10 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
 
     glm::quat final_quat = glm::angleAxis(angle, axis);
 
+    if (pos != glm::vec3(0) || scale != glm::vec3(1) ||
+        final_quat != glm::quat(1, 0, 0, 0))
+      check = true;
+
     if (tempstr == "Spine") {
       float tempdir = lookdir;
 
@@ -258,6 +266,16 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
 
       final_quat = final_quat *
                    glm::angleAxis(glm::radians(tempdir), glm::vec3(1, 0, 0));
+    } else if (tempstr == "Arm.L") {
+      float tempdir = -lookdir;
+
+      if (tempdir > 0)
+        tempdir *= 2.f / 3.f;
+      else
+        tempdir /= 2.f;
+
+      final_quat = final_quat *
+                   glm::angleAxis(glm::radians(tempdir), glm::vec3(0, 1, 0));
     }
 
     temp = (final_quat) * (temp - bone->head);
@@ -268,22 +286,29 @@ glm::vec3 modelapplybones(GlobalClass::Model::Vertex input,
     temp.z *= scale.z;
     tempstr = bone->parent;
   }
-  return temp;
+
+  return std::make_pair(temp, check);
 }
 
 void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
                       bool isUI, float deltatime) {
-  modeltrans->frame += deltatime * 24;
-  if ((float)modelgroup->anim[modeltrans->actionname][0] ==
-      (float)modelgroup->anim[modeltrans->actionname][1]) {
-    modeltrans->frame = (float)modelgroup->anim[modeltrans->actionname][0];
-  } else {
-    while (modeltrans->frame >=
-           (float)modelgroup->anim[modeltrans->actionname][1])
-      modeltrans->frame += ((float)modelgroup->anim[modeltrans->actionname][0] -
-                            (float)modelgroup->anim[modeltrans->actionname][1]);
-    if (modeltrans->frame < (float)modelgroup->anim[modeltrans->actionname][0])
-      modeltrans->frame = (float)modelgroup->anim[modeltrans->actionname][0];
+  for (int i = 0; i < modeltrans->actions.size(); i++) {
+    modeltrans->actions[i].frame += deltatime * 24;
+    if ((float)modelgroup->anim[modeltrans->actions[i].name][0] ==
+        (float)modelgroup->anim[modeltrans->actions[i].name][1]) {
+      modeltrans->actions[i].frame =
+          (float)modelgroup->anim[modeltrans->actions[i].name][0];
+    } else {
+      while (modeltrans->actions[i].frame >=
+             (float)modelgroup->anim[modeltrans->actions[i].name][1])
+        modeltrans->actions[i].frame +=
+            ((float)modelgroup->anim[modeltrans->actions[i].name][0] -
+             (float)modelgroup->anim[modeltrans->actions[i].name][1]);
+      if (modeltrans->actions[i].frame <
+          (float)modelgroup->anim[modeltrans->actions[i].name][0])
+        modeltrans->actions[i].frame =
+            (float)modelgroup->anim[modeltrans->actions[i].name][0];
+    }
   }
 
   glm::vec3 renderpos =
@@ -299,12 +324,24 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
                         Global->GLstuff->textures[model->texture]);
           glBegin(GL_TRIANGLES);
           for (int k = 2; k >= 0; k--) {
-            glm::vec3 pos = modelapplybones(
-                model->points[model->faces[j].point[k]], modeltrans->actionname,
-                modelgroup, modeltrans->frame, modeltrans->lookdir.y);
-            if (std::isnan(pos.x))
-              SDL_Log("%s has nan",
-                      model->points[model->faces[j].point[k]].bone.c_str());
+            glm::vec3 pos;
+            int cnt = modeltrans->actions.size() - 1;
+            while (cnt > -1) {
+              std::pair<glm::vec3, bool> temp;
+
+              temp = modelapplybones(model->points[model->faces[j].point[k]],
+                                     modeltrans->actions[cnt].name, modelgroup,
+                                     modeltrans->actions[cnt].frame,
+                                     modeltrans->lookdir.y);
+
+              if (cnt == 0 ||
+                  (temp.second && !std::isnan(temp.first.x) &&
+                   !std::isnan(temp.first.y) && !std::isnan(temp.first.z))) {
+                pos = temp.first;
+                break;
+              }
+              cnt--;
+            }
 
             pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
                                  glm::vec3(0, 0, 1)) *

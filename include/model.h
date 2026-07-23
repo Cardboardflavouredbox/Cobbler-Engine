@@ -5,6 +5,7 @@
 #include <glm/vec3.hpp>
 #include <map>
 #include <string>
+#include <vector>
 
 #ifdef _WIN32
 #ifdef DLLEXPORT
@@ -34,9 +35,13 @@ struct ModelGroupClass {
 LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 
 struct Modeltransform {
-  std::string name, actionname = "default";
+  std::string name;
+  struct action {
+    std::string name;
+    float frame;
+  };
+  std::vector<action> actions;
   glm::vec3 position, size = glm::vec3({1, 1, 1});
   glm::vec2 lookdir;
   glm::quat rot;
-  float frame;
 };
