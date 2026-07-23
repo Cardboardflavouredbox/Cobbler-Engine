@@ -34,6 +34,16 @@ def write_some_data(context, filepath):
     scene = bpy.context.scene
     selected_objects = bpy.data.objects
     
+    
+    for obj in selected_objects:
+        if obj and obj.library is None and obj.type == 'ARMATURE':
+            for bone in obj.pose.bones:
+                bone.location = (0.0, 0.0, 0.0)
+                bone.rotation_quaternion = (1.0, 0.0, 0.0, 0.0)
+                bone.rotation_axis_angle = (0.0, 0.0, 1.0, 0.0)
+                bone.rotation_euler = (0.0, 0.0, 0.0)
+                bone.scale = (1.0, 1.0, 1.0)
+            
     for obj in selected_objects:
         if obj and obj.library is None:
             if obj.animation_data:
@@ -103,7 +113,6 @@ def write_some_data(context, filepath):
                         uv_loop = active_uv_layer[loop_idx]
                         f.write(f"/{uv_loop.uv[0]:f} {uv_loop.uv[1]:f}")
                     f.write(f"\n")
-    
     f.close()
 
     return {'FINISHED'}
