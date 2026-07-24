@@ -18,10 +18,8 @@
 
 playerinputs Loadinputdata(playerdatapacket input) {
   playerinputs temp;
-  for (int i = 0; i < 3; i++) {
-    temp.movevec3[i] = input.movevec3[i];
-  }
   for (int i = 0; i < 2; i++) {
+    temp.movevec2[i] = input.movevec2[i];
     temp.lookdir[i] = input.lookdir[i];
   }
   temp.jump = input.jump;
@@ -46,7 +44,7 @@ void processinputs() {
   float ps = std::sin(P1PlayerInputs->lookdir.x * PI / 180.0);
   float pc = std::cos(P1PlayerInputs->lookdir.x * PI / 180.0);
 
-  glm::vec3 tempmove = glm::vec3({0, 0, 0});
+  glm::vec2 tempmove = glm::vec3(0);
   if (LocalInputs->A > 0 && LocalInputs->D == 0) {
     tempmove.x -= std::sin((P1PlayerInputs->lookdir.x + 90) * PI / 180.0);
     tempmove.y += std::cos((P1PlayerInputs->lookdir.x + 90) * PI / 180.0);
@@ -64,8 +62,8 @@ void processinputs() {
     tempmove.y -= pc;
   }
 
-  if (tempmove != glm::vec3(0)) tempmove = glm::normalize(tempmove);
-  P1PlayerInputs->movevec3 = tempmove;
+  if (tempmove != glm::vec2(0)) tempmove = glm::normalize(tempmove);
+  P1PlayerInputs->movevec2 = tempmove;
   P1PlayerInputs->jump = LocalInputs->Space;
 }
 

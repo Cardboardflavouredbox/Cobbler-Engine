@@ -7,8 +7,7 @@
 #include "entity.h"
 
 struct playerinputs {
-  glm::vec3 movevec3;
-  glm::vec2 lookdir;
+  glm::vec2 lookdir, movevec2;
   unsigned char jump, attack, altattack;
 };
 
@@ -17,15 +16,13 @@ struct playerdatapacket {
   // float Stateanimend = 0, Stateanim = 0;
 
   uint64_t ID;
-  std::array<float, 3> movevec3, position, velocityvec3;
-  std::array<float, 2> lookdir;
+  std::array<float, 3> position, velocityvec3;
+  std::array<float, 2> movevec2, lookdir;
   unsigned char jump, attack, altattack;
   bool IsGrounded;
   void Set(playerinputs* input) {
-    for (int i = 0; i < 3; i++) {
-      movevec3[i] = input->movevec3[i];
-    }
     for (int i = 0; i < 2; i++) {
+      movevec2[i] = input->movevec2[i];
       lookdir[i] = input->lookdir[i];
     }
     jump = input->jump;
