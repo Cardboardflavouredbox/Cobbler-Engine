@@ -109,7 +109,7 @@ void update() {
             Global->UserIDs.insert(i);
             CobblerAddIP(tempdata->IP, tempdata->PORT, i);
 
-            Global->PlayerEntity[i] = SpawnEntities["Policeguy"]();
+            Global->PlayerEntity[i] = SpawnEntities["Gardner"]();
           }
         } else if (tempdata->name == "PlayerList") {
           std::set<Uint64> tempset;
@@ -119,7 +119,7 @@ void update() {
               if (key != UserID &&
                   Global->UserIDs.find(key) == Global->UserIDs.end()) {
                 Global->UserIDs.insert(key);
-                Global->PlayerEntity[key] = SpawnEntities["Policeguy"]();
+                Global->PlayerEntity[key] = SpawnEntities["Gardner"]();
               }
             }
           }

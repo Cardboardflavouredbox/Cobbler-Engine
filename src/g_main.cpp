@@ -67,6 +67,7 @@ int main(int argc, char* argv[]) {
     if (entry.is_directory()) {
       SDL_Log("Folder: %s", entry.path().filename().string().c_str());
       PlayerClassUpdate[entry.path().filename().string()];
+      SpawnEntities[entry.path().filename().string()];
     }
   }
 
@@ -77,6 +78,8 @@ int main(int argc, char* argv[]) {
                                            entry.first,
                                        dylib::decorations::os_default()));
     entry.second = classlibs.back().get_function<void()>("Update");
+    SpawnEntities[entry.first] =
+        classlibs.back().get_function<Entity*()>("SpawnEntity");
     if (!classlibs.back().get_function<bool()>("UIsetup")()) return -1;
     classlibs.back().get_function<void()>("Init")();
   }

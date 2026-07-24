@@ -157,7 +157,7 @@ file(GLOB CLASSES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME
 foreach(CLASSDIR ${CLASSES})
     cmake_path(GET CLASSDIR FILENAME FOLDER_NAME)
     if(IS_DIRECTORY "${CLASSDIR}")
-        add_library(${FOLDER_NAME} SHARED "${CLASSDIR}/classmain.cpp" "${CLASSDIR}/ui.cpp")
+        add_library(${FOLDER_NAME} SHARED "${CLASSDIR}/classmain.cpp" "${CLASSDIR}/ui.cpp" "${CLASSDIR}/entitymain.cpp")
         set_target_properties(${FOLDER_NAME} PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/class/${FOLDER_NAME}"
         )
