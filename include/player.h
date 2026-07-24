@@ -13,6 +13,9 @@ struct playerinputs {
 };
 
 struct playerdatapacket {
+  int State;
+  // float Stateanimend = 0, Stateanim = 0;
+
   uint64_t ID;
   std::array<float, 3> movevec3, position, velocityvec3;
   std::array<float, 2> lookdir;

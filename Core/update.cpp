@@ -94,6 +94,7 @@ void update() {
                 Global->PlayerEntity[temp.ID]->position[i] = temp.position[i];
               }
               Global->PlayerEntity[temp.ID]->IsGrounded = temp.IsGrounded;
+              Global->PlayerEntity[temp.ID]->State = temp.State;
             }
           } else {
             SDL_Log("what");
@@ -207,6 +208,7 @@ void update() {
         if (ID != UserID) {
           std::vector<Uint8> buffer{};
           playerdatapacket temp;
+          temp.State = Global->PlayerEntity[ID]->State;
           temp.ID = ID;
           temp.Set(&Global->PlayerInputList[ID]);
           temp.IsGrounded = Global->PlayerEntity[ID]->IsGrounded;
@@ -223,6 +225,7 @@ void update() {
     }
     std::vector<Uint8> buffer{};
     playerdatapacket temp;
+    temp.State = Camera->State;
     temp.ID = UserID;
     temp.Set(P1PlayerInputs);
     temp.IsGrounded = Camera->IsGrounded;
