@@ -267,7 +267,7 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
       final_quat = final_quat *
                    glm::angleAxis(glm::radians(tempdir), glm::vec3(1, 0, 0));
     } else if (tempstr == "Arm.L") {
-      float tempdir = -lookdir;
+      float tempdir = lookdir;
 
       if (tempdir > 0)
         tempdir *= 2.f / 3.f;
@@ -275,7 +275,7 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
         tempdir /= 2.f;
 
       final_quat = final_quat *
-                   glm::angleAxis(glm::radians(tempdir), glm::vec3(0, 1, 0));
+                   glm::angleAxis(glm::radians(-tempdir), glm::vec3(0, 1, 0));
     }
 
     temp = (final_quat) * (temp - bone->head);
