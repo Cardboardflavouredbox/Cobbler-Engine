@@ -37,19 +37,30 @@ def write_some_data(context, filepath, use_some_setting):
     
     f = open(filepath, "w", encoding='utf-8')
     
-    print("{\n  \"Points\": [",file = f)
+    print("{\n  \"Points\": [",end="",file = f)
     
+    check = True
     for vert in vertdict.values():
-        print(f"    [{vert.x},{vert.y},{vert.z}],",file = f)
-    print(f"    [0,0,0]",file = f)
+        if check:
+            print(f"\n    [{vert.x},{vert.y},{vert.z}]",end="",file = f)
+            check = False
+        else:
+            print(f",\n    [{vert.x},{vert.y},{vert.z}]",end="",file = f)
+    print("\n",file = f)
     
     print("  ],",file = f)
     
     
-    print("\"mapfaces\": [",file = f)
+    print("\"mapfaces\": [",end="",file = f)
+    
+    check = True
     
     for face in facelist:
-        print("    {\n      \"doublesided\": false, \"texture\": \"Wall\", \"xloop\": 8, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]], \"shade\": [255,255,255,255]\n    },",file = f)
+        if check:
+            print("\n    {\n      \"doublesided\": false, \"texture\": \"Wall\", \"xloop\": 8, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]], \"shade\": [255,255,255,255]\n    }",end="",file = f)
+            check = False
+        else:
+            print(",\n    {\n      \"doublesided\": false, \"texture\": \"Wall\", \"xloop\": 8, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]], \"shade\": [255,255,255,255]\n    }",end="",file = f)
     
     print("  ],",file = f)
     
