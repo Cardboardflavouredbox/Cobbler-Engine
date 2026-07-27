@@ -173,16 +173,16 @@ void EntityMove(Entity* tempentity) {
             moveresult = glm::vec3({0, 0, 0});
 
   int temp = sqrtf(tempmove.x * tempmove.x + tempmove.y * tempmove.y) /
-                 tempentity->hitboxradius * 128 +
+                 tempentity->hitboxradius * 4 +
              1;
+  float dist =
+      sqrtf(tempmove.x * tempmove.x + tempmove.y * tempmove.y) / float(temp);
 
   for (int i = 0; i < temp; i++) {
     tempposition.x += tempmove.x / (float)temp;
     tempposition.y += tempmove.y / (float)temp;
     glm::vec3 normal = movecollisioncheck(tempentity->hitbox, tempposition,
                                           tempentity->hitboxradius);
-
-    float dist = glm::length(tempmove / (float)temp);
 
     if (normal == glm::vec3(0)) {
       moveresult.x += tempmove.x / (float)temp;
@@ -252,7 +252,10 @@ void EntityMove(Entity* tempentity) {
       tempentity->IsGrounded = false;
       moveresult.z += tempmove.z / (float)temp;
     } else {
-      tempentity->IsGrounded = true;
+      if (Slopecheck(tempnormal))
+        tempentity->IsGrounded = true;
+      else
+        tempentity->IsGrounded = false;
       tempentity->velocityvec3.z = -4.f;
       break;
     }
