@@ -1,5 +1,13 @@
 import bpy
-import json
+
+def getchildren(obj):
+    children = []
+    for child in obj.children:
+        if child and child.type == 'MESH':
+            children.append(child)
+        
+        children.extend(getchildren(child))
+    return children
 
 
 def write_some_data(context, filepath, use_some_setting):
@@ -12,68 +20,43 @@ def write_some_data(context, filepath, use_some_setting):
     
     facelist = []
     
-    for child in Map.children:
-      if child and child.type == 'MESH':
+    mapchildren = getchildren(Map)
+    
+    for child in mapchildren:
         if child.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
             
         mesh = child.data
         
         for vert in mesh.vertices:
-            vertdict[vert.index] = json.dumps(list(child.matrix_world @ vert.co))
+            vertdict[vert.index] = child.matrix_world @ vert.co
             
         for face in mesh.polygons:
-            tempface = {
-                 "doublesided": True,
-                 "texture": "Wall",
-                 "xloop": 1,
-                 "yloop": 1,
-                 "points": json.dumps(list(face.vertices)),
-                 "UVs": json.dumps([
-                    [
-                       0,
-                       0
-                    ],
-                    [
-                       1,
-                       0
-                    ],
-                    [
-                       1,
-                       1
-                    ],
-                    [
-                       0,
-                       1
-                    ]
-                 ]),
-                 "shade": json.dumps([
-                    255,
-                    255,
-                    255,
-                    255
-                 ])
-              }
-            facelist.append(tempface)
+            facelist.append(face.vertices)
             
     
     f = open(filepath, "w", encoding='utf-8')
     
+    print("{\n  \"Points\": [",file = f)
     
-    data = {
-    "Points": json.dumps(vertdict),
-    "mapfaces": json.dumps(facelist),
-    "Entities":json.dumps([
-    ]),
-    "props":json.dumps([
-
-    ]),
-    "skybox": "Sky"
-    }
-
+    for vert in vertdict.values():
+        print(f"    [{vert.x},{vert.y},{vert.z}],",file = f)
+    print(f"    [0,0,0]",file = f)
+    
+    print("  ],",file = f)
     
     
-    json.dump(data,f)
+    print("\"mapfaces\": [",file = f)
+    
+    for face in facelist:
+        print("    {\n      \"doublesided\": false, \"texture\": \"Wall\", \"xloop\": 8, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]], \"shade\": [255,255,255,255]\n    },",file = f)
+    
+    print("  ],",file = f)
+    
+    print("\"Entities\":[],\n\"props\":[],\n\"skybox\": \"Sky\"",file = f)
+    
+    
+    print("}",file = f)
     
     f.close()
 
