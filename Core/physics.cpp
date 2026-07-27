@@ -198,6 +198,7 @@ void EntityMove(Entity* tempentity) {
           moveresult.y += tempmove.y / (float)temp;
           moveresult.z += j * dist / 64.f;
           tempposition.z += j * dist / 64.f;
+          dist -= j * dist / 64.f;
           check = true;
           break;
         }
@@ -232,6 +233,7 @@ void EntityMove(Entity* tempentity) {
               moveresult += newmove;
               moveresult.z += j * dist / 64.f;
               tempposition.z += j * dist / 64.f;
+              dist -= j * dist / 64.f;
               check = true;
               break;
             }
@@ -243,7 +245,7 @@ void EntityMove(Entity* tempentity) {
   }
 
   tempposition = moveresult + tempentity->position;
-  temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 128 + 1;
+  temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 4 + 1;
   for (int i = 0; i < temp; i++) {
     tempposition.z += tempmove.z / (float)temp;
     glm::vec3 tempnormal = movecollisioncheck(tempentity->hitbox, tempposition,
@@ -252,10 +254,11 @@ void EntityMove(Entity* tempentity) {
       tempentity->IsGrounded = false;
       moveresult.z += tempmove.z / (float)temp;
     } else {
-      if (Slopecheck(tempnormal))
+      if (Slopecheck(tempnormal)) {
         tempentity->IsGrounded = true;
-      else
+      } else {
         tempentity->IsGrounded = false;
+      }
       tempentity->velocityvec3.z = -4.f;
       break;
     }
