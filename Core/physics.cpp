@@ -136,7 +136,7 @@ bool Slopecheck(glm::vec3 normal) {
   float angle = std::acosf(normal.z) * 180.f / (float)PI;
   if (angle < 0) angle *= -1;
 
-  return angle > 135;
+  return angle > 165;
 }
 
 glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
@@ -254,12 +254,35 @@ void EntityMove(Entity* tempentity) {
       tempentity->IsGrounded = false;
       moveresult.z += tempmove.z / (float)temp;
     } else {
-      if (Slopecheck(tempnormal)) {
+      tempnormal.z = 0;
+      tempnormal = glm::normalize(tempnormal);
+
+      float dist = -(std::fabs(tempmove.z) / (float)temp);
+      int result = 0;
+
+      for (int j = 1; j <= 64; j++) {
+        tempposition.x += tempnormal.x * dist * j / 64.f;
+        tempposition.y += tempnormal.y * dist * j / 64.f;
+
+        if (movecollisioncheck(tempentity->hitbox, tempposition,
+                               tempentity->hitboxradius) == glm::vec3(0)) {
+          result = j;
+        }
+        tempposition.x -= tempnormal.x * dist * j / 64.f;
+        tempposition.y -= tempnormal.y * dist * j / 64.f;
+      }
+      if (result == 0) {
         tempentity->IsGrounded = true;
+        tempentity->velocityvec3.z = -4.f;
       } else {
         tempentity->IsGrounded = false;
+        moveresult.x += tempnormal.x * dist * result / 64.f;
+        moveresult.y += tempnormal.y * dist * result / 64.f;
+        tempentity->velocityvec3.x += tempnormal.x * dist * result / 64.f * 2;
+        tempentity->velocityvec3.y += tempnormal.y * dist * result / 64.f * 2;
+        tempposition.x += tempnormal.x * dist * result / 64.f;
+        tempposition.y += tempnormal.y * dist * result / 64.f;
       }
-      tempentity->velocityvec3.z = -4.f;
       break;
     }
   }
