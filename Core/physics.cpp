@@ -136,7 +136,7 @@ bool Slopecheck(glm::vec3 normal) {
   float angle = std::acosf(normal.z) * 180.f / (float)PI;
   if (angle < 0) angle *= -1;
 
-  return angle > 165;
+  return angle > 135;
 }
 
 glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
@@ -245,7 +245,7 @@ void EntityMove(Entity* tempentity) {
   }
 
   tempposition = moveresult + tempentity->position;
-  temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 4 + 1;
+  temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 8 + 1;
   for (int i = 0; i < temp; i++) {
     tempposition.z += tempmove.z / (float)temp;
     glm::vec3 tempnormal = movecollisioncheck(tempentity->hitbox, tempposition,
@@ -254,36 +254,46 @@ void EntityMove(Entity* tempentity) {
       tempentity->IsGrounded = false;
       moveresult.z += tempmove.z / (float)temp;
     } else {
-      tempnormal.z = 0;
-      tempnormal = glm::normalize(tempnormal);
-
-      float dist = -(std::fabs(tempmove.z) / (float)temp);
-      int result = 0;
-
-      for (int j = 1; j <= 64; j++) {
-        tempposition.x += tempnormal.x * dist * j / 64.f;
-        tempposition.y += tempnormal.y * dist * j / 64.f;
-
-        if (movecollisioncheck(tempentity->hitbox, tempposition,
-                               tempentity->hitboxradius) == glm::vec3(0)) {
-          result = j;
-        }
-        tempposition.x -= tempnormal.x * dist * j / 64.f;
-        tempposition.y -= tempnormal.y * dist * j / 64.f;
-      }
-      if (result == 0) {
+      if (Slopecheck(tempnormal)) {
         tempentity->IsGrounded = true;
         tempentity->velocityvec3.z = -4.f;
+        break;
       } else {
-        tempentity->IsGrounded = false;
-        moveresult.x += tempnormal.x * dist * result / 64.f;
-        moveresult.y += tempnormal.y * dist * result / 64.f;
-        tempentity->velocityvec3.x += tempnormal.x * dist * result / 64.f * 2;
-        tempentity->velocityvec3.y += tempnormal.y * dist * result / 64.f * 2;
-        tempposition.x += tempnormal.x * dist * result / 64.f;
-        tempposition.y += tempnormal.y * dist * result / 64.f;
+        tempnormal.z = 0;
+        tempnormal = glm::normalize(tempnormal);
+
+        float dist = -(64.f * dt / (float)temp);
+        int result = 0;
+
+        for (int j = 1; j <= 16; j++) {
+          tempposition.x += tempnormal.x * dist * j / 16.f;
+          tempposition.y += tempnormal.y * dist * j / 16.f;
+
+          if (movecollisioncheck(tempentity->hitbox, tempposition,
+                                 tempentity->hitboxradius) == glm::vec3(0)) {
+            result = j;
+          }
+          tempposition.x -= tempnormal.x * dist * j / 16.f;
+          tempposition.y -= tempnormal.y * dist * j / 16.f;
+          if (result > 0) break;
+        }
+        if (result == 0) {
+          tempentity->IsGrounded = true;
+          tempentity->velocityvec3.z = -4.f;
+          tempposition.z -= tempmove.z / (float)temp;
+          break;
+        } else {
+          SDL_Log("%d", result);
+          tempentity->IsGrounded = false;
+          moveresult.x += tempnormal.x * dist * result / 16.f;
+          moveresult.y += tempnormal.y * dist * result / 16.f;
+          // tempentity->velocityvec3.x += tempnormal.x * dist * result / 16.f;
+          // tempentity->velocityvec3.y += tempnormal.y * dist * result / 16.f;
+          tempposition.x += tempnormal.x * dist * result / 16.f;
+          tempposition.y += tempnormal.y * dist * result / 16.f;
+          moveresult.z += tempmove.z / (float)temp;
+        }
       }
-      break;
     }
   }
 
