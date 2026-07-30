@@ -69,10 +69,10 @@ void processinputs() {
 
 void update() {
   if (Global->IsOnline) {  // recieve net data
-
     for (auto& i : Global->PlayerTimecounter) {
       if (i.first != UserID) i.second += deltaTime;
     }
+    std::queue<Uint64> deleteplayerqueue;
 
     std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
     if (tempvector != NULL) {
@@ -138,31 +138,32 @@ void update() {
               //                   ->deltatimelocal);
             }
           }
+        } else if (tempdata->name == "PlayerQuit") {
+          SDL_Log("player%llu client disconnect", tempdata->ID);
+          deleteplayerqueue.push(tempdata->ID);
         }
         tempvector->pop_back();
       }
       delete tempvector;
     }
 
-    std::queue<Uint64> tempque;
-
     for (auto i : Global->PlayerTimecounter) {
       if (i.second > 5) {  // timeout player
         SDL_Log("player%llu timed out", i.first);
 
-        tempque.push(i.first);
+        deleteplayerqueue.push(i.first);
       }
     }
 
-    while (!tempque.empty()) {
-      Global->UserIDs.erase(tempque.front());
+    while (!deleteplayerqueue.empty()) {
+      Global->UserIDs.erase(deleteplayerqueue.front());
 
-      delete (Global->PlayerEntity[tempque.front()]);
+      delete (Global->PlayerEntity[deleteplayerqueue.front()]);
 
-      Global->PlayerEntity.erase(tempque.front());
-      Global->PlayerInputList.erase(tempque.front());
-      Global->PlayerTimecounter.erase(tempque.front());
-      tempque.pop();
+      Global->PlayerEntity.erase(deleteplayerqueue.front());
+      Global->PlayerInputList.erase(deleteplayerqueue.front());
+      Global->PlayerTimecounter.erase(deleteplayerqueue.front());
+      deleteplayerqueue.pop();
     }
   }
 
@@ -251,4 +252,36 @@ void update() {
   }
 
   if (curlpostfield->hasdata && Global->LoggedIn) CobblerSendCurlData();
+}
+
+void PlayerQuit() {
+  std::vector<Uint8> buffer{};
+
+  for (int i = 0; i < 30; i++) {
+    CobblerQueueData("PlayerQuit", buffer);
+    std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
+    if (tempvector != NULL) {
+      bool check = false;
+      while (!tempvector->empty()) {
+        CobblerNetData* tempdata = &tempvector->back();
+        if (tempdata->name == "PlayerList") {
+          std::set<Uint64> tempset;
+          auto ec = glz::read_beve(tempset, tempdata->buffer);
+          if (!ec) {
+            if (tempset.find(UserID) == tempset.end()) {
+              check = true;
+              break;
+            }
+          }
+        }
+        tempvector->pop_back();
+        break;
+      }
+      delete tempvector;
+      if (check) break;
+    }
+
+    CobblerSendNet();
+    SDL_DelayNS(1000000000 / (double)Settings->fps);
+  }
 }

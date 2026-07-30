@@ -97,6 +97,9 @@ int main(int argc, char* argv[]) {
       SDL_DelayNS(1000000000 / Settings->fps - result);
     }
   }
+  if (Global->IsOnline) {
+    PlayerQuit();
+  }
   for (auto& entry : classlibs) {
     entry.get_function<void()>("Quit")();
   }
