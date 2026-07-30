@@ -362,7 +362,6 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
           glEnd();
         }
       }
-      glEnable(GL_CULL_FACE);
       break;
     }
       // default: {

@@ -256,7 +256,7 @@ void EntityMove(Entity* tempentity) {
     } else {
       if (Slopecheck(tempnormal)) {
         tempentity->IsGrounded = true;
-        tempentity->velocityvec3.z = -4.f;
+        tempentity->velocityvec3.z = -8.f;
         break;
       } else {
         tempnormal.z = 0;
@@ -279,11 +279,10 @@ void EntityMove(Entity* tempentity) {
         }
         if (result == 0) {
           tempentity->IsGrounded = true;
-          tempentity->velocityvec3.z = -4.f;
+          tempentity->velocityvec3.z = -8.f;
           tempposition.z -= tempmove.z / (float)temp;
           break;
         } else {
-          SDL_Log("%d", result);
           tempentity->IsGrounded = false;
           moveresult.x += tempnormal.x * dist * result / 16.f;
           moveresult.y += tempnormal.y * dist * result / 16.f;

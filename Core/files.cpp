@@ -562,6 +562,10 @@ bool init() {
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
+
+  SDL_Log("%d points in map", tempmapdata.Points.size());
+  SDL_Log("%d faces in map", tempmapdata.mapfaces.size());
+
   Global->perspectivematrix = glm::perspective(
       glm::radians((double)Settings->fov),
       Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);

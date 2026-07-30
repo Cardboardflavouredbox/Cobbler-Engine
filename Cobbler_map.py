@@ -42,10 +42,10 @@ def write_some_data(context, filepath, use_some_setting):
     check = True
     for vert in vertdict.values():
         if check:
-            print(f"\n    [{vert.x},{vert.y},{vert.z}]",end="",file = f)
+            print(f"\n    [{vert.x:.6f},{vert.y:.6f},{vert.z:.6f}]",end="",file = f)
             check = False
         else:
-            print(f",\n    [{vert.x},{vert.y},{vert.z}]",end="",file = f)
+            print(f",\n    [{vert.x:.6f},{vert.y:.6f},{vert.z:.6f}]",end="",file = f)
     print("\n",file = f)
     
     print("  ],",file = f)
@@ -57,10 +57,10 @@ def write_some_data(context, filepath, use_some_setting):
     
     for face in facelist:
         if check:
-            print("\n    {\n      \"doublesided\": false, \"texture\": \"Wall\", \"xloop\": 8, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]], \"shade\": [255,255,255,255]\n    }",end="",file = f)
+            print("\n    {\n      \"doublesided\": true, \"texture\": \"Floor\", \"xloop\": 8, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]], \"shade\": [255,255,255,255]\n    }",end="",file = f)
             check = False
         else:
-            print(",\n    {\n      \"doublesided\": false, \"texture\": \"Wall\", \"xloop\": 8, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]], \"shade\": [255,255,255,255]\n    }",end="",file = f)
+            print(",\n    {\n      \"doublesided\": true, \"texture\": \"Floor\", \"xloop\": 8, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]], \"shade\": [255,255,255,255]\n    }",end="",file = f)
     
     print("  ],",file = f)
     

@@ -189,6 +189,7 @@ void update() {
       }
     }
   }
+
   componentsupdatelate();
 
   // SDL_Log("%f %f %f", Global->Entities[1]->position[0],
