@@ -299,7 +299,7 @@ void openglrender() {
     glBindTexture(GL_TEXTURE_2D,
                   Global->GLstuff->textures[Global->mapfaces[i].texture]);
     glBegin(GL_TRIANGLES);
-    for (int j = 0; j < 3; j++) {
+    for (int j = 2; j >= 0; j--) {
       glm::vec3 pos = Global->Points[Global->mapfaces[i].points[j]];
       glm::vec2 uvw = Global->mapfaces[i].UVs[j];
       pos -= Camera->position;

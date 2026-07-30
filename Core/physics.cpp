@@ -148,9 +148,9 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                         Global->Points[Global->mapfaces[i].points[2]],
                         hitbox[0] + checkposition, hitbox[1] + checkposition,
                         radius)) {
-      glm::vec3 a = Global->Points[Global->mapfaces[i].points[1]] -
+      glm::vec3 a = Global->Points[Global->mapfaces[i].points[2]] -
                     Global->Points[Global->mapfaces[i].points[0]],
-                b = Global->Points[Global->mapfaces[i].points[2]] -
+                b = Global->Points[Global->mapfaces[i].points[1]] -
                     Global->Points[Global->mapfaces[i].points[0]];
       glm::vec3 temp = glm::cross(a, b);
       if (result == glm::vec3(0) || std::abs(temp.z) <= std::abs(result.z))

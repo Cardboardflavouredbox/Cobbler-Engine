@@ -315,7 +315,6 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
       modeltrans->position - (isUI ? glm::vec3(0) : Camera->position);
   switch (Settings->graphicsmode) {
     case 1: {
-      glDisable(GL_CULL_FACE);
       for (int a = 0; a < modelgroup->Models.size(); a++) {
         GlobalClass::Model* model = &Global->Modelmap[modelgroup->Models[a]];
         for (int j = 0; j < model->faces.size(); j++) {
