@@ -75,7 +75,7 @@ struct GlobalClass {
   };
   std::unordered_map<std::string, Model> Modelmap;
 
-  std::vector<glm::vec3> Points;
+  std::vector<MapPoint> Points;
   std::vector<Mapface> mapfaces;
   std::vector<Entity*> Entities;
   std::vector<Modeltransform> Models;
@@ -114,7 +114,7 @@ struct Mapdata {
     std::string name;
     glm::vec3 pos;
   };
-  std::vector<glm::vec3> Points;
+  std::vector<MapPoint> Points;
   std::vector<Mapface> mapfaces;
   std::vector<Entitydata> Entities;
   std::vector<Modeltransform> props;

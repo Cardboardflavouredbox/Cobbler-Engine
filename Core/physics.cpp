@@ -143,15 +143,15 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                              float radius) {
   glm::vec3 result = glm::vec3(0);
   for (int i = 0; i < Global->mapfaces.size(); i++) {
-    if (CapsuleTriCheck(Global->Points[Global->mapfaces[i].points[0]],
-                        Global->Points[Global->mapfaces[i].points[1]],
-                        Global->Points[Global->mapfaces[i].points[2]],
+    if (CapsuleTriCheck(Global->Points[Global->mapfaces[i].points[0]].pos,
+                        Global->Points[Global->mapfaces[i].points[1]].pos,
+                        Global->Points[Global->mapfaces[i].points[2]].pos,
                         hitbox[0] + checkposition, hitbox[1] + checkposition,
                         radius)) {
-      glm::vec3 a = Global->Points[Global->mapfaces[i].points[2]] -
-                    Global->Points[Global->mapfaces[i].points[0]],
-                b = Global->Points[Global->mapfaces[i].points[1]] -
-                    Global->Points[Global->mapfaces[i].points[0]];
+      glm::vec3 a = Global->Points[Global->mapfaces[i].points[2]].pos -
+                    Global->Points[Global->mapfaces[i].points[0]].pos,
+                b = Global->Points[Global->mapfaces[i].points[1]].pos -
+                    Global->Points[Global->mapfaces[i].points[0]].pos;
       glm::vec3 temp = glm::cross(a, b);
       if (result == glm::vec3(0) || std::abs(temp.z) <= std::abs(result.z))
         result = temp;

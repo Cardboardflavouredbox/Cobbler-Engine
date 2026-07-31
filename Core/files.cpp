@@ -50,54 +50,6 @@ struct glz::meta<glm::vec2> {
   static constexpr auto value = glz::array(&glm::vec2::x, &glm::vec2::y);
 };
 
-static const SDL_DialogFileFilter filters[] = {{"JSON file", "json"},
-                                               {"All files", "*"}};
-
-static void SDLCALL callback(void* userdata, const char* const* filelist,
-                             int filter) {
-  Global->isopeningfile = false;
-  if (!filelist) {
-    SDL_Log("An error occured: %s", SDL_GetError());
-    return;
-  } else if (!*filelist) {
-    SDL_Log("The user did not select any file.");
-    SDL_Log("Most likely, the dialog was canceled.");
-    return;
-  }
-
-  while (*filelist) {
-    SDL_Log("Full path to selected file: '%s'", *filelist);
-    Mapdata tempmapdata;
-    tempmapdata.skybox = Global->skybox;
-    tempmapdata.Points = Global->Points;
-    tempmapdata.mapfaces = Global->mapfaces;
-    auto error = glz::write_file_json<glz::opts{.prettify = true}>(
-        tempmapdata, *filelist, std::string{});
-    if (error) {
-      return;
-    }
-    filelist++;
-  }
-
-  if (filter < 0) {
-    SDL_Log(
-        "The current platform does not support fetching "
-        "the selected filter, or the user did not select"
-        " any filter.");
-    return;
-  } else if (filter < SDL_arraysize(filters)) {
-    SDL_Log("The filter selected by the user is '%s' (%s).",
-            filters[filter].pattern, filters[filter].name);
-    return;
-  }
-}
-
-void savemap() {
-  Global->isopeningfile = true;
-  SDL_ShowSaveFileDialog(callback, NULL, Global->window, filters,
-                         SDL_arraysize(filters), NULL);
-}
-
 void SaveSettings() {
   std::string location =
       SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());

@@ -18,6 +18,8 @@ def write_some_data(context, filepath, use_some_setting):
     
     vertdict = {}
     
+    colordict = {}
+    
     facelist = []
     
     mapchildren = getchildren(Map)
@@ -28,8 +30,11 @@ def write_some_data(context, filepath, use_some_setting):
             
         mesh = child.data
         
+        color_attr = mesh.attributes["Color"]
+        
         for vert in mesh.vertices:
             vertdict[vert.index] = child.matrix_world @ vert.co
+            colordict[vert.index] = color_attr.data[vert.index].color
             
         for face in mesh.polygons:
             facelist.append(face.vertices)
@@ -40,12 +45,14 @@ def write_some_data(context, filepath, use_some_setting):
     print("{\n  \"Points\": [",end="",file = f)
     
     check = True
-    for vert in vertdict.values():
+    for index in vertdict.keys():
+        vert = vertdict[index]
+        color = colordict[index]
         if check:
-            print(f"\n    [{vert.x:.6f},{vert.y:.6f},{vert.z:.6f}]",end="",file = f)
+            print(f"\n    {{\"pos\": [{vert.x:.6f},{vert.y:.6f},{vert.z:.6f}], \"shade\": [{color[0]},{color[1]},{color[2]}]}}",end="",file = f)
             check = False
         else:
-            print(f",\n    [{vert.x:.6f},{vert.y:.6f},{vert.z:.6f}]",end="",file = f)
+            print(f",\n    {{\"pos\": [{vert.x:.6f},{vert.y:.6f},{vert.z:.6f}], \"shade\": [{color[0]},{color[1]},{color[2]}]}}",end="",file = f)
     print("\n",file = f)
     
     print("  ],",file = f)
@@ -57,10 +64,10 @@ def write_some_data(context, filepath, use_some_setting):
     
     for face in facelist:
         if check:
-            print("\n    {\n      \"doublesided\": true, \"texture\": \"Floor\", \"xloop\": 8, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]], \"shade\": [255,255,255,255]\n    }",end="",file = f)
+            print("\n    {\n      \"doublesided\": false, \"texture\": \"Floor\", \"xloop\": 1, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]]\n    }",end="",file = f)
             check = False
         else:
-            print(",\n    {\n      \"doublesided\": true, \"texture\": \"Floor\", \"xloop\": 8, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]], \"shade\": [255,255,255,255]\n    }",end="",file = f)
+            print(",\n    {\n      \"doublesided\": false, \"texture\": \"Floor\", \"xloop\": 1, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]]\n    }",end="",file = f)
     
     print("  ],",file = f)
     
