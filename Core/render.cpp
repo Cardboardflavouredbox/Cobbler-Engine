@@ -321,6 +321,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
           glEnable(GL_TEXTURE_2D);
           glBindTexture(GL_TEXTURE_2D,
                         Global->GLstuff->textures[model->texture]);
+          glColor3f(1.f, 1.f, 1.f);
           glBegin(GL_TRIANGLES);
           for (int k = 2; k >= 0; k--) {
             glm::vec3 pos;

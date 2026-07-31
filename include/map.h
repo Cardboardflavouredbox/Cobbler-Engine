@@ -6,7 +6,7 @@
 
 struct MapPoint {
   glm::vec3 pos;
-  std::array<unsigned char, 3> shade = {255, 255, 255};
+  std::array<float, 3> shade = {255, 255, 255};
 };
 
 struct Mapface {
