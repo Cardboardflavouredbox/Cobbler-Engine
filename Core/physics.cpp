@@ -283,7 +283,7 @@ void EntityMove(Entity* tempentity) {
     } else {
       if (Slopecheck(tempnormal)) {
         tempentity->IsGrounded = true;
-        tempentity->velocityvec3.z = -1.f;
+        tempentity->velocityvec3.z = -0.1f;
         break;
       } else {
         tempnormal.z = 0;
@@ -306,7 +306,7 @@ void EntityMove(Entity* tempentity) {
         }
         if (result == 0) {
           tempentity->IsGrounded = true;
-          tempentity->velocityvec3.z = -1.f;
+          tempentity->velocityvec3.z = -0.1f;
           tempposition.z -= tempmove.z / (float)temp;
           break;
         } else {

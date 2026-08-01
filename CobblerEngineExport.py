@@ -82,6 +82,8 @@ def write_some_data(context, filepath):
                 active_uv_layer = obj.data.uv_layers.active.data
                 
                 vgroup_names = {g.index: g.name for g in obj.vertex_groups}
+                
+                color_attr = obj.data.attributes["Color"]
         
                 f.write(f"O {obj.name}\n")
             
@@ -94,9 +96,11 @@ def write_some_data(context, filepath):
                 for vert in obj.data.vertices:
                     # Convert local coordinate to world coordinate
                     world_coord = matrix_world @ vert.co
-            
+                    
+                    color = color_attr.data[vert.index].color
+                    
                     # Format and save data: Index, X, Y, Z
-                    f.write(f"P {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
+                    f.write(f"P {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}/{color[0]:f} {color[1]:f} {color[2]:f}")
                     for g in vert.groups:
                         group_name = vgroup_names.get(g.group, "Unknown Group")
                         if g.weight > 0: f.write(f" {group_name} {g.weight:.4f}")

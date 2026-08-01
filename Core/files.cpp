@@ -751,8 +751,9 @@ bool init() {
             } else if (strcmp(lineHeader, "P") == 0) {  // Points.
               GlobalClass::Model::Vertex vertex;
               char newlinecheck;
-              fscanf(file, "%f %f %f%c", &vertex.pos.x, &vertex.pos.y,
-                     &vertex.pos.z, &newlinecheck);
+              fscanf(file, "%f %f %f/%f %f %f%c", &vertex.pos.x, &vertex.pos.y,
+                     &vertex.pos.z, &vertex.shade[0], &vertex.shade[1],
+                     &vertex.shade[2], &newlinecheck);
               while (newlinecheck != '\n') {
                 char name[64];
                 float temp;
