@@ -652,13 +652,17 @@ bool init() {
     }
   }
 
+  // get the base path of the game.
   std::string basepath = SDL_GetBasePath(), tempstr, namestr;
+
+  // get all the models in the models folder.
   for (const auto& dir : std::filesystem::directory_iterator(
            basepath + Global->GameName + "/models/")) {
     if (dir.is_directory()) {
       for (const auto& entry : std::filesystem::directory_iterator(
                basepath + Global->GameName + "/models/" +
                dir.path().filename().string() + "/")) {
+        // check if file is a .cbm file.
         if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
           ModelGroupClass modelgroup;
           GlobalClass::Model model;
@@ -672,19 +676,20 @@ bool init() {
             SDL_Log("Impossible to open the file !");
             return false;
           }
+          // time to read the contents of the file.
           while (true) {
             char lineHeader[128];
             // read the first word of the line
             if (fscanf(file, "%s", lineHeader) == EOF) break;
 
-            if (strcmp(lineHeader, "A") == 0) {
+            if (strcmp(lineHeader, "A") == 0) {  // Animation.
               char name[64];
               unsigned int animend, animstart;
               fscanf(file, "%s %u %u\n", name, &animstart, &animend);
               modelgroup.anim[name][0] = animstart;
               modelgroup.anim[name][1] = animend;
               posename = name;
-            } else if (strcmp(lineHeader, "SB") == 0) {
+            } else if (strcmp(lineHeader, "SB") == 0) {  // Static(?) Bone.
               char name[64], parent[64];
               glm::vec3 head, tail;
               int what =
@@ -693,7 +698,7 @@ bool init() {
               modelgroup.Bonemap[name].parent = parent;
               modelgroup.Bonemap[name].head = head;
               modelgroup.Bonemap[name].tail = tail;
-            } else if (strcmp(lineHeader, "FC") == 0) {
+            } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
               char name[64], thing[64];
               int index;
               char newlinecheck = 'w';
@@ -731,7 +736,7 @@ bool init() {
                       .scale[index] = temp;
                 }
               }
-            } else if (strcmp(lineHeader, "O") == 0) {
+            } else if (strcmp(lineHeader, "O") == 0) {  // Object.
               if (namestr != tempstr) {
                 Global->Modelmap[namestr] = model;
                 modelgroup.Models.push_back(namestr);
@@ -743,7 +748,7 @@ bool init() {
               model.faces.clear();
               model.points.clear();
               model.texture = "";
-            } else if (strcmp(lineHeader, "P") == 0) {
+            } else if (strcmp(lineHeader, "P") == 0) {  // Points.
               GlobalClass::Model::Vertex vertex;
               char newlinecheck;
               fscanf(file, "%f %f %f%c", &vertex.pos.x, &vertex.pos.y,
@@ -755,7 +760,7 @@ bool init() {
                 vertex.bone = name;
               }
               model.points.push_back(vertex);
-            } else if (strcmp(lineHeader, "F") == 0) {
+            } else if (strcmp(lineHeader, "F") == 0) {  // Faces.
               GlobalClass::Model::Face face;
               int matches =
                   fscanf(file, "%u %u %u/%f %f %f/%f %f/%f %f/%f %f\n",
@@ -768,7 +773,7 @@ bool init() {
                 return false;
               }
               model.faces.push_back(face);
-            } else if (strcmp(lineHeader, "T") == 0) {
+            } else if (strcmp(lineHeader, "T") == 0) {  // Textures.
               char temp[256] = {};
               fscanf(file, "%s\n", temp);
               std::string tempstr2(temp);
@@ -780,19 +785,21 @@ bool init() {
           modelgroup.Models.push_back(namestr);
           ModelGroupMap[tempstr] = modelgroup;
         } else if (entry.is_regular_file() &&
-                   entry.path().extension() == ".bmp") {
+                   entry.path().extension() == ".bmp") {  // Load Textures.
           loadBMP(entry.path());
         }
       }
     }
   }
 
+  // Freetype font library load.
   Freetypething = new FreetypeClass();
   tempstr = basepath;
 
   if (FT_Init_FreeType(&(Freetypething->FTlibrary))) return false;
 
   tempstr = basepath;
+  // load font.
   tempstr.append("/" + Global->GameName + "/res/" + LoadedData->fontname);
   if (FT_New_Face(Freetypething->FTlibrary, tempstr.c_str(), 0,
                   &(Freetypething->FTface)))
@@ -801,7 +808,7 @@ bool init() {
 
   FT_Set_Pixel_Sizes(Freetypething->FTface, 0, 12);
 
-  for (int i = 0; i < 128; i++) {
+  for (int i = 0; i < 128; i++) {  // preload 128 glyphs.
     FT_UInt glyph_index = FT_Get_Char_Index(Freetypething->FTface, i);
     FT_Load_Glyph(Freetypething->FTface, glyph_index, FT_LOAD_MONOCHROME);
     FT_Render_Glyph(Freetypething->FTface->glyph, FT_RENDER_MODE_MONO);
@@ -817,18 +824,23 @@ bool init() {
   return true;
 }
 
+// Quit function.
 void quit() {
   SDL_Log("started quit");
+  // free renderer.
   freeRenderer();
   SDL_Log("freed renderer");
 
+  // free inputs.
   delete (LocalInputs);
   delete (P1PlayerInputs);
   SDL_Log("freed LocalInputs");
 
+  // free font related things.
   FT_Done_Face(Freetypething->FTface);
   FT_Done_FreeType(Freetypething->FTlibrary);
 
+  // free all the pixels of Glyphs.
   for (auto& [key, value] : Freetypething->Glyphmap) {
     delete[] (value.pixels);
   }
@@ -837,6 +849,7 @@ void quit() {
 
   SDL_Log("freed Freetype stuff");
 
+  // free UI map.
   for (auto& [key, value] : Global->UImap) {
     while (!value.empty()) {
       delete (value.back());
@@ -844,6 +857,7 @@ void quit() {
     }
   }
 
+  // free UI map 3D.
   for (auto& [key, value] : Global->UImap3D) {
     while (!value.empty()) {
       delete (value.back());
@@ -851,13 +865,16 @@ void quit() {
     }
   }
 
+  // free npc Entities and Camera.
   for (auto& i : Global->Entities) {
     delete (i);
   }
 
+  // free network stuff.
   CobblerQuitNet();
   SDL_Log("Netfreed");
 
+  // well it's not running anymore I suppose.
   Global->IsRunning = false;
   SDL_Quit();
   SDL_Log("SDL_Quit");

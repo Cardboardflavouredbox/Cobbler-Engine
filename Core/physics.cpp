@@ -7,6 +7,7 @@
 
 #include "deltaTime.h"
 
+// Ray and Triangle collision check function.
 // https://gamedev.stackexchange.com/a/5589
 bool RayTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
                  glm::vec3 R2, glm::vec3& PIP) {
@@ -58,6 +59,9 @@ bool RayTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
   return true;
 }
 
+// checks if capsule and ray overlaps.
+// pretty much compares two rays and see if the minimum distance is shorter than
+// the radius.
 bool capsuleraycheck(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4,
                      float radius) {  // fix this horrid code later
   if (glm::distance(p1, p3) < radius || glm::distance(p1, p4) < radius ||
@@ -75,6 +79,7 @@ bool capsuleraycheck(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4,
   return false;
 }
 
+// gets the closest point in triangle abc to p.
 // https://stackoverflow.com/a/74395029
 glm::vec3 closestPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3 b,
                                glm::vec3 c) {
@@ -120,6 +125,7 @@ glm::vec3 closestPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3 b,
   return a + v * ab + w * ac;  // #0
 }
 
+// checks if capsule and triangle overlaps.
 bool CapsuleTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
                      glm::vec3 R2, float radius) {
   int len = (glm::distance(R1, R2) / radius) + 1;
@@ -131,6 +137,7 @@ bool CapsuleTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
   return false;
 }
 
+// checks the angle of the slope.
 bool Slopecheck(glm::vec3 normal) {
   normal = glm::normalize(normal);
   float angle = std::acosf(normal.z) * 180.f / (float)PI;
@@ -139,6 +146,9 @@ bool Slopecheck(glm::vec3 normal) {
   return angle > 135;
 }
 
+// checks if you collided with triangle while you moved.
+// returns glm::vec3(0) if you haven't collided at all.
+// returns the normal of collided triangle if you have.
 glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                              float radius) {
   glm::vec3 result = glm::vec3(0);
@@ -160,10 +170,15 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   return result;
 }
 
+// entity movement function.
+// OPTIMIZE THIS LATER!! THIS IS HORRID.
+// Also add more comments! This looks like nonsense to most people.
 void EntityMove(Entity* tempentity) {
+  // consider round trip time in deltatime.
   float dt = tempentity->deltatimelocal + deltaTime;
   tempentity->velocityvec3.z -= tempentity->gravity * dt;
 
+  // set goal of movement.
   glm::vec3 tempmove =
       (glm::vec3({tempentity->velocityvec3.x + tempentity->movevec2.x,
                   tempentity->velocityvec3.y + tempentity->movevec2.y,
@@ -172,9 +187,11 @@ void EntityMove(Entity* tempentity) {
   glm::vec3 tempposition = tempentity->position,
             moveresult = glm::vec3({0, 0, 0});
 
+  // set how much to loop.
   int temp = sqrtf(tempmove.x * tempmove.x + tempmove.y * tempmove.y) /
                  tempentity->hitboxradius * 4 +
              1;
+  // get move distance of one loop.
   float dist =
       sqrtf(tempmove.x * tempmove.x + tempmove.y * tempmove.y) / float(temp);
 

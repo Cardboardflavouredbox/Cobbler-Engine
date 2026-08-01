@@ -2,6 +2,7 @@
 
 #include "deltaTime.h"
 
+// function that turns inputs into entity movement.
 void inputtoentity(playerinputs input, Entity* entity) {
   float temp = 2.f;
   if (entity->IsGrounded) temp = 1.f;

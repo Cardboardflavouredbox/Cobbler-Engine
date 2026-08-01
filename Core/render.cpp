@@ -10,6 +10,8 @@
 #include "rendermath.h"
 #include "screen.h"
 
+// function that turns vec3 into 2d point on screen.
+// for software rendering.
 ScreenPoint ToScreenSpace(glm::vec3 P) {
   glm::vec3 p1 = (P - Camera->position);
 
@@ -35,6 +37,7 @@ ScreenPoint ToScreenSpace(glm::vec3 P) {
   return screenpos;
 }
 
+// function for drawing line in software renderer.
 void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
   ScreenPoint vectors[2] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1])};
@@ -85,6 +88,7 @@ void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
   }
 }
 
+// this actually draws squares. will change later.
 void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
   ScreenPoint point = ToScreenSpace(rawpoint);
   if (!point.isbehindcamera)
@@ -102,6 +106,7 @@ void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
     }
 }
 
+// triangle drawing function for software renderer.
 void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
              int xloop, int yloop) {
   ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
@@ -191,6 +196,7 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
   }
 }
 
+// apply animations of bones to vertex.
 std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
                                            std::string actionname,
                                            ModelGroupClass* modelgroup,
@@ -200,6 +206,9 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
   bool check = false;
 
   std::string tempstr = input.bone;
+
+  // apply bones basically recursively(?).
+  // if tempstr is null, that means the bone has no parent.
   while (tempstr != "null") {
     // SDL_Log("%s", tempstr.c_str());
     ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
@@ -223,6 +232,7 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
       } else {
         float a = ((float)frame - (float)framebefore) /
                   ((float)key - (float)framebefore);
+        // lerp values.
         rot = glm::mix(rot, val.rot, a);
         pos = glm::mix(pos, val.pos, a);
         scale = glm::mix(scale, val.scale, a);
@@ -230,6 +240,7 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
       }
     }
 
+    // the axis translation code of fear and despair...
     float angle = glm::angle(rot);
 
     glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
@@ -246,6 +257,7 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
         final_quat != glm::quat(1, 0, 0, 0))
       check = true;
 
+    // some lil correction for some bones.
     if (tempstr == "Spine") {
       float tempdir = lookdir;
 
@@ -290,8 +302,10 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
   return std::make_pair(temp, check);
 }
 
+// renders modelgroup.
 void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
                       bool isUI, float deltatime) {
+  // code of animation frames.
   for (int i = 0; i < modeltrans->actions.size(); i++) {
     modeltrans->actions[i].frame += deltatime * 24;
     if ((float)modelgroup->anim[modeltrans->actions[i].name][0] ==
@@ -314,7 +328,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
   glm::vec3 renderpos =
       modeltrans->position - (isUI ? glm::vec3(0) : Camera->position);
   switch (Settings->graphicsmode) {
-    case 1: {
+    case 1: {  // opengl
       for (int a = 0; a < modelgroup->Models.size(); a++) {
         GlobalClass::Model* model = &Global->Modelmap[modelgroup->Models[a]];
         for (int j = 0; j < model->faces.size(); j++) {
@@ -364,7 +378,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
       }
       break;
     }
-      // default: {
+      // default: { // software
       //   for (int j = 0; j < model->faces.size(); j++) {
       //     glm::vec3 vec[3];
       //     glm::vec2 uv[3];
