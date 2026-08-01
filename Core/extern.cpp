@@ -6,17 +6,31 @@
 #include "font.h"
 #include "model.h"
 
+// This is where most of the extern global variables are!
 float deltaTime;
 
+// pointer to Global variables.
 std::unique_ptr<GlobalClass> Global;
+// pointer to Scrapped Editor variables. Will remove later.
 std::unique_ptr<EditorClass> Editor;
+// pointer to Settings variables.
 std::unique_ptr<SettingsClass> Settings;
+// pointer to Inputs of local inputs. As in, the actual keyboard inputs.
 Inputs* LocalInputs;
+// pointer to processed Inputs of local player. As in, move direction,
+// look direction, etc.
 playerinputs* P1PlayerInputs;
+// Camera (a.k.a Local Player) Entity pointer.
 CameraEntity* Camera;
+// deltatime calculation variable
 Uint64 lastTime;
+// deltatime calculation variable
 Uint64 currentTime = SDL_GetPerformanceCounter();
+// Entity Spawn function map. Loaded from dynamic libraries.
 std::unordered_map<std::string, Entity* (*)()> SpawnEntities;
+// Player Class Update function map. Loaded from dynamic libraries.
 std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
+// pointer to Freetype variables. (y'know for the fonts)
 FreetypeClass* Freetypething;
+// Map of ModelGroups. Refer to the ModelGroupClass class to see what that is.
 std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;

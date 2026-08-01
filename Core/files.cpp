@@ -27,30 +27,40 @@
 #include "network.h"
 #include "update.h"
 
+// IPv4 ServerIP string.
 std::string ServerIP;
+// Server Port unsigned int.
 unsigned int ServerPort;
 
+// glaze library serialization template for vec3
 template <>
 struct glz::meta<glm::vec3> {
+  // mimics float array
   using mimic = std::array<float, 3>;
   static constexpr auto value =
       glz::array(&glm::vec3::x, &glm::vec3::y, &glm::vec3::z);
 };
 
+// glaze library serialization template for quat
 template <>
 struct glz::meta<glm::quat> {
+  // mimics float array
   using mimic = std::array<float, 4>;
   static constexpr auto value =
       glz::array(&glm::quat::x, &glm::quat::y, &glm::quat::z, &glm::quat::w);
 };
 
+// glaze library serialization template for vec2
 template <>
 struct glz::meta<glm::vec2> {
+  // mimics float array
   using mimic = std::array<float, 2>;
   static constexpr auto value = glz::array(&glm::vec2::x, &glm::vec2::y);
 };
 
+// Settings Save function
 void SaveSettings() {
+  // get location of settings file
   std::string location =
       SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
   auto error = glz::write_file_json<glz::opts{.prettify = true}>(
@@ -65,7 +75,9 @@ void SaveSettings() {
   SDL_Log("Saved settings!");
 }
 
+// Settings Load function
 void LoadSettings() {
+  // get location of settings file
   std::string location =
       SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
   auto error =
@@ -80,20 +92,23 @@ void LoadSettings() {
   SDL_Log("Loaded settings!");
 }
 
+// renderer free function
 void freeRenderer() {
   SDL_DestroyWindow(Global->window);
 
-  switch (Settings->graphicsmode) {
+  switch (Settings->graphicsmode) {  // opengl
     case 1: {
-      // for (auto& [key, value] : Global->GLstuff->textures) {
-      //   glDeleteTextures(1, &value);
-      // }
+      // free textures
+      for (auto& [key, value] : Global->GLstuff->textures) {
+        glDeleteTextures(1, &value);
+      }
       SDL_GL_DestroyContext(Global->GLstuff->GLContext);
 
+      // delete opengl pointer
       delete (Global->GLstuff);
       break;
     }
-    default: {
+    default: {  // software
       SDL_DestroyPalette(Global->SRstuff->palette);
       SDL_DestroyRenderer(Global->SRstuff->renderer);
       SDL_DestroySurface(Global->SRstuff->render_target);
@@ -106,18 +121,22 @@ void freeRenderer() {
   }
 }
 
+// BMP load function
 bool loadBMP(std::filesystem::path path) {
   SDL_Surface* surface;
   SDL_Log("Texture: %s", path.filename().string().c_str());
   switch (Settings->graphicsmode) {
-    case 1: {
+    case 1: {  // opengl
       std::string tempstr = path.filename().string();
+      // remove file extension (bmp)
       for (int i = 0; i < 4; i++) tempstr.pop_back();
       glGenTextures(1, &(Global->GLstuff->textures[tempstr]));
       surface = SDL_LoadBMP(path.string().c_str());
       if (surface == NULL) return false;
+      // that one magenta color as transparent color
       SDL_SetSurfaceColorKey(surface, true,
                              SDL_MapSurfaceRGB(surface, 255, 0, 255));
+      // Set texture format.
       surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
 
       glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[tempstr]);
@@ -132,7 +151,7 @@ bool loadBMP(std::filesystem::path path) {
       SDL_DestroySurface(surface);
       break;
     }
-    default: {
+    default: {  // software
       surface = SDL_LoadBMP(path.string().c_str());
       if (surface == NULL) return false;
       surface = SDL_ConvertSurfaceAndColorspace(surface, SDL_PIXELFORMAT_INDEX8,
@@ -147,12 +166,14 @@ bool loadBMP(std::filesystem::path path) {
   return true;
 }
 
-bool setRenderer(std::shared_ptr<ZipData> LoadedData) {
+// renderer initialization code
+bool setRenderer() {
   switch (Settings->graphicsmode) {
-    case 1: {
+    case 1: {  // opengl
       SDL_Surface* surface;
       Global->GLstuff = new GlobalClass::OpenGLRenderer();
 
+      // set opengl version to 1.2 (for n64 compatibility. just in case.)
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
@@ -161,6 +182,7 @@ bool setRenderer(std::shared_ptr<ZipData> LoadedData) {
       // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
       // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
+      // create opengl window
       Global->window = SDL_CreateWindow(
           "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
           SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -173,8 +195,10 @@ bool setRenderer(std::shared_ptr<ZipData> LoadedData) {
 
       if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) return false;
 
+      // set vsync
       if (!SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0)) return false;
 
+      // opengl set stuff
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
       glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 256.f);
@@ -182,18 +206,20 @@ bool setRenderer(std::shared_ptr<ZipData> LoadedData) {
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-      std::unordered_map<std::string, GLuint> tempvector;
-      tempvector.reserve(32);
+      // set texture map
+      std::unordered_map<std::string, GLuint> tempmap;
+      tempmap.reserve(32);
 
-      Global->GLstuff->textures = tempvector;
+      Global->GLstuff->textures = tempmap;
 
+      // set backface culling
       glEnable(GL_CULL_FACE);
       glCullFace(GL_BACK);
       glFrontFace(GL_CW);
-      SDL_Log("%d", glGetError());
+      // SDL_Log("%d", glGetError());
       break;
     }
-    default: {
+    default: {  // software
       SDL_Surface* surface;
       std::string basepath = SDL_GetBasePath(), tempstr = basepath;
       std::unordered_map<std::string, SDL_Surface*> tempvector;
@@ -224,6 +250,8 @@ bool setRenderer(std::shared_ptr<ZipData> LoadedData) {
       break;
     }
   }
+
+  // load all the textures in the textures folder
   std::string basepath = SDL_GetBasePath();
   for (const auto& entry : std::filesystem::directory_iterator(
            basepath + Global->GameName + "/textures/")) {
@@ -234,6 +262,8 @@ bool setRenderer(std::shared_ptr<ZipData> LoadedData) {
   return true;
 }
 
+// function that checks if string is a number.
+// for checking arguements.
 bool is_number(const std::string s) {
   for (int i = 0; i < s.size(); i++) {
     if (!std::isdigit(s[i])) return false;
@@ -241,20 +271,24 @@ bool is_number(const std::string s) {
   return true;
 }
 
+// enums for arguements.
 enum argenums {
-  SetRendererAsOpenGL,
-  SetRendererAsSoftware,
-  SetFPS,
-  SetFOV,
-  SetVsync,
-  SetGame,
-  SetLogin,
-  SetWebsite,
-  SetServerIP,
-  SetIsServer
+  SetRendererAsOpenGL,    // Sets Renderer to OpenGL.
+  SetRendererAsSoftware,  // THIS WILL BE REMOVED EVENTUALLY.
+  SetFPS,                 // Sets Frame rate.
+  SetFOV,                 // Sets field of view.
+  SetVsync,               // Sets Vsync
+  SetGame,                // Sets the game.
+  SetLogin,               // Login for website. Work In Progress.
+  SetWebsite,             // The actual IP of the website.
+  SetServerIP,            // Set the IP of the server as a client.
+  SetIsServer             // Set if you are the server or not.
 };
 
+// arguements processing.
 bool initargs(std::vector<std::string> args) {
+  // Create Global, Settings, LocalInputs, and P1PlayerInputs so that the
+  // arguements can change them.
   Global = std::make_unique<GlobalClass>();
   if (Global == nullptr) return false;
   Settings = std::make_unique<SettingsClass>();
@@ -266,13 +300,17 @@ bool initargs(std::vector<std::string> args) {
 
   Settings->fov = 90;
 
+  // Create curlpostfield for website.
   curlpostfield = new PostField();
   if (curlpostfield == nullptr) return false;
 
+  // Load Settings automatically.
   LoadSettings();
 
   SDL_Log("Classes initialized");
 
+  // a map with strings as keys and argenums as values.
+  // translates arguement strings to enums.
   std::unordered_map<std::string, argenums> stringtoenums = {
       {"-OpenGL", SetRendererAsOpenGL},
       {"-openGL", SetRendererAsOpenGL},
@@ -306,7 +344,9 @@ bool initargs(std::vector<std::string> args) {
           Settings->vsync = true;
           break;
         case SetFPS:
+          // move to next arguement
           i++;
+          // checks if next arguement exists and is a number.
           if (i >= args.size() || !is_number(args[i])) {
             SDL_Log("Wrong Arguements!(FPS)");
             return false;
@@ -314,7 +354,9 @@ bool initargs(std::vector<std::string> args) {
           Settings->fps = std::stoi(args[i]);
           break;
         case SetFOV:
+          // move to next arguement
           i++;
+          // checks if next arguement exists and is a number.
           if (i >= args.size() || !is_number(args[i])) {
             SDL_Log("Wrong Arguements!(FOV)");
             return false;
@@ -322,7 +364,9 @@ bool initargs(std::vector<std::string> args) {
           Settings->fov = std::stoi(args[i]);
           break;
         case SetGame:
+          // move to next arguement
           i++;
+          // checks if next arguement exists.
           if (i >= args.size()) {
             SDL_Log("Wrong Arguements!(Game)");
             return false;
@@ -331,24 +375,32 @@ bool initargs(std::vector<std::string> args) {
           break;
         case SetLogin: {
           std::string password;
+          // move to next arguement
           i++;
+          // checks if next arguement exists.
           if (i >= args.size()) {
             SDL_Log("Wrong Arguements!(username)");
             return false;
           }
+          // sets username for the website.
           curlpostfield->username = args[i];
+          // move to next arguement
           i++;
+          // checks if next arguement exists.
           if (i >= args.size()) {
             SDL_Log("Wrong Arguements!(password)");
             return false;
           }
+          // sets password for the website.
           password = args[i];
 
+          // set string that you will send as post field for website.
           curlloginstring = "IsGame=True&username=" + curlpostfield->username +
                             "&password=" + password;
           break;
         }
         case SetWebsite:
+          // you probably know what this does at this point.
           i++;
           if (i >= args.size()) {
             SDL_Log("Wrong Arguements!(Website)");
@@ -357,6 +409,7 @@ bool initargs(std::vector<std::string> args) {
           curlpostfield->websiteaddr = args[i];
           break;
         case SetServerIP: {
+          // If you are a server return false
           if (IsServer) {
             SDL_Log(
                 "Wrong Arguements!(Cannot be Server and have IP input at the "
@@ -391,7 +444,9 @@ bool initargs(std::vector<std::string> args) {
           break;
         }
         case SetIsServer:
+          // Add Server(0) user.
           Global->UserIDs.insert(0);
+          // If ServerIP is set then you can't be server.
           if (ServerIP != "") {
             SDL_Log(
                 "Wrong Arguements!(Cannot be Server and have IP input at the "
@@ -424,10 +479,14 @@ bool initargs(std::vector<std::string> args) {
   return true;
 }
 
+// overall initialization function.
 bool init() {
+  // Your Global is running? You better go catch it.
   Global->IsRunning = true;
 
   std::shared_ptr<ZipData> LoadedData(new ZipData());
+
+  // read the resources file of the game.
   auto error = glz::read_file_json(
       LoadedData, Global->GameName + "/resources.json", std::string{});
   if (error) {
@@ -439,17 +498,20 @@ bool init() {
 
   SDL_Log("Loaded resources data");
 
+  // initialize SDL
   if (!SDL_SetAppMetadata(Global->GameName.c_str(), "0.1",
                           "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
   SDL_Log("SDL initialized");
 
+  // Initialize Network stuff
   if (!CobblerInitNet()) {
     return false;
   }
   SDL_Log("Net Loaded");
   if (curlloginstring != "") {
+    // try to log in.
     if (!CobblerCurlLogin()) {
       SDL_Log("Login failed");
       Global->LoggedIn = false;
@@ -459,12 +521,14 @@ bool init() {
     }
   }
 
+  // Server Setup.
   if (IsServer) {
     if (!CobblerSetSocket(ServerPort)) {
       SDL_Log("Server Setup failed");
     }
   }
 
+  // Client Setup.
   if (ServerIP != "") {
     if (!CobblerSetSocket(0)) {
       SDL_Log("Server connection failed");
@@ -473,6 +537,8 @@ bool init() {
     Global->IsOnline = true;
     std::vector<Uint8> buffer{};
     bool check = false;
+
+    // check if the server acknowledged you
     while (Global->IsRunning && !check) {
       events();
       CobblerQueueData("PlayerAdd", buffer);
@@ -493,12 +559,15 @@ bool init() {
     // SDL_Log("What");
   }
 
-  if (!setRenderer(LoadedData)) return false;
+  // Set the Renderer.
+  if (!setRenderer()) return false;
 
+  // capture the mouse!! Get it!!! NOW!!!
   SDL_SetWindowRelativeMouseMode(Global->window, true);
 
   Global->windowscale = SDL_GetWindowDisplayScale(Global->window);
 
+  // read map data.
   Mapdata tempmapdata;
   error = glz::read_file_json(
       tempmapdata,
@@ -518,10 +587,12 @@ bool init() {
   SDL_Log("%zu points in map", tempmapdata.Points.size());
   SDL_Log("%zu faces in map", tempmapdata.mapfaces.size());
 
+  // set perspective matrix.
   Global->perspectivematrix = glm::perspective(
       glm::radians((double)Settings->fov),
       Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
 
+  // set Camera entity stuff.
   Camera = new CameraEntity();
   Camera->hitbox[0] = glm::vec3({0, 0, -2.25f});
   Camera->hitbox[1] = glm::vec3({0, 0, 0.25f});
@@ -530,8 +601,12 @@ bool init() {
   Camera->dir = glm::vec2(0);
   Camera->teamindex = 0;
 
+  // push Camera Entity to Entities vector. Camera Entity will probably always
+  // be in index zero, but that doesn't matter since there's a seperate Camera
+  // pointer.
   Global->Entities.push_back(Camera);
 
+  // Spawns all the npcs in the map.
   for (int i = 0; i < tempmapdata.Entities.size(); i++) {
     // SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
     if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
@@ -540,8 +615,11 @@ bool init() {
     }
   }
 
+  // set the props.
   Global->Models = tempmapdata.props;
 
+  // preprocess the faces in the map.
+  // turns all quads into triangles.
   for (int i = 0; i < Global->mapfaces.size(); i++) {
     if (Global->mapfaces[i].points.size() == 4) {
       Mapface temp;

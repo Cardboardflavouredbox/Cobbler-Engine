@@ -19,13 +19,15 @@ int main(int argc, char* argv[]) {
   std::string basepath = SDL_GetBasePath();
   std::vector<std::string> args;
   args.resize(argc);
-  for (int i = 0; i < argc; i++) args[i] = argv[i];
+  for (int i = 0; i < argc; i++)
+    args[i] = argv[i];  // get arguements from command line
 
-  if (!initargs(args)) {
+  if (!initargs(args)) {  // process arguements
     SDL_Log("%s", SDL_GetError());
     return -1;
   }
 
+  // entity spawning function load from dynamic libraries
   SpawnEntities.reserve(16);
   for (const auto& entry : std::filesystem::directory_iterator(
            basepath + Global->GameName + "/entities/")) {

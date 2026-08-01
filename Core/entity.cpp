@@ -9,6 +9,7 @@
 #include "model.h"
 #include "render.h"
 
+// BillBoard angle sprite index code. Currently unused.
 int GetBillBoardIndex(float angle, int lastIndex) {
   // front
   if (angle > -22.5f && angle < 22.6f) return 0;
@@ -24,6 +25,7 @@ int GetBillBoardIndex(float angle, int lastIndex) {
 
   return lastIndex;
 }
+// Call Entity's rendermodelgroup.
 void Entity::rendermodelgroup() {
   renderModelGroup(Modelthing, &ModelGroupMap[Modelthing->name], false,
                    deltatimelocal + deltaTime);

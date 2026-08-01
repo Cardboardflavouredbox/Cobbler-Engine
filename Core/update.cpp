@@ -139,8 +139,10 @@ void update() {
             }
           }
         } else if (tempdata->name == "PlayerQuit") {
-          SDL_Log("player%llu client disconnect", tempdata->ID);
-          deleteplayerqueue.push(tempdata->ID);
+          if (Global->UserIDs.contains(tempdata->ID)) {
+            SDL_Log("player%llu client disconnect", tempdata->ID);
+            deleteplayerqueue.push(tempdata->ID);
+          }
         }
         tempvector->pop_back();
       }
