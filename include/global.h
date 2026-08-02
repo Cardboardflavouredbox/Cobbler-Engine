@@ -63,7 +63,6 @@ struct GlobalClass {
     std::string texture;
     struct Vertex {
       glm::vec3 pos;
-      std::array<float, 3> shade;
       std::string bone;
     };
     std::vector<Vertex> points;
