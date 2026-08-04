@@ -23,4 +23,6 @@ LIB_API void SaveSettings();
 LIB_API void LoadSettings();
 
 LIB_API void quit();
+
+LIB_API void LoadMapGL();
 }

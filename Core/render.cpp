@@ -349,7 +349,6 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
           glEnable(GL_TEXTURE_2D);
           glBindTexture(GL_TEXTURE_2D,
                         Global->GLstuff->textures[model->texture]);
-          glColor3f(1.f, 1.f, 1.f);
           glBegin(GL_TRIANGLES);
           glm::vec3 tri[3];
           for (int k = 2; k >= 0; k--) {
@@ -390,13 +389,12 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
           glm::vec3 normal =
               glm::normalize(glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
 
-          float angle = glm::acos(
-              glm::dot(glm::normalize(normal), glm::normalize(lookdir)));
+          float angle = glm::acos(glm::dot(normal, lookdir));
+          glColor3f(angle, angle, angle);
 
           angle = angle / PI;
 
           for (int k = 2; k >= 0; k--) {
-            glColor3f(angle, angle, angle);
             glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
             glVertex3f(tri[k].x, tri[k].y, tri[k].z);
           }

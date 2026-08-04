@@ -217,6 +217,7 @@ bool setRenderer() {
       glCullFace(GL_BACK);
       glFrontFace(GL_CW);
       // SDL_Log("%d", glGetError());
+
       break;
     }
     default: {  // software
@@ -259,6 +260,9 @@ bool setRenderer() {
       loadBMP(entry.path());
     }
   }
+
+  if (Settings->graphicsmode == 1) LoadMapGL();
+
   return true;
 }
 
@@ -559,14 +563,6 @@ bool init() {
     // SDL_Log("What");
   }
 
-  // Set the Renderer.
-  if (!setRenderer()) return false;
-
-  // capture the mouse!! Get it!!! NOW!!!
-  SDL_SetWindowRelativeMouseMode(Global->window, true);
-
-  Global->windowscale = SDL_GetWindowDisplayScale(Global->window);
-
   // read map data.
   Mapdata tempmapdata;
   error = glz::read_file_json(
@@ -586,37 +582,6 @@ bool init() {
 
   SDL_Log("%zu points in map", tempmapdata.Points.size());
   SDL_Log("%zu faces in map", tempmapdata.mapfaces.size());
-
-  // set perspective matrix.
-  Global->perspectivematrix = glm::perspective(
-      glm::radians((double)Settings->fov),
-      Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
-
-  // set Camera entity stuff.
-  Camera = new CameraEntity();
-  Camera->hitbox[0] = glm::vec3({0, 0, -2.25f});
-  Camera->hitbox[1] = glm::vec3({0, 0, 0.25f});
-  Camera->hitboxradius = 1.f;
-  Camera->position = glm::vec3({0, 0, 12});
-  Camera->dir = glm::vec2(0);
-  Camera->teamindex = 0;
-
-  // push Camera Entity to Entities vector. Camera Entity will probably always
-  // be in index zero, but that doesn't matter since there's a seperate Camera
-  // pointer.
-  Global->Entities.push_back(Camera);
-
-  // Spawns all the npcs in the map.
-  for (int i = 0; i < tempmapdata.Entities.size(); i++) {
-    // SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
-    if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
-      Global->Entities.push_back(SpawnEntities[tempmapdata.Entities[i].name]());
-      Global->Entities.back()->position = tempmapdata.Entities[i].pos;
-    }
-  }
-
-  // set the props.
-  Global->Models = tempmapdata.props;
 
   // preprocess the faces in the map.
   // turns all quads into triangles.
@@ -651,6 +616,45 @@ bool init() {
       i--;
     }
   }
+
+  // Set the Renderer.
+  if (!setRenderer()) return false;
+
+  // capture the mouse!! Get it!!! NOW!!!
+  SDL_SetWindowRelativeMouseMode(Global->window, true);
+
+  Global->windowscale = SDL_GetWindowDisplayScale(Global->window);
+
+  // set perspective matrix.
+  Global->perspectivematrix = glm::perspective(
+      glm::radians((double)Settings->fov),
+      Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
+
+  // set Camera entity stuff.
+  Camera = new CameraEntity();
+  Camera->hitbox[0] = glm::vec3({0, 0, -2.25f});
+  Camera->hitbox[1] = glm::vec3({0, 0, 0.25f});
+  Camera->hitboxradius = 1.f;
+  Camera->position = glm::vec3({0, 0, 12});
+  Camera->dir = glm::vec2(0);
+  Camera->teamindex = 0;
+
+  // push Camera Entity to Entities vector. Camera Entity will probably always
+  // be in index zero, but that doesn't matter since there's a seperate Camera
+  // pointer.
+  Global->Entities.push_back(Camera);
+
+  // Spawns all the npcs in the map.
+  for (int i = 0; i < tempmapdata.Entities.size(); i++) {
+    // SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
+    if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
+      Global->Entities.push_back(SpawnEntities[tempmapdata.Entities[i].name]());
+      Global->Entities.back()->position = tempmapdata.Entities[i].pos;
+    }
+  }
+
+  // set the props.
+  Global->Models = tempmapdata.props;
 
   // get the base path of the game.
   std::string basepath = SDL_GetBasePath(), tempstr, namestr;

@@ -295,8 +295,8 @@ void openglrender() {
               std::cos(glm::radians(Camera->dir.y));
   glm::mat4 modelMatrix = Global->perspectivematrix;
 
-  glm::mat4 view =
-      glm::lookAt(glm::vec3(0), lookdir * 16.f, glm::vec3(0, 0, 1));
+  glm::mat4 view = glm::lookAt(
+      Camera->position, Camera->position + lookdir * 16.f, glm::vec3(0, 0, 1));
 
   modelMatrix = modelMatrix * view;
 
@@ -304,24 +304,8 @@ void openglrender() {
   glLoadMatrixf(glm::value_ptr(modelMatrix));
 
   // OpenGL rendering goes here
-  for (int i = 0; i < Global->mapfaces.size(); i++) {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D,
-                  Global->GLstuff->textures[Global->mapfaces[i].texture]);
-    glBegin(GL_TRIANGLES);
-    for (int j = 2; j >= 0; j--) {
-      glm::vec3 pos = Global->Points[Global->mapfaces[i].points[j]].pos;
-      glm::vec2 uvw = Global->mapfaces[i].UVs[j];
-      pos -= Camera->position;
-      glColor3f(Global->Points[Global->mapfaces[i].points[j]].shade[0],
-                Global->Points[Global->mapfaces[i].points[j]].shade[1],
-                Global->Points[Global->mapfaces[i].points[j]].shade[2]);
-      glTexCoord2f(uvw.x * Global->mapfaces[i].xloop,
-                   uvw.y * Global->mapfaces[i].yloop);
-      glVertex3f(pos.x, pos.y, pos.z);
-    }
-    glEnd();
-  }
+  glCallList(Global->GLstuff->MapGLlist);
+
   renderProps();
   renderEntity();
 

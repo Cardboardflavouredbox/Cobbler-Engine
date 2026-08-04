@@ -48,6 +48,7 @@ struct GlobalClass {
   struct OpenGLRenderer {
     SDL_GLContext GLContext;
     std::unordered_map<std::string, GLuint> textures;
+    GLuint MapGLlist;
   };
   OpenGLRenderer* GLstuff;
 
