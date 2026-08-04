@@ -327,6 +327,20 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
 
   glm::vec3 renderpos =
       modeltrans->position - (isUI ? glm::vec3(0) : Camera->position);
+
+  glm::vec3 lookdir(0);
+
+  if (isUI) {
+    lookdir.x = std::cos(glm::radians(Camera->dir.x + 90.f)) *
+                std::cos(glm::radians(Camera->dir.y));
+    lookdir.z = std::sin(glm::radians(Camera->dir.y));
+    lookdir.y = std::sin(glm::radians(Camera->dir.x + 90.f)) *
+                std::cos(glm::radians(Camera->dir.y));
+    lookdir.x *= -1;
+  } else {
+    lookdir.y = 1;
+  }
+
   switch (Settings->graphicsmode) {
     case 1: {  // opengl
       for (int a = 0; a < modelgroup->Models.size(); a++) {
@@ -337,6 +351,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
                         Global->GLstuff->textures[model->texture]);
           glColor3f(1.f, 1.f, 1.f);
           glBegin(GL_TRIANGLES);
+          glm::vec3 tri[3];
           for (int k = 2; k >= 0; k--) {
             glm::vec3 pos;
             int cnt = modeltrans->actions.size() - 1;
@@ -369,9 +384,21 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
             //   pos.y *= -1;
             // }
             pos += renderpos;
-            glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
+            tri[k] = pos;
+          }
 
-            glVertex3f(pos.x, pos.y, pos.z);
+          glm::vec3 normal =
+              glm::normalize(glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
+
+          float angle = glm::acos(
+              glm::dot(glm::normalize(normal), glm::normalize(lookdir)));
+
+          angle = angle / PI;
+
+          for (int k = 2; k >= 0; k--) {
+            glColor3f(angle, angle, angle);
+            glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
+            glVertex3f(tri[k].x, tri[k].y, tri[k].z);
           }
           glEnd();
         }
