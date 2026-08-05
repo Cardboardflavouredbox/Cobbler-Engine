@@ -5,6 +5,9 @@
 
 // process events
 void events() {
+  for (int i = 0; i < 512; i++) {
+    if (LocalInputs->Keys[i] > 1) LocalInputs->Keys[i] = 1;
+  }
   // If mouse already clicked(2) change value to 1.
   // This allows the game to tell if you've clicked this frame or not.
   if (LocalInputs->leftclick == 2) LocalInputs->leftclick = 1;
@@ -72,6 +75,12 @@ void events() {
       case SDL_EVENT_MOUSE_WHEEL:
         LocalInputs->MouseScroll.x = event.wheel.x;
         LocalInputs->MouseScroll.y = event.wheel.y;
+        break;
+      case SDL_EVENT_KEY_DOWN:
+        LocalInputs->Keys[event.key.scancode] = event.key.repeat ? 1 : 2;
+        break;
+      case SDL_EVENT_KEY_UP:
+        LocalInputs->Keys[event.key.scancode] = 0;
         break;
     }
   }

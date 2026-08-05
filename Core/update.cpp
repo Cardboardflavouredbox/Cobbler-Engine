@@ -45,26 +45,28 @@ void processinputs() {
   float pc = std::cos(P1PlayerInputs->lookdir.x * PI / 180.0);
 
   glm::vec2 tempmove = glm::vec3(0);
-  if (LocalInputs->A > 0 && LocalInputs->D == 0) {
+  if (LocalInputs->Keys[SDL_SCANCODE_A] > 0 &&
+      LocalInputs->Keys[SDL_SCANCODE_D] == 0) {
     tempmove.x -= std::sin((P1PlayerInputs->lookdir.x + 90) * PI / 180.0);
     tempmove.y += std::cos((P1PlayerInputs->lookdir.x + 90) * PI / 180.0);
   }
-  if (LocalInputs->D > 0 && LocalInputs->A == 0) {
+  if (LocalInputs->Keys[SDL_SCANCODE_D] > 0 &&
+      LocalInputs->Keys[SDL_SCANCODE_A] == 0) {
     tempmove.x -= std::sin((P1PlayerInputs->lookdir.x - 90) * PI / 180.0);
     tempmove.y += std::cos((P1PlayerInputs->lookdir.x - 90) * PI / 180.0);
   }
-  if (LocalInputs->W > 0) {
+  if (LocalInputs->Keys[SDL_SCANCODE_W] > 0) {
     tempmove.x -= ps;
     tempmove.y += pc;
   }
-  if (LocalInputs->S > 0) {
+  if (LocalInputs->Keys[SDL_SCANCODE_S] > 0) {
     tempmove.x += ps;
     tempmove.y -= pc;
   }
 
   if (tempmove != glm::vec2(0)) tempmove = glm::normalize(tempmove);
   P1PlayerInputs->movevec2 = tempmove;
-  P1PlayerInputs->jump = LocalInputs->Space;
+  P1PlayerInputs->jump = LocalInputs->Keys[SDL_SCANCODE_SPACE];
 }
 
 void update() {
@@ -173,7 +175,7 @@ void update() {
   currentTime = SDL_GetPerformanceCounter();
   deltaTime = ((double)(currentTime - lastTime)) /
               (double)SDL_GetPerformanceFrequency();
-  if (LocalInputs->ESC == 2) {
+  if (LocalInputs->Keys[SDL_SCANCODE_ESCAPE] == 2) {
     Global->pause = !Global->pause;
     SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);
   }
@@ -284,6 +286,6 @@ void PlayerQuit() {
     }
 
     CobblerSendNet();
-    SDL_DelayNS(1000000000 / (double)Settings->fps);
+    SDL_DelayNS(1000000000 / 30);
   }
 }

@@ -325,9 +325,6 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
     }
   }
 
-  glm::vec3 renderpos =
-      modeltrans->position - (isUI ? glm::vec3(0) : Camera->position);
-
   glm::vec3 lookdir(0);
 
   if (isUI) {
@@ -382,17 +379,15 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
             // if (isUI) {
             //   pos.y *= -1;
             // }
-            pos += renderpos;
+            pos += modeltrans->position;
             tri[k] = pos;
           }
 
           glm::vec3 normal =
               glm::normalize(glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
 
-          float angle = glm::acos(glm::dot(normal, lookdir));
+          float angle = (glm::dot(normal, lookdir) + 1.f) / 3.f;
           glColor3f(angle, angle, angle);
-
-          angle = angle / PI;
 
           for (int k = 2; k >= 0; k--) {
             glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
@@ -412,7 +407,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
       //       pos.x *= Global->Models[i].size.x;
       //       pos.y *= Global->Models[i].size.y;
       //       pos.z *= Global->Models[i].size.z;
-      //       pos += renderpos;
+      //       pos += modeltrans->position;
       //       vec[k] = pos;
       //       uv[k] = glm::vec2(
       //           {model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y});

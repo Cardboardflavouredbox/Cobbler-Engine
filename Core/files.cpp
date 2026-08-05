@@ -558,7 +558,7 @@ bool init() {
         delete tempvector;
       }
       CobblerSendNet();
-      SDL_DelayNS(1000000000 / (double)Settings->fps);
+      SDL_DelayNS(1000000000 / 30);
     }
     // SDL_Log("What");
   }
