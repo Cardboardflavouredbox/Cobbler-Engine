@@ -135,6 +135,8 @@ void update() {
               temp /= 2;
               Global->PlayerEntity[tempdata->ID]->deltatimelocal =
                   temp / (double)SDL_GetPerformanceFrequency();
+              if (Global->PlayerEntity[tempdata->ID]->deltatimelocal > 0.03125f)
+                Global->PlayerEntity[tempdata->ID]->deltatimelocal = 0.03125f;
               // SDL_Log("%f",
               // Global->Entities[Global->PlayerEntity[tempdata->ID]]
               //                   ->deltatimelocal);
