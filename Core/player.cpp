@@ -4,17 +4,17 @@
 
 // function that turns inputs into entity movement.
 void inputtoentity(playerinputs input, Entity* entity) {
-  float temp = 2.f;
+  float temp = 4.f;
   if (entity->IsGrounded) temp = 1.f;
 
   entity->dir = input.lookdir;
 
-  if (glm::length(entity->movevec2) <
-      deltaTime * entity->movespeed * 6.f / temp)
+  float movelen = glm::length(entity->movevec2);
+
+  if (movelen < 0.5f)
     entity->movevec2 = glm::vec2(0);
   else
-    entity->movevec2 -= glm::normalize(entity->movevec2) * deltaTime *
-                        entity->movespeed * 6.f / temp;
+    entity->movevec2 *= std::pow(0.0078125f * temp, deltaTime);
 
   entity->movevec2 +=
       (input.movevec2 * entity->movespeed * deltaTime * 10.f / temp);
@@ -22,10 +22,6 @@ void inputtoentity(playerinputs input, Entity* entity) {
   if (glm::length(entity->movevec2) > entity->movespeed) {
     entity->movevec2 = glm::normalize(entity->movevec2) * entity->movespeed;
   }
-
-  // if ((LocalInputs->Shift == 0 && Settings->autorun) ||
-  //     (LocalInputs->Shift > 0 && !Settings->autorun))
-  //   Camera->movevec3 = (Camera->movevec3 * runspeed);
 
   if (input.jump == 2 && entity->IsGrounded)
     entity->velocityvec3.z = entity->jumpheight;
