@@ -38,7 +38,7 @@ struct Modeltransform {
   std::string name;
   struct action {
     std::string name;
-    float frame;
+    float frame, speed = 1.f;
   };
   std::vector<action> actions;
   glm::vec3 position, size = glm::vec3({1, 1, 1});

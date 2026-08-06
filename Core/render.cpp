@@ -307,7 +307,8 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
                       bool isUI, float deltatime) {
   // code of animation frames.
   for (int i = 0; i < modeltrans->actions.size(); i++) {
-    modeltrans->actions[i].frame += deltatime * 24;
+    modeltrans->actions[i].frame +=
+        deltatime * 24 * modeltrans->actions[i].speed;
     if ((float)modelgroup->anim[modeltrans->actions[i].name][0] ==
         (float)modelgroup->anim[modeltrans->actions[i].name][1]) {
       modeltrans->actions[i].frame =
