@@ -151,68 +151,65 @@ bool CobblerSendNet() {  // from: ID, to: ID
 }
 
 std::vector<CobblerNetData>* CobblerRecvNet() {
+  std::vector<CobblerNetData>* tempvec = NULL;
   NET_Datagram* dgram = NULL;
-  if (NET_ReceiveDatagram(NetStuff->Socket, &dgram)) {
-    if (dgram != NULL) {
-      std::vector<CobblerNetData>* tempvec = new std::vector<CobblerNetData>();
+  while (NET_ReceiveDatagram(NetStuff->Socket, &dgram) && dgram != NULL) {
+    // SDL_Log("SERVER: got %d-byte datagram from %s:%d", (int)dgram->buflen,
+    //         NET_GetAddressString(dgram->addr), (int)dgram->port);
+    if (tempvec == NULL) tempvec = new std::vector<CobblerNetData>();
 
-      // SDL_Log("SERVER: got %d-byte datagram from %s:%d", (int)dgram->buflen,
-      //         NET_GetAddressString(dgram->addr), (int)dgram->port);
+    std::deque<Uint8> datavec(dgram->buf, dgram->buf + dgram->buflen);
 
-      std::deque<Uint8> datavec(dgram->buf, dgram->buf + dgram->buflen);
+    std::array<Uint8, 8> tempbytes;
 
-      std::array<Uint8, 8> tempbytes;
-
-      for (int i = 0; i < 8; i++) {
-        tempbytes[i] = datavec.front();
-        datavec.pop_front();
-      }
-
-      Uint64 ID = std::bit_cast<Uint64>(tempbytes);
-
-      if constexpr (std::endian::native == std::endian::little) {
-        ID = std::byteswap(ID);
-      }
-
-      for (int i = 0; i < 8; i++) {
-        tempbytes[i] = datavec.front();
-        datavec.pop_front();
-      }
-
-      UserID = std::bit_cast<Uint64>(tempbytes);
-
-      if constexpr (std::endian::native == std::endian::little) {
-        UserID = std::byteswap(UserID);
-      }
-
-      while (!datavec.empty()) {
-        CobblerNetData temp;
-        temp.IP = NET_GetAddressString(dgram->addr);
-        temp.PORT = dgram->port;
-        temp.ID = ID;
-
-        if (!datavec.empty()) {
-          while (datavec.front() != Uint8(0) && !datavec.empty()) {
-            temp.name.push_back(char(datavec.front()));
-            datavec.pop_front();
-          }
-          datavec.pop_front();
-
-          unsigned char len = (unsigned char)datavec.front();
-          datavec.pop_front();
-
-          temp.buffer.insert(temp.buffer.end(), datavec.begin(),
-                             datavec.begin() + len);
-          datavec.erase(datavec.begin(), datavec.begin() + len);
-        }
-
-        tempvec->push_back(temp);
-      }
-      NET_DestroyDatagram(dgram);
-      return tempvec;
+    for (int i = 0; i < 8; i++) {
+      tempbytes[i] = datavec.front();
+      datavec.pop_front();
     }
+
+    Uint64 ID = std::bit_cast<Uint64>(tempbytes);
+
+    if constexpr (std::endian::native == std::endian::little) {
+      ID = std::byteswap(ID);
+    }
+
+    for (int i = 0; i < 8; i++) {
+      tempbytes[i] = datavec.front();
+      datavec.pop_front();
+    }
+
+    UserID = std::bit_cast<Uint64>(tempbytes);
+
+    if constexpr (std::endian::native == std::endian::little) {
+      UserID = std::byteswap(UserID);
+    }
+
+    while (!datavec.empty()) {
+      CobblerNetData temp;
+      temp.IP = NET_GetAddressString(dgram->addr);
+      temp.PORT = dgram->port;
+      temp.ID = ID;
+
+      if (!datavec.empty()) {
+        while (datavec.front() != Uint8(0) && !datavec.empty()) {
+          temp.name.push_back(char(datavec.front()));
+          datavec.pop_front();
+        }
+        datavec.pop_front();
+
+        unsigned char len = (unsigned char)datavec.front();
+        datavec.pop_front();
+
+        temp.buffer.insert(temp.buffer.end(), datavec.begin(),
+                           datavec.begin() + len);
+        datavec.erase(datavec.begin(), datavec.begin() + len);
+      }
+
+      tempvec->push_back(temp);
+    }
+    NET_DestroyDatagram(dgram);
   }
-  return NULL;
+  return tempvec;
 }
 
 void CobblerQuitNet() {
