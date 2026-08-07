@@ -12,7 +12,7 @@ void inputtoentity(playerinputs input, Entity* entity) {
     entity->movevec2 = glm::vec2(0);
   else
     entity->movevec2 *=
-        std::pow(entity->IsGrounded ? 0.0078125f : 0.125f, deltaTime);
+        std::pow(entity->IsGrounded ? 0.001f : 0.125f, deltaTime);
 
   entity->movevec2 += (input.movevec2 * entity->movespeed * deltaTime * 10.f /
                        (entity->IsGrounded ? 1.f : 4.f));

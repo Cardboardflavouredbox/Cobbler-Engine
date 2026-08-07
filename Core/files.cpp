@@ -696,12 +696,20 @@ bool init() {
             } else if (strcmp(lineHeader, "SB") == 0) {  // Static(?) Bone.
               char name[64], parent[64];
               glm::vec3 head, tail;
-              int what =
-                  fscanf(file, "%s %f %f %f/%f %f %f %s", name, &head.x,
-                         &head.y, &head.z, &tail.x, &tail.y, &tail.z, parent);
+              ModelGroupClass::Bone::Pose temppose;
+              int what = fscanf(
+                  file, "%s %f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f %f %s",
+                  name, &head.x, &head.y, &head.z, &tail.x, &tail.y, &tail.z,
+                  &temppose.pos[0], &temppose.pos[1], &temppose.pos[2],
+                  &temppose.scale[0], &temppose.scale[1], &temppose.scale[2],
+                  &temppose.rot[3], &temppose.rot[0], &temppose.rot[1],
+                  &temppose.rot[2], parent);
+
               modelgroup.Bonemap[name].parent = parent;
               modelgroup.Bonemap[name].head = head;
               modelgroup.Bonemap[name].tail = tail;
+              modelgroup.Bonemap[name].restpose = temppose;
+
             } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
               char name[64], thing[64];
               int index;
@@ -740,9 +748,16 @@ bool init() {
                       .scale[index] = temp;
                 }
               }
+            }  // Object from other file.
+            else if (strcmp(lineHeader, "L") == 0) {
+              char objname[128];
+              fscanf(file, "%s", objname);
+
+              modelgroup.Models.push_back(objname);
             } else if (strcmp(lineHeader, "O") == 0) {  // Object.
               if (namestr != tempstr) {
                 Global->Modelmap[namestr] = model;
+
                 modelgroup.Models.push_back(namestr);
               }
               char objname[128];

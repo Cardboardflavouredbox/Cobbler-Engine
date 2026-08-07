@@ -26,6 +26,7 @@ struct ModelGroupClass {
       glm::vec3 pos, scale;
       glm::quat rot;
     };
+    Pose restpose;
     std::unordered_map<std::string, std::map<unsigned int, Pose>> Poses;
   };
   std::unordered_map<std::string, Bone> Bonemap;

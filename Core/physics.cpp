@@ -330,7 +330,7 @@ void EntityMove(Entity* tempentity) {
   if (glm::length(tempvec) < 0.5f)
     tempvec = glm::vec2(0);
   else
-    tempvec *= std::pow(0.0078125f, dt);
+    tempvec *= std::pow(0.001f, dt);
 
   tempentity->velocityvec3.x = tempvec.x;
   tempentity->velocityvec3.y = tempvec.y;

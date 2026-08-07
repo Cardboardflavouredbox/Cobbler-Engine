@@ -43,76 +43,91 @@ def write_some_data(context, filepath):
                 bone.rotation_axis_angle = (0.0, 0.0, 1.0, 0.0)
                 bone.rotation_euler = (0.0, 0.0, 0.0)
                 bone.scale = (1.0, 1.0, 1.0)
+                
+    for action in bpy.data.actions:
+        if action.library is None:
+            actionthing(action, f)
             
     for obj in selected_objects:
         if obj and obj.library is None:
-            if obj.animation_data:
-                for track in obj.animation_data.nla_tracks:
-                    for strip in track.strips:
-                        actionthing(strip.action,f)
-                actionthing(obj.animation_data.action,f)
-            
-            if obj.type == 'ARMATURE':
-                bones = obj.data.bones
-                
-                for bone in bones:
-                    p_bone = obj.pose.bones.get(bone.name)
-                    head = obj.matrix_world @ bone.head_local
-                    tail = obj.matrix_world @ bone.tail_local
-                    parentname = "null"
-                    if bone.parent: 
-                        parentname = bone.parent.name
-                    elif obj.parent and obj.parent_type == 'BONE':
-                        parentname = obj.parent_bone
-                    elif p_bone and p_bone.constraints:
-                        for constraint in p_bone.constraints:
-                            parentname = constraint.subtarget
-                    
-                    z_axis = bone.z_axis
+            if obj.override_library:
+                if obj.type == 'ARMATURE':
+                    bones = obj.data.bones
+                    for bone in bones:
+                        p_bone = obj.pose.bones.get(bone.name)
+                        head = obj.matrix_world @ bone.head_local
+                        tail = obj.matrix_world @ bone.tail_local
+                        parentname = "null"
+                        if bone.parent: 
+                            parentname = bone.parent.name
+                        elif obj.parent and obj.parent_type == 'BONE':
+                            parentname = obj.parent_bone
+                        elif p_bone and p_bone.constraints:
+                            for constraint in p_bone.constraints:
+                                parentname = constraint.subtarget
                         
-                    f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f} {parentname}\n")
+                        z_axis = bone.z_axis
+                            
+                        f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{obj.location[0]:f} {obj.location[1]:f} {obj.location[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{obj.rotation_quaternion[0]:f} {obj.rotation_quaternion[1]:f} {obj.rotation_quaternion[2]:f} {obj.rotation_quaternion[3]:f} {parentname}\n")
+                elif obj.type == 'MESH':
+                    f.write(f"L {bpy.path.display_name_from_filepath(obj.override_library.reference.library.filepath)}/{obj.override_library.reference.name}\n")
+            else:
+                if obj.type == 'ARMATURE':
+                    bones = obj.data.bones
+                    for bone in bones:
+                        p_bone = obj.pose.bones.get(bone.name)
+                        head = obj.matrix_world @ bone.head_local
+                        tail = obj.matrix_world @ bone.tail_local
+                        parentname = "null"
+                        if bone.parent: 
+                            parentname = bone.parent.name
+                        elif obj.parent and obj.parent_type == 'BONE':
+                            parentname = obj.parent_bone
+                        elif p_bone and p_bone.constraints:
+                            for constraint in p_bone.constraints:
+                                parentname = constraint.subtarget
+                        
+                        z_axis = bone.z_axis
+                            
+                        f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{obj.location[0]:f} {obj.location[1]:f} {obj.location[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{obj.rotation_quaternion[0]:f} {obj.rotation_quaternion[1]:f} {obj.rotation_quaternion[2]:f} {obj.rotation_quaternion[3]:f} {parentname}\n")
+                elif obj.type == 'MESH':
+                    # Get the global transformation matrix
+                    matrix_world = obj.matrix_world
                 
-
+                    active_uv_layer = obj.data.uv_layers.active.data
                     
-                
-            elif obj.type == 'MESH':
-                # Get the global transformation matrix
-                matrix_world = obj.matrix_world
+                    vgroup_names = {g.index: g.name for g in obj.vertex_groups}
             
-                active_uv_layer = obj.data.uv_layers.active.data
+                    f.write(f"O {obj.name}\n")
                 
-                vgroup_names = {g.index: g.name for g in obj.vertex_groups}
-        
-                f.write(f"O {obj.name}\n")
-            
-                for s in obj.material_slots:
-                    if s.material and s.material.use_nodes:
-                        for n in s.material.node_tree.nodes:
-                            if n.type == 'TEX_IMAGE':
-                                f.write(f"T {n.image.name}\n")
+                    for s in obj.material_slots:
+                        if s.material and s.material.use_nodes:
+                            for n in s.material.node_tree.nodes:
+                                if n.type == 'TEX_IMAGE':
+                                    f.write(f"T {n.image.name}\n")
+                        
+                    for vert in obj.data.vertices:
+                        # Convert local coordinate to world coordinate
+                        world_coord = matrix_world @ vert.co
+                
+                        # Format and save data: Index, X, Y, Z
+                        f.write(f"P {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
+                        for g in vert.groups:
+                            group_name = vgroup_names.get(g.group, "Unknown Group")
+                            if g.weight > 0: f.write(f" {group_name} {g.weight:.4f}")
+                        f.write(f"\n")
+                    for face in obj.data.polygons:
+                        # Convert local coordinate to world coordinate
+                        vertices = list(face.vertices)
+                        normal = face.normal
                     
-                for vert in obj.data.vertices:
-                    # Convert local coordinate to world coordinate
-                    world_coord = matrix_world @ vert.co
-            
-                    # Format and save data: Index, X, Y, Z
-                    f.write(f"P {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
-                    for g in vert.groups:
-                        group_name = vgroup_names.get(g.group, "Unknown Group")
-                        if g.weight > 0: f.write(f" {group_name} {g.weight:.4f}")
-                    f.write(f"\n")
-                for face in obj.data.polygons:
-                    # Convert local coordinate to world coordinate
-                    vertices = list(face.vertices)
-                    normal = face.normal
-                
-                    # Format and save data: Index, X, Y, Z
-                    f.write(f"F {vertices[0]} {vertices[1]} {vertices[2]}/{normal[0]:f} {normal[1]:f} {normal[2]:f}")
-                    
-                    for loop_idx in face.loop_indices:
-                        uv_loop = active_uv_layer[loop_idx]
-                        f.write(f"/{uv_loop.uv[0]:f} {uv_loop.uv[1]:f}")
-                    f.write(f"\n")
+                        # Format and save data: Index, X, Y, Z
+                        f.write(f"F {vertices[0]} {vertices[1]} {vertices[2]}/{normal[0]:f} {normal[1]:f} {normal[2]:f}")
+                        
+                        for loop_idx in face.loop_indices:
+                            uv_loop = active_uv_layer[loop_idx]
+                            f.write(f"/{uv_loop.uv[0]:f} {uv_loop.uv[1]:f}")
+                        f.write(f"\n")
     f.close()
 
     return {'FINISHED'}

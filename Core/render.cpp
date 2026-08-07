@@ -207,6 +207,16 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
 
   std::string tempstr = input.bone;
 
+  ModelGroupClass::Bone* basebone = &modelgroup->Bonemap[tempstr];
+
+  temp.x *= basebone->restpose.scale.x;
+  temp.y *= basebone->restpose.scale.y;
+  temp.z *= basebone->restpose.scale.z;
+
+  temp = basebone->restpose.rot * temp;
+
+  temp += basebone->restpose.pos;
+
   // apply bones basically recursively(?).
   // if tempstr is null, that means the bone has no parent.
   while (tempstr != "null") {
