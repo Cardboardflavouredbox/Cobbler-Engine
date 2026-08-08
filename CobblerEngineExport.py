@@ -53,10 +53,11 @@ def write_some_data(context, filepath):
             if obj.override_library:
                 if obj.type == 'ARMATURE':
                     bones = obj.data.bones
+                    matrix_world = obj.matrix_world
                     for bone in bones:
                         p_bone = obj.pose.bones.get(bone.name)
-                        head = obj.matrix_world @ bone.head_local
-                        tail = obj.matrix_world @ bone.tail_local
+                        head = matrix_world @ bone.head_local
+                        tail = matrix_world @ bone.tail_local
                         parentname = "null"
                         if bone.parent: 
                             parentname = bone.parent.name
@@ -67,17 +68,22 @@ def write_some_data(context, filepath):
                                 parentname = constraint.subtarget
                         
                         z_axis = bone.z_axis
+
+                        global_quat = matrix_world.to_quaternion()
+                        
+                        pos = matrix_world.to_translation()
                             
-                        f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{obj.location[0]:f} {obj.location[1]:f} {obj.location[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{obj.rotation_quaternion[0]:f} {obj.rotation_quaternion[1]:f} {obj.rotation_quaternion[2]:f} {obj.rotation_quaternion[3]:f} {parentname}\n")
+                        f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
                 elif obj.type == 'MESH':
                     f.write(f"L {bpy.path.display_name_from_filepath(obj.override_library.reference.library.filepath)}/{obj.override_library.reference.name}\n")
             else:
                 if obj.type == 'ARMATURE':
                     bones = obj.data.bones
+                    matrix_world = obj.matrix_world
                     for bone in bones:
                         p_bone = obj.pose.bones.get(bone.name)
-                        head = obj.matrix_world @ bone.head_local
-                        tail = obj.matrix_world @ bone.tail_local
+                        head = matrix_world @ bone.head_local
+                        tail = matrix_world @ bone.tail_local
                         parentname = "null"
                         if bone.parent: 
                             parentname = bone.parent.name
@@ -88,8 +94,12 @@ def write_some_data(context, filepath):
                                 parentname = constraint.subtarget
                         
                         z_axis = bone.z_axis
+                        
+                        global_quat = matrix_world.to_quaternion()
+                        
+                        pos = matrix_world.to_translation()
                             
-                        f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{obj.location[0]:f} {obj.location[1]:f} {obj.location[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{obj.rotation_quaternion[0]:f} {obj.rotation_quaternion[1]:f} {obj.rotation_quaternion[2]:f} {obj.rotation_quaternion[3]:f} {parentname}\n")
+                        f.write(f"SB {bone.name} {head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
                 elif obj.type == 'MESH':
                     # Get the global transformation matrix
                     matrix_world = obj.matrix_world
