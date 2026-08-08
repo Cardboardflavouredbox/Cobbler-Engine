@@ -6,6 +6,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <utility>
 
+#include "camera.h"
 #include "extern.h"
 #include "rendermath.h"
 #include "screen.h"
@@ -13,12 +14,12 @@
 // function that turns vec3 into 2d point on screen.
 // for software rendering.
 ScreenPoint ToScreenSpace(glm::vec3 P) {
-  glm::vec3 p1 = (P - Camera->position);
+  glm::vec3 p1 = (P - LocalPlayer->position);
 
-  float ps = std::sin(Camera->dir.x * PI / 180.f);
-  float pc = std::cos(Camera->dir.x * PI / 180.f);
+  float ps = std::sin(LocalPlayer->dir.x * PI / 180.f);
+  float pc = std::cos(LocalPlayer->dir.x * PI / 180.f);
 
-  glm::quat q = glm::angleAxis(float(Camera->dir.y * PI / 180.f),
+  glm::quat q = glm::angleAxis(float(LocalPlayer->dir.y * PI / 180.f),
                                glm::vec3(-pc, -ps, 0.0f));
 
   p1 = q * p1;
@@ -28,7 +29,7 @@ ScreenPoint ToScreenSpace(glm::vec3 P) {
 
   ScreenPoint screenpos;
   if (ty <= 0.25f) {
-    screenpos.isbehindcamera = true;
+    screenpos.isbehindLocalPlayer = true;
     ty = 0.25f;
   }
   screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
@@ -41,7 +42,7 @@ ScreenPoint ToScreenSpace(glm::vec3 P) {
 void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
   ScreenPoint vectors[2] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1])};
-  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera) {
+  if (!vectors[0].isbehindLocalPlayer || !vectors[1].isbehindLocalPlayer) {
     int x = vectors[0].p.x, x2 = vectors[1].p.x;
 
     int y = vectors[0].p.y, y2 = vectors[1].p.y;
@@ -91,7 +92,7 @@ void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
 // this actually draws squares. will change later.
 void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
   ScreenPoint point = ToScreenSpace(rawpoint);
-  if (!point.isbehindcamera)
+  if (!point.isbehindLocalPlayer)
     for (int i = point.p.x - radius; i <= point.p.x + radius; i++) {
       for (int j = point.p.y - radius; j < point.p.y + radius; j++) {
         if (i > -1 && i < Settings->resolutionx && j > -1 &&
@@ -112,8 +113,8 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
   ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
                             ToScreenSpace(rawvectors[1]),
                             ToScreenSpace(rawvectors[2])};
-  if (!vectors[0].isbehindcamera || !vectors[1].isbehindcamera ||
-      !vectors[2].isbehindcamera) {
+  if (!vectors[0].isbehindLocalPlayer || !vectors[1].isbehindLocalPlayer ||
+      !vectors[2].isbehindLocalPlayer) {
     int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
         y2 = vectors[0].p.y;
     for (int i = 1; i < 3; i++) {
@@ -173,9 +174,9 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
                            rawvectors[2].y * uvw.z;
               tempvec3.z = rawvectors[0].z * uvw.x + rawvectors[1].z * uvw.y +
                            rawvectors[2].z * uvw.z;
-              tempvec3.x -= Camera->position.x;
-              tempvec3.y -= Camera->position.y;
-              tempvec3.z -= Camera->position.z;
+              tempvec3.x -= LocalPlayer->position.x;
+              tempvec3.y -= LocalPlayer->position.y;
+              tempvec3.z -= LocalPlayer->position.z;
               float dist =
                   std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
                             tempvec3.z * tempvec3.z);
@@ -339,12 +340,8 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
   glm::vec3 lookdir(0);
 
   if (isUI) {
-    lookdir.x = std::cos(glm::radians(Camera->dir.x + 90.f)) *
-                std::cos(glm::radians(Camera->dir.y));
-    lookdir.z = std::sin(glm::radians(Camera->dir.y));
-    lookdir.y = std::sin(glm::radians(Camera->dir.x + 90.f)) *
-                std::cos(glm::radians(Camera->dir.y));
-    lookdir.x *= -1;
+    lookdir.y = 1;
+    lookdir = Camera->lookdir * lookdir;
   } else {
     lookdir.y = 1;
   }

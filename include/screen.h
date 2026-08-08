@@ -16,7 +16,7 @@
 struct ScreenPoint {
   glm::vec2 p;
   float dist;
-  bool isbehindcamera = false;
+  bool isbehindLocalPlayer = false;
 };
 
 LIB_API ScreenPoint ToScreenSpace(glm::vec3 P);

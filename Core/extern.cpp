@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL_timer.h>
 
+#include "camera.h"
 #include "deltaTime.h"
 #include "font.h"
 #include "model.h"
@@ -20,8 +21,8 @@ Inputs* LocalInputs;
 // pointer to processed Inputs of local player. As in, move direction,
 // look direction, etc.
 playerinputs* P1PlayerInputs;
-// Camera (a.k.a Local Player) Entity pointer.
-CameraEntity* Camera;
+// LocalPlayer Entity pointer.
+Entity* LocalPlayer;
 // deltatime calculation variable
 Uint64 lastTime;
 // deltatime calculation variable
@@ -34,3 +35,5 @@ std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
 FreetypeClass* Freetypething;
 // Map of ModelGroups. Refer to the ModelGroupClass class to see what that is.
 std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
+// pointer to Camera.
+CameraClass* Camera;

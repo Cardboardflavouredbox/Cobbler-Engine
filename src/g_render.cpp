@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
 
+#include "camera.h"
 #include "deltaTime.h"
 #include "extern.h"
 #include "map.h"
@@ -15,11 +16,11 @@
 #include "update.h"
 
 float getdistancething(glm::vec3 P) {
-  glm::vec3 p1 = P - Camera->position;
-  float ps = std::sin(Camera->dir.x * PI / 180.f);
-  float pc = std::cos(Camera->dir.x * PI / 180.f);
-  glm::quat q =
-      glm::angleAxis(glm::radians(Camera->dir.y), glm::vec3(-pc, -ps, 0.0f));
+  glm::vec3 p1 = P - LocalPlayer->position;
+  float ps = std::sin(LocalPlayer->dir.x * PI / 180.f);
+  float pc = std::cos(LocalPlayer->dir.x * PI / 180.f);
+  glm::quat q = glm::angleAxis(glm::radians(LocalPlayer->dir.y),
+                               glm::vec3(-pc, -ps, 0.0f));
 
   p1 = q * p1;
   return p1.y * pc - p1.x * ps;
@@ -36,12 +37,12 @@ glm::vec2 divisiontoVec2(glm::vec2 p1, glm::vec2 p2, float t) {
 
 glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
   glm::vec3 p1, p2;
-  p1 = invisible - Camera->position;
-  p2 = visible - Camera->position;
-  float ps = std::sin(Camera->dir.x * PI / 180.f);
-  float pc = std::cos(Camera->dir.x * PI / 180.f);
-  glm::quat q =
-      glm::angleAxis(glm::radians(Camera->dir.y), glm::vec3(-pc, -ps, 0.0f));
+  p1 = invisible - LocalPlayer->position;
+  p2 = visible - LocalPlayer->position;
+  float ps = std::sin(LocalPlayer->dir.x * PI / 180.f);
+  float pc = std::cos(LocalPlayer->dir.x * PI / 180.f);
+  glm::quat q = glm::angleAxis(glm::radians(LocalPlayer->dir.y),
+                               glm::vec3(-pc, -ps, 0.0f));
 
   p1 = q * p1;
   p2 = q * p2;
@@ -219,12 +220,14 @@ void renderbackground() {
       if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] ==
           65535) {
         Uint8 color = static_cast<Uint8*>(
-            Global->SRstuff->textures[Global->skybox]->pixels)
-            [(int(i * 320.f / x) +
-              int((1 - ((int(Camera->dir.x) % 180) / 180.f)) * 640.f)) %
-                 640 +
-             (int((1 - (Camera->dir.y) / 90.f) * 200.f) + int(j * 200.f / y)) *
-                 640];
+            Global->SRstuff->textures[Global->skybox]
+                ->pixels)[(int(i * 320.f / x) +
+                           int((1 - ((int(LocalPlayer->dir.x) % 180) / 180.f)) *
+                               640.f)) %
+                              640 +
+                          (int((1 - (LocalPlayer->dir.y) / 90.f) * 200.f) +
+                           int(j * 200.f / y)) *
+                              640];
         Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
       }
     }
@@ -287,16 +290,10 @@ void openglrender() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glColor4f(1, 1, 1, 1);
 
-  glm::vec3 lookdir;
-  lookdir.x = std::cos(glm::radians(Camera->dir.x + 90.f)) *
-              std::cos(glm::radians(Camera->dir.y));
-  lookdir.z = std::sin(glm::radians(Camera->dir.y));
-  lookdir.y = std::sin(glm::radians(Camera->dir.x + 90.f)) *
-              std::cos(glm::radians(Camera->dir.y));
   glm::mat4 modelMatrix = Global->perspectivematrix;
 
-  glm::mat4 view = glm::lookAt(
-      Camera->position, Camera->position + lookdir * 16.f, glm::vec3(0, 0, 1));
+  glm::mat4 view = glm::translate(glm::mat4(1.0f), Camera->pos) *
+                   glm::mat4_cast(Camera->lookdir);
 
   modelMatrix = modelMatrix * view;
 

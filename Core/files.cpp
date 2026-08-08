@@ -20,6 +20,7 @@
 
 #include <glaze/json.hpp>
 
+#include "camera.h"
 #include "extern.h"
 #include "font.h"
 #include "global.h"
@@ -630,19 +631,12 @@ bool init() {
       glm::radians((double)Settings->fov),
       Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
 
-  // set Camera entity stuff.
-  Camera = new CameraEntity();
-  Camera->hitbox[0] = glm::vec3({0, 0, -2.25f});
-  Camera->hitbox[1] = glm::vec3({0, 0, 0.25f});
-  Camera->hitboxradius = 1.f;
-  Camera->position = glm::vec3({0, 0, 12});
-  Camera->dir = glm::vec2(0);
-  Camera->teamindex = 0;
+  Camera = new CameraClass();
 
-  // push Camera Entity to Entities vector. Camera Entity will probably always
-  // be in index zero, but that doesn't matter since there's a seperate Camera
-  // pointer.
-  Global->Entities.push_back(Camera);
+  // push LocalPlayer Entity to Entities vector. LocalPlayer Entity will
+  // probably always be in index zero, but that doesn't matter since there's a
+  // seperate LocalPlayer pointer.
+  // Global->Entities.push_back(LocalPlayer);
 
   // Spawns all the npcs in the map.
   for (int i = 0; i < tempmapdata.Entities.size(); i++) {
@@ -884,7 +878,7 @@ void quit() {
     }
   }
 
-  // free npc Entities and Camera.
+  // free npc Entities and LocalPlayer.
   for (auto& i : Global->Entities) {
     delete (i);
   }

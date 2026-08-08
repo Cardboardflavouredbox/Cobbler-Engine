@@ -184,11 +184,11 @@ void update() {
 
   if (!Global->pause) {
     processinputs();
-    inputtoentity(*P1PlayerInputs, Camera);
+    if (LocalPlayer != NULL) inputtoentity(*P1PlayerInputs, LocalPlayer);
     for (const auto& [ID, entity] : Global->PlayerEntity) {
       inputtoentity(Global->PlayerInputList[ID], entity);
     }
-    PlayerClassUpdate[Global->playerclass]();
+    if (LocalPlayer != NULL) PlayerClassUpdate[Global->playerclass]();
     componentsupdate();
     for (auto& [key, value] : Global->UImap3D) {
       for (auto& i : value) {
@@ -230,21 +230,23 @@ void update() {
       }
     }
     std::vector<Uint8> buffer{};
-    playerdatapacket temp;
-    temp.State = Camera->State;
-    temp.ID = UserID;
-    temp.Set(P1PlayerInputs);
-    temp.IsGrounded = Camera->IsGrounded;
-    for (int i = 0; i < 3; i++) {
-      temp.position[i] = Camera->position[i];
-      temp.velocityvec3[i] = Camera->velocityvec3[i];
+    if (LocalPlayer != NULL) {
+      playerdatapacket temp;
+      temp.State = LocalPlayer->State;
+      temp.ID = UserID;
+      temp.Set(P1PlayerInputs);
+      temp.IsGrounded = LocalPlayer->IsGrounded;
+      for (int i = 0; i < 3; i++) {
+        temp.position[i] = LocalPlayer->position[i];
+        temp.velocityvec3[i] = LocalPlayer->velocityvec3[i];
+      }
+      auto ec = glz::write_beve(temp, buffer);
+      if (!ec) {
+        CobblerQueueData("Player", buffer);
+      }
+      buffer.clear();
     }
-    auto ec = glz::write_beve(temp, buffer);
-    if (!ec) {
-      CobblerQueueData("Player", buffer);
-    }
-    buffer.clear();
-    ec = glz::write_beve(SDL_GetPerformanceCounter(), buffer);
+    auto ec = glz::write_beve(SDL_GetPerformanceCounter(), buffer);
 
     if (!ec) {
       CobblerQueueData("SendTick", buffer);
