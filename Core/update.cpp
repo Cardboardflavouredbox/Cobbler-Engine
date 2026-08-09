@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <queue>
 
+#include "camera.h"
 #include "components.h"
 #include "deltaTime.h"
 #include "entity.h"
@@ -67,6 +68,19 @@ void processinputs() {
   if (tempmove != glm::vec2(0)) tempmove = glm::normalize(tempmove);
   P1PlayerInputs->movevec2 = tempmove;
   P1PlayerInputs->jump = LocalInputs->Keys[SDL_SCANCODE_SPACE];
+}
+
+void CameraUpdate() {
+  if (LocalPlayer != NULL) {
+    Camera->pos = LocalPlayer->position;
+    Camera->pos.z += LocalPlayer->cameraoffset;
+    Camera->lookat.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
+                       std::cos(glm::radians(LocalPlayer->dir.y));
+    Camera->lookat.z = std::sin(glm::radians(LocalPlayer->dir.y));
+    Camera->lookat.y = std::sin(glm::radians(LocalPlayer->dir.x + 90.f)) *
+                       std::cos(glm::radians(LocalPlayer->dir.y));
+    Camera->lookat += Camera->pos;
+  }
 }
 
 void update() {
@@ -198,6 +212,8 @@ void update() {
   }
 
   componentsupdatelate();
+
+  CameraUpdate();
 
   // SDL_Log("%f %f %f", Global->Entities[1]->position[0],
   //         Global->Entities[1]->position[1],

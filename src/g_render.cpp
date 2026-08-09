@@ -292,8 +292,7 @@ void openglrender() {
 
   glm::mat4 modelMatrix = Global->perspectivematrix;
 
-  glm::mat4 view = glm::translate(glm::mat4(1.0f), Camera->pos) *
-                   glm::mat4_cast(Camera->lookdir);
+  glm::mat4 view = glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
 
   modelMatrix = modelMatrix * view;
 

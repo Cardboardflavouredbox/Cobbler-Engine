@@ -316,112 +316,114 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
 // renders modelgroup.
 void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
                       bool isUI, float deltatime) {
-  // code of animation frames.
-  for (int i = 0; i < modeltrans->actions.size(); i++) {
-    modeltrans->actions[i].frame +=
-        deltatime * 24 * modeltrans->actions[i].speed;
-    if ((float)modelgroup->anim[modeltrans->actions[i].name][0] ==
-        (float)modelgroup->anim[modeltrans->actions[i].name][1]) {
-      modeltrans->actions[i].frame =
-          (float)modelgroup->anim[modeltrans->actions[i].name][0];
-    } else {
-      while (modeltrans->actions[i].frame >=
-             (float)modelgroup->anim[modeltrans->actions[i].name][1])
-        modeltrans->actions[i].frame +=
-            ((float)modelgroup->anim[modeltrans->actions[i].name][0] -
-             (float)modelgroup->anim[modeltrans->actions[i].name][1]);
-      if (modeltrans->actions[i].frame <
-          (float)modelgroup->anim[modeltrans->actions[i].name][0])
+  if (modeltrans->visible) {
+    // code of animation frames.
+    for (int i = 0; i < modeltrans->actions.size(); i++) {
+      modeltrans->actions[i].frame +=
+          deltatime * 24 * modeltrans->actions[i].speed;
+      if ((float)modelgroup->anim[modeltrans->actions[i].name][0] ==
+          (float)modelgroup->anim[modeltrans->actions[i].name][1]) {
         modeltrans->actions[i].frame =
             (float)modelgroup->anim[modeltrans->actions[i].name][0];
+      } else {
+        while (modeltrans->actions[i].frame >=
+               (float)modelgroup->anim[modeltrans->actions[i].name][1])
+          modeltrans->actions[i].frame +=
+              ((float)modelgroup->anim[modeltrans->actions[i].name][0] -
+               (float)modelgroup->anim[modeltrans->actions[i].name][1]);
+        if (modeltrans->actions[i].frame <
+            (float)modelgroup->anim[modeltrans->actions[i].name][0])
+          modeltrans->actions[i].frame =
+              (float)modelgroup->anim[modeltrans->actions[i].name][0];
+      }
     }
-  }
 
-  glm::vec3 lookdir(0);
+    glm::vec3 lookdir(0);
 
-  if (isUI) {
-    lookdir.y = 1;
-    lookdir = Camera->lookdir * lookdir;
-  } else {
-    lookdir.y = 1;
-  }
+    if (isUI) {
+      lookdir = Camera->lookat - Camera->pos;
+    } else {
+      lookdir.y = 1;
+    }
 
-  switch (Settings->graphicsmode) {
-    case 1: {  // opengl
-      for (int a = 0; a < modelgroup->Models.size(); a++) {
-        GlobalClass::Model* model = &Global->Modelmap[modelgroup->Models[a]];
-        for (int j = 0; j < model->faces.size(); j++) {
-          glEnable(GL_TEXTURE_2D);
-          glBindTexture(GL_TEXTURE_2D,
-                        Global->GLstuff->textures[model->texture]);
-          glBegin(GL_TRIANGLES);
-          glm::vec3 tri[3];
-          for (int k = 2; k >= 0; k--) {
-            glm::vec3 pos;
-            int cnt = modeltrans->actions.size() - 1;
-            while (cnt > -1) {
-              std::pair<glm::vec3, bool> temp;
+    switch (Settings->graphicsmode) {
+      case 1: {  // opengl
+        for (int a = 0; a < modelgroup->Models.size(); a++) {
+          GlobalClass::Model* model = &Global->Modelmap[modelgroup->Models[a]];
+          for (int j = 0; j < model->faces.size(); j++) {
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D,
+                          Global->GLstuff->textures[model->texture]);
+            glBegin(GL_TRIANGLES);
+            glm::vec3 tri[3];
+            for (int k = 2; k >= 0; k--) {
+              glm::vec3 pos;
+              int cnt = modeltrans->actions.size() - 1;
+              while (cnt > -1) {
+                std::pair<glm::vec3, bool> temp;
 
-              temp = modelapplybones(model->points[model->faces[j].point[k]],
-                                     modeltrans->actions[cnt].name, modelgroup,
-                                     modeltrans->actions[cnt].frame,
-                                     modeltrans->lookdir.y);
+                temp = modelapplybones(
+                    model->points[model->faces[j].point[k]],
+                    modeltrans->actions[cnt].name, modelgroup,
+                    modeltrans->actions[cnt].frame, modeltrans->lookdir.y);
 
-              if (cnt == 0 ||
-                  (temp.second && !std::isnan(temp.first.x) &&
-                   !std::isnan(temp.first.y) && !std::isnan(temp.first.z))) {
-                pos = temp.first;
-                break;
+                if (cnt == 0 ||
+                    (temp.second && !std::isnan(temp.first.x) &&
+                     !std::isnan(temp.first.y) && !std::isnan(temp.first.z))) {
+                  pos = temp.first;
+                  break;
+                }
+                cnt--;
               }
-              cnt--;
+
+              pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
+                                   glm::vec3(0, 0, 1)) *
+                    pos;
+
+              pos = modeltrans->rot * pos;
+              pos.x *= modeltrans->size.x;
+              pos.y *= modeltrans->size.y;
+              pos.z *= modeltrans->size.z;
+              // if (isUI) {
+              //   pos.y *= -1;
+              // }
+              pos += modeltrans->position;
+              tri[k] = pos;
             }
 
-            pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
-                                 glm::vec3(0, 0, 1)) *
-                  pos;
+            glm::vec3 normal =
+                glm::normalize(glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
 
-            pos = modeltrans->rot * pos;
-            pos.x *= modeltrans->size.x;
-            pos.y *= modeltrans->size.y;
-            pos.z *= modeltrans->size.z;
-            // if (isUI) {
-            //   pos.y *= -1;
-            // }
-            pos += modeltrans->position;
-            tri[k] = pos;
+            float angle = (glm::dot(normal, lookdir) + 1.f) / 3.f;
+            glColor3f(angle, angle, angle);
+
+            for (int k = 2; k >= 0; k--) {
+              glTexCoord2f(model->faces[j].uv[k].x,
+                           1 - model->faces[j].uv[k].y);
+              glVertex3f(tri[k].x, tri[k].y, tri[k].z);
+            }
+            glEnd();
           }
-
-          glm::vec3 normal =
-              glm::normalize(glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
-
-          float angle = (glm::dot(normal, lookdir) + 1.f) / 3.f;
-          glColor3f(angle, angle, angle);
-
-          for (int k = 2; k >= 0; k--) {
-            glTexCoord2f(model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y);
-            glVertex3f(tri[k].x, tri[k].y, tri[k].z);
-          }
-          glEnd();
         }
+        break;
       }
-      break;
+        // default: { // software
+        //   for (int j = 0; j < model->faces.size(); j++) {
+        //     glm::vec3 vec[3];
+        //     glm::vec2 uv[3];
+        //     for (int k = 0; k < 3; k++) {
+        //       glm::vec3 pos = model->points[model->faces[j].point[k]];
+        //       pos.x *= Global->Models[i].size.x;
+        //       pos.y *= Global->Models[i].size.y;
+        //       pos.z *= Global->Models[i].size.z;
+        //       pos += modeltrans->position;
+        //       vec[k] = pos;
+        //       uv[k] = glm::vec2(
+        //           {model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y});
+        //     }
+        //     DrawTri(model->texture, vec, uv, 1, 1);
+        //   }
+        // }
     }
-      // default: { // software
-      //   for (int j = 0; j < model->faces.size(); j++) {
-      //     glm::vec3 vec[3];
-      //     glm::vec2 uv[3];
-      //     for (int k = 0; k < 3; k++) {
-      //       glm::vec3 pos = model->points[model->faces[j].point[k]];
-      //       pos.x *= Global->Models[i].size.x;
-      //       pos.y *= Global->Models[i].size.y;
-      //       pos.z *= Global->Models[i].size.z;
-      //       pos += modeltrans->position;
-      //       vec[k] = pos;
-      //       uv[k] = glm::vec2(
-      //           {model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y});
-      //     }
-      //     DrawTri(model->texture, vec, uv, 1, 1);
-      //   }
-      // }
   }
 }

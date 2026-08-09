@@ -46,11 +46,6 @@ int main(int argc, char* argv[]) {
     entry.second = entitylibs.back().get_function<Entity*()>("SpawnEntity");
   }
 
-  if (!init()) {
-    SDL_Log("%s", SDL_GetError());
-    return -1;
-  }
-
   dylib::library UIlib(basepath + "/" + Global->GameName + "/bin/CobblerGameUI",
                        dylib::decorations::os_default());
   SDL_Log("UI library loaded");
@@ -84,6 +79,10 @@ int main(int argc, char* argv[]) {
         classlibs.back().get_function<Entity*()>("SpawnEntity");
     if (!classlibs.back().get_function<bool()>("UIsetup")()) return -1;
     classlibs.back().get_function<void()>("Init")();
+  }
+  if (!init()) {
+    SDL_Log("%s", SDL_GetError());
+    return -1;
   }
 
   SDL_Log("Init done");

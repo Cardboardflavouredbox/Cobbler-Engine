@@ -633,10 +633,14 @@ bool init() {
 
   Camera = new CameraClass();
 
+  LocalPlayer = SpawnEntities[Global->playerclass]();
+  LocalPlayer->position.z = 8;
+  LocalPlayer->Modelthing->visible = false;
+
   // push LocalPlayer Entity to Entities vector. LocalPlayer Entity will
   // probably always be in index zero, but that doesn't matter since there's a
   // seperate LocalPlayer pointer.
-  // Global->Entities.push_back(LocalPlayer);
+  Global->Entities.push_back(LocalPlayer);
 
   // Spawns all the npcs in the map.
   for (int i = 0; i < tempmapdata.Entities.size(); i++) {

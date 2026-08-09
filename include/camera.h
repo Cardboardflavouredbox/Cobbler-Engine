@@ -1,6 +1,5 @@
 #pragma once
 
-#include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 
 #ifdef _WIN32
@@ -14,8 +13,7 @@
 #endif
 
 struct CameraClass {
-  glm::vec3 pos;
-  glm::quat lookdir;
+  glm::vec3 pos, lookat;
 };
 
 LIB_API extern CameraClass* Camera;
