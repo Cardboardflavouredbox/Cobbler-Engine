@@ -342,6 +342,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
 
     if (isUI) {
       lookdir = Camera->lookat - Camera->pos;
+      lookdir.x *= -1;
     } else {
       lookdir.y = 1;
     }

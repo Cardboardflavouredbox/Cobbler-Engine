@@ -6,8 +6,15 @@
 #include "extern.h"
 
 glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
-                             float radius);  // returns the face normal
-bool capsuleraycheck(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4,
-                     float radius);
+                             float radius,
+                             int teamindex);  // returns the face normal
+
+struct raycheckresult {
+  glm::vec3 A, B;
+  float dist = 0;
+};
+
+raycheckresult capsuleraycheck(glm::vec3 a0, glm::vec3 a1, glm::vec3 b0,
+                               glm::vec3 b1);
 
 void EntityMove(Entity* tempentity);
