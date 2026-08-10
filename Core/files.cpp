@@ -636,7 +636,6 @@ bool init() {
   LocalPlayer = SpawnEntities[Global->playerclass]();
   LocalPlayer->position.z = 8;
   LocalPlayer->Modelthing->visible = false;
-  LocalPlayer->teamindex = -1;
 
   // push LocalPlayer Entity to Entities vector. LocalPlayer Entity will
   // probably always be in index zero, but that doesn't matter since there's a
