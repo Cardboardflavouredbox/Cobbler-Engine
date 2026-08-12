@@ -125,8 +125,8 @@ raycheckresult capsuleraycheck(glm::vec3 a0, glm::vec3 a1, glm::vec3 b0,
     }
 
     // Segments overlap, return distance between parallel segments
-    result.A = glm::vec3(0);
-    result.B = glm::vec3(0);
+    result.A = a1;
+    result.B = b1;
     result.dist = glm::length(((d0 * _A) + a0) - b0);
     return result;
   }
@@ -315,7 +315,7 @@ void EntityMove(Entity* tempentity) {
 
   // set how much to loop.
   int temp = sqrtf(tempmove.x * tempmove.x + tempmove.y * tempmove.y) /
-                 tempentity->hitboxradius * 4 +
+                 tempentity->hitboxradius * 2 +
              1;
   // get move distance of one loop.
   float dist =
@@ -400,7 +400,7 @@ void EntityMove(Entity* tempentity) {
   }
 
   tempposition = moveresult + tempentity->position;
-  temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 8 + 1;
+  temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 4 + 1;
   for (int i = 0; i < temp; i++) {
     tempposition.z += tempmove.z / (float)temp;
     glm::vec3 tempnormal =
