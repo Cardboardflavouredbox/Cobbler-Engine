@@ -26,11 +26,11 @@ struct Entity {
   float deltatimelocal = 0;
   float hp, maxhp;
   float cameraoffset;
-  float movespeed = 17.5f, jumpheight = 24.f;
+  float movespeed = 12.5f, jumpheight = 16.f;
   glm::vec2 dir, movevec2 = glm::vec3(0);
   glm::vec3 position, velocityvec3 = glm::vec3({0, 0, 0});
   int teamindex;
-  float gravity = 9.81f * 8.f;
+  float gravity = 9.81f * 6.f;
   glm::vec3 hitbox[2];
   float hitboxradius;
   bool IsGrounded;

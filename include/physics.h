@@ -6,8 +6,8 @@
 #include "extern.h"
 
 glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
-                             float radius,
-                             int teamindex);  // returns the face normal
+                             float radius, int teamindex,
+                             float& dist);  // returns the face normal
 struct raycheckresult {
   glm::vec3 A, B;
   float dist = 0;
