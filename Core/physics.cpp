@@ -337,26 +337,31 @@ void EntityMove(Entity* tempentity) {
   for (int i = 0; i < temp; i++) {
     tempposition.x += tempmove.x / (float)temp;
     tempposition.y += tempmove.y / (float)temp;
-    float disttemp;
+    float distfirst;
     glm::vec3 normal = movecollisioncheck(tempentity->hitbox, tempposition,
                                           tempentity->hitboxradius,
-                                          tempentity->teamindex, disttemp);
+                                          tempentity->teamindex, distfirst);
 
+    // didn't collide with anything while moving on x and y axis.
     if (normal == glm::vec3(0)) {
       moveresult.x += tempmove.x / (float)temp;
       moveresult.y += tempmove.y / (float)temp;
-      for (int j = 1; j <= 64; j++) {
+      // go down a little bit just in case you're on a downwards slope.
+      for (int j = 1; j <= 16; j++) {
         float disttemp;
         glm::vec3 tempnormal = movecollisioncheck(
-            tempentity->hitbox, tempposition - glm::vec3(0, 0, j * dist / 64.f),
+            tempentity->hitbox, tempposition - glm::vec3(0, 0, j * dist / 16.f),
             tempentity->hitboxradius, tempentity->teamindex, disttemp);
         if (tempnormal != glm::vec3(0)) {
-          moveresult.z -= j * dist / 64.f;
-          tempposition.z -= j * dist / 64.f;
+          disttemp -= tempentity->hitboxradius;
+          moveresult.z -= j * dist / 16.f + disttemp;
+          tempposition.z -= j * dist / 16.f + disttemp;
           break;
         }
       }
-    } else {
+    }
+    // collided with something while moving on x and y axis.
+    else {
       bool check = false;
       for (int j = 1; j <= 64; j++) {
         float disttemp;
@@ -420,11 +425,11 @@ void EntityMove(Entity* tempentity) {
   tempposition = moveresult + tempentity->position;
   temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 4 + 1;
   for (int i = 0; i < temp; i++) {
-    float disttemp;
+    float disttempbase;
     tempposition.z += tempmove.z / (float)temp;
-    glm::vec3 tempnormal = movecollisioncheck(tempentity->hitbox, tempposition,
-                                              tempentity->hitboxradius,
-                                              tempentity->teamindex, disttemp);
+    glm::vec3 tempnormal = movecollisioncheck(
+        tempentity->hitbox, tempposition, tempentity->hitboxradius,
+        tempentity->teamindex, disttempbase);
     if (tempnormal == glm::vec3(0)) {
       tempentity->IsGrounded = false;
       moveresult.z += tempmove.z / (float)temp;
@@ -458,7 +463,7 @@ void EntityMove(Entity* tempentity) {
         if (result == 0) {
           tempentity->IsGrounded = true;
           tempentity->velocityvec3.z = -0.1f;
-          tempposition.z -= tempmove.z / (float)temp;
+          tempposition.z -= disttempbase;
           break;
         } else {
           tempentity->IsGrounded = false;
