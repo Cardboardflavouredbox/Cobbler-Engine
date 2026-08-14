@@ -363,20 +363,25 @@ void EntityMove(Entity* tempentity) {
     // collided with something while moving on x and y axis.
     else {
       bool check = false;
-      for (int j = 1; j <= 64; j++) {
+      float disttempcache = 0;
+      // try moving up just in case it's an upwards slope.
+      for (int j = 1; j <= 16; j++) {
         float disttemp;
         glm::vec3 tempnormal = movecollisioncheck(
-            tempentity->hitbox, tempposition + glm::vec3(0, 0, j * dist / 64.f),
+            tempentity->hitbox, tempposition + glm::vec3(0, 0, j * dist / 16.f),
             tempentity->hitboxradius, tempentity->teamindex, disttemp);
         if (tempnormal == glm::vec3(0)) {
+          if (disttempcache != 0)
+            disttempcache = tempentity->hitboxradius - disttempcache;
           moveresult.x += tempmove.x / (float)temp;
           moveresult.y += tempmove.y / (float)temp;
-          moveresult.z += j * dist / 64.f;
-          tempposition.z += j * dist / 64.f;
-          // dist -= j * dist / 64.f;
+          moveresult.z += (j - 1) * dist / 16.f - disttempcache;
+          tempposition.z += (j - 1) * dist / 16.f - disttempcache;
+          // dist -= (j-1) * dist / 16.f;
           check = true;
           break;
         }
+        disttempcache = disttemp;
       }
       if (!check) {
         tempposition.x -= tempmove.x / (float)temp;
