@@ -285,9 +285,10 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                           tempentity->hitbox[1] + tempentity->position);
       glm::vec3 normal = glm::normalize(temp.B - temp.A);
       if (temp.dist < radius + tempentity->hitboxradius &&
-          (distresult == 0 || distresult > temp.dist)) {
+          (distresult == 0 ||
+           distresult > -temp.dist + tempentity->hitboxradius)) {
         result = normal;
-        dist = temp.dist;
+        dist = -temp.dist + tempentity->hitboxradius;
       }
     }
   }
@@ -300,9 +301,10 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                           tempentity->hitbox[1] + tempentity->position);
       glm::vec3 normal = glm::normalize(temp.B - temp.A);
       if (temp.dist < radius + tempentity->hitboxradius &&
-          (distresult == 0 || distresult > temp.dist)) {
+          (distresult == 0 ||
+           distresult > -temp.dist + tempentity->hitboxradius)) {
         result = normal;
-        dist = temp.dist;
+        dist = -temp.dist + tempentity->hitboxradius;
       }
     }
   }
@@ -387,10 +389,12 @@ void EntityMove(Entity* tempentity) {
       if (!check) {
         moveresult.x += tempmove.x / (float)temp;
         moveresult.y += tempmove.y / (float)temp;
-        normal.z = 0;
+        // normal.z = 0;
         distfirst = -distfirst + tempentity->hitboxradius;
         // SDL_Log("%f", distfirst);
         glm::vec3 newmove = distfirst * glm::normalize(normal);
+
+        if (normal == glm::vec3(0)) newmove = glm::vec3(0);
 
         tempposition -= newmove;
         moveresult -= newmove;
