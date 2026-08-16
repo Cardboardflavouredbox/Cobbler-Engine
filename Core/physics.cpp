@@ -312,6 +312,21 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   return result;
 }
 
+glm::vec3 collisionloop(Entity* tempentity, glm::vec3 tempposition) {
+  float dist;
+  glm::vec3 normal =
+      movecollisioncheck(tempentity->hitbox, tempposition,
+                         tempentity->hitboxradius, tempentity->teamindex, dist);
+
+  dist = -dist + tempentity->hitboxradius;
+  // SDL_Log("%f", distfirst);
+  glm::vec3 newmove = dist * glm::normalize(normal);
+
+  if (normal == glm::vec3(0)) newmove = glm::vec3(0);
+
+  return -newmove;
+}
+
 // entity movement function.
 // OPTIMIZE THIS LATER!! THIS IS HORRID.
 // Also add more comments! This looks like nonsense to most people.
@@ -398,6 +413,14 @@ void EntityMove(Entity* tempentity) {
 
         tempposition -= newmove;
         moveresult -= newmove;
+
+        glm::vec3 tempvec3(1);
+        while (glm::length(tempvec3) > 0.00001) {
+          tempvec3 = collisionloop(tempentity, tempposition);
+
+          tempposition += tempvec3;
+          moveresult += tempvec3;
+        }
         // break;
       }
     }
