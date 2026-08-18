@@ -10,15 +10,12 @@
 #include <stdio.h>
 
 #include <filesystem>
-#include <glaze/beve.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <set>
 #include <sstream>
 #include <unordered_map>
 
 #include FT_FREETYPE_H
-
-#include <glaze/json.hpp>
 
 #include "camera.h"
 #include "extern.h"
@@ -33,46 +30,25 @@ std::string ServerIP;
 // Server Port unsigned int.
 unsigned int ServerPort;
 
-// glaze library serialization template for vec3
-template <>
-struct glz::meta<glm::vec3> {
-  // mimics float array
-  using mimic = std::array<float, 3>;
-  static constexpr auto value =
-      glz::array(&glm::vec3::x, &glm::vec3::y, &glm::vec3::z);
-};
-
-// glaze library serialization template for quat
-template <>
-struct glz::meta<glm::quat> {
-  // mimics float array
-  using mimic = std::array<float, 4>;
-  static constexpr auto value =
-      glz::array(&glm::quat::x, &glm::quat::y, &glm::quat::z, &glm::quat::w);
-};
-
-// glaze library serialization template for vec2
-template <>
-struct glz::meta<glm::vec2> {
-  // mimics float array
-  using mimic = std::array<float, 2>;
-  static constexpr auto value = glz::array(&glm::vec2::x, &glm::vec2::y);
-};
-
 // Settings Save function
 void SaveSettings() {
   // get location of settings file
   std::string location =
-      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
-  auto error = glz::write_file_json<glz::opts{.prettify = true}>(
-      Settings, location + "/Settings.json", std::string{});
-  if (error) {
-    SDL_Log("Failed to save!");
-    SDL_Log("%s",
-            glz::format_error(error, (location + "/Settings.json").c_str())
-                .c_str());
+      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str()) +
+      "/Settings.txt";
+
+  FILE* file = fopen(location.c_str(), "w");
+  if (file == NULL) {
+    SDL_Log("Failed to save settings!");
     return;
   }
+
+  fprintf(file, "%d %d %d %d %f %f %hu %hu %d", Settings->autorun,
+          Settings->fov, Settings->fps, Settings->graphicsmode,
+          Settings->mousesensitivity.x, Settings->mousesensitivity.y,
+          Settings->resolutionx, Settings->resolutiony, Settings->vsync);
+
+  fclose(file);
   SDL_Log("Saved settings!");
 }
 
@@ -80,16 +56,21 @@ void SaveSettings() {
 void LoadSettings() {
   // get location of settings file
   std::string location =
-      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
-  auto error =
-      glz::read_file_json(Settings, location + "/Settings.json", std::string{});
-  if (error) {
+      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str()) +
+      "/Settings.txt";
+
+  FILE* file = fopen(location.c_str(), "r");
+  if (file == NULL) {
     SDL_Log("Failed to load settings!");
-    SDL_Log("%s",
-            glz::format_error(error, (location + "/Settings.json").c_str())
-                .c_str());
     return;
   }
+
+  fscanf(file, "%d %d %d %d %f %f %hu %hu %d", &Settings->autorun,
+         &Settings->fov, &Settings->fps, &Settings->graphicsmode,
+         &Settings->mousesensitivity.x, &Settings->mousesensitivity.y,
+         &Settings->resolutionx, &Settings->resolutiony, &Settings->vsync);
+
+  fclose(file);
   SDL_Log("Loaded settings!");
 }
 
