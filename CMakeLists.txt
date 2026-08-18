@@ -34,12 +34,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(SDL3_net)
 
 FetchContent_Declare(
-  glaze
-  GIT_REPOSITORY https://github.com/stephenberry/glaze.git
-  GIT_TAG v7.8.4
-  GIT_SHALLOW TRUE
+  bitsery
+  GIT_REPOSITORY https://github.com/fraillt/bitsery.git
+  GIT_TAG v5.2.5
 )
-FetchContent_MakeAvailable(glaze)
+FetchContent_MakeAvailable(bitsery)
 
 FetchContent_Declare(
     freetype
@@ -107,8 +106,8 @@ src/g_main.cpp src/g_render.cpp)
 # src/e_main.cpp src/e_render.cpp 
 # src/e_update.cpp src/e_components.cpp)
 
-target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 glaze::glaze SDL3_net::SDL3_net CURL::libcurl)
-target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 glaze::glaze glm::glm freetype CobblerGLAD CobblerNet)
+target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net CURL::libcurl)
+target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm freetype CobblerGLAD CobblerNet)
 target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
 target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib)

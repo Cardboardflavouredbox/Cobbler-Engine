@@ -2,9 +2,14 @@
 
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_timer.h>
+#include <bitsery/adapter/buffer.h>
+#include <bitsery/bitsery.h>
+#include <bitsery/brief_syntax.h>
+#include <bitsery/brief_syntax/set.h>
+#include <bitsery/traits/array.h>
+#include <bitsery/traits/vector.h>
 
 #include <cmath>
-#include <glaze/beve.hpp>
 #include <glm/glm.hpp>
 #include <queue>
 
@@ -16,6 +21,20 @@
 #include "global.h"
 #include "network.h"
 #include "player.h"
+
+template <typename S>
+void serialize(S& s, playerdatapacket& o) {
+  s.value1b(o.altattack);
+  s.value1b(o.attack);
+  s.value8b(o.ID);
+  s.value1b(o.IsGrounded);
+  s.value1b(o.jump);
+  s.container4b(o.lookdir);
+  s.container4b(o.movevec2);
+  s.container4b(o.position);
+  s.value4b(o.State);
+  s.container4b(o.velocityvec3);
+}
 
 playerinputs Loadinputdata(playerdatapacket input) {
   playerinputs temp;
@@ -98,8 +117,10 @@ void update() {
         Global->PlayerTimecounter[tempdata->ID] = 0;
         if (tempdata->name == "Player") {
           playerdatapacket temp;
-          auto ec = glz::read_beve(temp, tempdata->buffer);
-          if (!ec) {
+          auto state = bitsery::quickDeserialization<
+              bitsery::InputBufferAdapter<std::vector<Uint8>>>(
+              {tempdata->buffer.begin(), tempdata->buffer.size()}, temp);
+          if (state.first == bitsery::ReaderError::NoError && state.second) {
             if (Global->PlayerEntity.contains(temp.ID) && temp.ID != UserID) {
               Global->PlayerInputList[temp.ID] = Loadinputdata(temp);
               for (int i = 0; i < 3; i++) {
@@ -128,8 +149,10 @@ void update() {
           }
         } else if (tempdata->name == "PlayerList") {
           std::set<Uint64> tempset;
-          auto ec = glz::read_beve(tempset, tempdata->buffer);
-          if (!ec) {
+          auto state = bitsery::quickDeserialization<
+              bitsery::InputBufferAdapter<std::vector<Uint8>>>(
+              {tempdata->buffer.begin(), tempdata->buffer.size()}, tempset);
+          if (state.first == bitsery::ReaderError::NoError && state.second) {
             for (auto& key : tempset) {
               if (key != UserID &&
                   Global->UserIDs.find(key) == Global->UserIDs.end()) {
@@ -143,8 +166,10 @@ void update() {
         } else if (tempdata->name == "ReturnTick") {
           if (Global->PlayerEntity.contains(tempdata->ID)) {
             Uint64 temp;
-            auto ec = glz::read_beve(temp, tempdata->buffer);
-            if (!ec) {
+            auto state = bitsery::quickDeserialization<
+                bitsery::InputBufferAdapter<std::vector<Uint8>>>(
+                {tempdata->buffer.begin(), tempdata->buffer.size()}, temp);
+            if (state.first == bitsery::ReaderError::NoError && state.second) {
               temp = SDL_GetPerformanceCounter() - temp;
               temp /= 2;
               Global->PlayerEntity[tempdata->ID]->deltatimelocal =
@@ -222,10 +247,13 @@ void update() {
   if (Global->IsOnline) {  // send net data
     if (IsServer) {
       std::vector<Uint8> buffer{};
-      auto ec = glz::write_beve(Global->UserIDs, buffer);
-      if (!ec) {
-        CobblerQueueData("PlayerList", buffer);
-      }
+
+      auto writtenSize = bitsery::quickSerialization<
+          bitsery::OutputBufferAdapter<std::vector<Uint8>>>({buffer},
+                                                            Global->UserIDs);
+
+      CobblerQueueData("PlayerList", buffer);
+
       for (const auto& [ID, entity] : Global->PlayerEntity) {
         if (ID != UserID) {
           std::vector<Uint8> buffer{};
@@ -238,10 +266,10 @@ void update() {
             temp.position[i] = Global->PlayerEntity[ID]->position[i];
             temp.velocityvec3[i] = Global->PlayerEntity[ID]->velocityvec3[i];
           }
-          auto ec = glz::write_beve(temp, buffer);
-          if (!ec) {
-            CobblerQueueData("Player", buffer);
-          }
+          writtenSize = bitsery::quickSerialization<
+              bitsery::OutputBufferAdapter<std::vector<Uint8>>>({buffer}, temp);
+
+          CobblerQueueData("Player", buffer);
         }
       }
     }
@@ -256,17 +284,16 @@ void update() {
         temp.position[i] = LocalPlayer->position[i];
         temp.velocityvec3[i] = LocalPlayer->velocityvec3[i];
       }
-      auto ec = glz::write_beve(temp, buffer);
-      if (!ec) {
-        CobblerQueueData("Player", buffer);
-      }
+      auto writtenSize = bitsery::quickSerialization<
+          bitsery::OutputBufferAdapter<std::vector<Uint8>>>({buffer}, temp);
+      CobblerQueueData("Player", buffer);
+
       buffer.clear();
     }
-    auto ec = glz::write_beve(SDL_GetPerformanceCounter(), buffer);
-
-    if (!ec) {
-      CobblerQueueData("SendTick", buffer);
-    }
+    auto writtenSize = bitsery::quickSerialization<
+        bitsery::OutputBufferAdapter<std::vector<Uint8>>>(
+        {buffer}, SDL_GetPerformanceCounter());
+    CobblerQueueData("SendTick", buffer);
 
     Global->Onlinesendwait -= deltaTime;
     while (Global->Onlinesendwait <= 0) {
@@ -290,8 +317,10 @@ void PlayerQuit() {
         CobblerNetData* tempdata = &tempvector->back();
         if (tempdata->name == "PlayerList") {
           std::set<Uint64> tempset;
-          auto ec = glz::read_beve(tempset, tempdata->buffer);
-          if (!ec) {
+          auto state = bitsery::quickDeserialization<
+              bitsery::InputBufferAdapter<std::vector<Uint8>>>(
+              {tempdata->buffer.begin(), tempdata->buffer.size()}, tempset);
+          if (state.first == bitsery::ReaderError::NoError && state.second) {
             if (tempset.find(UserID) == tempset.end()) {
               check = true;
               break;
