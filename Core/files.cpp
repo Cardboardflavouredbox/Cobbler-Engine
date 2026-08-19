@@ -581,16 +581,17 @@ bool init() {
 
     if (strcmp(lineHeader, "P") == 0) {  // Points.
       MapPoint temppoint;
-      fscanf(file, "[%f,%f,%f] [%f,%f,%f]\n", &temppoint.pos[0],
-             &temppoint.pos[1], &temppoint.pos[2], &temppoint.shade[0],
-             &temppoint.shade[1], &temppoint.shade[2]);
+      fscanf(file, "%f,%f,%f %f,%f,%f\n", &temppoint.pos.x, &temppoint.pos.y,
+             &temppoint.pos.z, &temppoint.shade[0], &temppoint.shade[1],
+             &temppoint.shade[2]);
       tempmapdata.Points.push_back(temppoint);
+      SDL_Log("%f %f %f", temppoint.pos.x, temppoint.pos.y, temppoint.pos.z);
     } else if (strcmp(lineHeader, "F") == 0) {  // Faces.
       char texture[64];
       Mapface tempface;
       tempface.points.resize(3);
       tempface.UVs.resize(3);
-      fscanf(file, "%d %s [%d,%d] [%d,%d,%d] [[%f,%f],[%f,%f],[%f,%f]]\n",
+      fscanf(file, "%d %s %d,%d %d,%d,%d %f,%f %f,%f %f,%f\n",
              &tempface.doublesided, texture, &tempface.xloop, &tempface.yloop,
              &tempface.points[0], &tempface.points[1], &tempface.points[2],
              &tempface.UVs[0][0], &tempface.UVs[0][1], &tempface.UVs[1][0],

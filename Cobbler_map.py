@@ -45,10 +45,10 @@ def write_some_data(context, filepath, use_some_setting):
     for index in vertdict.keys():
         vert = vertdict[index]
         color = colordict[index]
-        print(f"P [{vert.x:.6f},{vert.y:.6f},{vert.z:.6f}] [{color[0]},{color[1]},{color[2]}]",file = f)
+        print(f"P {vert.x:.6f},{vert.y:.6f},{vert.z:.6f} {color[0]},{color[1]},{color[2]}",file = f)
     
     for face in facelist:
-        print("F 0 Floor [1,1] ["+ ",".join(str(num) for num in face) +"] [[0,0],[1,0],[0,1]]",file = f)
+        print("F 0 Floor 1,1 "+ ",".join(str(num) for num in face) +" 0,0 1,0 0,1",file = f)
     
     print("SKYBOX Sky",file = f)
     
