@@ -42,39 +42,15 @@ def write_some_data(context, filepath, use_some_setting):
     
     f = open(filepath, "w", encoding='utf-8')
     
-    print("{\n  \"Points\": [",end="",file = f)
-    
-    check = True
     for index in vertdict.keys():
         vert = vertdict[index]
         color = colordict[index]
-        if check:
-            print(f"\n    {{\"pos\": [{vert.x:.6f},{vert.y:.6f},{vert.z:.6f}], \"shade\": [{color[0]},{color[1]},{color[2]}]}}",end="",file = f)
-            check = False
-        else:
-            print(f",\n    {{\"pos\": [{vert.x:.6f},{vert.y:.6f},{vert.z:.6f}], \"shade\": [{color[0]},{color[1]},{color[2]}]}}",end="",file = f)
-    print("\n",file = f)
-    
-    print("  ],",file = f)
-    
-    
-    print("\"mapfaces\": [",end="",file = f)
-    
-    check = True
+        print(f"P [{vert.x:.6f},{vert.y:.6f},{vert.z:.6f}] [{color[0]},{color[1]},{color[2]}]",file = f)
     
     for face in facelist:
-        if check:
-            print("\n    {\n      \"doublesided\": false, \"texture\": \"Floor\", \"xloop\": 1, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]]\n    }",end="",file = f)
-            check = False
-        else:
-            print(",\n    {\n      \"doublesided\": false, \"texture\": \"Floor\", \"xloop\": 1, \"yloop\": 1, \"points\": ["+ ",".join(str(num) for num in face) +"], \"UVs\": [[0,0],[1,0],[1,1],[0,1]]\n    }",end="",file = f)
+        print("F 0 Floor [1,1] ["+ ",".join(str(num) for num in face) +"] [[0,0],[1,0],[0,1]]",file = f)
     
-    print("  ],",file = f)
-    
-    print("\"Entities\":[],\n\"props\":[],\n\"skybox\": \"Sky\"",file = f)
-    
-    
-    print("}",file = f)
+    print("SKYBOX Sky",file = f)
     
     f.close()
 
@@ -94,7 +70,7 @@ class ExportSomeData(Operator, ExportHelper):
     bl_label = "Export Some Data"
 
     # ExportHelper mix-in class uses this.
-    filename_ext = ".json"
+    filename_ext = ".map"
 
     filter_glob: StringProperty(
         default="*.txt",

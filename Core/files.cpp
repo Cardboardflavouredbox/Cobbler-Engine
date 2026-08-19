@@ -34,8 +34,8 @@ unsigned int ServerPort;
 void SaveSettings() {
   // get location of settings file
   std::string location =
-      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str()) +
-      "/Settings.txt";
+      strcat(SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str()),
+             "/Settings.txt");
 
   FILE* file = fopen(location.c_str(), "w");
   if (file == NULL) {
@@ -56,8 +56,8 @@ void SaveSettings() {
 void LoadSettings() {
   // get location of settings file
   std::string location =
-      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str()) +
-      "/Settings.txt";
+      strcat(SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str()),
+             "/Settings.txt");
 
   FILE* file = fopen(location.c_str(), "r");
   if (file == NULL) {
@@ -473,14 +473,32 @@ bool init() {
   std::shared_ptr<ZipData> LoadedData(new ZipData());
 
   // read the resources file of the game.
-  auto error = glz::read_file_json(
-      LoadedData, Global->GameName + "/resources.json", std::string{});
-  if (error) {
-    SDL_Log("%s", glz::format_error(
-                      error, (Global->GameName + "/resources.json").c_str())
-                      .c_str());
+  FILE* file = fopen((Global->GameName + "/resources.txt").c_str(), "r");
+  if (file == NULL) {
+    SDL_Log("Impossible to open the file!");
     return false;
   }
+  // time to read the contents of the file.
+  while (true) {
+    char lineHeader[128];
+    // read the first word of the line
+    if (fscanf(file, "%s", lineHeader) == EOF) break;
+
+    if (strcmp(lineHeader, "START") == 0) {  // Starting stage.
+      char name[64];
+      fscanf(file, "%s\n", name);
+      LoadedData->startlevel = name;
+    } else if (strcmp(lineHeader, "FONT") == 0) {  // Font.
+      char name[64];
+      fscanf(file, "%s\n", name);
+      LoadedData->fontname = name;
+    } else if (strcmp(lineHeader, "STAGE") == 0) {  // Stage.
+      char name[64];
+      fscanf(file, "%s\n", name);
+      LoadedData->stagenames.push_back(name);
+    }
+  }
+  fclose(file);
 
   SDL_Log("Loaded resources data");
 
@@ -547,17 +565,45 @@ bool init() {
 
   // read map data.
   Mapdata tempmapdata;
-  error = glz::read_file_json(
-      tempmapdata,
-      Global->GameName + "/map/" + LoadedData->startlevel + ".json",
-      std::string{});
-  if (error) {
-    SDL_Log("%s", glz::format_error(error, (Global->GameName + "/map/" +
-                                            LoadedData->startlevel + ".json")
-                                               .c_str())
-                      .c_str());
+
+  file = fopen(
+      (Global->GameName + "/map/" + LoadedData->startlevel + ".map").c_str(),
+      "r");
+  if (file == NULL) {
+    SDL_Log("Impossible to open the file!");
     return false;
   }
+  // time to read the contents of the file.
+  while (true) {
+    char lineHeader[64];
+    // read the first word of the line
+    if (fscanf(file, "%s", lineHeader) == EOF) break;
+
+    if (strcmp(lineHeader, "P") == 0) {  // Points.
+      MapPoint temppoint;
+      fscanf(file, "[%f,%f,%f] [%f,%f,%f]\n", &temppoint.pos[0],
+             &temppoint.pos[1], &temppoint.pos[2], &temppoint.shade[0],
+             &temppoint.shade[1], &temppoint.shade[2]);
+      tempmapdata.Points.push_back(temppoint);
+    } else if (strcmp(lineHeader, "F") == 0) {  // Faces.
+      char texture[64];
+      Mapface tempface;
+      tempface.points.resize(3);
+      tempface.UVs.resize(3);
+      fscanf(file, "%d %s [%d,%d] [%d,%d,%d] [[%f,%f],[%f,%f],[%f,%f]]\n",
+             &tempface.doublesided, texture, &tempface.xloop, &tempface.yloop,
+             &tempface.points[0], &tempface.points[1], &tempface.points[2],
+             &tempface.UVs[0][0], &tempface.UVs[0][1], &tempface.UVs[1][0],
+             &tempface.UVs[1][1], &tempface.UVs[2][0], &tempface.UVs[2][1]);
+      tempmapdata.mapfaces.push_back(tempface);
+    } else if (strcmp(lineHeader, "SKYBOX") == 0) {  // Skybox.
+      char name[64];
+      fscanf(file, "%s\n", name);
+      tempmapdata.skybox = name;
+    }
+  }
+  fclose(file);
+
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
