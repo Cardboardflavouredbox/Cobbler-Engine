@@ -39,6 +39,7 @@ struct CobblerNetData {
   std::vector<Uint8> buffer;
   Uint16 PORT;
   Uint64 ID;
+  Uint8 size;
 };
 
 LIB_API extern PostField* curlpostfield;
@@ -54,7 +55,8 @@ LIB_API bool CobblerSetSocket(unsigned int port);
 LIB_API void CobblerQuitNet();
 LIB_API bool CobblerSendCurlData();
 LIB_API bool CobblerCurlLogin();
-LIB_API bool CobblerQueueData(const char* name, std::vector<Uint8> buf);
+LIB_API bool CobblerQueueData(const char* name, std::vector<Uint8> buf,
+                              size_t size);
 LIB_API bool CobblerSendNet();
 LIB_API std::vector<CobblerNetData>* CobblerRecvNet();
 }

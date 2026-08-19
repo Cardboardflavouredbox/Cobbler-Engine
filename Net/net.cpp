@@ -52,7 +52,7 @@ void CobblerAddIP(std::string IP, unsigned int Port, Uint64 ID) {
   client.ID = ID;
   client.RealAddress = NET_ResolveHostname(IP.c_str());
   NetStuff->Clients.push_back(client);
-  SDL_Log("%d %s %u", (int)NetStuff->Clients.size(), IP.c_str(), Port);
+  SDL_Log("%llu %s %u", ID, IP.c_str(), Port);
 }
 
 bool CobblerCheckHasIP(std::string IP, unsigned int Port) {
@@ -94,25 +94,23 @@ bool CobblerInitNet() {
   return true;
 }
 
-bool CobblerQueueData(const char* name, std::vector<Uint8> buf) {
+bool CobblerQueueData(const char* name, std::vector<Uint8> buf, size_t size) {
   int len = std::strlen(name);
   for (int i = 0; i < len; i++) {
     packetbuffer.push_back(Uint8(name[i]));
   }
   packetbuffer.push_back(Uint8('\0'));
 
-  unsigned int buflen = buf.size();
+  unsigned int buflen = size;
 
   if (buflen > 255) {
     SDL_Log("buffer too long!");
     return false;
   }
 
-  unsigned char templen = buflen;
+  packetbuffer.push_back(static_cast<Uint8>(buflen));
 
-  packetbuffer.push_back(static_cast<Uint8>(templen));
-
-  packetbuffer.insert(packetbuffer.end(), buf.begin(), buf.begin() + templen);
+  packetbuffer.insert(packetbuffer.end(), buf.begin(), buf.begin() + buflen);
   return true;
 }
 
@@ -197,8 +195,10 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
         }
         datavec.pop_front();
 
-        unsigned char len = (unsigned char)datavec.front();
+        Uint8 len = datavec.front();
         datavec.pop_front();
+
+        temp.size = len;
 
         temp.buffer.insert(temp.buffer.end(), datavec.begin(),
                            datavec.begin() + len);

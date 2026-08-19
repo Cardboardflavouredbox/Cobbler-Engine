@@ -545,7 +545,7 @@ bool init() {
     // check if the server acknowledged you
     while (Global->IsRunning && !check) {
       events();
-      CobblerQueueData("PlayerAdd", buffer);
+      CobblerQueueData("PlayerAdd", buffer, 0);
       std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
       if (tempvector != NULL) {
         while (!tempvector->empty()) {
@@ -585,7 +585,6 @@ bool init() {
              &temppoint.pos.z, &temppoint.shade[0], &temppoint.shade[1],
              &temppoint.shade[2]);
       tempmapdata.Points.push_back(temppoint);
-      SDL_Log("%f %f %f", temppoint.pos.x, temppoint.pos.y, temppoint.pos.z);
     } else if (strcmp(lineHeader, "F") == 0) {  // Faces.
       char texture[64];
       Mapface tempface;
@@ -596,6 +595,7 @@ bool init() {
              &tempface.points[0], &tempface.points[1], &tempface.points[2],
              &tempface.UVs[0][0], &tempface.UVs[0][1], &tempface.UVs[1][0],
              &tempface.UVs[1][1], &tempface.UVs[2][0], &tempface.UVs[2][1]);
+      tempface.texture = texture;
       tempmapdata.mapfaces.push_back(tempface);
     } else if (strcmp(lineHeader, "SKYBOX") == 0) {  // Skybox.
       char name[64];
