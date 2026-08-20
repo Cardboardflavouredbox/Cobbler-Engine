@@ -62,14 +62,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(dylib)
 
-FetchContent_Declare(
-	curl
-    DOWNLOAD_EXTRACT_TIMESTAMP true
-    OVERRIDE_FIND_PACKAGE # this one
-	URL "https://curl.se/download/curl-8.20.0.tar.gz"
-)
-FetchContent_MakeAvailable(curl)
-
 set(CORE_SOURCES 
     Core/update.cpp
     Core/components.cpp 
@@ -106,7 +98,7 @@ src/g_main.cpp src/g_render.cpp)
 # src/e_main.cpp src/e_render.cpp 
 # src/e_update.cpp src/e_components.cpp)
 
-target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net CURL::libcurl)
+target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net)
 target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm freetype CobblerGLAD CobblerNet)
 target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)

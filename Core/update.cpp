@@ -306,7 +306,7 @@ void update() {
     }
   }
 
-  if (curlpostfield->hasdata && Global->LoggedIn) CobblerSendCurlData();
+  // if (curlpostfield->hasdata && Global->LoggedIn) CobblerSendCurlData();
 }
 
 void PlayerQuit() {

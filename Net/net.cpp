@@ -1,6 +1,5 @@
 #include <SDL3/SDL.h>
 #include <SDL3_net/SDL_net.h>
-#include <curl/curl.h>
 
 #include <array>
 #include <bit>
@@ -22,28 +21,28 @@ struct NetworkStuffClass {
   std::vector<Clientthing> Clients;
   NET_DatagramSocket* Socket;
 
-  CURL* curl;
-  CURLcode res;
+  // CURL* curl;
+  // CURLcode res;
 };
 
 NetworkStuffClass* NetStuff;
-PostField* curlpostfield;
-std::string curlloginstring;
+// PostField* curlpostfield;
+// std::string curlloginstring;
 Uint64 UserID = 0;
 std::vector<Uint8> packetbuffer;
 
 bool IsServer = false;
 
-static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
-                                  void* clientp) {
-  size_t totalSize = size * nmemb;
+// static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
+//                                   void* clientp) {
+//   size_t totalSize = size * nmemb;
 
-  std::ostringstream* stream = (std::ostringstream*)clientp;
+//   std::ostringstream* stream = (std::ostringstream*)clientp;
 
-  stream->write(data, totalSize);
+//   stream->write(data, totalSize);
 
-  return totalSize;
-}
+//   return totalSize;
+// }
 
 void CobblerAddIP(std::string IP, unsigned int Port, Uint64 ID) {
   NetworkStuffClass::Clientthing client;
@@ -82,11 +81,11 @@ bool CobblerInitNet() {
   if (!NET_Init()) return false;
   NetStuff = new NetworkStuffClass();
 
-  curl_global_init(CURL_GLOBAL_ALL);
+  // curl_global_init(CURL_GLOBAL_ALL);
 
-  NetStuff->curl = curl_easy_init();
+  // NetStuff->curl = curl_easy_init();
 
-  curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEFILE, "");
+  // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEFILE, "");
 
   // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEFILE, MyCookieFileName);
   // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEJAR, MyCookieFileName);
@@ -219,62 +218,62 @@ void CobblerQuitNet() {
       NET_UnrefAddress(NetStuff->Clients[i].RealAddress);
   }
 
-  if (NetStuff->curl) curl_easy_cleanup(NetStuff->curl);
-  curl_global_cleanup();
+  // if (NetStuff->curl) curl_easy_cleanup(NetStuff->curl);
+  // curl_global_cleanup();
 
-  if (curlpostfield != nullptr) delete (curlpostfield);
+  // if (curlpostfield != nullptr) delete (curlpostfield);
 
   delete (NetStuff);
   NET_Quit();
 }
 
-bool CobblerSendCurlData() {
-  curl_easy_setopt(
-      NetStuff->curl, CURLOPT_URL,
-      ("http://" + curlpostfield->websiteaddr + "/gamedata").c_str());
-  std::ostringstream stream;
-  curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA, &stream);
-  std::string tempstr = curlpostfield->ToField();
-  curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, tempstr.c_str());
+// bool CobblerSendCurlData() {
+//   curl_easy_setopt(
+//       NetStuff->curl, CURLOPT_URL,
+//       ("http://" + curlpostfield->websiteaddr + "/gamedata").c_str());
+//   std::ostringstream stream;
+//   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA, &stream);
+//   std::string tempstr = curlpostfield->ToField();
+//   curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, tempstr.c_str());
 
-  NetStuff->res = curl_easy_perform(NetStuff->curl);
+//   NetStuff->res = curl_easy_perform(NetStuff->curl);
 
-  if (NetStuff->res != CURLE_OK) {
-    SDL_Log("curl_easy_perform() failed: %s\n",
-            curl_easy_strerror(NetStuff->res));
-    curlpostfield->hasdata = false;
-    return false;
-  }
-  curlpostfield->reset();
-  bool result = (stream.str() == "Success");
-  if (result)
-    SDL_Log("CurlData Sent Successfully");
-  else
-    SDL_Log("CurlData Send Failed");
-  return result;
-}
+//   if (NetStuff->res != CURLE_OK) {
+//     SDL_Log("curl_easy_perform() failed: %s\n",
+//             curl_easy_strerror(NetStuff->res));
+//     curlpostfield->hasdata = false;
+//     return false;
+//   }
+//   curlpostfield->reset();
+//   bool result = (stream.str() == "Success");
+//   if (result)
+//     SDL_Log("CurlData Sent Successfully");
+//   else
+//     SDL_Log("CurlData Send Failed");
+//   return result;
+// }
 
-bool CobblerCurlLogin() {
-  SDL_Log("logging in...");
-  std::ostringstream stream;
-  curl_easy_setopt(NetStuff->curl, CURLOPT_NOPROGRESS, 1L);
-  curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEFUNCTION, CobblerCurlCallback);
-  curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA, &stream);
-  curl_easy_setopt(NetStuff->curl, CURLOPT_URL,
-                   ("http://" + curlpostfield->websiteaddr + "/login").c_str());
-  curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, curlloginstring.c_str());
+// bool CobblerCurlLogin() {
+//   SDL_Log("logging in...");
+//   std::ostringstream stream;
+//   curl_easy_setopt(NetStuff->curl, CURLOPT_NOPROGRESS, 1L);
+//   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEFUNCTION, CobblerCurlCallback);
+//   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA, &stream);
+//   curl_easy_setopt(NetStuff->curl, CURLOPT_URL,
+//                    ("http://" + curlpostfield->websiteaddr + "/login").c_str());
+//   curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, curlloginstring.c_str());
 
-  NetStuff->res = curl_easy_perform(NetStuff->curl);
+//   NetStuff->res = curl_easy_perform(NetStuff->curl);
 
-  if (NetStuff->res != CURLE_OK) {
-    SDL_Log("curl_easy_perform() failed: %s\n",
-            curl_easy_strerror(NetStuff->res));
-    return false;
-  }
+//   if (NetStuff->res != CURLE_OK) {
+//     SDL_Log("curl_easy_perform() failed: %s\n",
+//             curl_easy_strerror(NetStuff->res));
+//     return false;
+//   }
 
-  bool result = (stream.str() == "Success");
-  if (result) {
-    curlloginstring.clear();
-  }
-  return result;
-}
+//   bool result = (stream.str() == "Success");
+//   if (result) {
+//     curlloginstring.clear();
+//   }
+//   return result;
+// }

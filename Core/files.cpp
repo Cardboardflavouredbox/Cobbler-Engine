@@ -287,8 +287,8 @@ bool initargs(std::vector<std::string> args) {
   Settings->fov = 90;
 
   // Create curlpostfield for website.
-  curlpostfield = new PostField();
-  if (curlpostfield == nullptr) return false;
+  // curlpostfield = new PostField();
+  // if (curlpostfield == nullptr) return false;
 
   // Load Settings automatically.
   LoadSettings();
@@ -359,41 +359,41 @@ bool initargs(std::vector<std::string> args) {
           }
           Global->GameName = args[i];
           break;
-        case SetLogin: {
-          std::string password;
-          // move to next arguement
-          i++;
-          // checks if next arguement exists.
-          if (i >= args.size()) {
-            SDL_Log("Wrong Arguements!(username)");
-            return false;
-          }
-          // sets username for the website.
-          curlpostfield->username = args[i];
-          // move to next arguement
-          i++;
-          // checks if next arguement exists.
-          if (i >= args.size()) {
-            SDL_Log("Wrong Arguements!(password)");
-            return false;
-          }
-          // sets password for the website.
-          password = args[i];
+        // case SetLogin: {
+        //   std::string password;
+        //   // move to next arguement
+        //   i++;
+        //   // checks if next arguement exists.
+        //   if (i >= args.size()) {
+        //     SDL_Log("Wrong Arguements!(username)");
+        //     return false;
+        //   }
+        //   // sets username for the website.
+        //   curlpostfield->username = args[i];
+        //   // move to next arguement
+        //   i++;
+        //   // checks if next arguement exists.
+        //   if (i >= args.size()) {
+        //     SDL_Log("Wrong Arguements!(password)");
+        //     return false;
+        //   }
+        //   // sets password for the website.
+        //   password = args[i];
 
-          // set string that you will send as post field for website.
-          curlloginstring = "IsGame=True&username=" + curlpostfield->username +
-                            "&password=" + password;
-          break;
-        }
-        case SetWebsite:
-          // you probably know what this does at this point.
-          i++;
-          if (i >= args.size()) {
-            SDL_Log("Wrong Arguements!(Website)");
-            return false;
-          }
-          curlpostfield->websiteaddr = args[i];
-          break;
+        //   // set string that you will send as post field for website.
+        //   curlloginstring = "IsGame=True&username=" + curlpostfield->username +
+        //                     "&password=" + password;
+        //   break;
+        // }
+        // case SetWebsite:
+        //   // you probably know what this does at this point.
+        //   i++;
+        //   if (i >= args.size()) {
+        //     SDL_Log("Wrong Arguements!(Website)");
+        //     return false;
+        //   }
+        //   curlpostfield->websiteaddr = args[i];
+        //   break;
         case SetServerIP: {
           // If you are a server return false
           if (IsServer) {
@@ -514,16 +514,16 @@ bool init() {
     return false;
   }
   SDL_Log("Net Loaded");
-  if (curlloginstring != "") {
-    // try to log in.
-    if (!CobblerCurlLogin()) {
-      SDL_Log("Login failed");
-      Global->LoggedIn = false;
-    } else {
-      SDL_Log("Login successful");
-      Global->LoggedIn = true;
-    }
-  }
+  // if (curlloginstring != "") {
+  //   // try to log in.
+  //   if (!CobblerCurlLogin()) {
+  //     SDL_Log("Login failed");
+  //     Global->LoggedIn = false;
+  //   } else {
+  //     SDL_Log("Login successful");
+  //     Global->LoggedIn = true;
+  //   }
+  // }
 
   // Server Setup.
   if (IsServer) {
