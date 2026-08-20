@@ -265,10 +265,10 @@ enum argenums {
   SetFOV,                 // Sets field of view.
   SetVsync,               // Sets Vsync
   SetGame,                // Sets the game.
-  SetLogin,               // Login for website. Work In Progress.
-  SetWebsite,             // The actual IP of the website.
-  SetServerIP,            // Set the IP of the server as a client.
-  SetIsServer             // Set if you are the server or not.
+  // SetLogin,               // Login for website. Work In Progress.
+  // SetWebsite,             // The actual IP of the website.
+  SetServerIP,  // Set the IP of the server as a client.
+  SetIsServer   // Set if you are the server or not.
 };
 
 // arguements processing.
@@ -308,8 +308,8 @@ bool initargs(std::vector<std::string> args) {
       {"-fov", SetFOV},
       {"-vsync", SetVsync},
       {"-game", SetGame},
-      {"-login", SetLogin},
-      {"-website", SetWebsite},
+      // {"-login", SetLogin},
+      // {"-website", SetWebsite},
       {"-IP", SetServerIP},
       {"-ip", SetServerIP},
       {"-ServerIP", SetServerIP},
@@ -381,7 +381,8 @@ bool initargs(std::vector<std::string> args) {
         //   password = args[i];
 
         //   // set string that you will send as post field for website.
-        //   curlloginstring = "IsGame=True&username=" + curlpostfield->username +
+        //   curlloginstring = "IsGame=True&username=" + curlpostfield->username
+        //   +
         //                     "&password=" + password;
         //   break;
         // }

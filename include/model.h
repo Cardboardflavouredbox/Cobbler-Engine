@@ -25,6 +25,7 @@ struct ModelGroupClass {
     struct Pose {
       glm::vec3 pos, scale;
       glm::quat rot;
+      bool isvisible = true;
     };
     Pose restpose;
     std::unordered_map<std::string, std::map<unsigned int, Pose>> Poses;
