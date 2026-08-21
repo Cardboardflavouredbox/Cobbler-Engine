@@ -33,9 +33,7 @@ unsigned int ServerPort;
 // Settings Save function
 void SaveSettings() {
   // get location of settings file
-  std::string location =
-      strcat(SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str()),
-             "/Settings.txt");
+  std::string location = strcat(Global->pref_path, "/Settings.txt");
 
   FILE* file = fopen(location.c_str(), "w");
   if (file == NULL) {
@@ -55,9 +53,7 @@ void SaveSettings() {
 // Settings Load function
 void LoadSettings() {
   // get location of settings file
-  std::string location =
-      strcat(SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str()),
-             "/Settings.txt");
+  std::string location = strcat(Global->pref_path, "/Settings.txt");
 
   FILE* file = fopen(location.c_str(), "r");
   if (file == NULL) {
@@ -283,6 +279,11 @@ bool initargs(std::vector<std::string> args) {
   if (LocalInputs == nullptr) return false;
   P1PlayerInputs = new playerinputs();
   if (P1PlayerInputs == nullptr) return false;
+
+  Global->pref_path =
+      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
+
+  SDL_Log("%s", SDL_GetError());
 
   Settings->fov = 90;
 
@@ -916,6 +917,8 @@ void quit() {
   for (auto& i : Global->Entities) {
     delete (i);
   }
+
+  SDL_free(Global->pref_path);
 
   // free network stuff.
   CobblerQuitNet();

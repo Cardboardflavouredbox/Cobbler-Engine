@@ -97,6 +97,8 @@ struct GlobalClass {
   std::unordered_map<Uint64, playerinputs> PlayerInputList;
 
   float Onlinesendwait = 0.05f;
+
+  char* pref_path;
 };
 
 struct EditorClass {

@@ -18,7 +18,6 @@
 int main(int argc, char* argv[]) {
   std::string basepath = SDL_GetBasePath();
   std::vector<std::string> args;
-  argc--;
   args.resize(argc);
   for (int i = 0; i < argc; i++)
     args[i] = argv[i];  // get arguements from command line
