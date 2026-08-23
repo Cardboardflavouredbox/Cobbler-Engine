@@ -20,8 +20,13 @@ def actionthing(action, f):
             if channel_bag and channel_bag.fcurves:
                 for fcurve in channel_bag.fcurves:
                     if fcurve.data_path == 'hide_viewport':
-                        found = [o for o in bpy.data.objects if o.animation_data and o.animation_data.action is fcurve.id_data]
-                        f.write(f"FCV {slot.name_display}\n")
+                        tempstr = slot.name_display
+                        if tempstr.endswith(".001"):
+                            tempstr = tempstr[:-4]
+                        pathstr = ""
+                        if action.override_library:
+                            pathstr=bpy.path.display_name_from_filepath(action.override_library.reference.library.filepath)+"/"
+                        f.write(f"FCV {pathstr}{tempstr}\n")
                     else:
                         f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
                     for keyframe in fcurve.keyframe_points:

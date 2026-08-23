@@ -752,7 +752,8 @@ bool init() {
                 fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
                 modelgroup.modelvisibility[posename].name = name;
-                modelgroup.modelvisibility[posename].value[index2] = temp;
+                modelgroup.modelvisibility[posename].value[index2] =
+                    (temp < 0.5);
               }
             } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
               char name[64], thing[64];
@@ -802,6 +803,7 @@ bool init() {
                 Global->Modelmap[namestr] = model;
 
                 modelgroup.Models.push_back(namestr);
+                SDL_Log("%s", namestr.c_str());
               }
               char objname[128];
               fscanf(file, "%s", objname);
@@ -844,6 +846,7 @@ bool init() {
           }
           fclose(file);
           Global->Modelmap[namestr] = model;
+          SDL_Log("%s", namestr.c_str());
           modelgroup.Models.push_back(namestr);
           ModelGroupMap[tempstr] = modelgroup;
         } else if (entry.is_regular_file() &&
