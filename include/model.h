@@ -25,11 +25,16 @@ struct ModelGroupClass {
     struct Pose {
       glm::vec3 pos, scale;
       glm::quat rot;
-      bool isvisible = true;
     };
     Pose restpose;
     std::unordered_map<std::string, std::map<unsigned int, Pose>> Poses;
   };
+  struct visibilitything {
+    std::string name;
+    std::map<unsigned int, bool> value;
+    bool result = true;
+  };
+  std::unordered_map<std::string, visibilitything> modelvisibility;
   std::unordered_map<std::string, Bone> Bonemap;
   std::unordered_map<std::string, std::array<unsigned int, 2>> anim;
 };

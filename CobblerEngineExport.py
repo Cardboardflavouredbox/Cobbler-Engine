@@ -1,6 +1,5 @@
 import bpy
 
-
 def actionthing(action, f):
     if action and action.layers:
         first_layer = action.layers[0]
@@ -20,7 +19,11 @@ def actionthing(action, f):
             
             if channel_bag and channel_bag.fcurves:
                 for fcurve in channel_bag.fcurves:
-                    f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
+                    if fcurve.data_path == 'hide_viewport':
+                        found = [o for o in bpy.data.objects if o.animation_data and o.animation_data.action is fcurve.id_data]
+                        f.write(f"FCV {slot.name_display}\n")
+                    else:
+                        f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
                     for keyframe in fcurve.keyframe_points:
                         frame_number = keyframe.co[0]
                         curve_value = keyframe.co[1]

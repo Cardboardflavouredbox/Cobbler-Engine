@@ -657,9 +657,11 @@ bool init() {
   Global->windowscale = SDL_GetWindowDisplayScale(Global->window);
 
   // set perspective matrix.
+  double fovy =
+      2.0 * std::atan(std::tan(glm::radians((double)Settings->fov) * 0.5) /
+                      (Settings->resolutionx / (double)Settings->resolutiony));
   Global->perspectivematrix = glm::perspective(
-      glm::radians((double)Settings->fov),
-      Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
+      fovy, Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
 
   Camera = new CameraClass();
 
@@ -739,6 +741,19 @@ bool init() {
               modelgroup.Bonemap[name].tail = tail;
               modelgroup.Bonemap[name].restpose = temppose;
 
+            } else if (strcmp(lineHeader, "FCV") == 0) {  // object visibility
+              char name[64];
+              char newlinecheck = 'w';
+              fscanf(file, "%s\n", name);
+              modelgroup.modelvisibility.try_emplace(posename);
+              while (newlinecheck != '\n') {
+                unsigned int index2;
+                float temp;
+                fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+
+                modelgroup.modelvisibility[posename].name = name;
+                modelgroup.modelvisibility[posename].value[index2] = temp;
+              }
             } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
               char name[64], thing[64];
               int index;
@@ -781,7 +796,6 @@ bool init() {
             else if (strcmp(lineHeader, "L") == 0) {
               char objname[128];
               fscanf(file, "%s", objname);
-
               modelgroup.Models.push_back(objname);
             } else if (strcmp(lineHeader, "O") == 0) {  // Object.
               if (namestr != tempstr) {
