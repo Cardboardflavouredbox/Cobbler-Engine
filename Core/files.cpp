@@ -186,7 +186,7 @@ bool setRenderer() {
 
       // set texture map
       std::unordered_map<std::string, GLuint> tempmap;
-      tempmap.reserve(32);
+      tempmap.reserve(64);
 
       Global->GLstuff->textures = tempmap;
 
@@ -202,7 +202,7 @@ bool setRenderer() {
       SDL_Surface* surface;
       std::string basepath = SDL_GetBasePath(), tempstr = basepath;
       std::unordered_map<std::string, SDL_Surface*> tempvector;
-      tempvector.reserve(32);
+      tempvector.reserve(64);
 
       Global->SRstuff = new GlobalClass::SoftwareRenderer();
 
@@ -235,7 +235,7 @@ bool setRenderer() {
   for (const auto& entry : std::filesystem::directory_iterator(
            basepath + Global->GameName + "/textures/")) {
     if (entry.is_regular_file()) {
-      loadBMP(entry.path());
+      if (!loadBMP(entry.path())) SDL_Log("Texture load fail!");
     }
   }
 
@@ -857,7 +857,7 @@ bool init() {
           SDL_Log("%s", namestr.c_str());
         } else if (entry.is_regular_file() &&
                    entry.path().extension() == ".bmp") {  // Load Textures.
-          loadBMP(entry.path());
+          if (!loadBMP(entry.path())) SDL_Log("Texture load fail!");
         }
       }
     }

@@ -349,19 +349,15 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
     for (auto const& action : modeltrans->actions) {
       for (auto const& visiblething :
            modelgroup->modelvisibility[action.name]) {
-        bool result = true, check = false;
+        bool result = modelgroup->modelvisibilityresult[visiblething.name];
         for (auto const& [key, val] : visiblething.value) {
-          check = true;
-          if (key < action.frame) {
+          if (key > action.frame) {
             break;
           } else {
             result = val;
           }
-          if (check) {
-            modelgroup->modelvisibilityresult[visiblething.name] = result;
-            // SDL_Log("%s", visiblething.name.c_str());
-          }
         }
+        modelgroup->modelvisibilityresult[visiblething.name] = result;
       }
     }
 
@@ -371,6 +367,8 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
           if (modelgroup->modelvisibilityresult[modelgroup->Models[a]]) {
             GlobalClass::Model* model =
                 &Global->Modelmap[modelgroup->Models[a]];
+            // SDL_Log("%s %d", modelgroup->Models[a].c_str(),
+            //         model->faces.size());
             for (int j = 0; j < model->faces.size(); j++) {
               glEnable(GL_TEXTURE_2D);
               glBindTexture(GL_TEXTURE_2D,
