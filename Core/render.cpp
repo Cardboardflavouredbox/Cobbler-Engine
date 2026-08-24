@@ -224,30 +224,36 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
     // SDL_Log("%s", tempstr.c_str());
     ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
 
-    glm::vec3 pos = bone->Poses[actionname].begin()->second.pos,
-              scale = bone->Poses[actionname].begin()->second.scale;
-    glm::quat rot = bone->Poses[actionname].begin()->second.rot;
-    unsigned int framebefore = modelgroup->anim[actionname][0];
+    glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
+    glm::quat rot = glm::quat(1, 0, 0, 0);
+    if (bone->Poses.empty()) {
+      // SDL_Log("no poses lol");
+    } else {
+      pos = bone->Poses[actionname].begin()->second.pos;
+      scale = bone->Poses[actionname].begin()->second.scale;
+      rot = bone->Poses[actionname].begin()->second.rot;
+      unsigned int framebefore = modelgroup->anim[actionname][0];
 
-    for (auto const& [key, val] : bone->Poses[actionname]) {
-      if (frame == key) {
-        pos = val.pos;
-        rot = val.rot;
-        scale = val.scale;
-        break;
-      } else if (frame > key) {
-        pos = val.pos;
-        rot = val.rot;
-        scale = val.scale;
-        framebefore = key;
-      } else {
-        float a = ((float)frame - (float)framebefore) /
-                  ((float)key - (float)framebefore);
-        // lerp values.
-        rot = glm::mix(rot, val.rot, a);
-        pos = glm::mix(pos, val.pos, a);
-        scale = glm::mix(scale, val.scale, a);
-        break;
+      for (auto const& [key, val] : bone->Poses[actionname]) {
+        if (frame == key) {
+          pos = val.pos;
+          rot = val.rot;
+          scale = val.scale;
+          break;
+        } else if (frame > key) {
+          pos = val.pos;
+          rot = val.rot;
+          scale = val.scale;
+          framebefore = key;
+        } else {
+          float a = ((float)frame - (float)framebefore) /
+                    ((float)key - (float)framebefore);
+          // lerp values.
+          rot = glm::mix(rot, val.rot, a);
+          pos = glm::mix(pos, val.pos, a);
+          scale = glm::mix(scale, val.scale, a);
+          break;
+        }
       }
     }
 
@@ -390,6 +396,8 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
                                    !std::isnan(temp.first.y) &&
                                    !std::isnan(temp.first.z))) {
                     pos = temp.first;
+                    // SDL_Log("%s %f %f %f", modelgroup->Models[a].c_str(),
+                    //         temp.first.x, temp.first.y, temp.first.z);
                     break;
                   }
                   cnt--;
