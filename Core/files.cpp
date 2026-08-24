@@ -751,9 +751,10 @@ bool init() {
                 float temp;
                 fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
-                modelgroup.modelvisibility[posename].name = name;
-                modelgroup.modelvisibility[posename].value[index2] =
-                    (temp < 0.5);
+                ModelGroupClass::visibilitything tempvisibility;
+                tempvisibility.name = name;
+                tempvisibility.value[index2] = (temp < 0.5f);
+                modelgroup.modelvisibility[posename].push_back(tempvisibility);
               }
             } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
               char name[64], thing[64];
@@ -798,11 +799,14 @@ bool init() {
               char objname[128];
               fscanf(file, "%s", objname);
               modelgroup.Models.push_back(objname);
+              modelgroup.modelvisibilityresult[objname] = true;
+              SDL_Log("%s", objname);
             } else if (strcmp(lineHeader, "O") == 0) {  // Object.
               if (namestr != tempstr) {
                 Global->Modelmap[namestr] = model;
 
                 modelgroup.Models.push_back(namestr);
+                modelgroup.modelvisibilityresult[namestr] = true;
                 SDL_Log("%s", namestr.c_str());
               }
               char objname[128];
@@ -849,6 +853,8 @@ bool init() {
           SDL_Log("%s", namestr.c_str());
           modelgroup.Models.push_back(namestr);
           ModelGroupMap[tempstr] = modelgroup;
+          modelgroup.modelvisibilityresult[namestr] = true;
+          SDL_Log("%s", namestr.c_str());
         } else if (entry.is_regular_file() &&
                    entry.path().extension() == ".bmp") {  // Load Textures.
           loadBMP(entry.path());

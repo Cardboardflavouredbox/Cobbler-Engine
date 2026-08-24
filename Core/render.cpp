@@ -347,29 +347,28 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
     }
 
     for (auto const& action : modeltrans->actions) {
-      bool result = true, check = false;
-
-      for (auto const& [key, val] :
-           modelgroup->modelvisibility[action.name].value) {
-        check = true;
-        if (key < action.frame) {
-          break;
-        } else {
-          result = val;
+      for (auto const& visiblething :
+           modelgroup->modelvisibility[action.name]) {
+        bool result = true, check = false;
+        for (auto const& [key, val] : visiblething.value) {
+          check = true;
+          if (key < action.frame) {
+            break;
+          } else {
+            result = val;
+          }
+          if (check) {
+            modelgroup->modelvisibilityresult[visiblething.name] = result;
+            // SDL_Log("%s", visiblething.name.c_str());
+          }
         }
-      }
-
-      if (check) {
-        modelgroup
-            ->modelvisibility[modelgroup->modelvisibility[action.name].name]
-            .result = result;
       }
     }
 
     switch (Settings->graphicsmode) {
       case 1: {  // opengl
         for (int a = 0; a < modelgroup->Models.size(); a++) {
-          if (modelgroup->modelvisibility[modelgroup->Models[a]].result) {
+          if (modelgroup->modelvisibilityresult[modelgroup->Models[a]]) {
             GlobalClass::Model* model =
                 &Global->Modelmap[modelgroup->Models[a]];
             for (int j = 0; j < model->faces.size(); j++) {

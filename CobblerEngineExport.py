@@ -1,7 +1,15 @@
 import bpy
 
+def actionset(action):
+    for ob in bpy.data.objects:
+        if not ob.animation_data: continue
+
+        # Set the active action
+        ob.animation_data.action = action
+
 def actionthing(action, f):
     if action and action.layers:
+        actionset(action)
         first_layer = action.layers[0]
         first_strip = first_layer.strips[0]
         
@@ -20,13 +28,10 @@ def actionthing(action, f):
             if channel_bag and channel_bag.fcurves:
                 for fcurve in channel_bag.fcurves:
                     if fcurve.data_path == 'hide_viewport':
-                        tempstr = slot.name_display
-                        if tempstr.endswith(".001"):
-                            tempstr = tempstr[:-4]
-                        pathstr = ""
-                        if action.override_library:
-                            pathstr=bpy.path.display_name_from_filepath(action.override_library.reference.library.filepath)+"/"
-                        f.write(f"FCV {pathstr}{tempstr}\n")
+                        templist = slot.users()
+                        
+                        for i in templist:
+                            f.write(f"FCV {bpy.path.display_name_from_filepath(i.override_library.reference.library.filepath)}/{i.override_library.reference.name}\n")
                     else:
                         f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
                     for keyframe in fcurve.keyframe_points:
