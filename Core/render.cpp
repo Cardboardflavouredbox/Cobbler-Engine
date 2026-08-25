@@ -352,18 +352,26 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
       lookdir.y = 1;
     }
 
-    for (auto const& action : modeltrans->actions) {
-      for (auto const& visiblething :
-           modelgroup->modelvisibility[action.name]) {
-        bool result = modelgroup->modelvisibilityresult[visiblething.name];
-        for (auto const& [key, val] : visiblething.value) {
-          if (key > action.frame) {
-            break;
-          } else {
-            result = val;
-          }
+    if (modeltrans->actions.empty()) {
+      if (modelgroup->modelvisibilityresult.empty()) {
+        for (auto const& visiblething : modelgroup->Models) {
+          modelgroup->modelvisibilityresult[visiblething] = true;
         }
-        modelgroup->modelvisibilityresult[visiblething.name] = result;
+      }
+    } else {
+      for (auto const& action : modeltrans->actions) {
+        for (auto const& visiblething :
+             modelgroup->modelvisibility[action.name]) {
+          bool result = modelgroup->modelvisibilityresult[visiblething.name];
+          for (auto const& [key, val] : visiblething.value) {
+            if (key > action.frame) {
+              break;
+            } else {
+              result = val;
+            }
+          }
+          modelgroup->modelvisibilityresult[visiblething.name] = result;
+        }
       }
     }
 
@@ -384,6 +392,9 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
               for (int k = 2; k >= 0; k--) {
                 glm::vec3 pos;
                 int cnt = modeltrans->actions.size() - 1;
+                if (cnt <= -1) {
+                  pos = model->points[model->faces[j].point[k]].pos;
+                }
                 while (cnt > -1) {
                   std::pair<glm::vec3, bool> temp;
 
