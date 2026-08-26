@@ -23,5 +23,10 @@ LIB_API extern playerinputs* P1PlayerInputs;
 LIB_API extern Entity* LocalPlayer;
 LIB_API extern Uint64 lastTime;
 LIB_API extern Uint64 currentTime;
-LIB_API extern std::unordered_map<std::string, Entity* (*)()> SpawnEntities;
+LIB_API extern std::unordered_map<std::string, Entity* (*)(unsigned int)>
+    SpawnEntities;
 LIB_API extern std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
+
+extern "C" {
+LIB_API unsigned int EntityMapEmptyIndex();
+}

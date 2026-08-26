@@ -20,6 +20,8 @@ extern "C" {
 LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
 struct Entity {
+  unsigned int EntityIndex;
+
   int State;
   // float Stateanimend = 0, Stateanim = 0;
 
@@ -33,7 +35,7 @@ struct Entity {
   float gravity = 9.81f * 6.f;
   glm::vec3 hitbox[2];
   float hitboxradius;
-  bool IsGrounded;
+  bool IsGrounded, Collided = false;
   Modeltransform* Modelthing;
   LIB_API void renderbillboard();
   LIB_API void rendermodelgroup();

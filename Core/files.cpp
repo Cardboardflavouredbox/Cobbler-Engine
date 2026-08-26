@@ -665,22 +665,25 @@ bool init() {
 
   Camera = new CameraClass();
 
-  LocalPlayer = SpawnEntities[Global->playerclass]();
+  LocalPlayer = SpawnEntities[Global->playerclass](0);
   LocalPlayer->position.z = 8;
   LocalPlayer->Modelthing->visible = false;
   LocalPlayer->teamindex = -1;
+  LocalPlayer->EntityIndex = 0;
 
   // push LocalPlayer Entity to Entities vector. LocalPlayer Entity will
   // probably always be in index zero, but that doesn't matter since there's a
   // seperate LocalPlayer pointer.
-  Global->Entities.push_back(LocalPlayer);
+  Global->Entities[0] = LocalPlayer;
 
   // Spawns all the npcs in the map.
   for (int i = 0; i < tempmapdata.Entities.size(); i++) {
     // SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
     if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
-      Global->Entities.push_back(SpawnEntities[tempmapdata.Entities[i].name]());
-      Global->Entities.back()->position = tempmapdata.Entities[i].pos;
+      unsigned int index = EntityMapEmptyIndex();
+      Global->Entities[index] =
+          SpawnEntities[tempmapdata.Entities[i].name](index);
+      Global->Entities[index]->position = tempmapdata.Entities[i].pos;
     }
   }
 
@@ -938,7 +941,7 @@ void quit() {
 
   // free npc Entities and LocalPlayer.
   for (auto& i : Global->Entities) {
-    delete (i);
+    delete (i.second);
   }
 
   SDL_free(Global->pref_path);

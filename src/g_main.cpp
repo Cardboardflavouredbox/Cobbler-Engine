@@ -43,7 +43,8 @@ int main(int argc, char* argv[]) {
                                             "/entities/" + entry.first + "/" +
                                             entry.first,
                                         dylib::decorations::os_default()));
-    entry.second = entitylibs.back().get_function<Entity*()>("SpawnEntity");
+    entry.second =
+        entitylibs.back().get_function<Entity*(unsigned int)>("SpawnEntity");
   }
 
   dylib::library UIlib(basepath + "/" + Global->GameName + "/bin/CobblerGameUI",
@@ -76,7 +77,7 @@ int main(int argc, char* argv[]) {
                                        dylib::decorations::os_default()));
     entry.second = classlibs.back().get_function<void()>("Update");
     SpawnEntities[entry.first] =
-        classlibs.back().get_function<Entity*()>("SpawnEntity");
+        classlibs.back().get_function<Entity*(unsigned int)>("SpawnEntity");
     if (!classlibs.back().get_function<bool()>("UIsetup")()) return -1;
     classlibs.back().get_function<void()>("Init")();
   }

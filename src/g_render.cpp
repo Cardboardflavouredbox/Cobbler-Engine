@@ -195,9 +195,8 @@ void render2DUI() {
 }
 
 void renderEntity() {
-  for (int i = 0; i < Global->Entities.size(); i++) {
-    if (Global->Entities[i]->Modelthing != nullptr)
-      Global->Entities[i]->rendermodelgroup();
+  for (auto& i : Global->Entities) {
+    if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();
   }
   for (const auto& i : Global->PlayerEntity) {
     if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();

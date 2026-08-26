@@ -4,6 +4,8 @@
 #include <glad/glad.h>
 
 #include <glm/glm.hpp>
+#include <map>
+#include <queue>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -78,8 +80,10 @@ struct GlobalClass {
 
   std::vector<MapPoint> Points;
   std::vector<Mapface> mapfaces;
-  std::vector<Entity*> Entities;
+  std::map<unsigned int, Entity*> Entities;
   std::vector<Modeltransform> Models;
+
+  std::queue<unsigned int> EntitydeleteQueue;
 
   std::unordered_map<std::string, std::vector<UIthing*>> UImap;
   std::vector<std::string> UIlist = {"default"};

@@ -146,7 +146,7 @@ void update() {
             Global->UserIDs.insert(i);
             CobblerAddIP(tempdata->IP, tempdata->PORT, i);
 
-            Global->PlayerEntity[i] = SpawnEntities["Gardner"]();
+            Global->PlayerEntity[i] = SpawnEntities["Gardner"](i);
           }
         } else if (tempdata->name == "PlayerList") {
           std::set<Uint64> tempset;
@@ -158,7 +158,7 @@ void update() {
               if (key != UserID &&
                   Global->UserIDs.find(key) == Global->UserIDs.end()) {
                 Global->UserIDs.insert(key);
-                Global->PlayerEntity[key] = SpawnEntities["Gardner"]();
+                Global->PlayerEntity[key] = SpawnEntities["Gardner"](key);
               }
             }
           }
@@ -238,6 +238,13 @@ void update() {
   }
 
   componentsupdatelate();
+
+  while (!Global->EntitydeleteQueue.empty()) {
+    unsigned int index = Global->EntitydeleteQueue.front();
+    Global->EntitydeleteQueue.pop();
+    delete (Global->Entities[index]);
+    Global->Entities.erase(index);
+  }
 
   CameraUpdate();
 

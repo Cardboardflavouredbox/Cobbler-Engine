@@ -67,6 +67,28 @@ bool RayTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
 raycheckresult capsuleraycheck(glm::vec3 a0, glm::vec3 a1, glm::vec3 b0,
                                glm::vec3 b1) {
   raycheckresult result;
+
+  if (a0 == a1) {
+    float LineLength = glm::distance(b0, b1);
+    glm::vec3 Vector = a0 - b0, LineDirection = (b1 - b0) / LineLength;
+
+    // Project Vector to LineDirection to get the distance of point from a
+    float Distance = glm::dot(Vector, LineDirection);
+
+    result.A = a0;
+    if (Distance <= 0)
+      result.B = b0;
+    else if (Distance >= LineLength)
+      result.B = b1;
+    else {
+      result.B = b0 + LineDirection * Distance;
+    }
+
+    result.dist = glm::distance(result.A, result.B);
+
+    return result;
+  }
+
   // Calculate denomitator
   glm::vec3 A = a1 - a0;
   glm::vec3 B = b1 - b0;
@@ -276,8 +298,8 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
       }
     }
   }
-  for (int i = 0; i < Global->Entities.size(); i++) {
-    Entity* tempentity = Global->Entities[i];
+  for (auto& i : Global->Entities) {
+    Entity* tempentity = i.second;
     if (tempentity->teamindex != teamindex) {
       raycheckresult temp =
           capsuleraycheck(hitbox[0] + checkposition, hitbox[1] + checkposition,
@@ -362,19 +384,23 @@ void EntityMove(Entity* tempentity) {
 
     // didn't collide with anything while moving on x and y axis.
     if (normal == glm::vec3(0)) {
+      tempentity->Collided = false;
       moveresult.x += tempmove.x / (float)temp;
       moveresult.y += tempmove.y / (float)temp;
       // go down a little bit just in case you're on a downwards slope.
-      for (int j = 1; j <= 16; j++) {
-        float disttemp;
-        glm::vec3 tempnormal = movecollisioncheck(
-            tempentity->hitbox, tempposition - glm::vec3(0, 0, j * dist / 16.f),
-            tempentity->hitboxradius, tempentity->teamindex, disttemp);
-        if (tempnormal != glm::vec3(0)) {
-          disttemp -= tempentity->hitboxradius;
-          moveresult.z -= j * dist / 16.f + disttemp;
-          tempposition.z -= j * dist / 16.f + disttemp;
-          break;
+      if (tempentity->gravity != 0) {
+        for (int j = 1; j <= 16; j++) {
+          float disttemp;
+          glm::vec3 tempnormal = movecollisioncheck(
+              tempentity->hitbox,
+              tempposition - glm::vec3(0, 0, j * dist / 16.f),
+              tempentity->hitboxradius, tempentity->teamindex, disttemp);
+          if (tempnormal != glm::vec3(0)) {
+            disttemp -= tempentity->hitboxradius;
+            moveresult.z -= j * dist / 16.f + disttemp;
+            tempposition.z -= j * dist / 16.f + disttemp;
+            break;
+          }
         }
       }
     }
@@ -382,24 +408,28 @@ void EntityMove(Entity* tempentity) {
     else {
       bool check = false;
       float disttempcache = 0;
-      // try moving up just in case it's an upwards slope.
-      for (int j = 1; j <= 16; j++) {
-        float disttemp;
-        glm::vec3 tempnormal = movecollisioncheck(
-            tempentity->hitbox, tempposition + glm::vec3(0, 0, j * dist / 16.f),
-            tempentity->hitboxradius, tempentity->teamindex, disttemp);
-        if (tempnormal == glm::vec3(0)) {
-          if (disttempcache != 0)
-            disttempcache = tempentity->hitboxradius - disttempcache;
-          moveresult.x += tempmove.x / (float)temp;
-          moveresult.y += tempmove.y / (float)temp;
-          moveresult.z += (j - 1) * dist / 16.f - disttempcache;
-          tempposition.z += (j - 1) * dist / 16.f - disttempcache;
-          // dist -= (j-1) * dist / 16.f;
-          check = true;
-          break;
+      tempentity->Collided = true;
+      if (tempentity->gravity != 0) {
+        // try moving up just in case it's an upwards slope.
+        for (int j = 1; j <= 16; j++) {
+          float disttemp;
+          glm::vec3 tempnormal = movecollisioncheck(
+              tempentity->hitbox,
+              tempposition + glm::vec3(0, 0, j * dist / 16.f),
+              tempentity->hitboxradius, tempentity->teamindex, disttemp);
+          if (tempnormal == glm::vec3(0)) {
+            if (disttempcache != 0)
+              disttempcache = tempentity->hitboxradius - disttempcache;
+            moveresult.x += tempmove.x / (float)temp;
+            moveresult.y += tempmove.y / (float)temp;
+            moveresult.z += (j - 1) * dist / 16.f - disttempcache;
+            tempposition.z += (j - 1) * dist / 16.f - disttempcache;
+            // dist -= (j-1) * dist / 16.f;
+            check = true;
+            break;
+          }
+          disttempcache = disttemp;
         }
-        disttempcache = disttemp;
       }
       if (!check) {
         moveresult.x += tempmove.x / (float)temp;
@@ -494,4 +524,6 @@ void EntityMove(Entity* tempentity) {
 
   tempentity->velocityvec3.x = tempvec.x;
   tempentity->velocityvec3.y = tempvec.y;
+
+  if (tempentity->IsGrounded) tempentity->Collided = true;
 }

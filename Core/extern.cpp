@@ -28,7 +28,7 @@ Uint64 lastTime;
 // deltatime calculation variable
 Uint64 currentTime = SDL_GetPerformanceCounter();
 // Entity Spawn function map. Loaded from dynamic libraries.
-std::unordered_map<std::string, Entity* (*)()> SpawnEntities;
+std::unordered_map<std::string, Entity* (*)(unsigned int)> SpawnEntities;
 // Player Class Update function map. Loaded from dynamic libraries.
 std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
 // pointer to Freetype variables. (y'know for the fonts)
@@ -37,3 +37,15 @@ FreetypeClass* Freetypething;
 std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 // pointer to Camera.
 CameraClass* Camera;
+
+unsigned int EntityMapEmptyIndex() {
+  if (!Global->Entities.contains(0)) {
+    return 0;
+  }
+  unsigned int i = 1;
+  while (i != 0) {
+    if (!Global->Entities.contains(i)) return i;
+    i++;
+  }
+  return 0;
+}
