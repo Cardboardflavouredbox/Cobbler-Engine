@@ -246,6 +246,13 @@ void update() {
     Global->Entities.erase(index);
   }
 
+  while (!Global->ParticledeleteQueue.empty()) {
+    unsigned int index = Global->ParticledeleteQueue.front();
+    Global->ParticledeleteQueue.pop();
+    delete (Global->Particles[index]);
+    Global->Particles.erase(index);
+  }
+
   CameraUpdate();
 
   // SDL_Log("%f %f %f", Global->Entities[1]->position[0],

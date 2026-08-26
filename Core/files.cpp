@@ -944,6 +944,12 @@ void quit() {
     delete (i.second);
   }
 
+  // free particles
+  for (auto& i : Global->Particles) {
+    delete (i.second);
+  }
+
+  // free pref_path
   SDL_free(Global->pref_path);
 
   // free network stuff.

@@ -29,4 +29,5 @@ LIB_API extern std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
 
 extern "C" {
 LIB_API unsigned int EntityMapEmptyIndex();
+LIB_API unsigned int ParticleMapEmptyIndex();
 }

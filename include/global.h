@@ -13,6 +13,7 @@
 #include "entity.h"
 #include "map.h"
 #include "model.h"
+#include "particles.h"
 #include "player.h"
 #include "ui.h"
 
@@ -81,9 +82,11 @@ struct GlobalClass {
   std::vector<MapPoint> Points;
   std::vector<Mapface> mapfaces;
   std::map<unsigned int, Entity*> Entities;
+  std::map<unsigned int, Particle*> Particles;
   std::vector<Modeltransform> Models;
 
   std::queue<unsigned int> EntitydeleteQueue;
+  std::queue<unsigned int> ParticledeleteQueue;
 
   std::unordered_map<std::string, std::vector<UIthing*>> UImap;
   std::vector<std::string> UIlist = {"default"};

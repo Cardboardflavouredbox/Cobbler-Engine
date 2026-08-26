@@ -49,3 +49,15 @@ unsigned int EntityMapEmptyIndex() {
   }
   return 0;
 }
+
+unsigned int ParticleMapEmptyIndex() {
+  if (!Global->Particles.contains(0)) {
+    return 0;
+  }
+  unsigned int i = 1;
+  while (i != 0) {
+    if (!Global->Particles.contains(i)) return i;
+    i++;
+  }
+  return 0;
+}

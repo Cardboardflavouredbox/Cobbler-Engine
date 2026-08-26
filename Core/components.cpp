@@ -14,6 +14,10 @@ void componentsupdatelate() {
   for (auto& i : Global->PlayerEntity) {
     i.second->lateupdate();
   }
+  // call particle late updates
+  for (auto& i : Global->Particles) {
+    i.second->lateupdate();
+  }
   // call UI components updates
   for (int i = 0; i < Global->UIlist.size(); i++) {
     int len = Global->UImap[Global->UIlist[i]].size();
@@ -36,5 +40,9 @@ void componentsupdate() {
     i.second->update();
     EntityMove(i.second);
     i.second->deltatimelocal = 0;
+  }
+  // call particle updates
+  for (auto& i : Global->Particles) {
+    i.second->update();
   }
 }

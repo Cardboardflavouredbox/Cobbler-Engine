@@ -195,7 +195,7 @@ void render2DUI() {
 }
 
 void renderEntity() {
-  for (auto& i : Global->Entities) {
+  for (const auto& i : Global->Entities) {
     if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();
   }
   for (const auto& i : Global->PlayerEntity) {
@@ -209,6 +209,62 @@ void renderProps() {
     ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
     renderModelGroup(model, modelgroup, false, deltaTime);
+  }
+}
+
+void renderParticles() {
+  float ps = std::sin(LocalPlayer->dir.x * PI / 180.f);
+  float pc = std::cos(LocalPlayer->dir.x * PI / 180.f);
+  float what = std::cos(LocalPlayer->dir.y * PI / 180.f);
+
+  glm::vec3 dirthing = glm::normalize(glm::vec3{
+      -ps * what, pc * what, std::sin(LocalPlayer->dir.y * PI / 180.f)});
+
+  glm::quat quatthing =
+      glm::quatLookAt(-dirthing, glm::vec3(0, 0, 1)) *
+      glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, -1));
+
+  for (const auto& [key, i] : Global->Particles) {
+    if (i->Texture == "") {
+      glDisable(GL_TEXTURE_2D);
+    } else {
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[i->Texture]);
+    }
+
+    glm::vec3 quad[4];
+
+    quad[0].x = i->rect[0].x;
+    quad[0].y = 0;
+    quad[0].z = i->rect[0].y;
+
+    quad[1].x = i->rect[1].x;
+    quad[1].y = 0;
+    quad[1].z = i->rect[0].y;
+
+    quad[2].x = i->rect[1].x;
+    quad[2].y = 0;
+    quad[2].z = i->rect[1].y;
+
+    quad[3].x = i->rect[0].x;
+    quad[3].y = 0;
+    quad[3].z = i->rect[1].y;
+
+    for (int j = 0; j < 4; j++) {
+      quad[j] = quatthing * quad[j] + i->position;
+    }
+
+    glBegin(GL_QUADS);
+    glColor4f(i->color[0], i->color[1], i->color[2], i->color[3]);
+    glTexCoord2f(i->uv[0].x, i->uv[0].y);
+    glVertex3f(quad[0].x, quad[0].y, quad[0].z);
+    glTexCoord2f(i->uv[0].x + i->uv[1].x, i->uv[0].y);
+    glVertex3f(quad[1].x, quad[1].y, quad[1].z);
+    glTexCoord2f(i->uv[0].x + i->uv[1].x, i->uv[0].y + i->uv[1].y);
+    glVertex3f(quad[2].x, quad[2].y, quad[2].z);
+    glTexCoord2f(i->uv[0].x, i->uv[0].y + i->uv[1].y);
+    glVertex3f(quad[3].x, quad[3].y, quad[3].z);
+    glEnd();
   }
 }
 
@@ -303,6 +359,8 @@ void openglrender() {
 
   renderProps();
   renderEntity();
+
+  renderParticles();
 
   glLoadIdentity();
 
