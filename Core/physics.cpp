@@ -281,7 +281,20 @@ bool Slopecheck(glm::vec3 normal) {
 // returns glm::vec3(0) if you haven't collided at all.
 // returns the normal of collided triangle if you have.
 glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
-                             float radius, int teamindex, float& dist) {
+                             float radius, int teamindex, float& dist,
+                             Entity* tempentity) {
+  for (int i = 0; i < Global->KillboxFaces.size(); i++) {
+    float disttemp;
+    glm::vec3 normal;
+    if (CapsuleTriCheck(Global->KillboxPoints[Global->KillboxFaces[i][0]],
+                        Global->KillboxPoints[Global->KillboxFaces[i][1]],
+                        Global->KillboxPoints[Global->KillboxFaces[i][2]],
+                        hitbox[0] + checkposition, hitbox[1] + checkposition,
+                        radius, disttemp, normal)) {
+      tempentity->hp = -1;
+    }
+  }
+
   float distresult = 0;
   glm::vec3 result = glm::vec3(0);
   for (int i = 0; i < Global->mapfaces.size(); i++) {
@@ -336,9 +349,9 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
 
 glm::vec3 collisionloop(Entity* tempentity, glm::vec3 tempposition) {
   float dist;
-  glm::vec3 normal =
-      movecollisioncheck(tempentity->hitbox, tempposition,
-                         tempentity->hitboxradius, tempentity->teamindex, dist);
+  glm::vec3 normal = movecollisioncheck(
+      tempentity->hitbox, tempposition, tempentity->hitboxradius,
+      tempentity->teamindex, dist, tempentity);
 
   dist = -dist + tempentity->hitboxradius;
   // SDL_Log("%f", distfirst);
@@ -378,9 +391,9 @@ void EntityMove(Entity* tempentity) {
     tempposition.x += tempmove.x / (float)temp;
     tempposition.y += tempmove.y / (float)temp;
     float distfirst;
-    glm::vec3 normal = movecollisioncheck(tempentity->hitbox, tempposition,
-                                          tempentity->hitboxradius,
-                                          tempentity->teamindex, distfirst);
+    glm::vec3 normal = movecollisioncheck(
+        tempentity->hitbox, tempposition, tempentity->hitboxradius,
+        tempentity->teamindex, distfirst, tempentity);
 
     // didn't collide with anything while moving on x and y axis.
     if (normal == glm::vec3(0)) {
@@ -394,7 +407,8 @@ void EntityMove(Entity* tempentity) {
           glm::vec3 tempnormal = movecollisioncheck(
               tempentity->hitbox,
               tempposition - glm::vec3(0, 0, j * dist / 16.f),
-              tempentity->hitboxradius, tempentity->teamindex, disttemp);
+              tempentity->hitboxradius, tempentity->teamindex, disttemp,
+              tempentity);
           if (tempnormal != glm::vec3(0)) {
             disttemp -= tempentity->hitboxradius;
             moveresult.z -= j * dist / 16.f + disttemp;
@@ -416,7 +430,8 @@ void EntityMove(Entity* tempentity) {
           glm::vec3 tempnormal = movecollisioncheck(
               tempentity->hitbox,
               tempposition + glm::vec3(0, 0, j * dist / 16.f),
-              tempentity->hitboxradius, tempentity->teamindex, disttemp);
+              tempentity->hitboxradius, tempentity->teamindex, disttemp,
+              tempentity);
           if (tempnormal == glm::vec3(0)) {
             if (disttempcache != 0)
               disttempcache = tempentity->hitboxradius - disttempcache;
@@ -463,7 +478,7 @@ void EntityMove(Entity* tempentity) {
     tempposition.z += tempmove.z / (float)temp;
     glm::vec3 tempnormal = movecollisioncheck(
         tempentity->hitbox, tempposition, tempentity->hitboxradius,
-        tempentity->teamindex, disttempbase);
+        tempentity->teamindex, disttempbase, tempentity);
     if (tempnormal == glm::vec3(0)) {
       tempentity->IsGrounded = false;
       moveresult.z += tempmove.z / (float)temp;
@@ -484,9 +499,10 @@ void EntityMove(Entity* tempentity) {
           tempposition.x += tempnormal.x * dist * j / 16.f;
           tempposition.y += tempnormal.y * dist * j / 16.f;
           float disttemp;
-          if (movecollisioncheck(
-                  tempentity->hitbox, tempposition, tempentity->hitboxradius,
-                  tempentity->teamindex, disttemp) == glm::vec3(0)) {
+          if (movecollisioncheck(tempentity->hitbox, tempposition,
+                                 tempentity->hitboxradius,
+                                 tempentity->teamindex, disttemp,
+                                 tempentity) == glm::vec3(0)) {
             distthing = disttemp;
             result = j;
           }

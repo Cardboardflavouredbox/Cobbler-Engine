@@ -25,6 +25,7 @@ struct Entity {
   int State;
   // float Stateanimend = 0, Stateanim = 0;
 
+  bool invincible = false;
   float deltatimelocal = 0;
   float hp, maxhp;
   float cameraoffset;

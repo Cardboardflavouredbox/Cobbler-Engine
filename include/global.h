@@ -81,6 +81,8 @@ struct GlobalClass {
 
   std::vector<MapPoint> Points;
   std::vector<Mapface> mapfaces;
+  std::vector<glm::vec3> KillboxPoints;
+  std::vector<std::vector<int>> KillboxFaces;
   std::map<unsigned int, Entity*> Entities;
   std::map<unsigned int, Particle*> Particles;
   std::vector<Modeltransform> Models;
@@ -126,6 +128,8 @@ struct Mapdata {
   };
   std::vector<MapPoint> Points;
   std::vector<Mapface> mapfaces;
+  std::vector<glm::vec3> KillboxPoints;
+  std::vector<std::vector<int>> KillboxFaces;
   std::vector<Entitydata> Entities;
   std::vector<Modeltransform> props;
   std::string skybox;

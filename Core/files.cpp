@@ -122,8 +122,8 @@ bool loadBMP(std::filesystem::path path) {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
                    GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
 
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
       SDL_DestroySurface(surface);
@@ -603,6 +603,15 @@ bool init() {
       char name[64];
       fscanf(file, "%s\n", name);
       tempmapdata.skybox = name;
+    } else if (strcmp(lineHeader, "KP") == 0) {  // Killbox Points.
+      glm::vec3 temppoint;
+      fscanf(file, "%f,%f,%f\n", &temppoint.x, &temppoint.y, &temppoint.z);
+      tempmapdata.KillboxPoints.push_back(temppoint);
+    } else if (strcmp(lineHeader, "KF") == 0) {  // Killbox Faces.
+      std::vector<int> tempvector(3);
+      fscanf(file, "%d,%d,%d\n", &tempvector[0], &tempvector[1],
+             &tempvector[2]);
+      tempmapdata.KillboxFaces.push_back(tempvector);
     }
   }
   fclose(file);
@@ -610,6 +619,9 @@ bool init() {
   Global->Points = tempmapdata.Points;
   Global->mapfaces = tempmapdata.mapfaces;
   Global->skybox = tempmapdata.skybox;
+
+  Global->KillboxPoints = tempmapdata.KillboxPoints;
+  Global->KillboxFaces = tempmapdata.KillboxFaces;
 
   SDL_Log("%zu points in map", tempmapdata.Points.size());
   SDL_Log("%zu faces in map", tempmapdata.mapfaces.size());

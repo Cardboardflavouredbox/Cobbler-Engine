@@ -16,6 +16,10 @@ def write_some_data(context, filepath, use_some_setting):
     
     Map = bpy.data.objects.get("Map")
     
+    killboxverts = {}
+    
+    killboxfaces = []
+    
     vertdict = {}
     
     colordict = {}
@@ -30,15 +34,21 @@ def write_some_data(context, filepath, use_some_setting):
             
         mesh = child.data
         
-        color_attr = mesh.attributes["Color"]
-        
-        for vert in mesh.vertices:
-            vertdict[vert.index] = child.matrix_world @ vert.co
-            colordict[vert.index] = color_attr.data[vert.index].color
+        if child.get('IsKillbox'):
+            for vert in mesh.vertices:
+                killboxverts[vert.index] = child.matrix_world @ vert.co
+                
+            for face in mesh.polygons:
+                killboxfaces.append(face.vertices)
+        else:
+            color_attr = mesh.attributes["Color"]
             
-        for face in mesh.polygons:
-            facelist.append(face.vertices)
-            
+            for vert in mesh.vertices:
+                vertdict[vert.index] = child.matrix_world @ vert.co
+                colordict[vert.index] = color_attr.data[vert.index].color
+                
+            for face in mesh.polygons:
+                facelist.append(face.vertices)
     
     f = open(filepath, "w", encoding='utf-8')
     
@@ -49,6 +59,13 @@ def write_some_data(context, filepath, use_some_setting):
     
     for face in facelist:
         print("F 0 Floor 1,1 "+ ",".join(str(num) for num in face) +" 0,0 1,0 0,1",file = f)
+        
+    for index in killboxverts.keys():
+        vert = killboxverts[index]
+        print(f"KP {vert.x:.6f},{vert.y:.6f},{vert.z:.6f}",file = f)
+    
+    for face in killboxfaces:
+        print("KF "+ ",".join(str(num) for num in face),file = f)
     
     print("SKYBOX Sky",file = f)
     
