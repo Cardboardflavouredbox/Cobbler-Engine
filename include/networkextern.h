@@ -16,8 +16,6 @@
 #endif
 
 struct GlobalNetworkClass {
-  bool IsServer;
-  uint64_t UserID;
   std::set<uint64_t> UserIDs;
   std::unordered_map<uint64_t, float> PlayerTimecounter;
   std::unordered_map<uint64_t, Entity*> PlayerEntity;

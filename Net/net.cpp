@@ -13,7 +13,7 @@
 
 struct NetworkStuffClass {
   struct Clientthing {
-    Uint16 PORT;
+    uint16_t PORT;
     std::string Address;
     NET_Address* RealAddress = NULL;
     uint64_t ID;
@@ -29,8 +29,7 @@ NetworkStuffClass* NetStuff;
 // PostField* curlpostfield;
 // std::string curlloginstring;
 uint64_t UserID = 0;
-std::vector<Uint8> packetbuffer;
-
+std::vector<uint8_t> packetbuffer;
 bool IsServer = false;
 
 // static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
@@ -93,12 +92,12 @@ bool CobblerInitNet() {
   return true;
 }
 
-bool CobblerQueueData(const char* name, std::vector<Uint8> buf, size_t size) {
+bool CobblerQueueData(const char* name, std::vector<uint8_t> buf, size_t size) {
   int len = std::strlen(name);
   for (int i = 0; i < len; i++) {
-    packetbuffer.push_back(Uint8(name[i]));
+    packetbuffer.push_back(uint8_t(name[i]));
   }
-  packetbuffer.push_back(Uint8('\0'));
+  packetbuffer.push_back(uint8_t('\0'));
 
   unsigned int buflen = size;
 
@@ -107,7 +106,7 @@ bool CobblerQueueData(const char* name, std::vector<Uint8> buf, size_t size) {
     return false;
   }
 
-  packetbuffer.push_back(static_cast<Uint8>(buflen));
+  packetbuffer.push_back(static_cast<uint8_t>(buflen));
 
   packetbuffer.insert(packetbuffer.end(), buf.begin(), buf.begin() + buflen);
   return true;
@@ -118,7 +117,7 @@ bool CobblerSendNet() {  // from: ID, to: ID
   if constexpr (std::endian::native == std::endian::little) {
     tempID = std::byteswap(tempID);
   }
-  auto localID = std::bit_cast<std::array<Uint8, 8>>(tempID);
+  auto localID = std::bit_cast<std::array<uint8_t, 8>>(tempID);
 
   for (int i = 0; i < NetStuff->Clients.size(); i++) {
     uint64_t ID = NetStuff->Clients[i].ID;
@@ -128,9 +127,9 @@ bool CobblerSendNet() {  // from: ID, to: ID
     }
 
     // 2. Cast directly into a fixed-size byte array safely
-    auto byte_array = std::bit_cast<std::array<Uint8, 8>>(ID);
+    auto byte_array = std::bit_cast<std::array<uint8_t, 8>>(ID);
 
-    std::vector<Uint8> temppacket(localID.begin(), localID.end());
+    std::vector<uint8_t> temppacket(localID.begin(), localID.end());
 
     temppacket.insert(temppacket.end(), byte_array.begin(), byte_array.end());
 
@@ -155,9 +154,9 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
     //         NET_GetAddressString(dgram->addr), (int)dgram->port);
     if (tempvec == NULL) tempvec = new std::vector<CobblerNetData>();
 
-    std::deque<Uint8> datavec(dgram->buf, dgram->buf + dgram->buflen);
+    std::deque<uint8_t> datavec(dgram->buf, dgram->buf + dgram->buflen);
 
-    std::array<Uint8, 8> tempbytes;
+    std::array<uint8_t, 8> tempbytes;
 
     for (int i = 0; i < 8; i++) {
       tempbytes[i] = datavec.front();
@@ -188,13 +187,13 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
       temp.ID = ID;
 
       if (!datavec.empty()) {
-        while (datavec.front() != Uint8(0) && !datavec.empty()) {
+        while (datavec.front() != uint8_t(0) && !datavec.empty()) {
           temp.name.push_back(char(datavec.front()));
           datavec.pop_front();
         }
         datavec.pop_front();
 
-        Uint8 len = datavec.front();
+        uint8_t len = datavec.front();
         datavec.pop_front();
 
         temp.size = len;

@@ -2,6 +2,7 @@
 
 #include <model.h>
 
+#include <array>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <map>
@@ -23,9 +24,11 @@ LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
 
 struct EntitySpawnInfo {
+  std::string name;
+  unsigned int EntityCode;
   int State;
-  glm::vec3 position, velocityvec3 = glm::vec3({0, 0, 0});
-  glm::vec2 direction;
+  std::array<float, 3> position, velocityvec3;
+  std::array<float, 2> direction;
   int teamindex;
 };
 
@@ -68,6 +71,5 @@ LIB_API extern std::unordered_map<std::string,
 
 extern "C" {
 LIB_API unsigned int EntityMapEmptyIndex();
-LIB_API void EntitySpawn(std::string name, unsigned int EntityCode,
-                         EntitySpawnInfo Entityinfo);
+LIB_API void EntitySpawn(EntitySpawnInfo Entityinfo);
 }

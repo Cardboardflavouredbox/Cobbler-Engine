@@ -414,7 +414,7 @@ bool initargs(std::vector<std::string> args) {
         //   break;
         case SetServerIP: {
           // If you are a server return false
-          if (GlobalNetworkStuff->IsServer) {
+          if (IsServer) {
             SDL_Log(
                 "Wrong Arguements!(Cannot be Server and have IP input at the "
                 "same time)");
@@ -474,7 +474,7 @@ bool initargs(std::vector<std::string> args) {
             j++;
           }
           Global->IsOnline = true;
-          GlobalNetworkStuff->IsServer = true;
+          IsServer = true;
           break;
       }
     }
@@ -544,7 +544,7 @@ bool init() {
   // }
 
   // Server Setup.
-  if (GlobalNetworkStuff->IsServer) {
+  if (IsServer) {
     if (!CobblerSetSocket(ServerPort)) {
       SDL_Log("Server Setup failed");
     }
@@ -557,7 +557,7 @@ bool init() {
     }
     CobblerAddIP(ServerIP, ServerPort, 0);
     Global->IsOnline = true;
-    std::vector<Uint8> buffer{};
+    std::vector<uint8_t> buffer{};
     bool check = false;
 
     // check if the server acknowledged you
@@ -580,6 +580,8 @@ bool init() {
     }
     // SDL_Log("What");
   }
+
+  if (!Global->IsRunning) return false;
 
   // read map data.
   Mapdata tempmapdata;

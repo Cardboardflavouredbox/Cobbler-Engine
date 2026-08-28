@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <map>
@@ -15,6 +16,12 @@
 #else
 #define LIB_API
 #endif
+
+struct ParticleSpawnInfo {
+  std::string name;
+  unsigned int ParticleCode;
+  std::array<float, 3> position;
+};
 
 struct Particle {
   std::string Texture = "";
@@ -42,6 +49,5 @@ LIB_API extern std::unordered_map<std::string,
 
 extern "C" {
 LIB_API unsigned int ParticleMapEmptyIndex();
-LIB_API void ParticleSpawn(std::string name, unsigned int ParticleCode,
-                           glm::vec3 position);
+LIB_API void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend);
 }

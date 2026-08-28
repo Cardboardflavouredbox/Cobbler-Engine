@@ -170,7 +170,7 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
                 textureh = RendererGlobal->SRstuff->textures[texture]->h;
             int uvxthing = (int(texturew * (uvresult.x)) * xloop) % texturew;
             int uvything = (int(textureh * (uvresult.y)) * yloop) % textureh;
-            Uint8 color = static_cast<Uint8*>(
+            uint8_t color = static_cast<uint8_t*>(
                 RendererGlobal->SRstuff->textures[texture]
                     ->pixels)[uvxthing + uvything * texturew];
 

@@ -279,7 +279,7 @@ void renderbackground() {
     for (int j = 0; j < y; j++) {
       if (RendererGlobal->SRstuff
               ->pixelsdepth[i + j * RendererGlobal->SRstuff->pitch] == 65535) {
-        Uint8 color = static_cast<Uint8*>(
+        uint8_t color = static_cast<uint8_t*>(
             RendererGlobal->SRstuff->textures[GlobalMapStuff->skybox]
                 ->pixels)[(int(i * 320.f / x) +
                            int((1 - ((int(LocalPlayer->dir.x) % 180) / 180.f)) *

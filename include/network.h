@@ -43,7 +43,8 @@ struct CobblerNetData {
 };
 
 // LIB_API extern PostField* curlpostfield;
-// LIB_API extern std::string curlloginstring;
+LIB_API extern bool IsServer;
+LIB_API extern uint64_t UserID;
 
 extern "C" {
 LIB_API bool CobblerInitNet();

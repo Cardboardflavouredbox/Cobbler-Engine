@@ -1,6 +1,12 @@
 #include "extern.h"
 
 #include <SDL3/SDL_timer.h>
+#include <bitsery/adapter/buffer.h>
+#include <bitsery/bitsery.h>
+#include <bitsery/brief_syntax.h>
+#include <bitsery/traits/array.h>
+#include <bitsery/traits/string.h>
+#include <bitsery/traits/vector.h>
 
 #include "camera.h"
 #include "deltaTime.h"
@@ -9,6 +15,7 @@
 #include "inputs.h"
 #include "map.h"
 #include "model.h"
+#include "network.h"
 #include "networkextern.h"
 #include "particles.h"
 #include "player.h"
@@ -67,6 +74,22 @@ std::unique_ptr<UIGlobalClass> UIGlobalStuff;
 
 std::unique_ptr<GlobalNetworkClass> GlobalNetworkStuff;
 
+template <typename S>
+void serialize(S& s, ParticleSpawnInfo& o) {
+  s.value4b(o.ParticleCode);
+  s.container4b(o.position);
+  s.text1b(o.name, 32);
+}
+
+template <typename S>
+void serialize(S& s, EntitySpawnInfo& o) {
+  s.value4b(o.teamindex);
+  s.container4b(o.direction);
+  s.container4b(o.position);
+  s.container4b(o.velocityvec3);
+  s.value4b(o.State);
+}
+
 unsigned int EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {
     return 0;
@@ -79,17 +102,21 @@ unsigned int EntityMapEmptyIndex() {
   return 0;
 }
 
-void EntitySpawn(std::string name, unsigned int EntityCode,
-                 EntitySpawnInfo Entityinfo) {
-  if (!Global->IsOnline || GlobalNetworkStuff->IsServer) {
+void EntitySpawn(EntitySpawnInfo Entityinfo) {
+  if (!Global->IsOnline || IsServer) {
     unsigned int temp = EntityMapEmptyIndex();
-    Entity* tempentity = SpawnEntities[name](EntityCode, temp);
+    Entity* tempentity =
+        SpawnEntities[Entityinfo.name](Entityinfo.EntityCode, temp);
     tempentity->EntityIndex = temp;
-    tempentity->position = Entityinfo.position;
+    for (int i = 0; i < 3; i++) {
+      tempentity->position[i] = Entityinfo.position[i];
+      tempentity->velocityvec3[i] = Entityinfo.velocityvec3[i];
+    }
     tempentity->State = Entityinfo.State;
     tempentity->teamindex = Entityinfo.teamindex;
-    tempentity->velocityvec3 = Entityinfo.velocityvec3;
-    tempentity->dir = Entityinfo.direction;
+    for (int i = 0; i < 2; i++) {
+      tempentity->dir[i] = Entityinfo.direction[i];
+    }
     Entities[temp] = tempentity;
   }
 }
@@ -106,12 +133,21 @@ unsigned int ParticleMapEmptyIndex() {
   return 0;
 }
 
-void ParticleSpawn(std::string name, unsigned int ParticleCode,
-                   glm::vec3 position) {
-  if (Global->IsOnline) {  // online code stuff
+void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
+  if (Global->IsOnline && OnlineSend) {  // online code stuff
+    std::vector<uint8_t> buffer{};
+
+    auto writtenSize = bitsery::quickSerialization<
+        bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
+                                                            Particleinfo);
+
+    CobblerQueueData("ParticleSpawn", buffer, writtenSize);
   }
   unsigned int temp = ParticleMapEmptyIndex();
-  Particle* tempparticle = SpawnParticles[name](ParticleCode, temp);
-  tempparticle->position = position;
+  Particle* tempparticle =
+      SpawnParticles[Particleinfo.name](Particleinfo.ParticleCode, temp);
+  for (int i = 0; i < 3; i++) {
+    tempparticle->position[i] = Particleinfo.position[i];
+  }
   Particles[temp] = tempparticle;
 }
