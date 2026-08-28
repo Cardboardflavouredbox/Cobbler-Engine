@@ -16,7 +16,7 @@ struct NetworkStuffClass {
     Uint16 PORT;
     std::string Address;
     NET_Address* RealAddress = NULL;
-    Uint64 ID;
+    uint64_t ID;
   };
   std::vector<Clientthing> Clients;
   NET_DatagramSocket* Socket;
@@ -28,7 +28,7 @@ struct NetworkStuffClass {
 NetworkStuffClass* NetStuff;
 // PostField* curlpostfield;
 // std::string curlloginstring;
-Uint64 UserID = 0;
+uint64_t UserID = 0;
 std::vector<Uint8> packetbuffer;
 
 bool IsServer = false;
@@ -44,7 +44,7 @@ bool IsServer = false;
 //   return totalSize;
 // }
 
-void CobblerAddIP(std::string IP, unsigned int Port, Uint64 ID) {
+void CobblerAddIP(std::string IP, unsigned int Port, uint64_t ID) {
   NetworkStuffClass::Clientthing client;
   client.Address = IP;
   client.PORT = Port;
@@ -114,14 +114,14 @@ bool CobblerQueueData(const char* name, std::vector<Uint8> buf, size_t size) {
 }
 
 bool CobblerSendNet() {  // from: ID, to: ID
-  Uint64 tempID = UserID;
+  uint64_t tempID = UserID;
   if constexpr (std::endian::native == std::endian::little) {
     tempID = std::byteswap(tempID);
   }
   auto localID = std::bit_cast<std::array<Uint8, 8>>(tempID);
 
   for (int i = 0; i < NetStuff->Clients.size(); i++) {
-    Uint64 ID = NetStuff->Clients[i].ID;
+    uint64_t ID = NetStuff->Clients[i].ID;
 
     if constexpr (std::endian::native == std::endian::little) {
       ID = std::byteswap(ID);
@@ -164,7 +164,7 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
       datavec.pop_front();
     }
 
-    Uint64 ID = std::bit_cast<Uint64>(tempbytes);
+    uint64_t ID = std::bit_cast<uint64_t>(tempbytes);
 
     if constexpr (std::endian::native == std::endian::little) {
       ID = std::byteswap(ID);
@@ -175,7 +175,7 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
       datavec.pop_front();
     }
 
-    UserID = std::bit_cast<Uint64>(tempbytes);
+    UserID = std::bit_cast<uint64_t>(tempbytes);
 
     if constexpr (std::endian::native == std::endian::little) {
       UserID = std::byteswap(UserID);
@@ -257,11 +257,13 @@ void CobblerQuitNet() {
 //   SDL_Log("logging in...");
 //   std::ostringstream stream;
 //   curl_easy_setopt(NetStuff->curl, CURLOPT_NOPROGRESS, 1L);
-//   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEFUNCTION, CobblerCurlCallback);
-//   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA, &stream);
-//   curl_easy_setopt(NetStuff->curl, CURLOPT_URL,
-//                    ("http://" + curlpostfield->websiteaddr + "/login").c_str());
-//   curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, curlloginstring.c_str());
+//   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEFUNCTION,
+//   CobblerCurlCallback); curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA,
+//   &stream); curl_easy_setopt(NetStuff->curl, CURLOPT_URL,
+//                    ("http://" + curlpostfield->websiteaddr +
+//                    "/login").c_str());
+//   curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS,
+//   curlloginstring.c_str());
 
 //   NetStuff->res = curl_easy_perform(NetStuff->curl);
 

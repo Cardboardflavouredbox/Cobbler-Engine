@@ -1,6 +1,9 @@
 #include <glad/glad.h>
 
 #include "extern.h"
+#include "inputs.h"
+#include "render.h"
+#include "settings.h"
 #include "update.h"
 
 // process events
@@ -22,22 +25,24 @@ void events() {
       // Resize Window
       case SDL_EVENT_WINDOW_RESIZED:
         // Get Window Size
-        SDL_GetWindowSizeInPixels(Global->window, &Global->windowx,
-                                  &Global->windowy);
+        SDL_GetWindowSizeInPixels(RendererGlobal->window,
+                                  &RendererGlobal->windowx,
+                                  &RendererGlobal->windowy);
 
         // Get Window Scale
-        Global->windowscale = SDL_GetWindowDisplayScale(Global->window);
+        RendererGlobal->windowscale =
+            SDL_GetWindowDisplayScale(RendererGlobal->window);
 
         switch (Settings->graphicsmode) {
           case 0: {  // software
             // resize pixelsdepth buffer
-            Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
-                                                Settings->resolutiony);
+            RendererGlobal->SRstuff->pixelsdepth.resize(Settings->resolutionx *
+                                                        Settings->resolutiony);
             break;
           }
           case 1: {  // opengl
             // Set glViewport to middle of window.
-            int w = Global->windowx, h = Global->windowy,
+            int w = RendererGlobal->windowx, h = RendererGlobal->windowy,
                 rtw = Settings->resolutionx, rth = Settings->resolutiony;
             int size = w / rtw;
             if (size > h / rth) size = h / rth;

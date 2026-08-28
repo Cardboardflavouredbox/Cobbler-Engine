@@ -4,6 +4,7 @@
 #include <glm/vec3.hpp>
 
 #include "extern.h"
+#include "map.h"
 
 glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                              float radius, int teamindex, float& dist,

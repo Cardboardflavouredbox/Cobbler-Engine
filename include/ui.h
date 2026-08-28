@@ -28,3 +28,12 @@ struct UI3Dthing {
   virtual void update() = 0;
   virtual ~UI3Dthing() { delete modeltrans; }
 };
+
+struct UIGlobalClass {
+  std::unordered_map<std::string, std::vector<UIthing*>> UImap;
+  std::vector<std::string> UIlist = {"default"};
+
+  std::unordered_map<std::string, std::vector<UI3Dthing*>> UImap3D;
+};
+
+LIB_API extern std::unique_ptr<UIGlobalClass> UIGlobalStuff;

@@ -13,6 +13,7 @@
 #include "extern.h"
 #include "files.h"
 #include "global.h"
+#include "settings.h"
 #include "update.h"
 
 int main(int argc, char* argv[]) {
@@ -88,13 +89,13 @@ int main(int argc, char* argv[]) {
 
   SDL_Log("Init done");
   while (Global->IsRunning) {
-    Uint64 start = SDL_GetTicksNS();
+    uint64_t start = SDL_GetTicksNS();
     events();
     input();
     update();
     changeUIindex();
     render();
-    Uint64 result = (SDL_GetTicksNS() - start);
+    uint64_t result = (SDL_GetTicksNS() - start);
     if (!Settings->vsync && result < 1000000000 / Settings->fps) {
       SDL_DelayNS(1000000000 / Settings->fps - result);
     }

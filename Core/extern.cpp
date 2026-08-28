@@ -5,15 +5,18 @@
 #include "camera.h"
 #include "deltaTime.h"
 #include "font.h"
+#include "inputs.h"
+#include "map.h"
 #include "model.h"
+#include "render.h"
+#include "settings.h"
+#include "ui.h"
 
 // This is where most of the extern global variables are!
 float deltaTime;
 
 // pointer to Global variables.
 std::unique_ptr<GlobalClass> Global;
-// pointer to Scrapped Editor variables. Will remove later.
-std::unique_ptr<EditorClass> Editor;
 // pointer to Settings variables.
 std::unique_ptr<SettingsClass> Settings;
 // pointer to Inputs of local inputs. As in, the actual keyboard inputs.
@@ -24,9 +27,9 @@ playerinputs* P1PlayerInputs;
 // LocalPlayer Entity pointer.
 Entity* LocalPlayer;
 // deltatime calculation variable
-Uint64 lastTime;
+uint64_t lastTime;
 // deltatime calculation variable
-Uint64 currentTime = SDL_GetPerformanceCounter();
+uint64_t currentTime = SDL_GetPerformanceCounter();
 // Entity Spawn function map. Loaded from dynamic libraries.
 std::unordered_map<std::string, Entity* (*)(unsigned int)> SpawnEntities;
 // Player Class Update function map. Loaded from dynamic libraries.
@@ -37,6 +40,16 @@ FreetypeClass* Freetypething;
 std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 // pointer to Camera.
 CameraClass* Camera;
+
+std::unique_ptr<GlobalMapClass> GlobalMapStuff;
+
+std::unique_ptr<RendererStuff> RendererGlobal;
+
+std::unique_ptr<UIGlobalClass> UIGlobalStuff;
+
+std::unique_ptr<GlobalNetworkClass> GlobalNetworkStuff;
+
+void EntitySpawn() {}
 
 unsigned int EntityMapEmptyIndex() {
   if (!Global->Entities.contains(0)) {

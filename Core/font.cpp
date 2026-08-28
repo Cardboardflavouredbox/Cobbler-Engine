@@ -1,6 +1,6 @@
 #include "font.h"
 
-#include "extern.h"
+#include "settings.h"
 
 // Glyph Creation function.
 CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {

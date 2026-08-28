@@ -11,7 +11,7 @@ void componentsupdatelate() {
     i.second->lateupdate();
   }
   // call player entity late updates
-  for (auto& i : Global->PlayerEntity) {
+  for (auto& i : GlobalNetworkStuff->PlayerEntity) {
     i.second->lateupdate();
   }
   // call particle late updates
@@ -19,10 +19,10 @@ void componentsupdatelate() {
     i.second->lateupdate();
   }
   // call UI components updates
-  for (int i = 0; i < Global->UIlist.size(); i++) {
-    int len = Global->UImap[Global->UIlist[i]].size();
+  for (int i = 0; i < UIGlobalStuff->UIlist.size(); i++) {
+    int len = UIGlobalStuff->UImap[UIGlobalStuff->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
-      Global->UImap[Global->UIlist[i]].at(j)->update();
+      UIGlobalStuff->UImap[UIGlobalStuff->UIlist[i]].at(j)->update();
     }
   }
 }
@@ -36,7 +36,7 @@ void componentsupdate() {
     i.second->deltatimelocal = 0;
   }
   // call player entity updates and EntityMove
-  for (auto& i : Global->PlayerEntity) {
+  for (auto& i : GlobalNetworkStuff->PlayerEntity) {
     i.second->update();
     EntityMove(i.second);
     i.second->deltatimelocal = 0;

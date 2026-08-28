@@ -21,8 +21,12 @@
 #include "extern.h"
 #include "font.h"
 #include "global.h"
+#include "inputs.h"
 #include "model.h"
 #include "network.h"
+#include "render.h"
+#include "settings.h"
+#include "ui.h"
 #include "update.h"
 
 // IPv4 ServerIP string.
@@ -72,28 +76,28 @@ void LoadSettings() {
 
 // renderer free function
 void freeRenderer() {
-  SDL_DestroyWindow(Global->window);
+  SDL_DestroyWindow(RendererGlobal->window);
 
   switch (Settings->graphicsmode) {  // opengl
     case 1: {
       // free textures
-      for (auto& [key, value] : Global->GLstuff->textures) {
+      for (auto& [key, value] : RendererGlobal->GLstuff->textures) {
         glDeleteTextures(1, &value);
       }
-      SDL_GL_DestroyContext(Global->GLstuff->GLContext);
+      SDL_GL_DestroyContext(RendererGlobal->GLstuff->GLContext);
 
       // delete opengl pointer
-      delete (Global->GLstuff);
+      delete (RendererGlobal->GLstuff);
       break;
     }
     default: {  // software
-      SDL_DestroyPalette(Global->SRstuff->palette);
-      SDL_DestroyRenderer(Global->SRstuff->renderer);
-      SDL_DestroySurface(Global->SRstuff->render_target);
-      for (auto& [key, value] : Global->SRstuff->textures) {
+      SDL_DestroyPalette(RendererGlobal->SRstuff->palette);
+      SDL_DestroyRenderer(RendererGlobal->SRstuff->renderer);
+      SDL_DestroySurface(RendererGlobal->SRstuff->render_target);
+      for (auto& [key, value] : RendererGlobal->SRstuff->textures) {
         SDL_DestroySurface(value);
       }
-      delete (Global->SRstuff);
+      delete (RendererGlobal->SRstuff);
       break;
     }
   }
@@ -108,7 +112,7 @@ bool loadBMP(std::filesystem::path path) {
       std::string tempstr = path.filename().string();
       // remove file extension (bmp)
       for (int i = 0; i < 4; i++) tempstr.pop_back();
-      glGenTextures(1, &(Global->GLstuff->textures[tempstr]));
+      glGenTextures(1, &(RendererGlobal->GLstuff->textures[tempstr]));
       surface = SDL_LoadBMP(path.string().c_str());
       if (surface == NULL) return false;
       // that one magenta color as transparent color
@@ -117,7 +121,7 @@ bool loadBMP(std::filesystem::path path) {
       // Set texture format.
       surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
 
-      glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[tempstr]);
+      glBindTexture(GL_TEXTURE_2D, RendererGlobal->GLstuff->textures[tempstr]);
 
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
                    GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
@@ -132,13 +136,13 @@ bool loadBMP(std::filesystem::path path) {
     default: {  // software
       surface = SDL_LoadBMP(path.string().c_str());
       if (surface == NULL) return false;
-      surface = SDL_ConvertSurfaceAndColorspace(surface, SDL_PIXELFORMAT_INDEX8,
-                                                Global->SRstuff->palette,
-                                                SDL_COLORSPACE_RGB_DEFAULT, 0);
-      SDL_SetSurfacePalette(surface, Global->SRstuff->palette);
+      surface = SDL_ConvertSurfaceAndColorspace(
+          surface, SDL_PIXELFORMAT_INDEX8, RendererGlobal->SRstuff->palette,
+          SDL_COLORSPACE_RGB_DEFAULT, 0);
+      SDL_SetSurfacePalette(surface, RendererGlobal->SRstuff->palette);
       std::string tempstr = path.filename().string();
       for (int i = 0; i < 4; i++) tempstr.pop_back();
-      Global->SRstuff->textures[tempstr] = surface;
+      RendererGlobal->SRstuff->textures[tempstr] = surface;
     }
   }
   return true;
@@ -149,7 +153,7 @@ bool setRenderer() {
   switch (Settings->graphicsmode) {
     case 1: {  // opengl
       SDL_Surface* surface;
-      Global->GLstuff = new GlobalClass::OpenGLRenderer();
+      RendererGlobal->GLstuff = new RendererStuff::OpenGLRenderer();
 
       // set opengl version to 1.2 (for n64 compatibility. just in case.)
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
@@ -161,14 +165,16 @@ bool setRenderer() {
       // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
       // create opengl window
-      Global->window = SDL_CreateWindow(
+      RendererGlobal->window = SDL_CreateWindow(
           "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
           SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
       // Create OpenGL context
-      Global->GLstuff->GLContext = SDL_GL_CreateContext(Global->window);
+      RendererGlobal->GLstuff->GLContext =
+          SDL_GL_CreateContext(RendererGlobal->window);
 
-      if (!SDL_GL_MakeCurrent(Global->window, Global->GLstuff->GLContext))
+      if (!SDL_GL_MakeCurrent(RendererGlobal->window,
+                              RendererGlobal->GLstuff->GLContext))
         return false;
 
       if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) return false;
@@ -188,7 +194,7 @@ bool setRenderer() {
       std::unordered_map<std::string, GLuint> tempmap;
       tempmap.reserve(64);
 
-      Global->GLstuff->textures = tempmap;
+      RendererGlobal->GLstuff->textures = tempmap;
 
       // set backface culling
       glEnable(GL_CULL_FACE);
@@ -204,28 +210,29 @@ bool setRenderer() {
       std::unordered_map<std::string, SDL_Surface*> tempvector;
       tempvector.reserve(64);
 
-      Global->SRstuff = new GlobalClass::SoftwareRenderer();
+      RendererGlobal->SRstuff = new RendererStuff::SoftwareRenderer();
 
-      Global->SRstuff->textures = tempvector;
+      RendererGlobal->SRstuff->textures = tempvector;
       tempstr = basepath;
       tempstr.append("/" + Global->GameName + "/res/Color_palette.bmp");
       surface = SDL_LoadBMP(tempstr.c_str());
 
-      Global->SRstuff->palette = SDL_GetSurfacePalette(surface);
-      Global->window =
+      RendererGlobal->SRstuff->palette = SDL_GetSurfacePalette(surface);
+      RendererGlobal->window =
           SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
                            Settings->resolutiony, SDL_WINDOW_RESIZABLE);
-      Global->SRstuff->renderer = SDL_CreateRenderer(Global->window, NULL);
-      SDL_SetRenderVSync(Global->SRstuff->renderer,
+      RendererGlobal->SRstuff->renderer =
+          SDL_CreateRenderer(RendererGlobal->window, NULL);
+      SDL_SetRenderVSync(RendererGlobal->SRstuff->renderer,
                          Settings->vsync ? 1 : SDL_RENDERER_VSYNC_DISABLED);
-      SDL_SetRenderTarget(Global->SRstuff->renderer, NULL);
-      Global->SRstuff->render_target = SDL_CreateSurface(
+      SDL_SetRenderTarget(RendererGlobal->SRstuff->renderer, NULL);
+      RendererGlobal->SRstuff->render_target = SDL_CreateSurface(
           Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
-      SDL_SetSurfacePalette(Global->SRstuff->render_target,
-                            Global->SRstuff->palette);
+      SDL_SetSurfacePalette(RendererGlobal->SRstuff->render_target,
+                            RendererGlobal->SRstuff->palette);
 
-      Global->SRstuff->pixelsdepth.resize(Settings->resolutionx *
-                                          Settings->resolutiony);
+      RendererGlobal->SRstuff->pixelsdepth.resize(Settings->resolutionx *
+                                                  Settings->resolutiony);
       break;
     }
   }
@@ -279,6 +286,14 @@ bool initargs(std::vector<std::string> args) {
   if (LocalInputs == nullptr) return false;
   P1PlayerInputs = new playerinputs();
   if (P1PlayerInputs == nullptr) return false;
+  GlobalMapStuff = std::make_unique<GlobalMapClass>();
+  if (GlobalMapStuff == nullptr) return false;
+  RendererGlobal = std::make_unique<RendererStuff>();
+  if (RendererGlobal == nullptr) return false;
+  UIGlobalStuff = std::make_unique<UIGlobalClass>();
+  if (UIGlobalStuff == nullptr) return false;
+  GlobalNetworkStuff = std::make_unique<GlobalNetworkClass>();
+  if (GlobalNetworkStuff == nullptr) return false;
 
   Global->pref_path =
       SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
@@ -398,7 +413,7 @@ bool initargs(std::vector<std::string> args) {
         //   break;
         case SetServerIP: {
           // If you are a server return false
-          if (IsServer) {
+          if (GlobalNetworkStuff->IsServer) {
             SDL_Log(
                 "Wrong Arguements!(Cannot be Server and have IP input at the "
                 "same time)");
@@ -433,7 +448,7 @@ bool initargs(std::vector<std::string> args) {
         }
         case SetIsServer:
           // Add Server(0) user.
-          Global->UserIDs.insert(0);
+          GlobalNetworkStuff->UserIDs.insert(0);
           // If ServerIP is set then you can't be server.
           if (ServerIP != "") {
             SDL_Log(
@@ -458,7 +473,7 @@ bool initargs(std::vector<std::string> args) {
             j++;
           }
           Global->IsOnline = true;
-          IsServer = true;
+          GlobalNetworkStuff->IsServer = true;
           break;
       }
     }
@@ -528,7 +543,7 @@ bool init() {
   // }
 
   // Server Setup.
-  if (IsServer) {
+  if (GlobalNetworkStuff->IsServer) {
     if (!CobblerSetSocket(ServerPort)) {
       SDL_Log("Server Setup failed");
     }
@@ -616,46 +631,46 @@ bool init() {
   }
   fclose(file);
 
-  Global->Points = tempmapdata.Points;
-  Global->mapfaces = tempmapdata.mapfaces;
-  Global->skybox = tempmapdata.skybox;
+  GlobalMapStuff->Points = tempmapdata.Points;
+  GlobalMapStuff->mapfaces = tempmapdata.mapfaces;
+  GlobalMapStuff->skybox = tempmapdata.skybox;
 
-  Global->KillboxPoints = tempmapdata.KillboxPoints;
-  Global->KillboxFaces = tempmapdata.KillboxFaces;
+  GlobalMapStuff->KillboxPoints = tempmapdata.KillboxPoints;
+  GlobalMapStuff->KillboxFaces = tempmapdata.KillboxFaces;
 
   SDL_Log("%zu points in map", tempmapdata.Points.size());
   SDL_Log("%zu faces in map", tempmapdata.mapfaces.size());
 
   // preprocess the faces in the map.
   // turns all quads into triangles.
-  for (int i = 0; i < Global->mapfaces.size(); i++) {
-    if (Global->mapfaces[i].points.size() == 4) {
+  for (int i = 0; i < GlobalMapStuff->mapfaces.size(); i++) {
+    if (GlobalMapStuff->mapfaces[i].points.size() == 4) {
       Mapface temp;
-      temp.doublesided = Global->mapfaces[i].doublesided;
-      temp.xloop = Global->mapfaces[i].xloop;
-      temp.yloop = Global->mapfaces[i].yloop;
-      temp.texture = Global->mapfaces[i].texture;
-      int temppoints[3] = {Global->mapfaces[i].points[0],
-                           Global->mapfaces[i].points[1],
-                           Global->mapfaces[i].points[2]};
-      glm::vec2 tempUV[3] = {Global->mapfaces[i].UVs[0],
-                             Global->mapfaces[i].UVs[1],
-                             Global->mapfaces[i].UVs[2]};
+      temp.doublesided = GlobalMapStuff->mapfaces[i].doublesided;
+      temp.xloop = GlobalMapStuff->mapfaces[i].xloop;
+      temp.yloop = GlobalMapStuff->mapfaces[i].yloop;
+      temp.texture = GlobalMapStuff->mapfaces[i].texture;
+      int temppoints[3] = {GlobalMapStuff->mapfaces[i].points[0],
+                           GlobalMapStuff->mapfaces[i].points[1],
+                           GlobalMapStuff->mapfaces[i].points[2]};
+      glm::vec2 tempUV[3] = {GlobalMapStuff->mapfaces[i].UVs[0],
+                             GlobalMapStuff->mapfaces[i].UVs[1],
+                             GlobalMapStuff->mapfaces[i].UVs[2]};
       temp.points.assign(temppoints, temppoints + 3);
       temp.UVs.assign(tempUV, tempUV + 3);
-      Global->mapfaces.push_back(temp);
+      GlobalMapStuff->mapfaces.push_back(temp);
 
-      temp.points[0] = Global->mapfaces[i].points[2];
-      temp.points[1] = Global->mapfaces[i].points[3];
-      temp.points[2] = Global->mapfaces[i].points[0];
+      temp.points[0] = GlobalMapStuff->mapfaces[i].points[2];
+      temp.points[1] = GlobalMapStuff->mapfaces[i].points[3];
+      temp.points[2] = GlobalMapStuff->mapfaces[i].points[0];
 
-      temp.UVs[0] = Global->mapfaces[i].UVs[2];
-      temp.UVs[1] = Global->mapfaces[i].UVs[3];
-      temp.UVs[2] = Global->mapfaces[i].UVs[0];
+      temp.UVs[0] = GlobalMapStuff->mapfaces[i].UVs[2];
+      temp.UVs[1] = GlobalMapStuff->mapfaces[i].UVs[3];
+      temp.UVs[2] = GlobalMapStuff->mapfaces[i].UVs[0];
 
-      Global->mapfaces.push_back(temp);
+      GlobalMapStuff->mapfaces.push_back(temp);
 
-      Global->mapfaces.erase(Global->mapfaces.begin() + i);
+      GlobalMapStuff->mapfaces.erase(GlobalMapStuff->mapfaces.begin() + i);
       i--;
     }
   }
@@ -664,9 +679,10 @@ bool init() {
   if (!setRenderer()) return false;
 
   // capture the mouse!! Get it!!! NOW!!!
-  SDL_SetWindowRelativeMouseMode(Global->window, true);
+  SDL_SetWindowRelativeMouseMode(RendererGlobal->window, true);
 
-  Global->windowscale = SDL_GetWindowDisplayScale(Global->window);
+  RendererGlobal->windowscale =
+      SDL_GetWindowDisplayScale(RendererGlobal->window);
 
   // set perspective matrix.
   double fovy =
@@ -905,7 +921,8 @@ bool init() {
 
   lastTime = SDL_GetTicks();
 
-  SDL_GetWindowSizeInPixels(Global->window, &Global->windowx, &Global->windowy);
+  SDL_GetWindowSizeInPixels(RendererGlobal->window, &RendererGlobal->windowx,
+                            &RendererGlobal->windowy);
 
   return true;
 }
@@ -936,7 +953,7 @@ void quit() {
   SDL_Log("freed Freetype stuff");
 
   // free UI map.
-  for (auto& [key, value] : Global->UImap) {
+  for (auto& [key, value] : UIGlobalStuff->UImap) {
     while (!value.empty()) {
       delete (value.back());
       value.pop_back();
@@ -944,7 +961,7 @@ void quit() {
   }
 
   // free UI map 3D.
-  for (auto& [key, value] : Global->UImap3D) {
+  for (auto& [key, value] : UIGlobalStuff->UImap3D) {
     while (!value.empty()) {
       delete (value.back());
       value.pop_back();

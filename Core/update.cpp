@@ -19,8 +19,11 @@
 #include "entity.h"
 #include "extern.h"
 #include "global.h"
+#include "inputs.h"
 #include "network.h"
 #include "player.h"
+#include "render.h"
+#include "settings.h"
 
 template <typename S>
 void serialize(S& s, playerdatapacket& o) {
@@ -50,9 +53,11 @@ playerinputs Loadinputdata(playerdatapacket input) {
 
 void processinputs() {
   P1PlayerInputs->lookdir.x += -0.5f * Settings->mousesensitivity.x *
-                               LocalInputs->MouseDelta.x * Global->windowscale;
+                               LocalInputs->MouseDelta.x *
+                               RendererGlobal->windowscale;
   P1PlayerInputs->lookdir.y += -0.5f * Settings->mousesensitivity.y *
-                               LocalInputs->MouseDelta.y * Global->windowscale;
+                               LocalInputs->MouseDelta.y *
+                               RendererGlobal->windowscale;
 
   if (P1PlayerInputs->lookdir.x < 0) P1PlayerInputs->lookdir.x += 360;
   if (P1PlayerInputs->lookdir.x >= 360) P1PlayerInputs->lookdir.x -= 360;
@@ -104,86 +109,96 @@ void CameraUpdate() {
 
 void update() {
   if (Global->IsOnline) {  // recieve net data
-    for (auto& i : Global->PlayerTimecounter) {
-      if (i.first != UserID) i.second += deltaTime;
+    for (auto& i : GlobalNetworkStuff->PlayerTimecounter) {
+      if (i.first != GlobalNetworkStuff->UserID) i.second += deltaTime;
     }
-    std::queue<Uint64> deleteplayerqueue;
+    std::queue<uint64_t> deleteplayerqueue;
 
     std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
     if (tempvector != NULL) {
       while (!tempvector->empty()) {
         CobblerNetData* tempdata = &tempvector->back();
         // SDL_Log("%s", tempdata->name.c_str());
-        Global->PlayerTimecounter[tempdata->ID] = 0;
+        GlobalNetworkStuff->PlayerTimecounter[tempdata->ID] = 0;
         if (tempdata->name == "Player") {
           playerdatapacket temp;
           auto state = bitsery::quickDeserialization<
               bitsery::InputBufferAdapter<std::vector<Uint8>>>(
               {tempdata->buffer.begin(), tempdata->size}, temp);
           if (state.first == bitsery::ReaderError::NoError && state.second) {
-            if (Global->PlayerEntity.contains(temp.ID) && temp.ID != UserID) {
-              Global->PlayerInputList[temp.ID] = Loadinputdata(temp);
+            if (GlobalNetworkStuff->PlayerEntity.contains(temp.ID) &&
+                temp.ID != GlobalNetworkStuff->UserID) {
+              GlobalNetworkStuff->PlayerInputList[temp.ID] =
+                  Loadinputdata(temp);
               for (int i = 0; i < 3; i++) {
-                Global->PlayerEntity[temp.ID]->velocityvec3[i] =
+                GlobalNetworkStuff->PlayerEntity[temp.ID]->velocityvec3[i] =
                     temp.velocityvec3[i];
-                Global->PlayerEntity[temp.ID]->position[i] = temp.position[i];
+                GlobalNetworkStuff->PlayerEntity[temp.ID]->position[i] =
+                    temp.position[i];
               }
-              Global->PlayerEntity[temp.ID]->IsGrounded = temp.IsGrounded;
-              Global->PlayerEntity[temp.ID]->State = temp.State;
+              GlobalNetworkStuff->PlayerEntity[temp.ID]->IsGrounded =
+                  temp.IsGrounded;
+              GlobalNetworkStuff->PlayerEntity[temp.ID]->State = temp.State;
             }
           }
           // else {
           //   SDL_Log("%u Receive", tempdata->size);
           // }
 
-        } else if (IsServer && tempdata->name == "PlayerAdd") {
+        } else if (GlobalNetworkStuff->IsServer &&
+                   tempdata->name == "PlayerAdd") {
           if (!CobblerCheckHasIP(tempdata->IP, tempdata->PORT)) {
-            Uint64 i = 1;
-            while (Global->UserIDs.find(i) != Global->UserIDs.end()) {
+            uint64_t i = 1;
+            while (GlobalNetworkStuff->UserIDs.find(i) !=
+                   GlobalNetworkStuff->UserIDs.end()) {
               i++;
             }
 
-            Global->UserIDs.insert(i);
+            GlobalNetworkStuff->UserIDs.insert(i);
             CobblerAddIP(tempdata->IP, tempdata->PORT, i);
 
-            Global->PlayerEntity[i] = SpawnEntities["Gardner"](i);
+            GlobalNetworkStuff->PlayerEntity[i] = SpawnEntities["Gardner"](i);
           }
         } else if (tempdata->name == "PlayerList") {
-          std::set<Uint64> tempset;
+          std::set<uint64_t> tempset;
           auto state = bitsery::quickDeserialization<
               bitsery::InputBufferAdapter<std::vector<Uint8>>>(
               {tempdata->buffer.begin(), tempdata->size}, tempset);
           if (state.first == bitsery::ReaderError::NoError && state.second) {
             for (auto& key : tempset) {
-              if (key != UserID &&
-                  Global->UserIDs.find(key) == Global->UserIDs.end()) {
-                Global->UserIDs.insert(key);
-                Global->PlayerEntity[key] = SpawnEntities["Gardner"](key);
+              if (key != GlobalNetworkStuff->UserID &&
+                  GlobalNetworkStuff->UserIDs.find(key) ==
+                      GlobalNetworkStuff->UserIDs.end()) {
+                GlobalNetworkStuff->UserIDs.insert(key);
+                GlobalNetworkStuff->PlayerEntity[key] =
+                    SpawnEntities["Gardner"](key);
               }
             }
           }
         } else if (tempdata->name == "SendTick") {
           CobblerQueueData("ReturnTick", tempdata->buffer, tempdata->size);
         } else if (tempdata->name == "ReturnTick") {
-          if (Global->PlayerEntity.contains(tempdata->ID)) {
-            Uint64 temp;
+          if (GlobalNetworkStuff->PlayerEntity.contains(tempdata->ID)) {
+            uint64_t temp;
             auto state = bitsery::quickDeserialization<
                 bitsery::InputBufferAdapter<std::vector<Uint8>>>(
                 {tempdata->buffer.begin(), tempdata->size}, temp);
             if (state.first == bitsery::ReaderError::NoError && state.second) {
               temp = SDL_GetPerformanceCounter() - temp;
               temp /= 2;
-              Global->PlayerEntity[tempdata->ID]->deltatimelocal =
+              GlobalNetworkStuff->PlayerEntity[tempdata->ID]->deltatimelocal =
                   temp / (double)SDL_GetPerformanceFrequency();
-              if (Global->PlayerEntity[tempdata->ID]->deltatimelocal > 0.03125f)
-                Global->PlayerEntity[tempdata->ID]->deltatimelocal = 0.03125f;
+              if (GlobalNetworkStuff->PlayerEntity[tempdata->ID]
+                      ->deltatimelocal > 0.03125f)
+                GlobalNetworkStuff->PlayerEntity[tempdata->ID]->deltatimelocal =
+                    0.03125f;
               // SDL_Log("%f",
-              // Global->Entities[Global->PlayerEntity[tempdata->ID]]
+              // Global->Entities[GlobalNetworkStuff->PlayerEntity[tempdata->ID]]
               //                   ->deltatimelocal);
             }
           }
         } else if (tempdata->name == "PlayerQuit") {
-          if (Global->UserIDs.contains(tempdata->ID)) {
+          if (GlobalNetworkStuff->UserIDs.contains(tempdata->ID)) {
             SDL_Log("player%llu client disconnect", tempdata->ID);
             deleteplayerqueue.push(tempdata->ID);
           }
@@ -193,7 +208,7 @@ void update() {
       delete tempvector;
     }
 
-    for (auto i : Global->PlayerTimecounter) {
+    for (auto i : GlobalNetworkStuff->PlayerTimecounter) {
       if (i.second > 5) {  // timeout player
         SDL_Log("player%llu timed out", i.first);
 
@@ -202,13 +217,13 @@ void update() {
     }
 
     while (!deleteplayerqueue.empty()) {
-      Global->UserIDs.erase(deleteplayerqueue.front());
+      GlobalNetworkStuff->UserIDs.erase(deleteplayerqueue.front());
 
-      delete (Global->PlayerEntity[deleteplayerqueue.front()]);
+      delete (GlobalNetworkStuff->PlayerEntity[deleteplayerqueue.front()]);
 
-      Global->PlayerEntity.erase(deleteplayerqueue.front());
-      Global->PlayerInputList.erase(deleteplayerqueue.front());
-      Global->PlayerTimecounter.erase(deleteplayerqueue.front());
+      GlobalNetworkStuff->PlayerEntity.erase(deleteplayerqueue.front());
+      GlobalNetworkStuff->PlayerInputList.erase(deleteplayerqueue.front());
+      GlobalNetworkStuff->PlayerTimecounter.erase(deleteplayerqueue.front());
       deleteplayerqueue.pop();
     }
   }
@@ -219,18 +234,18 @@ void update() {
               (double)SDL_GetPerformanceFrequency();
   if (LocalInputs->Keys[SDL_SCANCODE_ESCAPE] == 2) {
     Global->pause = !Global->pause;
-    SDL_SetWindowRelativeMouseMode(Global->window, !Global->pause);
+    SDL_SetWindowRelativeMouseMode(RendererGlobal->window, !Global->pause);
   }
 
   if (!Global->pause) {
     processinputs();
     if (LocalPlayer != NULL) inputtoentity(*P1PlayerInputs, LocalPlayer);
-    for (const auto& [ID, entity] : Global->PlayerEntity) {
-      inputtoentity(Global->PlayerInputList[ID], entity);
+    for (const auto& [ID, entity] : GlobalNetworkStuff->PlayerEntity) {
+      inputtoentity(GlobalNetworkStuff->PlayerInputList[ID], entity);
     }
     if (LocalPlayer != NULL) PlayerClassUpdate[Global->playerclass]();
     componentsupdate();
-    for (auto& [key, value] : Global->UImap3D) {
+    for (auto& [key, value] : UIGlobalStuff->UImap3D) {
       for (auto& i : value) {
         i->update();
       }
@@ -260,28 +275,30 @@ void update() {
   //         Global->Entities[1]->position[2]);
 
   if (Global->IsOnline) {  // send net data
-    if (IsServer) {
+    if (GlobalNetworkStuff->IsServer) {
       std::vector<Uint8> buffer{};
 
       auto writtenSize = bitsery::quickSerialization<
-          bitsery::OutputBufferAdapter<std::vector<Uint8>>>({buffer},
-                                                            Global->UserIDs);
+          bitsery::OutputBufferAdapter<std::vector<Uint8>>>(
+          {buffer}, GlobalNetworkStuff->UserIDs);
 
       CobblerQueueData("PlayerList", buffer, writtenSize);
 
       buffer.clear();
 
-      for (const auto& [ID, entity] : Global->PlayerEntity) {
-        if (ID != UserID) {
+      for (const auto& [ID, entity] : GlobalNetworkStuff->PlayerEntity) {
+        if (ID != GlobalNetworkStuff->UserID) {
           std::vector<Uint8> buffer{};
           playerdatapacket temp;
-          temp.State = Global->PlayerEntity[ID]->State;
+          temp.State = GlobalNetworkStuff->PlayerEntity[ID]->State;
           temp.ID = ID;
-          temp.Set(&Global->PlayerInputList[ID]);
-          temp.IsGrounded = Global->PlayerEntity[ID]->IsGrounded;
+          temp.Set(&GlobalNetworkStuff->PlayerInputList[ID]);
+          temp.IsGrounded = GlobalNetworkStuff->PlayerEntity[ID]->IsGrounded;
           for (int i = 0; i < 3; i++) {
-            temp.position[i] = Global->PlayerEntity[ID]->position[i];
-            temp.velocityvec3[i] = Global->PlayerEntity[ID]->velocityvec3[i];
+            temp.position[i] =
+                GlobalNetworkStuff->PlayerEntity[ID]->position[i];
+            temp.velocityvec3[i] =
+                GlobalNetworkStuff->PlayerEntity[ID]->velocityvec3[i];
           }
           auto writtenSize = bitsery::quickSerialization<
               bitsery::OutputBufferAdapter<std::vector<Uint8>>>({buffer}, temp);
@@ -294,7 +311,7 @@ void update() {
     if (LocalPlayer != NULL) {
       playerdatapacket temp;
       temp.State = LocalPlayer->State;
-      temp.ID = UserID;
+      temp.ID = GlobalNetworkStuff->UserID;
       temp.Set(P1PlayerInputs);
       temp.IsGrounded = LocalPlayer->IsGrounded;
       for (int i = 0; i < 3; i++) {
@@ -313,10 +330,10 @@ void update() {
         {buffer}, SDL_GetPerformanceCounter());
     CobblerQueueData("SendTick", buffer, writtenSize);
 
-    Global->Onlinesendwait -= deltaTime;
-    while (Global->Onlinesendwait <= 0) {
+    GlobalNetworkStuff->Onlinesendwait -= deltaTime;
+    while (GlobalNetworkStuff->Onlinesendwait <= 0) {
       CobblerSendNet();
-      Global->Onlinesendwait += 0.05f;
+      GlobalNetworkStuff->Onlinesendwait += 0.05f;
     }
   }
 
@@ -334,12 +351,12 @@ void PlayerQuit() {
       while (!tempvector->empty()) {
         CobblerNetData* tempdata = &tempvector->back();
         if (tempdata->name == "PlayerList") {
-          std::set<Uint64> tempset;
+          std::set<uint64_t> tempset;
           auto state = bitsery::quickDeserialization<
               bitsery::InputBufferAdapter<std::vector<Uint8>>>(
               {tempdata->buffer.begin(), tempdata->size}, tempset);
           if (state.first == bitsery::ReaderError::NoError && state.second) {
-            if (tempset.find(UserID) == tempset.end()) {
+            if (tempset.find(GlobalNetworkStuff->UserID) == tempset.end()) {
               check = true;
               break;
             }

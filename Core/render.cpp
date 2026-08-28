@@ -10,6 +10,7 @@
 #include "extern.h"
 #include "rendermath.h"
 #include "screen.h"
+#include "settings.h"
 
 // function that turns vec3 into 2d point on screen.
 // for software rendering.
@@ -58,11 +59,13 @@ void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
         int tempy = y + ((i - x) * (y2 - y) / (x2 - x));
         if (i >= 0 && tempy >= 0 && i < Settings->resolutionx &&
             tempy < Settings->resolutiony) {
-          if (Global->SRstuff
-                  ->pixelsdepth[i + tempy * Global->SRstuff->pitch] >= 8) {
-            Global->SRstuff->pixelsdepth[i + tempy * Global->SRstuff->pitch] =
-                8;
-            Global->SRstuff->pixels[i + tempy * Global->SRstuff->pitch] = color;
+          if (RendererGlobal->SRstuff
+                  ->pixelsdepth[i + tempy * RendererGlobal->SRstuff->pitch] >=
+              8) {
+            RendererGlobal->SRstuff
+                ->pixelsdepth[i + tempy * RendererGlobal->SRstuff->pitch] = 8;
+            RendererGlobal->SRstuff
+                ->pixels[i + tempy * RendererGlobal->SRstuff->pitch] = color;
           }
         }
       }
@@ -77,11 +80,13 @@ void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
         int tempx = x + ((i - y) * (x2 - x) / (y2 - y));
         if (tempx >= 0 && i >= 0 && tempx < Settings->resolutionx &&
             i < Settings->resolutiony) {
-          if (Global->SRstuff
-                  ->pixelsdepth[tempx + i * Global->SRstuff->pitch] >= 8) {
-            Global->SRstuff->pixelsdepth[tempx + i * Global->SRstuff->pitch] =
-                8;
-            Global->SRstuff->pixels[tempx + i * Global->SRstuff->pitch] = color;
+          if (RendererGlobal->SRstuff
+                  ->pixelsdepth[tempx + i * RendererGlobal->SRstuff->pitch] >=
+              8) {
+            RendererGlobal->SRstuff
+                ->pixelsdepth[tempx + i * RendererGlobal->SRstuff->pitch] = 8;
+            RendererGlobal->SRstuff
+                ->pixels[tempx + i * RendererGlobal->SRstuff->pitch] = color;
           }
         }
       }
@@ -97,10 +102,12 @@ void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
       for (int j = point.p.y - radius; j < point.p.y + radius; j++) {
         if (i > -1 && i < Settings->resolutionx && j > -1 &&
             j < Settings->resolutiony) {
-          if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >=
-              7) {
-            Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 7;
-            Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
+          if (RendererGlobal->SRstuff
+                  ->pixelsdepth[i + j * RendererGlobal->SRstuff->pitch] >= 7) {
+            RendererGlobal->SRstuff
+                ->pixelsdepth[i + j * RendererGlobal->SRstuff->pitch] = 7;
+            RendererGlobal->SRstuff
+                ->pixels[i + j * RendererGlobal->SRstuff->pitch] = color;
           }
         }
       }
@@ -158,12 +165,12 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
             uvresult = (uvresult * (1 / (uvw.x * vectors[0].dist +
                                          uvw.y * vectors[1].dist +
                                          uvw.z * vectors[2].dist)));
-            int texturew = Global->SRstuff->textures[texture]->w,
-                textureh = Global->SRstuff->textures[texture]->h;
+            int texturew = RendererGlobal->SRstuff->textures[texture]->w,
+                textureh = RendererGlobal->SRstuff->textures[texture]->h;
             int uvxthing = (int(texturew * (uvresult.x)) * xloop) % texturew;
             int uvything = (int(textureh * (uvresult.y)) * yloop) % textureh;
             Uint8 color = static_cast<Uint8*>(
-                Global->SRstuff->textures[texture]
+                RendererGlobal->SRstuff->textures[texture]
                     ->pixels)[uvxthing + uvything * texturew];
 
             if (color > 0) {
@@ -180,11 +187,14 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[],
               float dist =
                   std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
                             tempvec3.z * tempvec3.z);
-              if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] >
+              if (RendererGlobal->SRstuff
+                      ->pixelsdepth[i + j * RendererGlobal->SRstuff->pitch] >
                   dist * 3) {
-                Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
+                RendererGlobal->SRstuff
+                    ->pixels[i + j * RendererGlobal->SRstuff->pitch] = color;
                 if (dist < 0) dist = 0;
-                Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] =
+                RendererGlobal->SRstuff
+                    ->pixelsdepth[i + j * RendererGlobal->SRstuff->pitch] =
                     (unsigned char)dist * 4;
               }
             }
@@ -386,7 +396,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
             for (int j = 0; j < model->faces.size(); j++) {
               glEnable(GL_TEXTURE_2D);
               glBindTexture(GL_TEXTURE_2D,
-                            Global->GLstuff->textures[model->texture]);
+                            RendererGlobal->GLstuff->textures[model->texture]);
               glBegin(GL_TRIANGLES);
               glm::vec3 tri[3];
               for (int k = 2; k >= 0; k--) {

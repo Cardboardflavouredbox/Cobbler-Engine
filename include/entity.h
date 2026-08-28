@@ -19,6 +19,14 @@
 extern "C" {
 LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
+
+struct EntitySpawnInfo {
+  unsigned int EntityIndex;
+  int State;
+  glm::vec3 position, velocityvec3 = glm::vec3({0, 0, 0});
+  int teamindex;
+};
+
 struct Entity {
   unsigned int EntityIndex;
 

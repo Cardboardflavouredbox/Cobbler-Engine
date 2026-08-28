@@ -38,18 +38,16 @@ struct CobblerNetData {
   std::string name, IP;
   std::vector<Uint8> buffer;
   Uint16 PORT;
-  Uint64 ID;
+  uint64_t ID;
   Uint8 size;
 };
 
 // LIB_API extern PostField* curlpostfield;
 // LIB_API extern std::string curlloginstring;
-LIB_API extern bool IsServer;
-LIB_API extern Uint64 UserID;
 
 extern "C" {
 LIB_API bool CobblerInitNet();
-LIB_API void CobblerAddIP(std::string IP, unsigned int Port, Uint64 ID);
+LIB_API void CobblerAddIP(std::string IP, unsigned int Port, uint64_t ID);
 LIB_API bool CobblerCheckHasIP(std::string IP, unsigned int Port);
 LIB_API bool CobblerSetSocket(unsigned int port);
 LIB_API void CobblerQuitNet();

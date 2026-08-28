@@ -1,7 +1,6 @@
 #pragma once
 
-#include <SDL3/SDL_render.h>
-#include <glad/glad.h>
+#include <SDL3/SDL_scancode.h>
 
 #include <glm/glm.hpp>
 #include <map>
@@ -34,34 +33,8 @@ struct GlobalClass {
  public:
   std::string GameName = "CobblerGame";
 
-  SDL_Window* window;
-
-  struct SoftwareRenderer {
-    SDL_Renderer* renderer;
-    SDL_Surface* render_target;
-    SDL_Palette* palette;
-    std::unordered_map<std::string, SDL_Surface*> textures;
-    unsigned char* pixels;
-    int pitch;
-    std::vector<unsigned short> pixelsdepth;
-  };
-
-  SoftwareRenderer* SRstuff;
-
-  struct OpenGLRenderer {
-    SDL_GLContext GLContext;
-    std::unordered_map<std::string, GLuint> textures;
-    GLuint MapGLlist;
-  };
-  OpenGLRenderer* GLstuff;
-
   bool IsRunning;
-  bool pause = false, isopeningfile = false;
-  std::string skybox;
-
-  int windowx = 320, windowy = 200;
-
-  float windowscale = 1.f;
+  bool pause = false;
 
   struct Model {
     std::string texture;
@@ -79,10 +52,6 @@ struct GlobalClass {
   };
   std::unordered_map<std::string, Model> Modelmap;
 
-  std::vector<MapPoint> Points;
-  std::vector<Mapface> mapfaces;
-  std::vector<glm::vec3> KillboxPoints;
-  std::vector<std::vector<int>> KillboxFaces;
   std::map<unsigned int, Entity*> Entities;
   std::map<unsigned int, Particle*> Particles;
   std::vector<Modeltransform> Models;
@@ -90,30 +59,24 @@ struct GlobalClass {
   std::queue<unsigned int> EntitydeleteQueue;
   std::queue<unsigned int> ParticledeleteQueue;
 
-  std::unordered_map<std::string, std::vector<UIthing*>> UImap;
-  std::vector<std::string> UIlist = {"default"};
-
-  std::unordered_map<std::string, std::vector<UI3Dthing*>> UImap3D;
   glm::mat4 perspectivematrix;
 
   bool LoggedIn = false;
   bool IsOnline = false;
   std::string playerclass = "default";
 
-  std::set<Uint64> UserIDs;
-  std::unordered_map<Uint64, float> PlayerTimecounter;
-  std::unordered_map<Uint64, Entity*> PlayerEntity;
-  std::unordered_map<Uint64, playerinputs> PlayerInputList;
-
-  float Onlinesendwait = 0.05f;
-
   char* pref_path;
 };
 
-struct EditorClass {
-  glm::vec2 pos;
-  float zoom = 1;
-  int currentlyselectedpoint = -1, currentlyselectedface = -1;
+struct GlobalNetworkClass {
+  bool IsServer;
+  uint64_t UserID;
+  std::set<uint64_t> UserIDs;
+  std::unordered_map<uint64_t, float> PlayerTimecounter;
+  std::unordered_map<uint64_t, Entity*> PlayerEntity;
+  std::unordered_map<uint64_t, playerinputs> PlayerInputList;
+
+  float Onlinesendwait = 0.05f;
 };
 
 struct ZipData {
@@ -133,21 +96,4 @@ struct Mapdata {
   std::vector<Entitydata> Entities;
   std::vector<Modeltransform> props;
   std::string skybox;
-};
-
-struct Inputs {
- public:
-  unsigned char Keys[512] = {}, leftclick = 0, rightclick = 0;
-  glm::vec2 MouseDelta, MousePos, MouseScroll;
-};
-
-struct SettingsClass {
- public:
-  uint16_t resolutionx = 480, resolutiony = 270;
-  int fov = 90;
-  int fps = 60;
-  bool vsync = false;
-  int graphicsmode = 0;  // 0 = software, 1 = opengl
-  bool autorun = false;
-  glm::vec2 mousesensitivity = glm::vec2({1, 1});
 };

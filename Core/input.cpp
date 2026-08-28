@@ -1,4 +1,6 @@
-#include "extern.h"
+#include <SDL3/SDL_mouse.h>
+
+#include "inputs.h"
 #include "update.h"
 
 // key press function.

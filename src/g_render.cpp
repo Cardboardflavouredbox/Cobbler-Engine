@@ -13,6 +13,7 @@
 #include "render.h"
 #include "rendermath.h"
 #include "screen.h"
+#include "settings.h"
 #include "update.h"
 
 float getdistancething(glm::vec3 P) {
@@ -56,7 +57,7 @@ glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
 
 // software rendering stuff
 // void rendergame() {
-//   std::vector<Mapface> tempmapfacevector = Global->mapfaces,
+//   std::vector<Mapface> tempmapfacevector = GlobalMapStuff->mapfaces,
 //   addlaterfacevector; std::vector<MapPoint> temppointsvector =
 //   Global->Points;
 
@@ -170,10 +171,11 @@ glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
 // }
 
 void render3DUI() {
-  for (int i = 0; i < Global->UIlist.size(); i++) {
-    int len = Global->UImap3D[Global->UIlist[i]].size();
+  for (int i = 0; i < UIGlobalStuff->UIlist.size(); i++) {
+    int len = UIGlobalStuff->UImap3D[UIGlobalStuff->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
-      Modeltransform* model = Global->UImap3D[Global->UIlist[i]][j]->modeltrans;
+      Modeltransform* model =
+          UIGlobalStuff->UImap3D[UIGlobalStuff->UIlist[i]][j]->modeltrans;
       ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
       // SDL_Log("%f %f %f", model->position.x, model->position.y,
@@ -185,11 +187,11 @@ void render3DUI() {
 }
 
 void render2DUI() {
-  for (int i = 0; i < Global->UIlist.size(); i++) {
-    int len = Global->UImap[Global->UIlist[i]].size();
+  for (int i = 0; i < UIGlobalStuff->UIlist.size(); i++) {
+    int len = UIGlobalStuff->UImap[UIGlobalStuff->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
       if (Settings->graphicsmode == 1) glDisable(GL_TEXTURE_2D);
-      Global->UImap[Global->UIlist[i]].at(j)->render();
+      UIGlobalStuff->UImap[UIGlobalStuff->UIlist[i]].at(j)->render();
     }
   }
 }
@@ -198,7 +200,7 @@ void renderEntity() {
   for (const auto& i : Global->Entities) {
     if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();
   }
-  for (const auto& i : Global->PlayerEntity) {
+  for (const auto& i : GlobalNetworkStuff->PlayerEntity) {
     if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();
   }
 }
@@ -229,7 +231,8 @@ void renderParticles() {
       glDisable(GL_TEXTURE_2D);
     } else {
       glEnable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D, Global->GLstuff->textures[i->Texture]);
+      glBindTexture(GL_TEXTURE_2D,
+                    RendererGlobal->GLstuff->textures[i->Texture]);
     }
 
     glm::vec3 quad[4];
@@ -272,10 +275,10 @@ void renderbackground() {
   int x = Settings->resolutionx, y = Settings->resolutiony;
   for (int i = 0; i < x; i++) {
     for (int j = 0; j < y; j++) {
-      if (Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] ==
-          65535) {
+      if (RendererGlobal->SRstuff
+              ->pixelsdepth[i + j * RendererGlobal->SRstuff->pitch] == 65535) {
         Uint8 color = static_cast<Uint8*>(
-            Global->SRstuff->textures[Global->skybox]
+            RendererGlobal->SRstuff->textures[GlobalMapStuff->skybox]
                 ->pixels)[(int(i * 320.f / x) +
                            int((1 - ((int(LocalPlayer->dir.x) % 180) / 180.f)) *
                                640.f)) %
@@ -283,7 +286,8 @@ void renderbackground() {
                           (int((1 - (LocalPlayer->dir.y) / 90.f) * 200.f) +
                            int(j * 200.f / y)) *
                               640];
-        Global->SRstuff->pixels[i + j * Global->SRstuff->pitch] = color;
+        RendererGlobal->SRstuff
+            ->pixels[i + j * RendererGlobal->SRstuff->pitch] = color;
       }
     }
   }
@@ -292,15 +296,18 @@ void renderbackground() {
 void softwarerender() {
   SDL_Log("Software renderer is not supported anymore.");
   Global->IsRunning = false;
-  // SDL_LockSurface(Global->SRstuff->render_target);
+  // SDL_LockSurface(RendererGlobal->SRstuff->render_target);
 
-  // Global->SRstuff->pixels =
-  //     static_cast<unsigned char*>(Global->SRstuff->render_target->pixels);
-  // Global->SRstuff->pitch = Global->SRstuff->render_target->pitch;
+  // RendererGlobal->SRstuff->pixels =
+  //     static_cast<unsigned
+  //     char*>(RendererGlobal->SRstuff->render_target->pixels);
+  // RendererGlobal->SRstuff->pitch =
+  // RendererGlobal->SRstuff->render_target->pitch;
 
   // for (int i = 0; i < Settings->resolutionx; i++) {
   //   for (int j = 0; j < Settings->resolutiony; j++) {
-  //     Global->SRstuff->pixelsdepth[i + j * Global->SRstuff->pitch] = 65535;
+  //     RendererGlobal->SRstuff->pixelsdepth[i + j *
+  //     RendererGlobal->SRstuff->pitch] = 65535;
   //   }
   // }
   // render2DUI();
@@ -311,7 +318,7 @@ void softwarerender() {
 
   // renderbackground();
 
-  // SDL_UnlockSurface(Global->SRstuff->render_target);
+  // SDL_UnlockSurface(RendererGlobal->SRstuff->render_target);
 
   // // Screen size and position stuff
   // int w = Global->windowx, h = Global->windowy, rtw = Settings->resolutionx,
@@ -333,10 +340,11 @@ void softwarerender() {
   // temprect.x = w;
   // temprect.y = h;
   // SDL_Texture* temptexture = SDL_CreateTextureFromSurface(
-  //     Global->SRstuff->renderer, Global->SRstuff->render_target);
+  //     RendererGlobal->SRstuff->renderer,
+  //     RendererGlobal->SRstuff->render_target);
   // SDL_SetTextureScaleMode(temptexture, SDL_SCALEMODE_PIXELART);
-  // SDL_RenderTexture(Global->SRstuff->renderer, temptexture, NULL, &temprect);
-  // SDL_RenderPresent(Global->SRstuff->renderer);
+  // SDL_RenderTexture(RendererGlobal->SRstuff->renderer, temptexture, NULL,
+  // &temprect); SDL_RenderPresent(RendererGlobal->SRstuff->renderer);
 }
 
 void openglrender() {
@@ -355,7 +363,7 @@ void openglrender() {
   glLoadMatrixf(glm::value_ptr(modelMatrix));
 
   // OpenGL rendering goes here
-  glCallList(Global->GLstuff->MapGLlist);
+  glCallList(RendererGlobal->GLstuff->MapGLlist);
 
   renderProps();
   renderEntity();
@@ -381,7 +389,7 @@ void openglrender() {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_TEXTURE_2D);
 
-  if (Global->pause || Global->isopeningfile) {
+  if (Global->pause) {
     glBegin(GL_TRIANGLE_FAN);
 
     glColor4f(0, 0, 0, 0.5f);
@@ -398,7 +406,7 @@ void openglrender() {
 
   glFlush();
 
-  SDL_GL_SwapWindow(Global->window);
+  SDL_GL_SwapWindow(RendererGlobal->window);
 }
 
 void render() {

@@ -283,28 +283,30 @@ bool Slopecheck(glm::vec3 normal) {
 glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                              float radius, int teamindex, float& dist,
                              Entity* tempentity) {
-  for (int i = 0; i < Global->KillboxFaces.size(); i++) {
+  for (int i = 0; i < GlobalMapStuff->KillboxFaces.size(); i++) {
     float disttemp;
     glm::vec3 normal;
-    if (CapsuleTriCheck(Global->KillboxPoints[Global->KillboxFaces[i][0]],
-                        Global->KillboxPoints[Global->KillboxFaces[i][1]],
-                        Global->KillboxPoints[Global->KillboxFaces[i][2]],
-                        hitbox[0] + checkposition, hitbox[1] + checkposition,
-                        radius, disttemp, normal)) {
+    if (CapsuleTriCheck(
+            GlobalMapStuff->KillboxPoints[GlobalMapStuff->KillboxFaces[i][0]],
+            GlobalMapStuff->KillboxPoints[GlobalMapStuff->KillboxFaces[i][1]],
+            GlobalMapStuff->KillboxPoints[GlobalMapStuff->KillboxFaces[i][2]],
+            hitbox[0] + checkposition, hitbox[1] + checkposition, radius,
+            disttemp, normal)) {
       tempentity->hp = -1;
     }
   }
 
   float distresult = 0;
   glm::vec3 result = glm::vec3(0);
-  for (int i = 0; i < Global->mapfaces.size(); i++) {
+  for (int i = 0; i < GlobalMapStuff->mapfaces.size(); i++) {
     float disttemp;
     glm::vec3 normal;
-    if (CapsuleTriCheck(Global->Points[Global->mapfaces[i].points[0]].pos,
-                        Global->Points[Global->mapfaces[i].points[1]].pos,
-                        Global->Points[Global->mapfaces[i].points[2]].pos,
-                        hitbox[0] + checkposition, hitbox[1] + checkposition,
-                        radius, disttemp, normal)) {
+    if (CapsuleTriCheck(
+            GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[0]].pos,
+            GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[1]].pos,
+            GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[2]].pos,
+            hitbox[0] + checkposition, hitbox[1] + checkposition, radius,
+            disttemp, normal)) {
       if (distresult == 0 || distresult > disttemp) {
         result = normal;
         distresult = disttemp;
@@ -327,7 +329,7 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
       }
     }
   }
-  for (auto& i : Global->PlayerEntity) {
+  for (auto& i : GlobalNetworkStuff->PlayerEntity) {
     Entity* tempentity = i.second;
     if (tempentity->teamindex != teamindex) {
       raycheckresult temp =
