@@ -6,6 +6,10 @@
 #include <glm/glm.hpp>
 
 #include "deltaTime.h"
+#include "extern.h"
+#include "map.h"
+#include "networkextern.h"
+#include "pi.h"
 
 // Ray and Triangle collision check function.
 // https://gamedev.stackexchange.com/a/5589
@@ -313,7 +317,7 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
       }
     }
   }
-  for (auto& i : Global->Entities) {
+  for (auto& i : Entities) {
     Entity* tempentity = i.second;
     if (tempentity->teamindex != teamindex) {
       raycheckresult temp =

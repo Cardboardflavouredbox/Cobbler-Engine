@@ -8,6 +8,7 @@
 
 #include "camera.h"
 #include "extern.h"
+#include "pi.h"
 #include "rendermath.h"
 #include "screen.h"
 #include "settings.h"

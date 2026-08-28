@@ -4,10 +4,14 @@
 
 #include "camera.h"
 #include "deltaTime.h"
+#include "entity.h"
 #include "font.h"
 #include "inputs.h"
 #include "map.h"
 #include "model.h"
+#include "networkextern.h"
+#include "particles.h"
+#include "player.h"
 #include "render.h"
 #include "settings.h"
 #include "ui.h"
@@ -31,7 +35,11 @@ uint64_t lastTime;
 // deltatime calculation variable
 uint64_t currentTime = SDL_GetPerformanceCounter();
 // Entity Spawn function map. Loaded from dynamic libraries.
-std::unordered_map<std::string, Entity* (*)(unsigned int)> SpawnEntities;
+std::unordered_map<std::string, Entity* (*)(unsigned int, unsigned int)>
+    SpawnEntities;
+// Particle Spawn function map. Loaded from dynamic libraries.
+std::unordered_map<std::string, Particle* (*)(unsigned int, unsigned int)>
+    SpawnParticles;
 // Player Class Update function map. Loaded from dynamic libraries.
 std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
 // pointer to Freetype variables. (y'know for the fonts)
@@ -41,6 +49,16 @@ std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 // pointer to Camera.
 CameraClass* Camera;
 
+// Entities map. Contains all the npc Entities.
+std::map<unsigned int, Entity*> Entities;
+// Queue that contains all the Entities to delete this frame.
+std::queue<unsigned int> EntitydeleteQueue;
+
+// Particles map. Contains all the Particles.
+std::map<unsigned int, Particle*> Particles;
+// Queue that contains all the Particles to delete this frame.
+std::queue<unsigned int> ParticledeleteQueue;
+
 std::unique_ptr<GlobalMapClass> GlobalMapStuff;
 
 std::unique_ptr<RendererStuff> RendererGlobal;
@@ -49,28 +67,51 @@ std::unique_ptr<UIGlobalClass> UIGlobalStuff;
 
 std::unique_ptr<GlobalNetworkClass> GlobalNetworkStuff;
 
-void EntitySpawn() {}
-
 unsigned int EntityMapEmptyIndex() {
-  if (!Global->Entities.contains(0)) {
+  if (!Entities.contains(0)) {
     return 0;
   }
   unsigned int i = 1;
   while (i != 0) {
-    if (!Global->Entities.contains(i)) return i;
+    if (!Entities.contains(i)) return i;
     i++;
   }
   return 0;
 }
 
+void EntitySpawn(std::string name, unsigned int EntityCode,
+                 EntitySpawnInfo Entityinfo) {
+  if (!Global->IsOnline || GlobalNetworkStuff->IsServer) {
+    unsigned int temp = EntityMapEmptyIndex();
+    Entity* tempentity = SpawnEntities[name](EntityCode, temp);
+    tempentity->EntityIndex = temp;
+    tempentity->position = Entityinfo.position;
+    tempentity->State = Entityinfo.State;
+    tempentity->teamindex = Entityinfo.teamindex;
+    tempentity->velocityvec3 = Entityinfo.velocityvec3;
+    tempentity->dir = Entityinfo.direction;
+    Entities[temp] = tempentity;
+  }
+}
+
 unsigned int ParticleMapEmptyIndex() {
-  if (!Global->Particles.contains(0)) {
+  if (!Particles.contains(0)) {
     return 0;
   }
   unsigned int i = 1;
   while (i != 0) {
-    if (!Global->Particles.contains(i)) return i;
+    if (!Particles.contains(i)) return i;
     i++;
   }
   return 0;
+}
+
+void ParticleSpawn(std::string name, unsigned int ParticleCode,
+                   glm::vec3 position) {
+  if (Global->IsOnline) {  // online code stuff
+  }
+  unsigned int temp = ParticleMapEmptyIndex();
+  Particle* tempparticle = SpawnParticles[name](ParticleCode, temp);
+  tempparticle->position = position;
+  Particles[temp] = tempparticle;
 }

@@ -138,7 +138,24 @@ foreach(ENTITYDIR ${ENTITIES})
         set_target_properties(${FOLDER_NAME} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/entities/${FOLDER_NAME}"
         )
-        target_link_libraries(${FOLDER_NAME} PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD)
+        target_link_libraries(${FOLDER_NAME} PRIVATE glm::glm CobblerCore CobblerGLAD)
+        target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    endif()
+endforeach()
+
+file(GLOB PARTICLES LIST_DIRECTORIES true CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/particles/*")
+file(GLOB PARTICLES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/particles/*")
+foreach(PARTICLEDIR ${PARTICLES})
+    cmake_path(GET PARTICLEDIR FILENAME FOLDER_NAME)
+    if(IS_DIRECTORY "${PARTICLEDIR}")
+        add_library(${FOLDER_NAME} SHARED "${PARTICLEDIR}/particlemain.cpp")
+        set_target_properties(${FOLDER_NAME} PROPERTIES
+            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/particles/${FOLDER_NAME}"
+        )
+        set_target_properties(${FOLDER_NAME} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/particles/${FOLDER_NAME}"
+        )
+        target_link_libraries(${FOLDER_NAME} PRIVATE glm::glm CobblerCore CobblerGLAD)
         target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
     endif()
 endforeach()
@@ -156,7 +173,7 @@ foreach(CLASSDIR ${CLASSES})
         set_target_properties(${FOLDER_NAME} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/class/${FOLDER_NAME}"
         )
-        target_link_libraries(${FOLDER_NAME} PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGameUI freetype CobblerGLAD)
+        target_link_libraries(${FOLDER_NAME} PRIVATE glm::glm CobblerCore CobblerGameUI freetype CobblerGLAD)
         target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
         target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/class/${FOLDER_NAME}/include)
         target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/UI/include)

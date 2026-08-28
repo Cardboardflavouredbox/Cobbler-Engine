@@ -2,6 +2,8 @@
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <map>
+#include <queue>
 #include <string>
 
 #ifdef _WIN32
@@ -30,3 +32,16 @@ struct Particle {
 
   virtual ~Particle() {}
 };
+
+LIB_API extern std::map<unsigned int, Particle*> Particles;
+LIB_API extern std::queue<unsigned int> ParticledeleteQueue;
+
+LIB_API extern std::unordered_map<std::string,
+                                  Particle* (*)(unsigned int, unsigned int)>
+    SpawnParticles;
+
+extern "C" {
+LIB_API unsigned int ParticleMapEmptyIndex();
+LIB_API void ParticleSpawn(std::string name, unsigned int ParticleCode,
+                           glm::vec3 position);
+}

@@ -1,14 +1,11 @@
 #pragma once
 
-#include <SDL3/SDL_scancode.h>
-
 #include <glm/glm.hpp>
-#include <map>
-#include <queue>
 #include <set>
 #include <string>
 #include <unordered_map>
 
+#include "SDL_scancode.h"
 #include "entity.h"
 #include "map.h"
 #include "model.h"
@@ -25,9 +22,6 @@
 #else
 #define LIB_API
 #endif
-
-const double PI =
-    3.1415926535897932384626433832795028841971693993751058209749445923078164062;
 
 struct GlobalClass {
  public:
@@ -52,12 +46,7 @@ struct GlobalClass {
   };
   std::unordered_map<std::string, Model> Modelmap;
 
-  std::map<unsigned int, Entity*> Entities;
-  std::map<unsigned int, Particle*> Particles;
   std::vector<Modeltransform> Models;
-
-  std::queue<unsigned int> EntitydeleteQueue;
-  std::queue<unsigned int> ParticledeleteQueue;
 
   glm::mat4 perspectivematrix;
 
@@ -66,17 +55,6 @@ struct GlobalClass {
   std::string playerclass = "default";
 
   char* pref_path;
-};
-
-struct GlobalNetworkClass {
-  bool IsServer;
-  uint64_t UserID;
-  std::set<uint64_t> UserIDs;
-  std::unordered_map<uint64_t, float> PlayerTimecounter;
-  std::unordered_map<uint64_t, Entity*> PlayerEntity;
-  std::unordered_map<uint64_t, playerinputs> PlayerInputList;
-
-  float Onlinesendwait = 0.05f;
 };
 
 struct ZipData {

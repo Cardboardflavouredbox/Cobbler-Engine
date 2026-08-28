@@ -1,13 +1,14 @@
 #include "components.h"
 
-#include "extern.h"
+#include "networkextern.h"
+#include "particles.h"
 #include "physics.h"
 #include "ui.h"
 
 // components that are called after update but before render
 void componentsupdatelate() {
   // call npc entity late updates
-  for (auto& i : Global->Entities) {
+  for (auto& i : Entities) {
     i.second->lateupdate();
   }
   // call player entity late updates
@@ -15,7 +16,7 @@ void componentsupdatelate() {
     i.second->lateupdate();
   }
   // call particle late updates
-  for (auto& i : Global->Particles) {
+  for (auto& i : Particles) {
     i.second->lateupdate();
   }
   // call UI components updates
@@ -30,7 +31,7 @@ void componentsupdatelate() {
 // update components
 void componentsupdate() {
   // call npc entity updates and EntityMove
-  for (auto& i : Global->Entities) {
+  for (auto& i : Entities) {
     i.second->update();
     EntityMove(i.second);
     i.second->deltatimelocal = 0;
@@ -42,7 +43,7 @@ void componentsupdate() {
     i.second->deltatimelocal = 0;
   }
   // call particle updates
-  for (auto& i : Global->Particles) {
+  for (auto& i : Particles) {
     i.second->update();
   }
 }

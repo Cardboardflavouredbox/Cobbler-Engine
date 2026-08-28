@@ -10,6 +10,8 @@
 #include "extern.h"
 #include "map.h"
 #include "model.h"
+#include "networkextern.h"
+#include "pi.h"
 #include "render.h"
 #include "rendermath.h"
 #include "screen.h"
@@ -197,7 +199,7 @@ void render2DUI() {
 }
 
 void renderEntity() {
-  for (const auto& i : Global->Entities) {
+  for (const auto& i : Entities) {
     if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();
   }
   for (const auto& i : GlobalNetworkStuff->PlayerEntity) {
@@ -226,7 +228,7 @@ void renderParticles() {
       glm::quatLookAt(-dirthing, glm::vec3(0, 0, 1)) *
       glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, -1));
 
-  for (const auto& [key, i] : Global->Particles) {
+  for (const auto& [key, i] : Particles) {
     if (i->Texture == "") {
       glDisable(GL_TEXTURE_2D);
     } else {

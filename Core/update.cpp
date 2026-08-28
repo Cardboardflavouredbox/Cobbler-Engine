@@ -21,6 +21,8 @@
 #include "global.h"
 #include "inputs.h"
 #include "network.h"
+#include "networkextern.h"
+#include "pi.h"
 #include "player.h"
 #include "render.h"
 #include "settings.h"
@@ -157,7 +159,8 @@ void update() {
             GlobalNetworkStuff->UserIDs.insert(i);
             CobblerAddIP(tempdata->IP, tempdata->PORT, i);
 
-            GlobalNetworkStuff->PlayerEntity[i] = SpawnEntities["Gardner"](i);
+            GlobalNetworkStuff->PlayerEntity[i] =
+                SpawnEntities["Gardner"](0, i);
           }
         } else if (tempdata->name == "PlayerList") {
           std::set<uint64_t> tempset;
@@ -171,7 +174,7 @@ void update() {
                       GlobalNetworkStuff->UserIDs.end()) {
                 GlobalNetworkStuff->UserIDs.insert(key);
                 GlobalNetworkStuff->PlayerEntity[key] =
-                    SpawnEntities["Gardner"](key);
+                    SpawnEntities["Gardner"](0, key);
               }
             }
           }
@@ -193,7 +196,7 @@ void update() {
                 GlobalNetworkStuff->PlayerEntity[tempdata->ID]->deltatimelocal =
                     0.03125f;
               // SDL_Log("%f",
-              // Global->Entities[GlobalNetworkStuff->PlayerEntity[tempdata->ID]]
+              // Entities[GlobalNetworkStuff->PlayerEntity[tempdata->ID]]
               //                   ->deltatimelocal);
             }
           }
@@ -254,25 +257,25 @@ void update() {
 
   componentsupdatelate();
 
-  while (!Global->EntitydeleteQueue.empty()) {
-    unsigned int index = Global->EntitydeleteQueue.front();
-    Global->EntitydeleteQueue.pop();
-    delete (Global->Entities[index]);
-    Global->Entities.erase(index);
+  while (!EntitydeleteQueue.empty()) {
+    unsigned int index = EntitydeleteQueue.front();
+    EntitydeleteQueue.pop();
+    delete (Entities[index]);
+    Entities.erase(index);
   }
 
-  while (!Global->ParticledeleteQueue.empty()) {
-    unsigned int index = Global->ParticledeleteQueue.front();
-    Global->ParticledeleteQueue.pop();
-    delete (Global->Particles[index]);
-    Global->Particles.erase(index);
+  while (!ParticledeleteQueue.empty()) {
+    unsigned int index = ParticledeleteQueue.front();
+    ParticledeleteQueue.pop();
+    delete (Particles[index]);
+    Particles.erase(index);
   }
 
   CameraUpdate();
 
-  // SDL_Log("%f %f %f", Global->Entities[1]->position[0],
-  //         Global->Entities[1]->position[1],
-  //         Global->Entities[1]->position[2]);
+  // SDL_Log("%f %f %f", Entities[1]->position[0],
+  //         Entities[1]->position[1],
+  //         Entities[1]->position[2]);
 
   if (Global->IsOnline) {  // send net data
     if (GlobalNetworkStuff->IsServer) {

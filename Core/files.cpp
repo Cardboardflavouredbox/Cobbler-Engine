@@ -24,6 +24,7 @@
 #include "inputs.h"
 #include "model.h"
 #include "network.h"
+#include "networkextern.h"
 #include "render.h"
 #include "settings.h"
 #include "ui.h"
@@ -693,7 +694,7 @@ bool init() {
 
   Camera = new CameraClass();
 
-  LocalPlayer = SpawnEntities[Global->playerclass](0);
+  LocalPlayer = SpawnEntities[Global->playerclass](0, 0);
   LocalPlayer->position.z = 8;
   LocalPlayer->Modelthing->visible = false;
   LocalPlayer->teamindex = -1;
@@ -702,16 +703,15 @@ bool init() {
   // push LocalPlayer Entity to Entities vector. LocalPlayer Entity will
   // probably always be in index zero, but that doesn't matter since there's a
   // seperate LocalPlayer pointer.
-  Global->Entities[0] = LocalPlayer;
+  Entities[0] = LocalPlayer;
 
   // Spawns all the npcs in the map.
   for (int i = 0; i < tempmapdata.Entities.size(); i++) {
     // SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
     if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
       unsigned int index = EntityMapEmptyIndex();
-      Global->Entities[index] =
-          SpawnEntities[tempmapdata.Entities[i].name](index);
-      Global->Entities[index]->position = tempmapdata.Entities[i].pos;
+      Entities[index] = SpawnEntities[tempmapdata.Entities[i].name](0, index);
+      Entities[index]->position = tempmapdata.Entities[i].pos;
     }
   }
 
@@ -969,12 +969,12 @@ void quit() {
   }
 
   // free npc Entities and LocalPlayer.
-  for (auto& i : Global->Entities) {
+  for (auto& i : Entities) {
     delete (i.second);
   }
 
   // free particles
-  for (auto& i : Global->Particles) {
+  for (auto& i : Particles) {
     delete (i.second);
   }
 

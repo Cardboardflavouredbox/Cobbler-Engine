@@ -45,7 +45,29 @@ int main(int argc, char* argv[]) {
                                             entry.first,
                                         dylib::decorations::os_default()));
     entry.second =
-        entitylibs.back().get_function<Entity*(unsigned int)>("SpawnEntity");
+        entitylibs.back().get_function<Entity*(unsigned int, unsigned int)>(
+            "SpawnEntity");
+  }
+
+  // particle spawning function load from dynamic libraries
+  SpawnParticles.reserve(16);
+  for (const auto& entry : std::filesystem::directory_iterator(
+           basepath + Global->GameName + "/particles/")) {
+    if (entry.is_directory()) {
+      SDL_Log("Folder: %s", entry.path().filename().string().c_str());
+      SpawnParticles[entry.path().filename().string()];
+    }
+  }
+  std::vector<dylib::library> particlelibs;
+
+  for (auto& entry : SpawnParticles) {
+    particlelibs.push_back(dylib::library(basepath + "/" + Global->GameName +
+                                              "/particles/" + entry.first +
+                                              "/" + entry.first,
+                                          dylib::decorations::os_default()));
+    entry.second =
+        particlelibs.back().get_function<Particle*(unsigned int, unsigned int)>(
+            "SpawnParticle");
   }
 
   dylib::library UIlib(basepath + "/" + Global->GameName + "/bin/CobblerGameUI",
@@ -78,7 +100,8 @@ int main(int argc, char* argv[]) {
                                        dylib::decorations::os_default()));
     entry.second = classlibs.back().get_function<void()>("Update");
     SpawnEntities[entry.first] =
-        classlibs.back().get_function<Entity*(unsigned int)>("SpawnEntity");
+        classlibs.back().get_function<Entity*(unsigned int, unsigned int)>(
+            "SpawnEntity");
     if (!classlibs.back().get_function<bool()>("UIsetup")()) return -1;
     classlibs.back().get_function<void()>("Init")();
   }

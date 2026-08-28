@@ -4,6 +4,8 @@
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <map>
+#include <queue>
 #include <string>
 
 #ifdef _WIN32
@@ -21,9 +23,9 @@ LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
 
 struct EntitySpawnInfo {
-  unsigned int EntityIndex;
   int State;
   glm::vec3 position, velocityvec3 = glm::vec3({0, 0, 0});
+  glm::vec2 direction;
   int teamindex;
 };
 
@@ -55,3 +57,17 @@ struct Entity {
     if (Modelthing != nullptr) delete (Modelthing);
   }
 };
+LIB_API extern Entity* LocalPlayer;
+
+LIB_API extern std::map<unsigned int, Entity*> Entities;
+LIB_API extern std::queue<unsigned int> EntitydeleteQueue;
+
+LIB_API extern std::unordered_map<std::string,
+                                  Entity* (*)(unsigned int, unsigned int)>
+    SpawnEntities;
+
+extern "C" {
+LIB_API unsigned int EntityMapEmptyIndex();
+LIB_API void EntitySpawn(std::string name, unsigned int EntityCode,
+                         EntitySpawnInfo Entityinfo);
+}
