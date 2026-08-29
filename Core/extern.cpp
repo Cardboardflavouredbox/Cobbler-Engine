@@ -84,6 +84,10 @@ void serialize(S& s, ParticleSpawnInfo& o) {
 template <typename S>
 void serialize(S& s, EntitySpawnInfo& o) {
   s.value4b(o.teamindex);
+  s.value4b(o.hp);
+  s.text1b(o.name, 32);
+  s.value4b(o.EntityCode);
+  s.value4b(o.EntityIndex);
   s.container4b(o.direction);
   s.container4b(o.position);
   s.container4b(o.velocityvec3);
@@ -102,11 +106,24 @@ unsigned int EntityMapEmptyIndex() {
   return 0;
 }
 
-void EntitySpawn(EntitySpawnInfo Entityinfo) {
-  if (!Global->IsOnline || IsServer) {
+void EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
+  if (Global->IsOnline && OnlineSend && !IsServer) {
+    std::vector<uint8_t> buffer{};
+
+    auto writtenSize = bitsery::quickSerialization<
+        bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
+                                                            Entityinfo);
+
+    CobblerQueueData("LocalEntity", buffer, writtenSize);
+  } else {
     unsigned int temp = EntityMapEmptyIndex();
     Entity* tempentity =
         SpawnEntities[Entityinfo.name](Entityinfo.EntityCode, temp);
+
+    if (Entityinfo.hp != -1) tempentity->hp = Entityinfo.hp;
+    tempentity->name = Entityinfo.name;
+    tempentity->EntityCode = Entityinfo.EntityCode;
+
     tempentity->EntityIndex = temp;
     for (int i = 0; i < 3; i++) {
       tempentity->position[i] = Entityinfo.position[i];

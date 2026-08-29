@@ -24,16 +24,20 @@ LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
 
 struct EntitySpawnInfo {
+  unsigned int EntityIndex;
   std::string name;
   unsigned int EntityCode;
   int State;
   std::array<float, 3> position, velocityvec3;
   std::array<float, 2> direction;
   int teamindex;
+  float hp = -1;
 };
 
 struct Entity {
   unsigned int EntityIndex;
+  std::string name;
+  unsigned int EntityCode;
 
   int State;
   // float Stateanimend = 0, Stateanim = 0;
@@ -71,5 +75,5 @@ LIB_API extern std::unordered_map<std::string,
 
 extern "C" {
 LIB_API unsigned int EntityMapEmptyIndex();
-LIB_API void EntitySpawn(EntitySpawnInfo Entityinfo);
+LIB_API void EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend);
 }

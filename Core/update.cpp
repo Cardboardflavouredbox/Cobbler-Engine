@@ -5,6 +5,7 @@
 #include <bitsery/adapter/buffer.h>
 #include <bitsery/bitsery.h>
 #include <bitsery/brief_syntax.h>
+#include <bitsery/brief_syntax/map.h>
 #include <bitsery/brief_syntax/set.h>
 #include <bitsery/traits/array.h>
 #include <bitsery/traits/string.h>
@@ -38,6 +39,10 @@ void serialize(S& s, ParticleSpawnInfo& o) {
 template <typename S>
 void serialize(S& s, EntitySpawnInfo& o) {
   s.value4b(o.teamindex);
+  s.value4b(o.hp);
+  s.text1b(o.name, 32);
+  s.value4b(o.EntityCode);
+  s.value4b(o.EntityIndex);
   s.container4b(o.direction);
   s.container4b(o.position);
   s.container4b(o.velocityvec3);
@@ -159,7 +164,7 @@ void update() {
                   temp.IsGrounded;
               GlobalNetworkStuff->PlayerEntity[temp.ID]->State = temp.State;
             } else {
-              SDL_Log("%llu %llu", temp.ID, UserID);
+              // SDL_Log("%llu %llu", temp.ID, UserID);
             }
           }
           // else {
@@ -192,6 +197,42 @@ void update() {
                 GlobalNetworkStuff->UserIDs.insert(key);
                 GlobalNetworkStuff->PlayerEntity[key] =
                     SpawnEntities["Gardner"](0, key);
+              }
+            }
+          }
+        } else if (tempdata->name == "LocalEntity") {
+          EntitySpawnInfo tempinfo;
+          auto state = bitsery::quickDeserialization<
+              bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
+              {tempdata->buffer.begin(), tempdata->size}, tempinfo);
+          if (state.first == bitsery::ReaderError::NoError && state.second) {
+            if (IsServer) {
+              EntitySpawn(tempinfo, false);
+            } else {
+              if (Entities.contains(tempinfo.EntityIndex)) {
+                Entity* tempentity = Entities[tempinfo.EntityIndex];
+                if (tempentity->name != tempinfo.name ||
+                    tempentity->EntityCode != tempinfo.EntityCode) {
+                  delete (tempentity);
+                  tempentity = SpawnEntities[tempinfo.name](
+                      tempinfo.EntityCode, tempinfo.EntityIndex);
+                }
+                if (tempinfo.hp != -1) tempentity->hp = tempinfo.hp;
+                tempentity->name = tempinfo.name;
+                tempentity->EntityCode = tempinfo.EntityCode;
+
+                tempentity->EntityIndex = tempinfo.EntityIndex;
+                for (int i = 0; i < 3; i++) {
+                  tempentity->position[i] = tempinfo.position[i];
+                  tempentity->velocityvec3[i] = tempinfo.velocityvec3[i];
+                }
+                tempentity->State = tempinfo.State;
+                tempentity->teamindex = tempinfo.teamindex;
+                for (int i = 0; i < 2; i++) {
+                  tempentity->dir[i] = tempinfo.direction[i];
+                }
+              } else {
+                EntitySpawn(tempinfo, false);
               }
             }
           }
@@ -322,21 +363,42 @@ void update() {
         if (ID != UserID) {
           std::vector<uint8_t> buffer{};
           playerdatapacket temp;
-          temp.State = GlobalNetworkStuff->PlayerEntity[ID]->State;
+          temp.State = entity->State;
           temp.ID = ID;
           temp.Set(&GlobalNetworkStuff->PlayerInputList[ID]);
-          temp.IsGrounded = GlobalNetworkStuff->PlayerEntity[ID]->IsGrounded;
+          temp.IsGrounded = entity->IsGrounded;
           for (int i = 0; i < 3; i++) {
-            temp.position[i] =
-                GlobalNetworkStuff->PlayerEntity[ID]->position[i];
-            temp.velocityvec3[i] =
-                GlobalNetworkStuff->PlayerEntity[ID]->velocityvec3[i];
+            temp.position[i] = entity->position[i];
+            temp.velocityvec3[i] = entity->velocityvec3[i];
           }
           auto writtenSize = bitsery::quickSerialization<
               bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
                                                                   temp);
 
           CobblerQueueData("Player", buffer, writtenSize);
+        }
+      }
+
+      for (const auto& [ID, entity] : Entities) {
+        if (ID > 0) {
+          std::vector<uint8_t> buffer{};
+          EntitySpawnInfo temp;
+          for (int i = 0; i < 2; i++) temp.direction[i] = entity->dir[i];
+          temp.EntityIndex = entity->EntityIndex;
+          temp.EntityCode = entity->EntityCode;
+          temp.hp = entity->hp;
+          temp.name = entity->name;
+          temp.State = entity->State;
+          temp.teamindex = entity->teamindex;
+          for (int i = 0; i < 3; i++) {
+            temp.position[i] = entity->position[i];
+            temp.velocityvec3[i] = entity->velocityvec3[i];
+          }
+          auto writtenSize = bitsery::quickSerialization<
+              bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
+                                                                  temp);
+
+          CobblerQueueData("LocalEntity", buffer, writtenSize);
         }
       }
     }
