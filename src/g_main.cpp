@@ -8,6 +8,7 @@
 
 #include <filesystem>
 
+#include "deltaTime.h"
 #include "dylib.hpp"
 #include "entity.h"
 #include "extern.h"
@@ -109,18 +110,46 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  const SDL_DisplayMode* displaymode =
+      SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay());
+
+  const double refreshrateupdate = displaymode->refresh_rate_denominator /
+                                   (double)displaymode->refresh_rate_numerator;
+  SDL_Log("%f", refreshrateupdate);
+  double ratecountupdate = 0, ratecountrender = 0;
+  uint64_t lastTime;
+  uint64_t currentTime = SDL_GetPerformanceCounter();
+  const double performancefreq = (double)SDL_GetPerformanceFrequency();
+  double microdeltatime = 0;
+
   SDL_Log("Init done");
   while (Global->IsRunning) {
-    uint64_t start = SDL_GetTicksNS();
-    events();
-    input();
-    update();
-    changeUIindex();
-    render();
-    uint64_t result = (SDL_GetTicksNS() - start);
-    if (!Settings->vsync && result < 1000000000 / Settings->fps) {
-      SDL_DelayNS(1000000000 / Settings->fps - result);
+    lastTime = currentTime;
+    currentTime = SDL_GetPerformanceCounter();
+    microdeltatime = ((double)(currentTime - lastTime)) / performancefreq;
+    if (!Settings->vsync) {
+      ratecountupdate += microdeltatime;
+      ratecountrender += microdeltatime;
     }
+    deltaTime += microdeltatime;
+    if (Settings->vsync || ratecountupdate >= refreshrateupdate) {
+      events();
+      input();
+      update();
+      changeUIindex();
+
+      // SDL_Log("%f %f", ratecountupdate, deltaTime);
+      deltaTime = 0;
+    }
+    if (Settings->vsync || ratecountrender >= (1 / (float)Settings->fps)) {
+      render();
+      // SDL_Log("%f %f", ratecountrender, 1 / (float)Settings->fps);
+    }
+
+    while (ratecountupdate >= refreshrateupdate)
+      ratecountupdate -= refreshrateupdate;
+    while (ratecountrender >= (1 / (float)Settings->fps))
+      ratecountrender -= (1 / (float)Settings->fps);
   }
   if (Global->IsOnline) {
     PlayerQuit();

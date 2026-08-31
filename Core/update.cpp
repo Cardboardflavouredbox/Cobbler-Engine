@@ -153,20 +153,29 @@ void RecieveNetData() {
             {tempdata->buffer.begin(), tempdata->size}, temp);
         if (state.first == bitsery::ReaderError::NoError && state.second) {
           if (GlobalNetworkStuff->PlayerNetStuff.contains(temp.ID) &&
-              temp.ID != UserID &&
               GlobalNetworkStuff->PlayerNetStuff[temp.ID].PlayerEntity !=
                   nullptr) {
-            GlobalNetworkClass::PlayerNetClass* tempplayerthing =
-                &GlobalNetworkStuff->PlayerNetStuff[temp.ID];
-            tempplayerthing->PlayerInput = Loadinputdata(temp);
-            for (int i = 0; i < 3; i++) {
-              tempplayerthing->PlayerEntity->velocityvec3[i] =
-                  temp.velocityvec3[i];
-              tempplayerthing->PlayerEntity->position[i] = temp.position[i];
+            if (temp.ID != UserID) {
+              GlobalNetworkClass::PlayerNetClass* tempplayerthing =
+                  &GlobalNetworkStuff->PlayerNetStuff[temp.ID];
+              tempplayerthing->PlayerInput = Loadinputdata(temp);
+              for (int i = 0; i < 3; i++) {
+                tempplayerthing->PlayerEntity->velocityvec3[i] =
+                    temp.velocityvec3[i];
+                tempplayerthing->PlayerEntity->position[i] = temp.position[i];
+              }
+              tempplayerthing->PlayerEntity->teamindex = temp.teamindex;
+              tempplayerthing->PlayerEntity->IsGrounded = temp.IsGrounded;
+              tempplayerthing->PlayerEntity->State = temp.State;
+            } else {
+              for (int i = 0; i < 3; i++) {
+                LocalPlayer->velocityvec3[i] = temp.velocityvec3[i];
+                LocalPlayer->position[i] = temp.position[i];
+              }
+              LocalPlayer->teamindex = temp.teamindex;
+              LocalPlayer->IsGrounded = temp.IsGrounded;
+              LocalPlayer->State = temp.State;
             }
-            tempplayerthing->PlayerEntity->teamindex = temp.teamindex;
-            tempplayerthing->PlayerEntity->IsGrounded = temp.IsGrounded;
-            tempplayerthing->PlayerEntity->State = temp.State;
           } else {
             // SDL_Log("%llu %llu", temp.ID, UserID);
           }
@@ -313,10 +322,6 @@ void update() {
     RecieveNetData();
   }
 
-  lastTime = currentTime;
-  currentTime = SDL_GetPerformanceCounter();
-  deltaTime = ((double)(currentTime - lastTime)) /
-              (double)SDL_GetPerformanceFrequency();
   if (LocalInputs->Keys[SDL_SCANCODE_ESCAPE] == 2) {
     Global->pause = !Global->pause;
     SDL_SetWindowRelativeMouseMode(RendererGlobal->window, !Global->pause);

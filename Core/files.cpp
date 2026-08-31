@@ -921,8 +921,6 @@ bool init() {
         CreateGlyph(Freetypething->FTface->glyph);
   }
 
-  lastTime = SDL_GetTicks();
-
   SDL_GetWindowSizeInPixels(RendererGlobal->window, &RendererGlobal->windowx,
                             &RendererGlobal->windowy);
 

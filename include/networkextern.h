@@ -25,6 +25,6 @@ struct GlobalNetworkClass {
   };
   std::map<uint64_t, PlayerNetClass> PlayerNetStuff;
 
-  float Onlinesendwait = 0.05f;
+  double Onlinesendwait = 0.05;
 };
 LIB_API extern std::unique_ptr<GlobalNetworkClass> GlobalNetworkStuff;
