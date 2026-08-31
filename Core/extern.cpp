@@ -24,8 +24,8 @@
 #include "ui.h"
 
 // This is where most of the extern global variables are!
-float deltaTime;
-
+float updatedeltaTime;
+float renderdeltaTime;
 // pointer to Global variables.
 std::unique_ptr<GlobalClass> Global;
 // pointer to Settings variables.

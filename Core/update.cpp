@@ -135,7 +135,7 @@ void CameraUpdate() {
 // recieve net data
 void RecieveNetData() {
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
-    if (i.first != UserID) i.second.Timecounter += deltaTime;
+    if (i.first != UserID) i.second.Timecounter += updatedeltaTime;
   }
   std::queue<uint64_t> deleteplayerqueue;
 
@@ -317,10 +317,95 @@ void RecieveNetData() {
   }
 }
 
-void update() {
-  if (Global->IsOnline) {
-    RecieveNetData();
+// send net data
+void SendNetData() {
+  if (IsServer) {
+    std::vector<uint8_t> buffer{};
+
+    auto writtenSize = bitsery::quickSerialization<
+        bitsery::OutputBufferAdapter<std::vector<uint8_t>>>(
+        {buffer}, GlobalNetworkStuff->UserIDs);
+
+    CobblerQueueData("PlayerList", buffer, writtenSize);
+
+    buffer.clear();
+
+    for (const auto& [ID, player] : GlobalNetworkStuff->PlayerNetStuff) {
+      if (ID != UserID) {
+        std::vector<uint8_t> buffer{};
+        playerdatapacket temp;
+        Entity* entity = player.PlayerEntity;
+        temp.State = entity->State;
+        temp.teamindex = entity->teamindex;
+        temp.ID = ID;
+        temp.Set(&player.PlayerInput);
+        temp.IsGrounded = entity->IsGrounded;
+        for (int i = 0; i < 3; i++) {
+          temp.position[i] = entity->position[i];
+          temp.velocityvec3[i] = entity->velocityvec3[i];
+        }
+        auto writtenSize = bitsery::quickSerialization<
+            bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
+
+        CobblerQueueData("Player", buffer, writtenSize);
+      }
+    }
+
+    for (const auto& [ID, entity] : Entities) {
+      if (ID > 0) {
+        std::vector<uint8_t> buffer{};
+        EntitySpawnInfo temp;
+        for (int i = 0; i < 2; i++) temp.direction[i] = entity->dir[i];
+        temp.EntityIndex = entity->EntityIndex;
+        temp.EntityCode = entity->EntityCode;
+        temp.hp = entity->hp;
+        temp.name = entity->name;
+        temp.State = entity->State;
+        temp.teamindex = entity->teamindex;
+        for (int i = 0; i < 3; i++) {
+          temp.position[i] = entity->position[i];
+          temp.velocityvec3[i] = entity->velocityvec3[i];
+        }
+        auto writtenSize = bitsery::quickSerialization<
+            bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
+
+        CobblerQueueData("LocalEntity", buffer, writtenSize);
+      }
+    }
   }
+  std::vector<uint8_t> buffer{};
+  if (LocalPlayer != NULL) {
+    playerdatapacket temp;
+    temp.teamindex = LocalPlayer->teamindex;
+    temp.State = LocalPlayer->State;
+    temp.ID = UserID;
+    temp.Set(P1PlayerInputs);
+    temp.IsGrounded = LocalPlayer->IsGrounded;
+    for (int i = 0; i < 3; i++) {
+      temp.position[i] = LocalPlayer->position[i];
+      temp.velocityvec3[i] = LocalPlayer->velocityvec3[i];
+    }
+    auto writtenSize = bitsery::quickSerialization<
+        bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
+    CobblerQueueData("Player", buffer, writtenSize);
+    // SDL_Log("%u Send", writtenSize);
+
+    buffer.clear();
+  }
+  auto writtenSize = bitsery::quickSerialization<
+      bitsery::OutputBufferAdapter<std::vector<uint8_t>>>(
+      {buffer}, SDL_GetPerformanceCounter());
+  CobblerQueueData("SendTick", buffer, writtenSize);
+
+  GlobalNetworkStuff->Onlinesendwait -= updatedeltaTime;
+  while (GlobalNetworkStuff->Onlinesendwait <= 0) {
+    CobblerSendNet();
+    GlobalNetworkStuff->Onlinesendwait += 0.05f;
+  }
+}
+
+void fixedupdate() {
+  if (Global->IsOnline) RecieveNetData();
 
   if (LocalInputs->Keys[SDL_SCANCODE_ESCAPE] == 2) {
     Global->pause = !Global->pause;
@@ -342,15 +427,18 @@ void update() {
       }
     }
   }
-
-  componentsupdatelate();
-
   while (!EntitydeleteQueue.empty()) {
     uint32_t index = EntitydeleteQueue.front();
     EntitydeleteQueue.pop();
     delete (Entities[index]);
     Entities.erase(index);
   }
+
+  if (Global->IsOnline) SendNetData();
+}
+
+void update() {
+  componentsupdatelate();
 
   while (!ParticledeleteQueue.empty()) {
     uint32_t index = ParticledeleteQueue.front();
@@ -364,94 +452,6 @@ void update() {
   // SDL_Log("%f %f %f", Entities[1]->position[0],
   //         Entities[1]->position[1],
   //         Entities[1]->position[2]);
-
-  if (Global->IsOnline) {  // send net data
-    if (IsServer) {
-      std::vector<uint8_t> buffer{};
-
-      auto writtenSize = bitsery::quickSerialization<
-          bitsery::OutputBufferAdapter<std::vector<uint8_t>>>(
-          {buffer}, GlobalNetworkStuff->UserIDs);
-
-      CobblerQueueData("PlayerList", buffer, writtenSize);
-
-      buffer.clear();
-
-      for (const auto& [ID, player] : GlobalNetworkStuff->PlayerNetStuff) {
-        if (ID != UserID) {
-          std::vector<uint8_t> buffer{};
-          playerdatapacket temp;
-          Entity* entity = player.PlayerEntity;
-          temp.State = entity->State;
-          temp.teamindex = entity->teamindex;
-          temp.ID = ID;
-          temp.Set(&player.PlayerInput);
-          temp.IsGrounded = entity->IsGrounded;
-          for (int i = 0; i < 3; i++) {
-            temp.position[i] = entity->position[i];
-            temp.velocityvec3[i] = entity->velocityvec3[i];
-          }
-          auto writtenSize = bitsery::quickSerialization<
-              bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
-                                                                  temp);
-
-          CobblerQueueData("Player", buffer, writtenSize);
-        }
-      }
-
-      for (const auto& [ID, entity] : Entities) {
-        if (ID > 0) {
-          std::vector<uint8_t> buffer{};
-          EntitySpawnInfo temp;
-          for (int i = 0; i < 2; i++) temp.direction[i] = entity->dir[i];
-          temp.EntityIndex = entity->EntityIndex;
-          temp.EntityCode = entity->EntityCode;
-          temp.hp = entity->hp;
-          temp.name = entity->name;
-          temp.State = entity->State;
-          temp.teamindex = entity->teamindex;
-          for (int i = 0; i < 3; i++) {
-            temp.position[i] = entity->position[i];
-            temp.velocityvec3[i] = entity->velocityvec3[i];
-          }
-          auto writtenSize = bitsery::quickSerialization<
-              bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
-                                                                  temp);
-
-          CobblerQueueData("LocalEntity", buffer, writtenSize);
-        }
-      }
-    }
-    std::vector<uint8_t> buffer{};
-    if (LocalPlayer != NULL) {
-      playerdatapacket temp;
-      temp.teamindex = LocalPlayer->teamindex;
-      temp.State = LocalPlayer->State;
-      temp.ID = UserID;
-      temp.Set(P1PlayerInputs);
-      temp.IsGrounded = LocalPlayer->IsGrounded;
-      for (int i = 0; i < 3; i++) {
-        temp.position[i] = LocalPlayer->position[i];
-        temp.velocityvec3[i] = LocalPlayer->velocityvec3[i];
-      }
-      auto writtenSize = bitsery::quickSerialization<
-          bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
-      CobblerQueueData("Player", buffer, writtenSize);
-      // SDL_Log("%u Send", writtenSize);
-
-      buffer.clear();
-    }
-    auto writtenSize = bitsery::quickSerialization<
-        bitsery::OutputBufferAdapter<std::vector<uint8_t>>>(
-        {buffer}, SDL_GetPerformanceCounter());
-    CobblerQueueData("SendTick", buffer, writtenSize);
-
-    GlobalNetworkStuff->Onlinesendwait -= deltaTime;
-    while (GlobalNetworkStuff->Onlinesendwait <= 0) {
-      CobblerSendNet();
-      GlobalNetworkStuff->Onlinesendwait += 0.05f;
-    }
-  }
 
   // if (curlpostfield->hasdata && Global->LoggedIn) CobblerSendCurlData();
 }

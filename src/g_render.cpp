@@ -183,7 +183,7 @@ void render3DUI() {
       // SDL_Log("%f %f %f", model->position.x, model->position.y,
       //         model->position.z);
 
-      renderModelGroup(model, modelgroup, true, deltaTime);
+      renderModelGroup(model, modelgroup, true, renderdeltaTime);
     }
   }
 }
@@ -213,7 +213,7 @@ void renderProps() {
     Modeltransform* model = &Global->Models[i];
     ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
-    renderModelGroup(model, modelgroup, false, deltaTime);
+    renderModelGroup(model, modelgroup, false, renderdeltaTime);
   }
 }
 
@@ -408,8 +408,6 @@ void openglrender() {
   render2DUI();
 
   glFlush();
-
-  SDL_GL_SwapWindow(RendererGlobal->window);
 }
 
 void render() {
@@ -419,5 +417,16 @@ void render() {
       break;
     default:
       softwarerender();
+  }
+}
+
+void renderresult() {
+  switch (Settings->graphicsmode) {
+    case 1: {
+      SDL_GL_SwapWindow(RendererGlobal->window);
+      break;
+    }
+    default: {
+    }
   }
 }

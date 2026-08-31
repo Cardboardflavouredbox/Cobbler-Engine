@@ -7,6 +7,8 @@
 #include <stdlib.h>
 
 #include <filesystem>
+#include <mutex>
+#include <thread>
 
 #include "deltaTime.h"
 #include "dylib.hpp"
@@ -14,8 +16,47 @@
 #include "extern.h"
 #include "files.h"
 #include "global.h"
+#include "inputs.h"
 #include "settings.h"
 #include "update.h"
+
+void (*changeUIindex)();
+std::mutex mutexthing;
+const double performancefreq = (double)SDL_GetPerformanceFrequency();
+
+void updatefunction() {
+  const SDL_DisplayMode* displaymode =
+      SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay());
+
+  const double refreshrateupdate = displaymode->refresh_rate_denominator /
+                                   (double)displaymode->refresh_rate_numerator;
+
+  uint64_t lastTime;
+  uint64_t currentTime = SDL_GetPerformanceCounter();
+  while (Global->IsRunning) {
+    mutexthing.lock();
+
+    lastTime = currentTime;
+    currentTime = SDL_GetPerformanceCounter();
+    updatedeltaTime = ((double)(currentTime - lastTime)) / performancefreq;
+    fixedupdate();
+    changeUIindex();
+    for (int i = 0; i < 512; i++) {
+      if (LocalInputs->Keys[i] > 1) LocalInputs->Keys[i] = 1;
+    }
+    // If mouse already clicked(2) change value to 1.
+    // This allows the game to tell if you've clicked this frame or not.
+    if (LocalInputs->leftclick == 2) LocalInputs->leftclick = 1;
+    if (LocalInputs->rightclick == 2) LocalInputs->rightclick = 1;
+
+    mutexthing.unlock();
+
+    SDL_DelayNS(uint64_t((refreshrateupdate -
+                          ((double)(SDL_GetPerformanceCounter() - currentTime) /
+                           performancefreq)) *
+                         1000000000));
+  }
+}
 
 int main(int argc, char* argv[]) {
   std::string basepath = SDL_GetBasePath();
@@ -79,7 +120,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
   SDL_Log("UI loaded");
-  void (*changeUIindex)() = UIlib.get_function<void()>("changeUIindex");
+  changeUIindex = UIlib.get_function<void()>("changeUIindex");
 
   Global->playerclass = "Gardner";
   PlayerClassUpdate.reserve(16);
@@ -110,47 +151,35 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  const SDL_DisplayMode* displaymode =
-      SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay());
+  SDL_Log("Init done");
 
-  const double refreshrateupdate = displaymode->refresh_rate_denominator /
-                                   (double)displaymode->refresh_rate_numerator;
-  SDL_Log("%f", refreshrateupdate);
-  double ratecountupdate = 0, ratecountrender = 0;
+  std::thread updatethread(updatefunction);
+
   uint64_t lastTime;
   uint64_t currentTime = SDL_GetPerformanceCounter();
-  const double performancefreq = (double)SDL_GetPerformanceFrequency();
-  double microdeltatime = 0;
-
-  SDL_Log("Init done");
   while (Global->IsRunning) {
+    mutexthing.lock();
+
     lastTime = currentTime;
     currentTime = SDL_GetPerformanceCounter();
-    microdeltatime = ((double)(currentTime - lastTime)) / performancefreq;
+    renderdeltaTime = ((double)(currentTime - lastTime)) / performancefreq;
+    events();
+    input();
+    update();
+    render();
+    mutexthing.unlock();
+
+    renderresult();
     if (!Settings->vsync) {
-      ratecountupdate += microdeltatime;
-      ratecountrender += microdeltatime;
+      SDL_DelayNS(
+          uint64_t(((1 / (double)Settings->fps) -
+                    ((double)(SDL_GetPerformanceCounter() - currentTime) /
+                     performancefreq)) *
+                   1000000000));
     }
-    deltaTime += microdeltatime;
-    if (Settings->vsync || ratecountupdate >= refreshrateupdate) {
-      events();
-      input();
-      update();
-      changeUIindex();
-
-      // SDL_Log("%f %f", ratecountupdate, deltaTime);
-      deltaTime = 0;
-    }
-    if (Settings->vsync || ratecountrender >= (1 / (float)Settings->fps)) {
-      render();
-      // SDL_Log("%f %f", ratecountrender, 1 / (float)Settings->fps);
-    }
-
-    while (ratecountupdate >= refreshrateupdate)
-      ratecountupdate -= refreshrateupdate;
-    while (ratecountrender >= (1 / (float)Settings->fps))
-      ratecountrender -= (1 / (float)Settings->fps);
   }
+
+  updatethread.join();
   if (Global->IsOnline) {
     PlayerQuit();
   }

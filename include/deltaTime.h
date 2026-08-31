@@ -10,4 +10,5 @@
 #define LIB_API
 #endif
 
-LIB_API extern float deltaTime;
+LIB_API extern float updatedeltaTime;
+LIB_API extern float renderdeltaTime;

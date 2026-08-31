@@ -8,13 +8,6 @@
 
 // process events
 void events() {
-  for (int i = 0; i < 512; i++) {
-    if (LocalInputs->Keys[i] > 1) LocalInputs->Keys[i] = 1;
-  }
-  // If mouse already clicked(2) change value to 1.
-  // This allows the game to tell if you've clicked this frame or not.
-  if (LocalInputs->leftclick == 2) LocalInputs->leftclick = 1;
-  if (LocalInputs->rightclick == 2) LocalInputs->rightclick = 1;
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     switch (event.type) {

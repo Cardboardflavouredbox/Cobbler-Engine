@@ -10,8 +10,10 @@
 
 extern "C" {
 LIB_API void input();
+LIB_API void fixedupdate();
 LIB_API void update();
 LIB_API void render();
+LIB_API void renderresult();
 LIB_API void events();
 LIB_API void PlayerQuit();
 }
