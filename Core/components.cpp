@@ -12,8 +12,8 @@ void componentsupdatelate() {
     i.second->lateupdate();
   }
   // call player entity late updates
-  for (auto& i : GlobalNetworkStuff->PlayerEntity) {
-    i.second->lateupdate();
+  for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+    i.second.PlayerEntity->lateupdate();
   }
   // call particle late updates
   for (auto& i : Particles) {
@@ -37,10 +37,10 @@ void componentsupdate() {
     i.second->deltatimelocal = 0;
   }
   // call player entity updates and EntityMove
-  for (auto& i : GlobalNetworkStuff->PlayerEntity) {
-    i.second->update();
-    EntityMove(i.second);
-    i.second->deltatimelocal = 0;
+  for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+    i.second.PlayerEntity->update();
+    EntityMove(i.second.PlayerEntity);
+    i.second.PlayerEntity->deltatimelocal = 0;
   }
   // call particle updates
   for (auto& i : Particles) {

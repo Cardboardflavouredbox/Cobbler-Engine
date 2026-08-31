@@ -202,8 +202,9 @@ void renderEntity() {
   for (const auto& i : Entities) {
     if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();
   }
-  for (const auto& i : GlobalNetworkStuff->PlayerEntity) {
-    if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();
+  for (const auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+    if (i.second.PlayerEntity->Modelthing != nullptr)
+      i.second.PlayerEntity->rendermodelgroup();
   }
 }
 

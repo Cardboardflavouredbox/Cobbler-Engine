@@ -32,8 +32,8 @@
 
 // IPv4 ServerIP string.
 std::string ServerIP;
-// Server Port unsigned int.
-unsigned int ServerPort;
+// Server Port uint32_t.
+uint32_t ServerPort;
 
 // Settings Save function
 void SaveSettings() {
@@ -711,7 +711,7 @@ bool init() {
   for (int i = 0; i < tempmapdata.Entities.size(); i++) {
     // SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
     if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
-      unsigned int index = EntityMapEmptyIndex();
+      uint32_t index = EntityMapEmptyIndex();
       Entities[index] = SpawnEntities[tempmapdata.Entities[i].name](0, index);
       Entities[index]->position = tempmapdata.Entities[i].pos;
     }
@@ -752,7 +752,7 @@ bool init() {
 
             if (strcmp(lineHeader, "A") == 0) {  // Animation.
               char name[64];
-              unsigned int animend, animstart;
+              uint32_t animend, animstart;
               fscanf(file, "%s %u %u\n", name, &animstart, &animend);
               modelgroup.anim[name][0] = animstart;
               modelgroup.anim[name][1] = animend;
@@ -780,7 +780,7 @@ bool init() {
               fscanf(file, "%s\n", name);
               modelgroup.modelvisibility.try_emplace(posename);
               while (newlinecheck != '\n') {
-                unsigned int index2;
+                uint32_t index2;
                 float temp;
                 fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
@@ -798,7 +798,7 @@ bool init() {
               modelgroup.Bonemap.try_emplace(name);
               if (strcmp(thing, "location") == 0) {
                 while (newlinecheck != '\n') {
-                  unsigned int index2;
+                  uint32_t index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
@@ -808,7 +808,7 @@ bool init() {
                 }
               } else if (strcmp(thing, "rotation_quaternion") == 0) {
                 while (newlinecheck != '\n') {
-                  unsigned int index2;
+                  uint32_t index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
                   modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);
@@ -818,7 +818,7 @@ bool init() {
                 }
               } else if (strcmp(thing, "scale") == 0) {
                 while (newlinecheck != '\n') {
-                  unsigned int index2;
+                  uint32_t index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
                   modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);

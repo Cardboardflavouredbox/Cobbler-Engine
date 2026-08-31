@@ -333,8 +333,8 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
       }
     }
   }
-  for (auto& i : GlobalNetworkStuff->PlayerEntity) {
-    Entity* tempentity = i.second;
+  for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+    Entity* tempentity = i.second.PlayerEntity;
     if (tempentity->teamindex != teamindex) {
       raycheckresult temp =
           capsuleraycheck(hitbox[0] + checkposition, hitbox[1] + checkposition,
@@ -539,7 +539,7 @@ void EntityMove(Entity* tempentity) {
   glm::vec2 tempvec =
       glm::vec2({tempentity->velocityvec3.x, tempentity->velocityvec3.y});
 
-  if (glm::length(tempvec) < 0.5f)
+  if (glm::length(tempvec) < 0.0001f)
     tempvec = glm::vec2(0);
   else
     tempvec *= std::pow(0.001f, dt);

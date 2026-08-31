@@ -8,7 +8,7 @@ void inputtoentity(playerinputs input, Entity* entity) {
 
   float movelen = glm::length(entity->movevec2);
 
-  if (movelen < 0.5f)
+  if (movelen < 0.0001f)
     entity->movevec2 = glm::vec2(0);
   else
     entity->movevec2 *=

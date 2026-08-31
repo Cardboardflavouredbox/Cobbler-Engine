@@ -43,7 +43,7 @@ bool IsServer = false;
 //   return totalSize;
 // }
 
-void CobblerAddIP(std::string IP, unsigned int Port, uint64_t ID) {
+void CobblerAddIP(std::string IP, uint32_t Port, uint64_t ID) {
   NetworkStuffClass::Clientthing client;
   client.Address = IP;
   client.PORT = Port;
@@ -53,7 +53,7 @@ void CobblerAddIP(std::string IP, unsigned int Port, uint64_t ID) {
   SDL_Log("%llu %s %u", ID, IP.c_str(), Port);
 }
 
-bool CobblerCheckHasIP(std::string IP, unsigned int Port) {
+bool CobblerCheckHasIP(std::string IP, uint32_t Port) {
   for (int i = 0; i < NetStuff->Clients.size(); i++) {
     if (NetStuff->Clients[i].Address == IP && NetStuff->Clients[i].PORT == Port)
       return true;
@@ -61,7 +61,7 @@ bool CobblerCheckHasIP(std::string IP, unsigned int Port) {
   return false;
 }
 
-bool CobblerSetSocket(unsigned int port) {
+bool CobblerSetSocket(uint32_t port) {
   SDL_PropertiesID props = SDL_CreateProperties();
   SDL_SetBooleanProperty(props, NET_PROP_DATAGRAM_SOCKET_REUSEADDR_BOOLEAN,
                          true);
@@ -99,7 +99,7 @@ bool CobblerQueueData(const char* name, std::vector<uint8_t> buf, size_t size) {
   }
   packetbuffer.push_back(uint8_t('\0'));
 
-  unsigned int buflen = size;
+  uint32_t buflen = size;
 
   if (buflen > 255) {
     SDL_Log("buffer too long!");

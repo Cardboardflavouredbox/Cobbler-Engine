@@ -1,6 +1,6 @@
 #pragma once
+#include <map>
 #include <set>
-#include <unordered_map>
 
 #include "entity.h"
 #include "player.h"
@@ -17,9 +17,13 @@
 
 struct GlobalNetworkClass {
   std::set<uint64_t> UserIDs;
-  std::unordered_map<uint64_t, float> PlayerTimecounter;
-  std::unordered_map<uint64_t, Entity*> PlayerEntity;
-  std::unordered_map<uint64_t, playerinputs> PlayerInputList;
+
+  struct PlayerNetClass {
+    float Timecounter, deltatimelocal;
+    Entity* PlayerEntity;
+    playerinputs PlayerInput;
+  };
+  std::map<uint64_t, PlayerNetClass> PlayerNetStuff;
 
   float Onlinesendwait = 0.05f;
 };

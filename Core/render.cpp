@@ -243,7 +243,7 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
       pos = bone->Poses[actionname].begin()->second.pos;
       scale = bone->Poses[actionname].begin()->second.scale;
       rot = bone->Poses[actionname].begin()->second.rot;
-      unsigned int framebefore = modelgroup->anim[actionname][0];
+      uint32_t framebefore = modelgroup->anim[actionname][0];
 
       for (auto const& [key, val] : bone->Poses[actionname]) {
         if (frame == key) {

@@ -27,16 +27,16 @@ struct ModelGroupClass {
       glm::quat rot;
     };
     Pose restpose;
-    std::unordered_map<std::string, std::map<unsigned int, Pose>> Poses;
+    std::unordered_map<std::string, std::map<uint32_t, Pose>> Poses;
   };
   struct visibilitything {
     std::string name;
-    std::map<unsigned int, bool> value;
+    std::map<uint32_t, bool> value;
   };
   std::unordered_map<std::string, bool> modelvisibilityresult;
   std::unordered_map<std::string, std::vector<visibilitything>> modelvisibility;
   std::unordered_map<std::string, Bone> Bonemap;
-  std::unordered_map<std::string, std::array<unsigned int, 2>> anim;
+  std::unordered_map<std::string, std::array<uint32_t, 2>> anim;
 };
 
 LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;

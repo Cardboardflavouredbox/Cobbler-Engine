@@ -19,14 +19,14 @@
 
 struct ParticleSpawnInfo {
   std::string name;
-  unsigned int ParticleCode;
+  uint32_t ParticleCode;
   std::array<float, 3> position;
 };
 
 struct Particle {
   std::string Texture = "";
   glm::vec2 uv[2];
-  unsigned int ParticleIndex;
+  uint32_t ParticleIndex;
   float timeleft;
 
   float color[4] = {1, 1, 1, 1};
@@ -40,14 +40,14 @@ struct Particle {
   virtual ~Particle() {}
 };
 
-LIB_API extern std::map<unsigned int, Particle*> Particles;
-LIB_API extern std::queue<unsigned int> ParticledeleteQueue;
+LIB_API extern std::map<uint32_t, Particle*> Particles;
+LIB_API extern std::queue<uint32_t> ParticledeleteQueue;
 
 LIB_API extern std::unordered_map<std::string,
-                                  Particle* (*)(unsigned int, unsigned int)>
+                                  Particle* (*)(uint32_t, uint32_t)>
     SpawnParticles;
 
 extern "C" {
-LIB_API unsigned int ParticleMapEmptyIndex();
+LIB_API uint32_t ParticleMapEmptyIndex();
 LIB_API void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend);
 }

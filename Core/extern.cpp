@@ -42,10 +42,9 @@ uint64_t lastTime;
 // deltatime calculation variable
 uint64_t currentTime = SDL_GetPerformanceCounter();
 // Entity Spawn function map. Loaded from dynamic libraries.
-std::unordered_map<std::string, Entity* (*)(unsigned int, unsigned int)>
-    SpawnEntities;
+std::unordered_map<std::string, Entity* (*)(uint32_t, uint32_t)> SpawnEntities;
 // Particle Spawn function map. Loaded from dynamic libraries.
-std::unordered_map<std::string, Particle* (*)(unsigned int, unsigned int)>
+std::unordered_map<std::string, Particle* (*)(uint32_t, uint32_t)>
     SpawnParticles;
 // Player Class Update function map. Loaded from dynamic libraries.
 std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
@@ -57,14 +56,14 @@ std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 CameraClass* Camera;
 
 // Entities map. Contains all the npc Entities.
-std::map<unsigned int, Entity*> Entities;
+std::map<uint32_t, Entity*> Entities;
 // Queue that contains all the Entities to delete this frame.
-std::queue<unsigned int> EntitydeleteQueue;
+std::queue<uint32_t> EntitydeleteQueue;
 
 // Particles map. Contains all the Particles.
-std::map<unsigned int, Particle*> Particles;
+std::map<uint32_t, Particle*> Particles;
 // Queue that contains all the Particles to delete this frame.
-std::queue<unsigned int> ParticledeleteQueue;
+std::queue<uint32_t> ParticledeleteQueue;
 
 std::unique_ptr<GlobalMapClass> GlobalMapStuff;
 
@@ -94,11 +93,11 @@ void serialize(S& s, EntitySpawnInfo& o) {
   s.value4b(o.State);
 }
 
-unsigned int EntityMapEmptyIndex() {
+uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {
     return 0;
   }
-  unsigned int i = 1;
+  uint32_t i = 1;
   while (i != 0) {
     if (!Entities.contains(i)) return i;
     i++;
@@ -106,7 +105,7 @@ unsigned int EntityMapEmptyIndex() {
   return 0;
 }
 
-void EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
+uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
   if (Global->IsOnline && OnlineSend && !IsServer) {
     std::vector<uint8_t> buffer{};
 
@@ -115,34 +114,35 @@ void EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
                                                             Entityinfo);
 
     CobblerQueueData("LocalEntity", buffer, writtenSize);
-  } else {
-    unsigned int temp = EntityMapEmptyIndex();
-    Entity* tempentity =
-        SpawnEntities[Entityinfo.name](Entityinfo.EntityCode, temp);
-
-    if (Entityinfo.hp != -1) tempentity->hp = Entityinfo.hp;
-    tempentity->name = Entityinfo.name;
-    tempentity->EntityCode = Entityinfo.EntityCode;
-
-    tempentity->EntityIndex = temp;
-    for (int i = 0; i < 3; i++) {
-      tempentity->position[i] = Entityinfo.position[i];
-      tempentity->velocityvec3[i] = Entityinfo.velocityvec3[i];
-    }
-    tempentity->State = Entityinfo.State;
-    tempentity->teamindex = Entityinfo.teamindex;
-    for (int i = 0; i < 2; i++) {
-      tempentity->dir[i] = Entityinfo.direction[i];
-    }
-    Entities[temp] = tempentity;
+    return 0;
   }
+  uint32_t temp = EntityMapEmptyIndex();
+  Entity* tempentity =
+      SpawnEntities[Entityinfo.name](Entityinfo.EntityCode, temp);
+
+  if (Entityinfo.hp != -1) tempentity->hp = Entityinfo.hp;
+  tempentity->name = Entityinfo.name;
+  tempentity->EntityCode = Entityinfo.EntityCode;
+
+  tempentity->EntityIndex = temp;
+  for (int i = 0; i < 3; i++) {
+    tempentity->position[i] = Entityinfo.position[i];
+    tempentity->velocityvec3[i] = Entityinfo.velocityvec3[i];
+  }
+  tempentity->State = Entityinfo.State;
+  tempentity->teamindex = Entityinfo.teamindex;
+  for (int i = 0; i < 2; i++) {
+    tempentity->dir[i] = Entityinfo.direction[i];
+  }
+  Entities[temp] = tempentity;
+  return temp;
 }
 
-unsigned int ParticleMapEmptyIndex() {
+uint32_t ParticleMapEmptyIndex() {
   if (!Particles.contains(0)) {
     return 0;
   }
-  unsigned int i = 1;
+  uint32_t i = 1;
   while (i != 0) {
     if (!Particles.contains(i)) return i;
     i++;
@@ -160,7 +160,7 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
 
     CobblerQueueData("ParticleSpawn", buffer, writtenSize);
   }
-  unsigned int temp = ParticleMapEmptyIndex();
+  uint32_t temp = ParticleMapEmptyIndex();
   Particle* tempparticle =
       SpawnParticles[Particleinfo.name](Particleinfo.ParticleCode, temp);
   for (int i = 0; i < 3; i++) {

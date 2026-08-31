@@ -24,9 +24,9 @@ LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
 
 struct EntitySpawnInfo {
-  unsigned int EntityIndex;
+  uint32_t EntityIndex;
   std::string name;
-  unsigned int EntityCode;
+  uint32_t EntityCode;
   int State;
   std::array<float, 3> position, velocityvec3;
   std::array<float, 2> direction;
@@ -35,9 +35,9 @@ struct EntitySpawnInfo {
 };
 
 struct Entity {
-  unsigned int EntityIndex;
+  uint32_t EntityIndex;
   std::string name;
-  unsigned int EntityCode;
+  uint32_t EntityCode;
 
   int State;
   // float Stateanimend = 0, Stateanim = 0;
@@ -66,14 +66,13 @@ struct Entity {
 };
 LIB_API extern Entity* LocalPlayer;
 
-LIB_API extern std::map<unsigned int, Entity*> Entities;
-LIB_API extern std::queue<unsigned int> EntitydeleteQueue;
+LIB_API extern std::map<uint32_t, Entity*> Entities;
+LIB_API extern std::queue<uint32_t> EntitydeleteQueue;
 
-LIB_API extern std::unordered_map<std::string,
-                                  Entity* (*)(unsigned int, unsigned int)>
+LIB_API extern std::unordered_map<std::string, Entity* (*)(uint32_t, uint32_t)>
     SpawnEntities;
 
 extern "C" {
-LIB_API unsigned int EntityMapEmptyIndex();
-LIB_API void EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend);
+LIB_API uint32_t EntityMapEmptyIndex();
+LIB_API uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend);
 }

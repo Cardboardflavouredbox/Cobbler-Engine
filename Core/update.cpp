@@ -54,6 +54,7 @@ void serialize(S& s, playerdatapacket& o) {
   s.value1b(o.altattack);
   s.value1b(o.attack);
   s.value8b(o.ID);
+  s.value4b(o.teamindex);
   s.value1b(o.IsGrounded);
   s.value1b(o.jump);
   s.container4b(o.lookdir);
@@ -131,174 +132,185 @@ void CameraUpdate() {
   }
 }
 
-void update() {
-  if (Global->IsOnline) {  // recieve net data
-    for (auto& i : GlobalNetworkStuff->PlayerTimecounter) {
-      if (i.first != UserID) i.second += deltaTime;
-    }
-    std::queue<uint64_t> deleteplayerqueue;
+// recieve net data
+void RecieveNetData() {
+  for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+    if (i.first != UserID) i.second.Timecounter += deltaTime;
+  }
+  std::queue<uint64_t> deleteplayerqueue;
 
-    std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
-    if (tempvector != NULL) {
-      while (!tempvector->empty()) {
-        CobblerNetData* tempdata = &tempvector->back();
-        // SDL_Log("%s", tempdata->name.c_str());
-        GlobalNetworkStuff->PlayerTimecounter[tempdata->ID] = 0;
-        if (tempdata->name == "Player") {
-          playerdatapacket temp;
+  std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
+  if (tempvector != NULL) {
+    while (!tempvector->empty()) {
+      CobblerNetData* tempdata = &tempvector->back();
+      // SDL_Log("%s", tempdata->name.c_str());
+      if (GlobalNetworkStuff->PlayerNetStuff.contains(tempdata->ID))
+        GlobalNetworkStuff->PlayerNetStuff[tempdata->ID].Timecounter = 0;
+      if (tempdata->name == "Player") {
+        playerdatapacket temp;
+        auto state = bitsery::quickDeserialization<
+            bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
+            {tempdata->buffer.begin(), tempdata->size}, temp);
+        if (state.first == bitsery::ReaderError::NoError && state.second) {
+          if (GlobalNetworkStuff->PlayerNetStuff.contains(temp.ID) &&
+              temp.ID != UserID &&
+              GlobalNetworkStuff->PlayerNetStuff[temp.ID].PlayerEntity !=
+                  nullptr) {
+            GlobalNetworkClass::PlayerNetClass* tempplayerthing =
+                &GlobalNetworkStuff->PlayerNetStuff[temp.ID];
+            tempplayerthing->PlayerInput = Loadinputdata(temp);
+            for (int i = 0; i < 3; i++) {
+              tempplayerthing->PlayerEntity->velocityvec3[i] =
+                  temp.velocityvec3[i];
+              tempplayerthing->PlayerEntity->position[i] = temp.position[i];
+            }
+            tempplayerthing->PlayerEntity->teamindex = temp.teamindex;
+            tempplayerthing->PlayerEntity->IsGrounded = temp.IsGrounded;
+            tempplayerthing->PlayerEntity->State = temp.State;
+          } else {
+            // SDL_Log("%llu %llu", temp.ID, UserID);
+          }
+        }
+        // else {
+        //   SDL_Log("%u Receive", tempdata->size);
+        // }
+
+      } else if (IsServer && tempdata->name == "PlayerAdd") {
+        if (!CobblerCheckHasIP(tempdata->IP, tempdata->PORT)) {
+          uint64_t i = 1;
+          while (GlobalNetworkStuff->UserIDs.find(i) !=
+                 GlobalNetworkStuff->UserIDs.end()) {
+            i++;
+          }
+
+          GlobalNetworkStuff->UserIDs.insert(i);
+          CobblerAddIP(tempdata->IP, tempdata->PORT, i);
+
+          GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity =
+              SpawnEntities["Gardner"](0, i);
+        }
+      } else if (tempdata->name == "PlayerList") {
+        std::set<uint64_t> tempset;
+        auto state = bitsery::quickDeserialization<
+            bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
+            {tempdata->buffer.begin(), tempdata->size}, tempset);
+        if (state.first == bitsery::ReaderError::NoError && state.second) {
+          for (auto& key : tempset) {
+            if (key != UserID && GlobalNetworkStuff->UserIDs.find(key) ==
+                                     GlobalNetworkStuff->UserIDs.end()) {
+              GlobalNetworkStuff->UserIDs.insert(key);
+              GlobalNetworkStuff->PlayerNetStuff[key].PlayerEntity =
+                  SpawnEntities["Gardner"](0, key);
+            }
+          }
+        }
+      } else if (tempdata->name == "LocalEntity") {
+        EntitySpawnInfo tempinfo;
+        auto state = bitsery::quickDeserialization<
+            bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
+            {tempdata->buffer.begin(), tempdata->size}, tempinfo);
+        if (state.first == bitsery::ReaderError::NoError && state.second) {
+          uint32_t entityindex = 0;
+          if (IsServer) {
+            entityindex = EntitySpawn(tempinfo, false);
+          } else {
+            if (Entities.contains(tempinfo.EntityIndex)) {
+              entityindex = tempinfo.EntityIndex;
+              Entity* tempentity = Entities[tempinfo.EntityIndex];
+              if (tempentity->name != tempinfo.name ||
+                  tempentity->EntityCode != tempinfo.EntityCode) {
+                delete (tempentity);
+                tempentity = SpawnEntities[tempinfo.name](tempinfo.EntityCode,
+                                                          tempinfo.EntityIndex);
+              }
+              if (tempinfo.hp != -1) tempentity->hp = tempinfo.hp;
+              tempentity->name = tempinfo.name;
+              tempentity->EntityCode = tempinfo.EntityCode;
+
+              tempentity->EntityIndex = tempinfo.EntityIndex;
+              for (int i = 0; i < 3; i++) {
+                tempentity->position[i] = tempinfo.position[i];
+                tempentity->velocityvec3[i] = tempinfo.velocityvec3[i];
+              }
+              tempentity->State = tempinfo.State;
+              tempentity->teamindex = tempinfo.teamindex;
+              for (int i = 0; i < 2; i++) {
+                tempentity->dir[i] = tempinfo.direction[i];
+              }
+            } else {
+              entityindex = EntitySpawn(tempinfo, false);
+            }
+          }
+          Entities[entityindex]->deltatimelocal =
+              GlobalNetworkStuff->PlayerNetStuff[tempdata->ID].deltatimelocal;
+        }
+      } else if (tempdata->name == "ParticleSpawn") {
+        ParticleSpawnInfo tempinfo;
+        auto state = bitsery::quickDeserialization<
+            bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
+            {tempdata->buffer.begin(), tempdata->size}, tempinfo);
+        if (state.first == bitsery::ReaderError::NoError && state.second) {
+          if (IsServer) {
+            CobblerQueueData("ParticleSpawn", tempdata->buffer, tempdata->size);
+          }
+          ParticleSpawn(tempinfo, false);
+        }
+      } else if (tempdata->name == "SendTick") {
+        CobblerQueueData("ReturnTick", tempdata->buffer, tempdata->size);
+      } else if (tempdata->name == "ReturnTick") {
+        if (GlobalNetworkStuff->PlayerNetStuff.contains(tempdata->ID)) {
+          uint64_t temp;
           auto state = bitsery::quickDeserialization<
               bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
               {tempdata->buffer.begin(), tempdata->size}, temp);
           if (state.first == bitsery::ReaderError::NoError && state.second) {
-            if (GlobalNetworkStuff->PlayerEntity.contains(temp.ID) &&
-                temp.ID != UserID) {
-              GlobalNetworkStuff->PlayerInputList[temp.ID] =
-                  Loadinputdata(temp);
-              for (int i = 0; i < 3; i++) {
-                GlobalNetworkStuff->PlayerEntity[temp.ID]->velocityvec3[i] =
-                    temp.velocityvec3[i];
-                GlobalNetworkStuff->PlayerEntity[temp.ID]->position[i] =
-                    temp.position[i];
-              }
-              GlobalNetworkStuff->PlayerEntity[temp.ID]->IsGrounded =
-                  temp.IsGrounded;
-              GlobalNetworkStuff->PlayerEntity[temp.ID]->State = temp.State;
-            } else {
-              // SDL_Log("%llu %llu", temp.ID, UserID);
-            }
-          }
-          // else {
-          //   SDL_Log("%u Receive", tempdata->size);
-          // }
+            temp = SDL_GetPerformanceCounter() - temp;
+            temp /= 2;
+            double result = temp / (double)SDL_GetPerformanceFrequency();
+            if (result > 0.03125f) result = 0.03125f;
 
-        } else if (IsServer && tempdata->name == "PlayerAdd") {
-          if (!CobblerCheckHasIP(tempdata->IP, tempdata->PORT)) {
-            uint64_t i = 1;
-            while (GlobalNetworkStuff->UserIDs.find(i) !=
-                   GlobalNetworkStuff->UserIDs.end()) {
-              i++;
-            }
-
-            GlobalNetworkStuff->UserIDs.insert(i);
-            CobblerAddIP(tempdata->IP, tempdata->PORT, i);
-
-            GlobalNetworkStuff->PlayerEntity[i] =
-                SpawnEntities["Gardner"](0, i);
-          }
-        } else if (tempdata->name == "PlayerList") {
-          std::set<uint64_t> tempset;
-          auto state = bitsery::quickDeserialization<
-              bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
-              {tempdata->buffer.begin(), tempdata->size}, tempset);
-          if (state.first == bitsery::ReaderError::NoError && state.second) {
-            for (auto& key : tempset) {
-              if (key != UserID && GlobalNetworkStuff->UserIDs.find(key) ==
-                                       GlobalNetworkStuff->UserIDs.end()) {
-                GlobalNetworkStuff->UserIDs.insert(key);
-                GlobalNetworkStuff->PlayerEntity[key] =
-                    SpawnEntities["Gardner"](0, key);
-              }
-            }
-          }
-        } else if (tempdata->name == "LocalEntity") {
-          EntitySpawnInfo tempinfo;
-          auto state = bitsery::quickDeserialization<
-              bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
-              {tempdata->buffer.begin(), tempdata->size}, tempinfo);
-          if (state.first == bitsery::ReaderError::NoError && state.second) {
-            if (IsServer) {
-              EntitySpawn(tempinfo, false);
-            } else {
-              if (Entities.contains(tempinfo.EntityIndex)) {
-                Entity* tempentity = Entities[tempinfo.EntityIndex];
-                if (tempentity->name != tempinfo.name ||
-                    tempentity->EntityCode != tempinfo.EntityCode) {
-                  delete (tempentity);
-                  tempentity = SpawnEntities[tempinfo.name](
-                      tempinfo.EntityCode, tempinfo.EntityIndex);
-                }
-                if (tempinfo.hp != -1) tempentity->hp = tempinfo.hp;
-                tempentity->name = tempinfo.name;
-                tempentity->EntityCode = tempinfo.EntityCode;
-
-                tempentity->EntityIndex = tempinfo.EntityIndex;
-                for (int i = 0; i < 3; i++) {
-                  tempentity->position[i] = tempinfo.position[i];
-                  tempentity->velocityvec3[i] = tempinfo.velocityvec3[i];
-                }
-                tempentity->State = tempinfo.State;
-                tempentity->teamindex = tempinfo.teamindex;
-                for (int i = 0; i < 2; i++) {
-                  tempentity->dir[i] = tempinfo.direction[i];
-                }
-              } else {
-                EntitySpawn(tempinfo, false);
-              }
-            }
-          }
-        } else if (tempdata->name == "ParticleSpawn") {
-          ParticleSpawnInfo tempinfo;
-          auto state = bitsery::quickDeserialization<
-              bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
-              {tempdata->buffer.begin(), tempdata->size}, tempinfo);
-          if (state.first == bitsery::ReaderError::NoError && state.second) {
-            if (IsServer) {
-              CobblerQueueData("ParticleSpawn", tempdata->buffer,
-                               tempdata->size);
-            }
-            ParticleSpawn(tempinfo, false);
-          }
-        } else if (tempdata->name == "SendTick") {
-          CobblerQueueData("ReturnTick", tempdata->buffer, tempdata->size);
-        } else if (tempdata->name == "ReturnTick") {
-          if (GlobalNetworkStuff->PlayerEntity.contains(tempdata->ID)) {
-            uint64_t temp;
-            auto state = bitsery::quickDeserialization<
-                bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
-                {tempdata->buffer.begin(), tempdata->size}, temp);
-            if (state.first == bitsery::ReaderError::NoError && state.second) {
-              temp = SDL_GetPerformanceCounter() - temp;
-              temp /= 2;
-              GlobalNetworkStuff->PlayerEntity[tempdata->ID]->deltatimelocal =
-                  temp / (double)SDL_GetPerformanceFrequency();
-              if (GlobalNetworkStuff->PlayerEntity[tempdata->ID]
-                      ->deltatimelocal > 0.03125f)
-                GlobalNetworkStuff->PlayerEntity[tempdata->ID]->deltatimelocal =
-                    0.03125f;
-              // SDL_Log("%f",
-              // Entities[GlobalNetworkStuff->PlayerEntity[tempdata->ID]]
-              //                   ->deltatimelocal);
-            }
-          }
-        } else if (tempdata->name == "PlayerQuit") {
-          if (GlobalNetworkStuff->UserIDs.contains(tempdata->ID)) {
-            SDL_Log("player%llu client disconnect", tempdata->ID);
-            deleteplayerqueue.push(tempdata->ID);
+            GlobalNetworkStuff->PlayerNetStuff[tempdata->ID]
+                .PlayerEntity->deltatimelocal = result;
+            GlobalNetworkStuff->PlayerNetStuff[tempdata->ID].deltatimelocal =
+                result;
+            // SDL_Log("%f",
+            // Entities[GlobalNetworkStuff->PlayerEntity[tempdata->ID]]
+            //                   ->deltatimelocal);
           }
         }
-        tempvector->pop_back();
+      } else if (tempdata->name == "PlayerQuit") {
+        if (GlobalNetworkStuff->UserIDs.contains(tempdata->ID)) {
+          SDL_Log("player%llu client disconnect", tempdata->ID);
+          deleteplayerqueue.push(tempdata->ID);
+        }
       }
-      delete tempvector;
+      tempvector->pop_back();
     }
+    delete tempvector;
+  }
 
-    for (auto i : GlobalNetworkStuff->PlayerTimecounter) {
-      if (i.second > 5) {  // timeout player
-        SDL_Log("player%llu timed out", i.first);
+  for (auto i : GlobalNetworkStuff->PlayerNetStuff) {
+    if (i.second.Timecounter > 5) {  // timeout player
+      SDL_Log("player%llu timed out", i.first);
 
-        deleteplayerqueue.push(i.first);
-      }
+      deleteplayerqueue.push(i.first);
     }
+  }
 
-    while (!deleteplayerqueue.empty()) {
-      GlobalNetworkStuff->UserIDs.erase(deleteplayerqueue.front());
+  while (!deleteplayerqueue.empty()) {
+    GlobalNetworkStuff->UserIDs.erase(deleteplayerqueue.front());
 
-      delete (GlobalNetworkStuff->PlayerEntity[deleteplayerqueue.front()]);
+    delete (GlobalNetworkStuff->PlayerNetStuff[deleteplayerqueue.front()]
+                .PlayerEntity);
 
-      GlobalNetworkStuff->PlayerEntity.erase(deleteplayerqueue.front());
-      GlobalNetworkStuff->PlayerInputList.erase(deleteplayerqueue.front());
-      GlobalNetworkStuff->PlayerTimecounter.erase(deleteplayerqueue.front());
-      deleteplayerqueue.pop();
-    }
+    GlobalNetworkStuff->PlayerNetStuff.erase(deleteplayerqueue.front());
+    deleteplayerqueue.pop();
+  }
+}
+
+void update() {
+  if (Global->IsOnline) {
+    RecieveNetData();
   }
 
   lastTime = currentTime;
@@ -313,8 +325,9 @@ void update() {
   if (!Global->pause) {
     processinputs();
     if (LocalPlayer != NULL) inputtoentity(*P1PlayerInputs, LocalPlayer);
-    for (const auto& [ID, entity] : GlobalNetworkStuff->PlayerEntity) {
-      inputtoentity(GlobalNetworkStuff->PlayerInputList[ID], entity);
+    for (const auto& [ID, player] : GlobalNetworkStuff->PlayerNetStuff) {
+      if (player.PlayerEntity != NULL)
+        inputtoentity(player.PlayerInput, player.PlayerEntity);
     }
     if (LocalPlayer != NULL) PlayerClassUpdate[Global->playerclass]();
     componentsupdate();
@@ -328,14 +341,14 @@ void update() {
   componentsupdatelate();
 
   while (!EntitydeleteQueue.empty()) {
-    unsigned int index = EntitydeleteQueue.front();
+    uint32_t index = EntitydeleteQueue.front();
     EntitydeleteQueue.pop();
     delete (Entities[index]);
     Entities.erase(index);
   }
 
   while (!ParticledeleteQueue.empty()) {
-    unsigned int index = ParticledeleteQueue.front();
+    uint32_t index = ParticledeleteQueue.front();
     ParticledeleteQueue.pop();
     delete (Particles[index]);
     Particles.erase(index);
@@ -359,13 +372,15 @@ void update() {
 
       buffer.clear();
 
-      for (const auto& [ID, entity] : GlobalNetworkStuff->PlayerEntity) {
+      for (const auto& [ID, player] : GlobalNetworkStuff->PlayerNetStuff) {
         if (ID != UserID) {
           std::vector<uint8_t> buffer{};
           playerdatapacket temp;
+          Entity* entity = player.PlayerEntity;
           temp.State = entity->State;
+          temp.teamindex = entity->teamindex;
           temp.ID = ID;
-          temp.Set(&GlobalNetworkStuff->PlayerInputList[ID]);
+          temp.Set(&player.PlayerInput);
           temp.IsGrounded = entity->IsGrounded;
           for (int i = 0; i < 3; i++) {
             temp.position[i] = entity->position[i];
@@ -405,6 +420,7 @@ void update() {
     std::vector<uint8_t> buffer{};
     if (LocalPlayer != NULL) {
       playerdatapacket temp;
+      temp.teamindex = LocalPlayer->teamindex;
       temp.State = LocalPlayer->State;
       temp.ID = UserID;
       temp.Set(P1PlayerInputs);

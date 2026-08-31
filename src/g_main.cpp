@@ -44,9 +44,8 @@ int main(int argc, char* argv[]) {
                                             "/entities/" + entry.first + "/" +
                                             entry.first,
                                         dylib::decorations::os_default()));
-    entry.second =
-        entitylibs.back().get_function<Entity*(unsigned int, unsigned int)>(
-            "SpawnEntity");
+    entry.second = entitylibs.back().get_function<Entity*(uint32_t, uint32_t)>(
+        "SpawnEntity");
   }
 
   // particle spawning function load from dynamic libraries
@@ -66,7 +65,7 @@ int main(int argc, char* argv[]) {
                                               "/" + entry.first,
                                           dylib::decorations::os_default()));
     entry.second =
-        particlelibs.back().get_function<Particle*(unsigned int, unsigned int)>(
+        particlelibs.back().get_function<Particle*(uint32_t, uint32_t)>(
             "SpawnParticle");
   }
 
@@ -100,7 +99,7 @@ int main(int argc, char* argv[]) {
                                        dylib::decorations::os_default()));
     entry.second = classlibs.back().get_function<void()>("Update");
     SpawnEntities[entry.first] =
-        classlibs.back().get_function<Entity*(unsigned int, unsigned int)>(
+        classlibs.back().get_function<Entity*(uint32_t, uint32_t)>(
             "SpawnEntity");
     if (!classlibs.back().get_function<bool()>("UIsetup")()) return -1;
     classlibs.back().get_function<void()>("Init")();

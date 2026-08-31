@@ -48,9 +48,9 @@ LIB_API extern uint64_t UserID;
 
 extern "C" {
 LIB_API bool CobblerInitNet();
-LIB_API void CobblerAddIP(std::string IP, unsigned int Port, uint64_t ID);
-LIB_API bool CobblerCheckHasIP(std::string IP, unsigned int Port);
-LIB_API bool CobblerSetSocket(unsigned int port);
+LIB_API void CobblerAddIP(std::string IP, uint32_t Port, uint64_t ID);
+LIB_API bool CobblerCheckHasIP(std::string IP, uint32_t Port);
+LIB_API bool CobblerSetSocket(uint32_t port);
 LIB_API void CobblerQuitNet();
 // LIB_API bool CobblerSendCurlData();
 // LIB_API bool CobblerCurlLogin();

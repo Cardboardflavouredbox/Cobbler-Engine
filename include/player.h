@@ -12,7 +12,7 @@ struct playerinputs {
 };
 
 struct playerdatapacket {
-  int State;
+  int State, teamindex;
   // float Stateanimend = 0, Stateanim = 0;
 
   uint64_t ID;
@@ -20,7 +20,7 @@ struct playerdatapacket {
   std::array<float, 2> movevec2, lookdir;
   unsigned char jump, attack, altattack;
   bool IsGrounded;
-  void Set(playerinputs* input) {
+  void Set(const playerinputs* input) {
     for (int i = 0; i < 2; i++) {
       movevec2[i] = input->movevec2[i];
       lookdir[i] = input->lookdir[i];
