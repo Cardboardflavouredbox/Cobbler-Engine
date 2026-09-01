@@ -286,6 +286,7 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
       check = true;
 
     // some lil correction for some bones.
+    // find a way to not hardcode this!
     if (tempstr == "Spine") {
       float tempdir = lookdir;
 
