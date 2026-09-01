@@ -51,10 +51,11 @@ void updatefunction() {
 
     mutexthing.unlock();
 
-    SDL_DelayNS(uint64_t((refreshrateupdate -
-                          ((double)(SDL_GetPerformanceCounter() - currentTime) /
-                           performancefreq)) *
-                         1000000000));
+    SDL_DelayPrecise(
+        uint64_t((refreshrateupdate -
+                  ((double)(SDL_GetPerformanceCounter() - currentTime) /
+                   performancefreq)) *
+                 1000000000.0));
   }
 }
 
@@ -170,12 +171,14 @@ int main(int argc, char* argv[]) {
     mutexthing.unlock();
 
     renderresult();
+
+    // SDL_Log("%f", 1 / renderdeltaTime);
     if (!Settings->vsync) {
-      SDL_DelayNS(
+      SDL_DelayPrecise(
           uint64_t(((1 / (double)Settings->fps) -
                     ((double)(SDL_GetPerformanceCounter() - currentTime) /
                      performancefreq)) *
-                   1000000000));
+                   1000000000.0));
     }
   }
 

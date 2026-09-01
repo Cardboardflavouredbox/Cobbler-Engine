@@ -363,17 +363,16 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
       lookdir.y = 1;
     }
 
-    if (modeltrans->actions.empty()) {
-      if (modelgroup->modelvisibilityresult.empty()) {
-        for (auto const& visiblething : modelgroup->Models) {
-          modelgroup->modelvisibilityresult[visiblething] = true;
-        }
+    if (modeltrans->modelvisibilityresult.empty()) {
+      for (auto const& visiblething : modelgroup->Models) {
+        modeltrans->modelvisibilityresult[visiblething] = true;
       }
-    } else {
+    }
+    if (!modeltrans->actions.empty()) {
       for (auto const& action : modeltrans->actions) {
         for (auto const& visiblething :
              modelgroup->modelvisibility[action.name]) {
-          bool result = modelgroup->modelvisibilityresult[visiblething.name];
+          bool result = modeltrans->modelvisibilityresult[visiblething.name];
           for (auto const& [key, val] : visiblething.value) {
             if (key > action.frame) {
               break;
@@ -381,7 +380,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
               result = val;
             }
           }
-          modelgroup->modelvisibilityresult[visiblething.name] = result;
+          modeltrans->modelvisibilityresult[visiblething.name] = result;
         }
       }
     }
@@ -389,7 +388,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
     switch (Settings->graphicsmode) {
       case 1: {  // opengl
         for (int a = 0; a < modelgroup->Models.size(); a++) {
-          if (modelgroup->modelvisibilityresult[modelgroup->Models[a]]) {
+          if (modeltrans->modelvisibilityresult[modelgroup->Models[a]]) {
             GlobalClass::Model* model =
                 &Global->Modelmap[modelgroup->Models[a]];
             // SDL_Log("%s %d", modelgroup->Models[a].c_str(),

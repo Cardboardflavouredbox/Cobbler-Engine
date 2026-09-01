@@ -33,8 +33,8 @@ struct ModelGroupClass {
     std::string name;
     std::map<uint32_t, bool> value;
   };
-  std::unordered_map<std::string, bool> modelvisibilityresult;
   std::unordered_map<std::string, std::vector<visibilitything>> modelvisibility;
+
   std::unordered_map<std::string, Bone> Bonemap;
   std::unordered_map<std::string, std::array<uint32_t, 2>> anim;
 };
@@ -52,4 +52,6 @@ struct Modeltransform {
   glm::vec3 position, size = glm::vec3({1, 1, 1});
   glm::vec2 lookdir;
   glm::quat rot;
+
+  std::unordered_map<std::string, bool> modelvisibilityresult;
 };

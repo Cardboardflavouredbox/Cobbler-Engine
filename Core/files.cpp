@@ -832,14 +832,12 @@ bool init() {
               char objname[128];
               fscanf(file, "%s", objname);
               modelgroup.Models.push_back(objname);
-              modelgroup.modelvisibilityresult[objname] = true;
               SDL_Log("%s", objname);
             } else if (strcmp(lineHeader, "O") == 0) {  // Object.
               if (namestr != tempstr) {
                 Global->Modelmap[namestr] = model;
 
                 modelgroup.Models.push_back(namestr);
-                modelgroup.modelvisibilityresult[namestr] = true;
                 SDL_Log("%s", namestr.c_str());
               }
               char objname[128];
@@ -886,7 +884,6 @@ bool init() {
           SDL_Log("%s", namestr.c_str());
           modelgroup.Models.push_back(namestr);
           ModelGroupMap[tempstr] = modelgroup;
-          modelgroup.modelvisibilityresult[namestr] = true;
           SDL_Log("%s", namestr.c_str());
         } else if (entry.is_regular_file() &&
                    entry.path().extension() == ".bmp") {  // Load Textures.
