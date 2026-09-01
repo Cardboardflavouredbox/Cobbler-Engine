@@ -167,7 +167,7 @@ foreach(CLASSDIR ${CLASSES})
     cmake_path(GET CLASSDIR FILENAME FOLDER_NAME)
     if(IS_DIRECTORY "${CLASSDIR}")
         add_library(${FOLDER_NAME} SHARED "${CLASSDIR}/classmain.cpp" "${CLASSDIR}/ui.cpp" "${CLASSDIR}/entitymain.cpp")
-        target_compile_definitions(${FOLDER_NAME} PRIVATE DLLEXPORT=1 UIEXPORT=0)
+        target_compile_definitions(${FOLDER_NAME} PRIVATE DLLEXPORT=0 UIEXPORT=0 CLASS_API=1)
         set_target_properties(${FOLDER_NAME} PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/class/${FOLDER_NAME}"
         )
