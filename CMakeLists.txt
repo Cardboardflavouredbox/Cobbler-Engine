@@ -116,7 +116,7 @@ target_include_directories(CobblerNet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includ
 
 target_compile_definitions(Cobbler-Engine PRIVATE DLLEXPORT=0)
 target_compile_definitions(CobblerGLAD PRIVATE DLLEXPORT=1)
-target_compile_definitions(CobblerGameUI PRIVATE DLLEXPORT=1)
+target_compile_definitions(CobblerGameUI PRIVATE DLLEXPORT=0 UIEXPORT=1)
 target_compile_definitions(CobblerCore PRIVATE DLLEXPORT=1)
 target_compile_definitions(CobblerNet PRIVATE DLLEXPORT=1)
 
@@ -167,6 +167,7 @@ foreach(CLASSDIR ${CLASSES})
     cmake_path(GET CLASSDIR FILENAME FOLDER_NAME)
     if(IS_DIRECTORY "${CLASSDIR}")
         add_library(${FOLDER_NAME} SHARED "${CLASSDIR}/classmain.cpp" "${CLASSDIR}/ui.cpp" "${CLASSDIR}/entitymain.cpp")
+        target_compile_definitions(${FOLDER_NAME} PRIVATE DLLEXPORT=1 UIEXPORT=0)
         set_target_properties(${FOLDER_NAME} PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/class/${FOLDER_NAME}"
         )
