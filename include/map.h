@@ -4,6 +4,7 @@
 #include <glm/vec3.hpp>
 #include <string>
 #include <vector>
+#include <memory>
 
 #ifdef _WIN32
 #ifdef DLLEXPORT

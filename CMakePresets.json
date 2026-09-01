@@ -62,6 +62,18 @@
                 "CMAKE_C_COMPILER": "cl.exe",
                 "CMAKE_CXX_COMPILER": "cl.exe"
             }
+        },
+        {
+            "name": "w64devkit",
+            "displayName": "GCC 16.2.0 x86_64-w64-mingw32",
+            "description": "Using compilers: C = c:\\w64devkit\\bin\\gcc.exe, CXX = c:\\w64devkit\\bin\\g++.exe",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "c:/w64devkit/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "c:/w64devkit/bin/g++.exe",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
         }
     ],
     "buildPresets": [

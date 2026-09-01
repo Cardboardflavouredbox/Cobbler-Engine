@@ -1,4 +1,5 @@
 #include <glm/vec2.hpp>
+#include <memory>
 
 #ifdef _WIN32
 #ifdef DLLEXPORT

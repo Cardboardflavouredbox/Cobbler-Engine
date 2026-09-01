@@ -6,6 +6,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <string>
+#include <memory>
 
 #include "model.h"
 
