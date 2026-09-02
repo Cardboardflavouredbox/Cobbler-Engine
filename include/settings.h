@@ -17,7 +17,7 @@ struct SettingsClass {
   int fov = 90;
   int fps = 60;
   bool vsync = false;
-  int graphicsmode = 0;  // 0 = software, 1 = opengl
+  uint8_t graphicsmode = 0;  // 0 = software, 1 = opengl 2 = vulkan
   bool autorun = false;
   glm::vec2 mousesensitivity = glm::vec2({1, 1});
 };

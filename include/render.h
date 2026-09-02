@@ -1,12 +1,17 @@
 #pragma once
 
+#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
+
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_vulkan.h>
 #include <glad/glad.h>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
+#include <vulkan/vulkan_raii.hpp>
 
 #include "model.h"
 
@@ -45,6 +50,13 @@ struct RendererStuff {
     GLuint MapGLlist;
   };
   OpenGLRenderer* GLstuff;
+
+  struct VulkanRenderer {
+    vk::raii::Context context;
+    vk::raii::Instance instance = nullptr;
+    vk::raii::PhysicalDevice physicalDevice = nullptr;
+  };
+  VulkanRenderer* Vulkanstuff;
 };
 
 LIB_API extern std::unique_ptr<RendererStuff> RendererGlobal;

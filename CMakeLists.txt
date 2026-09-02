@@ -62,6 +62,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(dylib)
 
+find_package (Vulkan REQUIRED)
+
 set(CORE_SOURCES 
     Core/update.cpp
     Core/components.cpp 
@@ -99,14 +101,15 @@ src/g_main.cpp src/g_render.cpp)
 # src/e_update.cpp src/e_components.cpp)
 
 target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net)
-target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm freetype CobblerGLAD CobblerNet)
+target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm freetype CobblerGLAD CobblerNet Vulkan::Vulkan)
 target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
 target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib)
 # target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib)
-
+ 
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(CobblerCore PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/UI/include)
 target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # target_include_directories(CobblerEditorUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
