@@ -104,8 +104,8 @@ void freeRenderer() {
   }
 }
 
-// BMP load function
-bool loadBMP(std::filesystem::path path) {
+// PNG load function
+bool loadPNG(std::filesystem::path path) {
   SDL_Surface* surface;
   SDL_Log("Texture: %s", path.filename().string().c_str());
   switch (Settings->graphicsmode) {
@@ -115,10 +115,10 @@ bool loadBMP(std::filesystem::path path) {
     }
     case 1: {  // opengl
       std::string tempstr = path.filename().string();
-      // remove file extension (bmp)
+      // remove file extension (png)
       for (int i = 0; i < 4; i++) tempstr.pop_back();
       glGenTextures(1, &(RendererGlobal->GLstuff->textures[tempstr]));
-      surface = SDL_LoadBMP(path.string().c_str());
+      surface = SDL_LoadPNG(path.string().c_str());
       if (surface == NULL) return false;
       // that one magenta color as transparent color
       SDL_SetSurfaceColorKey(surface, true,
@@ -139,7 +139,7 @@ bool loadBMP(std::filesystem::path path) {
       break;
     }
     default: {  // software
-      surface = SDL_LoadBMP(path.string().c_str());
+      surface = SDL_LoadPNG(path.string().c_str());
       if (surface == NULL) return false;
       surface = SDL_ConvertSurfaceAndColorspace(
           surface, SDL_PIXELFORMAT_INDEX8, RendererGlobal->SRstuff->palette,
@@ -362,8 +362,8 @@ bool setRenderer() {
 
       RendererGlobal->SRstuff->textures = tempvector;
       tempstr = basepath;
-      tempstr.append("/" + Global->GameName + "/res/Color_palette.bmp");
-      surface = SDL_LoadBMP(tempstr.c_str());
+      tempstr.append("/" + Global->GameName + "/res/Color_palette.png");
+      surface = SDL_LoadPNG(tempstr.c_str());
 
       RendererGlobal->SRstuff->palette = SDL_GetSurfacePalette(surface);
       RendererGlobal->window =
@@ -390,7 +390,7 @@ bool setRenderer() {
   for (const auto& entry : std::filesystem::directory_iterator(
            basepath + Global->GameName + "/textures/")) {
     if (entry.is_regular_file()) {
-      if (!loadBMP(entry.path())) SDL_Log("Texture load fail!");
+      if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
     }
   }
 
@@ -1049,8 +1049,8 @@ bool init() {
           ModelGroupMap[tempstr] = modelgroup;
           SDL_Log("%s", namestr.c_str());
         } else if (entry.is_regular_file() &&
-                   entry.path().extension() == ".bmp") {  // Load Textures.
-          if (!loadBMP(entry.path())) SDL_Log("Texture load fail!");
+                   entry.path().extension() == ".png") {  // Load Textures.
+          if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
         }
       }
     }
