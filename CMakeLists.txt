@@ -19,19 +19,8 @@ endif()
 
 include(FetchContent)
 
-FetchContent_Declare(
-    SDL3
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG release-3.4.2 
-)
-FetchContent_MakeAvailable(SDL3)
-
-FetchContent_Declare(
-    SDL3_net
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_net.git
-    GIT_TAG        release-3.2.0 
-)
-FetchContent_MakeAvailable(SDL3_net)
+find_package (SDL3 REQUIRED)
+find_package (SDL3_net REQUIRED)
 
 FetchContent_Declare(
   bitsery
@@ -40,12 +29,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(bitsery)
 
-FetchContent_Declare(
-    freetype
-    GIT_REPOSITORY https://github.com/freetype/freetype.git
-    GIT_TAG VER-2-14-3
-)
-FetchContent_MakeAvailable(freetype)
+find_package (Freetype REQUIRED)
 
 FetchContent_Declare(
 	glm
@@ -101,11 +85,11 @@ src/g_main.cpp src/g_render.cpp)
 # src/e_update.cpp src/e_components.cpp)
 
 target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net)
-target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm freetype CobblerGLAD CobblerNet Vulkan::Vulkan)
-target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
-# target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD)
-target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib)
-# target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm freetype CobblerCore CobblerGLAD dylib)
+target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm Freetype::Freetype CobblerGLAD CobblerNet Vulkan::Vulkan)
+target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
+# target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
+target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD dylib)
+# target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD dylib)
  
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -177,7 +161,7 @@ foreach(CLASSDIR ${CLASSES})
         set_target_properties(${FOLDER_NAME} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/class/${FOLDER_NAME}"
         )
-        target_link_libraries(${FOLDER_NAME} PRIVATE glm::glm CobblerCore CobblerGameUI freetype CobblerGLAD)
+        target_link_libraries(${FOLDER_NAME} PRIVATE glm::glm CobblerCore CobblerGameUI Freetype::Freetype CobblerGLAD)
         target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
         target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/class/${FOLDER_NAME}/include)
         target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/UI/include)

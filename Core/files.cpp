@@ -340,7 +340,7 @@ bool setRenderer() {
 
       // set texture map
       std::unordered_map<std::string, GLuint> tempmap;
-      tempmap.reserve(64);
+      tempmap.reserve(2048);
 
       RendererGlobal->GLstuff->textures = tempmap;
 
@@ -356,7 +356,7 @@ bool setRenderer() {
       SDL_Surface* surface;
       std::string basepath = SDL_GetBasePath(), tempstr = basepath;
       std::unordered_map<std::string, SDL_Surface*> tempvector;
-      tempvector.reserve(64);
+      tempvector.reserve(2048);
 
       RendererGlobal->SRstuff = new RendererStuff::SoftwareRenderer();
 
@@ -746,12 +746,43 @@ bool init() {
 
   if (!Global->IsRunning) return false;
 
+  // Set the Renderer.
+  if (!setRenderer()) return false;
+
+  // capture the mouse!! Get it!!! NOW!!!
+  SDL_SetWindowRelativeMouseMode(RendererGlobal->window, true);
+
+  RendererGlobal->windowscale =
+      SDL_GetWindowDisplayScale(RendererGlobal->window);
+
+  // set perspective matrix.
+  double fovy =
+      2.0 * std::atan(std::tan(glm::radians((double)Settings->fov) * 0.5) /
+                      (Settings->resolutionx / (double)Settings->resolutiony));
+  Global->perspectivematrix = glm::perspective(
+      fovy, Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
+
+  Camera = new CameraClass();
+
   // read map data.
   Mapdata tempmapdata;
 
-  file = fopen(
-      (Global->GameName + "/map/" + LoadedData->startlevel + ".map").c_str(),
-      "r");
+  for (const auto& dir :
+       std::filesystem::directory_iterator(Global->GameName + "/models/")) {
+    if (dir.is_directory()) {
+      for (const auto& entry : std::filesystem::directory_iterator(
+               Global->GameName + "/map/" + LoadedData->startlevel + "/")) {
+        // check if file is a .map file.
+        if (entry.is_regular_file() && entry.path().extension() == ".map") {
+          entry.path().c_str();
+        } else if (entry.is_regular_file() &&
+                   entry.path().extension() == ".png") {  // Load Textures.
+          if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
+        }
+      }
+    }
+  }
+
   if (file == NULL) {
     SDL_Log("Impossible to open the file!");
     return false;
@@ -841,24 +872,6 @@ bool init() {
     }
   }
 
-  // Set the Renderer.
-  if (!setRenderer()) return false;
-
-  // capture the mouse!! Get it!!! NOW!!!
-  SDL_SetWindowRelativeMouseMode(RendererGlobal->window, true);
-
-  RendererGlobal->windowscale =
-      SDL_GetWindowDisplayScale(RendererGlobal->window);
-
-  // set perspective matrix.
-  double fovy =
-      2.0 * std::atan(std::tan(glm::radians((double)Settings->fov) * 0.5) /
-                      (Settings->resolutionx / (double)Settings->resolutiony));
-  Global->perspectivematrix = glm::perspective(
-      fovy, Settings->resolutionx / (double)Settings->resolutiony, 0.1, 256.0);
-
-  Camera = new CameraClass();
-
   LocalPlayer = SpawnEntities[Global->playerclass](0, 0);
   LocalPlayer->position.z = 8;
   LocalPlayer->Modelthing->visible = false;
@@ -886,7 +899,7 @@ bool init() {
   // get the base path of the game.
   std::string basepath = SDL_GetBasePath(), tempstr, namestr;
 
-  // get all the models in the models folder.
+  // get all the files in the models folder.
   for (const auto& dir : std::filesystem::directory_iterator(
            basepath + Global->GameName + "/models/")) {
     if (dir.is_directory()) {

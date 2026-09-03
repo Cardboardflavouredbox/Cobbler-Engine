@@ -43,12 +43,23 @@ def write_some_data(context, filepath, use_some_setting):
         else:
             color_attr = mesh.attributes["Color"]
             
+            
+            
             for vert in mesh.vertices:
                 vertdict[vert.index] = child.matrix_world @ vert.co
                 colordict[vert.index] = color_attr.data[vert.index].color
                 
             for face in mesh.polygons:
-                facelist.append(face.vertices)
+                texture = ""
+                s = child.material_slots[face.material_index]
+                if s.material and s.material.use_nodes:
+                    for n in s.material.node_tree.nodes:
+                        if n.type == 'TEX_IMAGE':
+                            texture = n.image.name
+                            texture = texture[:-4]
+                
+                facedata = [texture,face.vertices]
+                facelist.append(facedata)
     
     f = open(filepath, "w", encoding='utf-8')
     
@@ -58,7 +69,7 @@ def write_some_data(context, filepath, use_some_setting):
         print(f"P {vert.x:.6f},{vert.y:.6f},{vert.z:.6f} {color[0]},{color[1]},{color[2]}",file = f)
     
     for face in facelist:
-        print("F 0 Floor 1,1 "+ ",".join(str(num) for num in face) +" 0,0 1,0 0,1",file = f)
+        print("F 0 "+face[0]+" 1,1 "+ ",".join(str(num) for num in face[1]) +" 0,0 1,0 0,1",file = f)
         
     for index in killboxverts.keys():
         vert = killboxverts[index]
