@@ -34,6 +34,8 @@ def write_some_data(context, filepath, use_some_setting):
             
         mesh = child.data
         
+        active_uv_layer = mesh.uv_layers.active.data
+        
         if child.get('IsKillbox'):
             for vert in mesh.vertices:
                 killboxverts[vert.index] = child.matrix_world @ vert.co
@@ -42,8 +44,6 @@ def write_some_data(context, filepath, use_some_setting):
                 killboxfaces.append(face.vertices)
         else:
             color_attr = mesh.attributes["Color"]
-            
-            
             
             for vert in mesh.vertices:
                 vertdict[vert.index] = child.matrix_world @ vert.co
@@ -58,7 +58,13 @@ def write_some_data(context, filepath, use_some_setting):
                             texture = n.image.name
                             texture = texture[:-4]
                 
-                facedata = [texture,face.vertices]
+                uvthing = ""
+                
+                for loop_idx in face.loop_indices:
+                    uv_loop = active_uv_layer[loop_idx]
+                    uvthing += str(uv_loop.uv[0]) + "," + str(uv_loop.uv[1]) + " "
+
+                facedata = [texture,face.vertices,uvthing]
                 facelist.append(facedata)
     
     f = open(filepath, "w", encoding='utf-8')
@@ -69,7 +75,7 @@ def write_some_data(context, filepath, use_some_setting):
         print(f"P {vert.x:.6f},{vert.y:.6f},{vert.z:.6f} {color[0]},{color[1]},{color[2]}",file = f)
     
     for face in facelist:
-        print("F 0 "+face[0]+" 1,1 "+ ",".join(str(num) for num in face[1]) +" 0,0 1,0 0,1",file = f)
+        print("F 0 "+face[0]+" 1,1 "+ ",".join(str(num) for num in face[1]) +" "+face[2],file = f)
         
     for index in killboxverts.keys():
         vert = killboxverts[index]

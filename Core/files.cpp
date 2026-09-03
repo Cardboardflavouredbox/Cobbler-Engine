@@ -340,10 +340,9 @@ bool setRenderer() {
 
       // set texture map
       std::unordered_map<std::string, GLuint> tempmap;
-      tempmap.reserve(2048);
+      tempmap.reserve(64);
 
       RendererGlobal->GLstuff->textures = tempmap;
-
       // set backface culling
       glEnable(GL_CULL_FACE);
       glCullFace(GL_BACK);
@@ -356,7 +355,7 @@ bool setRenderer() {
       SDL_Surface* surface;
       std::string basepath = SDL_GetBasePath(), tempstr = basepath;
       std::unordered_map<std::string, SDL_Surface*> tempvector;
-      tempvector.reserve(2048);
+      tempvector.reserve(64);
 
       RendererGlobal->SRstuff = new RendererStuff::SoftwareRenderer();
 
@@ -393,8 +392,6 @@ bool setRenderer() {
       if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
     }
   }
-
-  if (Settings->graphicsmode == 1) LoadMapGL();
 
   return true;
 }
@@ -746,6 +743,9 @@ bool init() {
 
   if (!Global->IsRunning) return false;
 
+  // get the base path of the game.
+  std::string basepath = SDL_GetBasePath(), tempstr, namestr;
+
   // Set the Renderer.
   if (!setRenderer()) return false;
 
@@ -767,14 +767,15 @@ bool init() {
   // read map data.
   Mapdata tempmapdata;
 
-  for (const auto& dir :
-       std::filesystem::directory_iterator(Global->GameName + "/models/")) {
+  for (const auto& dir : std::filesystem::directory_iterator(
+           basepath + Global->GameName + "/models/")) {
     if (dir.is_directory()) {
       for (const auto& entry : std::filesystem::directory_iterator(
-               Global->GameName + "/map/" + LoadedData->startlevel + "/")) {
+               basepath + Global->GameName + "/map/" + LoadedData->startlevel +
+               "/")) {
         // check if file is a .map file.
         if (entry.is_regular_file() && entry.path().extension() == ".map") {
-          entry.path().c_str();
+          file = fopen(entry.path().c_str(), "r");
         } else if (entry.is_regular_file() &&
                    entry.path().extension() == ".png") {  // Load Textures.
           if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
@@ -809,6 +810,7 @@ bool init() {
              &tempface.points[0], &tempface.points[1], &tempface.points[2],
              &tempface.UVs[0][0], &tempface.UVs[0][1], &tempface.UVs[1][0],
              &tempface.UVs[1][1], &tempface.UVs[2][0], &tempface.UVs[2][1]);
+      tempface.doublesided = true;
       tempface.texture = texture;
       tempmapdata.mapfaces.push_back(tempface);
     } else if (strcmp(lineHeader, "SKYBOX") == 0) {  // Skybox.
@@ -840,37 +842,35 @@ bool init() {
 
   // preprocess the faces in the map.
   // turns all quads into triangles.
-  for (int i = 0; i < GlobalMapStuff->mapfaces.size(); i++) {
-    if (GlobalMapStuff->mapfaces[i].points.size() == 4) {
-      Mapface temp;
-      temp.doublesided = GlobalMapStuff->mapfaces[i].doublesided;
-      temp.xloop = GlobalMapStuff->mapfaces[i].xloop;
-      temp.yloop = GlobalMapStuff->mapfaces[i].yloop;
-      temp.texture = GlobalMapStuff->mapfaces[i].texture;
-      int temppoints[3] = {GlobalMapStuff->mapfaces[i].points[0],
-                           GlobalMapStuff->mapfaces[i].points[1],
-                           GlobalMapStuff->mapfaces[i].points[2]};
-      glm::vec2 tempUV[3] = {GlobalMapStuff->mapfaces[i].UVs[0],
-                             GlobalMapStuff->mapfaces[i].UVs[1],
-                             GlobalMapStuff->mapfaces[i].UVs[2]};
-      temp.points.assign(temppoints, temppoints + 3);
-      temp.UVs.assign(tempUV, tempUV + 3);
-      GlobalMapStuff->mapfaces.push_back(temp);
+  // for (int i = 0; i < GlobalMapStuff->mapfaces.size(); i++) {
+  //   if (GlobalMapStuff->mapfaces[i].points.size() == 4) {
+  //     Mapface temp;
+  //     temp.doublesided = GlobalMapStuff->mapfaces[i].doublesided;
+  //     temp.xloop = GlobalMapStuff->mapfaces[i].xloop;
+  //     temp.yloop = GlobalMapStuff->mapfaces[i].yloop;
+  //     temp.texture = GlobalMapStuff->mapfaces[i].texture;
+  //     int temppoints[3] = {GlobalMapStuff->mapfaces[i].points[0],
+  //                          GlobalMapStuff->mapfaces[i].points[1],
+  //                          GlobalMapStuff->mapfaces[i].points[2]};
+  //     glm::vec2 tempUV[3] = {GlobalMapStuff->mapfaces[i].UVs[0],
+  //                            GlobalMapStuff->mapfaces[i].UVs[1],
+  //                            GlobalMapStuff->mapfaces[i].UVs[2]};
+  //     temp.points.assign(temppoints, temppoints + 3);
+  //     temp.UVs.assign(tempUV, tempUV + 3);
+  //     GlobalMapStuff->mapfaces.push_back(temp);
+  //     temp.points[0] = GlobalMapStuff->mapfaces[i].points[2];
+  //     temp.points[1] = GlobalMapStuff->mapfaces[i].points[3];
+  //     temp.points[2] = GlobalMapStuff->mapfaces[i].points[0];
+  //     temp.UVs[0] = GlobalMapStuff->mapfaces[i].UVs[2];
+  //     temp.UVs[1] = GlobalMapStuff->mapfaces[i].UVs[3];
+  //     temp.UVs[2] = GlobalMapStuff->mapfaces[i].UVs[0];
+  //     GlobalMapStuff->mapfaces.push_back(temp);
+  //     GlobalMapStuff->mapfaces.erase(GlobalMapStuff->mapfaces.begin() + i);
+  //     i--;
+  //   }
+  // }
 
-      temp.points[0] = GlobalMapStuff->mapfaces[i].points[2];
-      temp.points[1] = GlobalMapStuff->mapfaces[i].points[3];
-      temp.points[2] = GlobalMapStuff->mapfaces[i].points[0];
-
-      temp.UVs[0] = GlobalMapStuff->mapfaces[i].UVs[2];
-      temp.UVs[1] = GlobalMapStuff->mapfaces[i].UVs[3];
-      temp.UVs[2] = GlobalMapStuff->mapfaces[i].UVs[0];
-
-      GlobalMapStuff->mapfaces.push_back(temp);
-
-      GlobalMapStuff->mapfaces.erase(GlobalMapStuff->mapfaces.begin() + i);
-      i--;
-    }
-  }
+  if (Settings->graphicsmode == 1) LoadMapGL();
 
   LocalPlayer = SpawnEntities[Global->playerclass](0, 0);
   LocalPlayer->position.z = 8;
@@ -895,9 +895,6 @@ bool init() {
 
   // set the props.
   Global->Models = tempmapdata.props;
-
-  // get the base path of the game.
-  std::string basepath = SDL_GetBasePath(), tempstr, namestr;
 
   // get all the files in the models folder.
   for (const auto& dir : std::filesystem::directory_iterator(
