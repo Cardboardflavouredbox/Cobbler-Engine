@@ -273,12 +273,10 @@ bool CapsuleTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
 }
 
 // checks the angle of the slope.
-bool Slopecheck(glm::vec3 normal) {
+float Slopecheck(glm::vec3 normal) {
   normal = glm::normalize(normal);
-  float angle = std::acosf(normal.z) * 180.f / (float)PI;
-  if (angle < 0) angle *= -1;
 
-  return angle > 135;
+  return std::acosf(normal.z) * 180.f / (float)PI;
 }
 
 // checks if you collided with triangle while you moved.
@@ -489,8 +487,14 @@ void EntityMove(Entity* tempentity) {
       tempentity->IsGrounded = false;
       moveresult.z += tempmove.z / (float)temp;
     } else {
-      if (Slopecheck(tempnormal)) {
+      float anglething = Slopecheck(tempnormal);
+      if (anglething < 0) anglething *= -1;
+      if (anglething > 135) {
         tempentity->IsGrounded = true;
+        tempentity->velocityvec3.z = -0.1f;
+        break;
+      } else if (anglething < 45) {
+        tempentity->IsGrounded = false;
         tempentity->velocityvec3.z = -0.1f;
         break;
       } else {
@@ -542,7 +546,7 @@ void EntityMove(Entity* tempentity) {
   if (glm::length(tempvec) < 0.0001f)
     tempvec = glm::vec2(0);
   else
-    tempvec *= std::pow(0.001f, dt);
+    tempvec *= std::pow(tempentity->IsGrounded ? 0.001f : 0.125f, dt);
 
   tempentity->velocityvec3.x = tempvec.x;
   tempentity->velocityvec3.y = tempvec.y;
