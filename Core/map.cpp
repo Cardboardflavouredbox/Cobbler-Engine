@@ -28,8 +28,7 @@ void LoadMapGL() {
                     .shade[1],
                 GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[j]]
                     .shade[2]);
-      glTexCoord2f(uvw.x * GlobalMapStuff->mapfaces[i].xloop,
-                   uvw.y * GlobalMapStuff->mapfaces[i].yloop);
+      glTexCoord2f(uvw.x, uvw.y);
       glVertex3f(pos.x, pos.y, pos.z);
     }
     glEnd();

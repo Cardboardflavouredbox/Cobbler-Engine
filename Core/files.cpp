@@ -805,11 +805,11 @@ bool init() {
       Mapface tempface;
       tempface.points.resize(3);
       tempface.UVs.resize(3);
-      fscanf(file, "%d %s %d,%d %d,%d,%d %f,%f %f,%f %f,%f\n",
-             &tempface.doublesided, texture, &tempface.xloop, &tempface.yloop,
-             &tempface.points[0], &tempface.points[1], &tempface.points[2],
-             &tempface.UVs[0][0], &tempface.UVs[0][1], &tempface.UVs[1][0],
-             &tempface.UVs[1][1], &tempface.UVs[2][0], &tempface.UVs[2][1]);
+      fscanf(file, "%d %s %d,%d,%d %f,%f %f,%f %f,%f\n", &tempface.doublesided,
+             texture, &tempface.points[0], &tempface.points[1],
+             &tempface.points[2], &tempface.UVs[0][0], &tempface.UVs[0][1],
+             &tempface.UVs[1][0], &tempface.UVs[1][1], &tempface.UVs[2][0],
+             &tempface.UVs[2][1]);
       tempface.doublesided = true;
       tempface.texture = texture;
       tempmapdata.mapfaces.push_back(tempface);

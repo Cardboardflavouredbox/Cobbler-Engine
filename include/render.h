@@ -71,5 +71,5 @@ LIB_API void DrawLine(unsigned char color, glm::vec3 rawvectors[]);
 LIB_API void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius);
 
 LIB_API void DrawTri(std::string texture, glm::vec3 rawvectors[],
-                     glm::vec2 UVs[], int xloop, int yloop);
+                     glm::vec2 UVs[]);
 }

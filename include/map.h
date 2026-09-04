@@ -2,9 +2,9 @@
 #include <array>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 #ifdef _WIN32
 #ifdef DLLEXPORT
@@ -24,7 +24,6 @@ struct MapPoint {
 struct Mapface {
   bool doublesided = false;
   std::string texture;
-  int xloop = 1, yloop = 1;
   std::vector<int> points;
   std::vector<glm::vec2> UVs;
 };

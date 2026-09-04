@@ -75,7 +75,7 @@ def write_some_data(context, filepath, use_some_setting):
         print(f"P {vert.x:.6f},{vert.y:.6f},{vert.z:.6f} {color[0]},{color[1]},{color[2]}",file = f)
     
     for face in facelist:
-        print("F 0 "+face[0]+" 1,1 "+ ",".join(str(num) for num in face[1]) +" "+face[2],file = f)
+        print("F 0 "+face[0]+" "+ ",".join(str(num) for num in face[1]) +" "+face[2],file = f)
         
     for index in killboxverts.keys():
         vert = killboxverts[index]
