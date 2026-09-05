@@ -13,42 +13,49 @@ def getchildren(obj):
 def write_some_data(context, filepath, use_some_setting):
     print("running write_some_data...")
     
-    
     Map = bpy.data.objects.get("Map")
     
-    killboxverts = {}
-    
-    killboxfaces = []
-    
-    vertdict = {}
-    
-    colordict = {}
-    
-    facelist = []
-    
     mapchildren = getchildren(Map)
+    
+    f = open(filepath, "w", encoding='utf-8')
     
     for child in mapchildren:
         if child.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
             
         mesh = child.data
+
         
         active_uv_layer = mesh.uv_layers.active.data
         
         if child.get('IsKillbox'):
+            print(f"K",file=f)
             for vert in mesh.vertices:
-                killboxverts[vert.index] = child.matrix_world @ vert.co
-                
+                vertdata = child.matrix_world @ vert.co
+                print(f"D{vertdata.x:.6f},{vertdata.y:.6f},{vertdata.z:.6f}",file = f)
+            print(f"E",file=f)
             for face in mesh.polygons:
-                killboxfaces.append(face.vertices)
+                print("D"+",".join(str(num) for num in face.vertices),file = f)
+            print(f"E",file=f)
+        elif child.get('Hitbox'):
+            print(f"H",file=f)
+            for vert in mesh.vertices:
+                vertdata = child.matrix_world @ vert.co
+                
+                print(f"D{vertdata.x:.6f},{vertdata.y:.6f},{vertdata.z:.6f}",file = f)
+            print(f"E",file=f)
+            for face in mesh.polygons:
+                print("D"+",".join(str(num) for num in face.vertices),file = f)
+            print(f"E",file=f)
         else:
+            print(f"V",file=f)
             color_attr = mesh.attributes["Color"]
             
             for vert in mesh.vertices:
-                vertdict[vert.index] = child.matrix_world @ vert.co
-                colordict[vert.index] = color_attr.data[vert.index].color
-                
+                vertdata = child.matrix_world @ vert.co
+                color = color_attr.data[vert.index].color
+                print(f"D{vertdata.x:.6f},{vertdata.y:.6f},{vertdata.z:.6f} {color[0]},{color[1]},{color[2]}",file = f)
+            print(f"E",file=f)
             for face in mesh.polygons:
                 texture = ""
                 s = child.material_slots[face.material_index]
@@ -65,26 +72,9 @@ def write_some_data(context, filepath, use_some_setting):
                     uvthing += str(uv_loop.uv[0]) + "," + str(uv_loop.uv[1]) + " "
 
                 facedata = [texture,face.vertices,uvthing]
-                facelist.append(facedata)
-    
-    f = open(filepath, "w", encoding='utf-8')
-    
-    for index in vertdict.keys():
-        vert = vertdict[index]
-        color = colordict[index]
-        print(f"P {vert.x:.6f},{vert.y:.6f},{vert.z:.6f} {color[0]},{color[1]},{color[2]}",file = f)
-    
-    for face in facelist:
-        print("F 0 "+face[0]+" "+ ",".join(str(num) for num in face[1]) +" "+face[2],file = f)
-        
-    for index in killboxverts.keys():
-        vert = killboxverts[index]
-        print(f"KP {vert.x:.6f},{vert.y:.6f},{vert.z:.6f}",file = f)
-    
-    for face in killboxfaces:
-        print("KF "+ ",".join(str(num) for num in face),file = f)
-    
-    print("SKYBOX Sky",file = f)
+                print("D0 "+facedata[0]+" "+ ",".join(str(num) for num in facedata[1]) +" "+facedata[2],file = f)
+            print(f"E",file=f)
+    print("S Sky",file = f)
     
     f.close()
 

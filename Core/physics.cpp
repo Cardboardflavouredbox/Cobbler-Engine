@@ -300,13 +300,13 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
 
   float distresult = 0;
   glm::vec3 result = glm::vec3(0);
-  for (int i = 0; i < GlobalMapStuff->mapfaces.size(); i++) {
+  for (int i = 0; i < GlobalMapStuff->Hitboxmapfaces.size(); i++) {
     float disttemp;
     glm::vec3 normal;
     if (CapsuleTriCheck(
-            GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[0]].pos,
-            GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[1]].pos,
-            GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[2]].pos,
+            GlobalMapStuff->HitboxPoints[GlobalMapStuff->Hitboxmapfaces[i][0]],
+            GlobalMapStuff->HitboxPoints[GlobalMapStuff->Hitboxmapfaces[i][1]],
+            GlobalMapStuff->HitboxPoints[GlobalMapStuff->Hitboxmapfaces[i][2]],
             hitbox[0] + checkposition, hitbox[1] + checkposition, radius,
             disttemp, normal)) {
       if (distresult == 0 || distresult > disttemp) {

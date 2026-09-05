@@ -790,55 +790,105 @@ bool init() {
   }
   // time to read the contents of the file.
   while (true) {
-    char lineHeader[64];
+    char lineHeader;
     // read the first word of the line
-    if (fscanf(file, "%s", lineHeader) == EOF) break;
+    if (fscanf(file, "%c\n", &lineHeader) == EOF) break;
 
-    if (strcmp(lineHeader, "P") == 0) {  // Points.
-      MapPoint temppoint;
-      fscanf(file, "%f,%f,%f %f,%f,%f\n", &temppoint.pos.x, &temppoint.pos.y,
-             &temppoint.pos.z, &temppoint.shade[0], &temppoint.shade[1],
-             &temppoint.shade[2]);
-      tempmapdata.Points.push_back(temppoint);
-    } else if (strcmp(lineHeader, "F") == 0) {  // Faces.
-      char texture[64];
-      Mapface tempface;
-      tempface.points.resize(3);
-      tempface.UVs.resize(3);
-      fscanf(file, "%d %s %d,%d,%d %f,%f %f,%f %f,%f\n", &tempface.doublesided,
-             texture, &tempface.points[0], &tempface.points[1],
-             &tempface.points[2], &tempface.UVs[0][0], &tempface.UVs[0][1],
-             &tempface.UVs[1][0], &tempface.UVs[1][1], &tempface.UVs[2][0],
-             &tempface.UVs[2][1]);
-      tempface.doublesided = true;
-      tempface.texture = texture;
-      tempmapdata.mapfaces.push_back(tempface);
-    } else if (strcmp(lineHeader, "SKYBOX") == 0) {  // Skybox.
+    if (lineHeader == 'V') {  // Visual thing
+      uint32_t cnt = tempmapdata.VisualPoints.size();
+      while (true) {  // Visual Points.
+        if (fscanf(file, "%c", &lineHeader) == EOF) break;
+        if (lineHeader == 'E') break;
+        MapPoint temppoint;
+        fscanf(file, "%f,%f,%f %f,%f,%f\n", &temppoint.pos.x, &temppoint.pos.y,
+               &temppoint.pos.z, &temppoint.shade[0], &temppoint.shade[1],
+               &temppoint.shade[2]);
+        tempmapdata.VisualPoints.push_back(temppoint);
+      }
+      fscanf(file, "\n");
+      while (true) {  // Visual Faces.
+        if (fscanf(file, "%c", &lineHeader) == EOF) break;
+        if (lineHeader == 'E') break;
+        char texture[64];
+        Mapface tempface;
+        int doublesided;
+        fscanf(file, "%d %s %u,%u,%u %f,%f %f,%f %f,%f\n", &doublesided,
+               texture, &tempface.points[0], &tempface.points[1],
+               &tempface.points[2], &tempface.UVs[0][0], &tempface.UVs[0][1],
+               &tempface.UVs[1][0], &tempface.UVs[1][1], &tempface.UVs[2][0],
+               &tempface.UVs[2][1]);
+        tempface.texture = texture;
+        tempface.doublesided = doublesided;
+        for (int i = 0; i < 3; i++) tempface.points[i] += cnt;
+        tempmapdata.Visualmapfaces.push_back(tempface);
+      }
+      fscanf(file, "\n");
+    } else if (lineHeader == 'H') {  // Hitbox thing
+      uint32_t cnt = tempmapdata.HitboxPoints.size();
+      while (true) {  // Hitbox Points.
+        if (fscanf(file, "%c", &lineHeader) == EOF) break;
+        if (lineHeader == 'E') break;
+        glm::vec3 temppoint;
+        fscanf(file, "%f,%f,%f\n", &temppoint.x, &temppoint.y, &temppoint.z);
+        tempmapdata.HitboxPoints.push_back(temppoint);
+      }
+      fscanf(file, "\n");
+      while (true) {  // Hitbox Faces.
+        if (fscanf(file, "%c", &lineHeader) == EOF) break;
+        if (lineHeader == 'E') break;
+        std::array<uint32_t, 3> tempface;
+        fscanf(file, "%u,%u,%u\n", &tempface[0], &tempface[1], &tempface[2]);
+
+        for (int i = 0; i < 3; i++) tempface[i] += cnt;
+        tempmapdata.Hitboxmapfaces.push_back(tempface);
+      }
+      fscanf(file, "\n");
+    } else if (lineHeader == 'K') {  // Killbox thing
+      uint32_t cnt = tempmapdata.KillboxPoints.size();
+      while (true) {  // Killbox Points.
+        if (fscanf(file, "%c", &lineHeader) == EOF) break;
+        if (lineHeader == 'E') break;
+        glm::vec3 temppoint;
+        fscanf(file, "%f,%f,%f\n", &temppoint.x, &temppoint.y, &temppoint.z);
+        tempmapdata.KillboxPoints.push_back(temppoint);
+      }
+      fscanf(file, "\n");
+      while (true) {  // Killbox Faces.
+        if (fscanf(file, "%c", &lineHeader) == EOF) break;
+        if (lineHeader == 'E') break;
+        std::array<uint32_t, 3> tempface;
+        fscanf(file, "%u,%u,%u\n", &tempface[0], &tempface[1], &tempface[2]);
+
+        for (int i = 0; i < 3; i++) tempface[i] += cnt;
+        tempmapdata.KillboxFaces.push_back(tempface);
+      }
+      fscanf(file, "\n");
+    } else if (lineHeader == 'S') {  // Skybox.
       char name[64];
-      fscanf(file, "%s\n", name);
+      fscanf(file, "%s", name);
       tempmapdata.skybox = name;
-    } else if (strcmp(lineHeader, "KP") == 0) {  // Killbox Points.
-      glm::vec3 temppoint;
-      fscanf(file, "%f,%f,%f\n", &temppoint.x, &temppoint.y, &temppoint.z);
-      tempmapdata.KillboxPoints.push_back(temppoint);
-    } else if (strcmp(lineHeader, "KF") == 0) {  // Killbox Faces.
-      std::vector<int> tempvector(3);
-      fscanf(file, "%d,%d,%d\n", &tempvector[0], &tempvector[1],
-             &tempvector[2]);
-      tempmapdata.KillboxFaces.push_back(tempvector);
+      break;
     }
   }
   fclose(file);
 
-  GlobalMapStuff->Points = tempmapdata.Points;
-  GlobalMapStuff->mapfaces = tempmapdata.mapfaces;
-  GlobalMapStuff->skybox = tempmapdata.skybox;
+  GlobalMapStuff->VisualPoints = tempmapdata.VisualPoints;
+  GlobalMapStuff->Visualmapfaces = tempmapdata.Visualmapfaces;
+
+  GlobalMapStuff->HitboxPoints = tempmapdata.HitboxPoints;
+  GlobalMapStuff->Hitboxmapfaces = tempmapdata.Hitboxmapfaces;
 
   GlobalMapStuff->KillboxPoints = tempmapdata.KillboxPoints;
   GlobalMapStuff->KillboxFaces = tempmapdata.KillboxFaces;
 
-  SDL_Log("%zu points in map", tempmapdata.Points.size());
-  SDL_Log("%zu faces in map", tempmapdata.mapfaces.size());
+  GlobalMapStuff->skybox = tempmapdata.skybox;
+
+  SDL_Log("%zu visual points in map", tempmapdata.VisualPoints.size());
+  SDL_Log("%zu visual faces in map", tempmapdata.Visualmapfaces.size());
+  SDL_Log("%zu hitbox points in map", tempmapdata.HitboxPoints.size());
+  SDL_Log("%zu hitbox faces in map", tempmapdata.Hitboxmapfaces.size());
+  SDL_Log("%zu killbox points in map", tempmapdata.KillboxPoints.size());
+  SDL_Log("%zu killbox faces in map", tempmapdata.KillboxFaces.size());
 
   // preprocess the faces in the map.
   // turns all quads into triangles.

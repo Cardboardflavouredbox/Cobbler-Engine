@@ -67,10 +67,12 @@ struct Mapdata {
     std::string name;
     glm::vec3 pos;
   };
-  std::vector<MapPoint> Points;
-  std::vector<Mapface> mapfaces;
+  std::vector<glm::vec3> HitboxPoints;
+  std::vector<std::array<uint32_t, 3>> Hitboxmapfaces;
+  std::vector<MapPoint> VisualPoints;
+  std::vector<Mapface> Visualmapfaces;
   std::vector<glm::vec3> KillboxPoints;
-  std::vector<std::vector<int>> KillboxFaces;
+  std::vector<std::array<uint32_t, 3>> KillboxFaces;
   std::vector<Entitydata> Entities;
   std::vector<Modeltransform> props;
   std::string skybox;

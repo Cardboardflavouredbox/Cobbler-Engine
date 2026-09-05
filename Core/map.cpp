@@ -12,21 +12,26 @@ void LoadMapGL() {
 
   glNewList(RendererGlobal->GLstuff->MapGLlist, GL_COMPILE);
 
-  for (int i = 0; i < GlobalMapStuff->mapfaces.size(); i++) {
+  for (int i = 0; i < GlobalMapStuff->Visualmapfaces.size(); i++) {
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(
-        GL_TEXTURE_2D,
-        RendererGlobal->GLstuff->textures[GlobalMapStuff->mapfaces[i].texture]);
+    glBindTexture(GL_TEXTURE_2D,
+                  RendererGlobal->GLstuff
+                      ->textures[GlobalMapStuff->Visualmapfaces[i].texture]);
     glBegin(GL_TRIANGLES);
     for (int j = 2; j >= 0; j--) {
       glm::vec3 pos =
-          GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[j]].pos;
-      glm::vec2 uvw = GlobalMapStuff->mapfaces[i].UVs[j];
-      glColor3f(GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[j]]
+          GlobalMapStuff
+              ->VisualPoints[GlobalMapStuff->Visualmapfaces[i].points[j]]
+              .pos;
+      glm::vec2 uvw = GlobalMapStuff->Visualmapfaces[i].UVs[j];
+      glColor3f(GlobalMapStuff
+                    ->VisualPoints[GlobalMapStuff->Visualmapfaces[i].points[j]]
                     .shade[0],
-                GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[j]]
+                GlobalMapStuff
+                    ->VisualPoints[GlobalMapStuff->Visualmapfaces[i].points[j]]
                     .shade[1],
-                GlobalMapStuff->Points[GlobalMapStuff->mapfaces[i].points[j]]
+                GlobalMapStuff
+                    ->VisualPoints[GlobalMapStuff->Visualmapfaces[i].points[j]]
                     .shade[2]);
       glTexCoord2f(uvw.x, uvw.y);
       glVertex3f(pos.x, pos.y, pos.z);
