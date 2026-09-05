@@ -33,7 +33,7 @@ void LoadMapGL() {
                 GlobalMapStuff
                     ->VisualPoints[GlobalMapStuff->Visualmapfaces[i].points[j]]
                     .shade[2]);
-      glTexCoord2f(uvw.x, uvw.y);
+      glTexCoord2f(uvw.x, 1 - uvw.y);
       glVertex3f(pos.x, pos.y, pos.z);
     }
     glEnd();
