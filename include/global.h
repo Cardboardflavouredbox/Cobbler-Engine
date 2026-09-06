@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <glm/glm.hpp>
 #include <set>
 #include <string>
@@ -25,7 +26,14 @@
 
 struct GlobalClass {
  public:
-  std::string GameName = "CobblerGame";
+  std::filesystem::path GameFolder = "CobblerGame";
+
+  struct LoadedData {
+    std::string GameName = "";
+    std::string startlevel, fontname;
+    std::vector<std::string> stagenames;
+  };
+  LoadedData* LoadedStuff;
 
   bool IsRunning;
   bool pause = false;
@@ -55,11 +63,6 @@ struct GlobalClass {
   std::string playerclass = "default";
 
   char* pref_path;
-};
-
-struct ZipData {
-  std::string startlevel, fontname;
-  std::vector<std::string> stagenames;
 };
 
 struct Mapdata {

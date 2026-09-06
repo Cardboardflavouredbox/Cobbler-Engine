@@ -6,11 +6,13 @@
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_timer.h>
 #include <ft2build.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <stdio.h>
 
 #include <filesystem>
+#include <fstream>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 #include <set>
 #include <sstream>
 #include <unordered_map>
@@ -46,10 +48,10 @@ void SaveSettings() {
     return;
   }
 
-  fprintf(file, "%d %d %d %d %f %f %hu %hu %d", Settings->autorun,
-          Settings->fov, Settings->fps, Settings->graphicsmode,
-          Settings->mousesensitivity.x, Settings->mousesensitivity.y,
-          Settings->resolutionx, Settings->resolutiony, Settings->vsync);
+  fprintf(file, "%d %d %d %f %f %hu %hu %d", Settings->fov, Settings->fps,
+          Settings->graphicsmode, Settings->mousesensitivity.x,
+          Settings->mousesensitivity.y, Settings->resolutionx,
+          Settings->resolutiony, Settings->vsync);
 
   fclose(file);
   SDL_Log("Saved settings!");
@@ -65,11 +67,12 @@ void LoadSettings() {
     SDL_Log("Failed to load settings!");
     return;
   }
-
-  fscanf(file, "%d %d %d %d %f %f %hu %hu %d", &Settings->autorun,
-         &Settings->fov, &Settings->fps, &Settings->graphicsmode,
-         &Settings->mousesensitivity.x, &Settings->mousesensitivity.y,
-         &Settings->resolutionx, &Settings->resolutiony, &Settings->vsync);
+  int vsync;
+  fscanf(file, "%d %d %d %f %f %hu %hu %d", &Settings->fov, &Settings->fps,
+         &Settings->graphicsmode, &Settings->mousesensitivity.x,
+         &Settings->mousesensitivity.y, &Settings->resolutionx,
+         &Settings->resolutiony, &vsync);
+  Settings->vsync = vsync;
 
   fclose(file);
   SDL_Log("Loaded settings!");
@@ -79,8 +82,15 @@ void LoadSettings() {
 void freeRenderer() {
   SDL_DestroyWindow(RendererGlobal->window);
 
-  switch (Settings->graphicsmode) {  // opengl
-    case 1: {
+  switch (Settings->graphicsmode) {
+    case Vulkan: {
+      break;
+    }
+    case OpenGL4:
+    case OpenGL3: {
+      glDeleteVertexArrays(1, &RendererGlobal->GLstuff->VAOthing);
+      glDeleteBuffers(1, &RendererGlobal->GLstuff->VBOthing);
+
       // free textures
       for (auto& [key, value] : RendererGlobal->GLstuff->textures) {
         glDeleteTextures(1, &value);
@@ -91,7 +101,18 @@ void freeRenderer() {
       delete (RendererGlobal->GLstuff);
       break;
     }
-    default: {  // software
+    case OpenGL1: {
+      // free textures
+      for (auto& [key, value] : RendererGlobal->GLstuff->textures) {
+        glDeleteTextures(1, &value);
+      }
+      SDL_GL_DestroyContext(RendererGlobal->GLstuff->GLContext);
+
+      // delete opengl pointer
+      delete (RendererGlobal->GLstuff);
+      break;
+    }
+    case Software: {
       SDL_DestroyPalette(RendererGlobal->SRstuff->palette);
       SDL_DestroyRenderer(RendererGlobal->SRstuff->renderer);
       SDL_DestroySurface(RendererGlobal->SRstuff->render_target);
@@ -109,11 +130,12 @@ bool loadPNG(std::filesystem::path path) {
   SDL_Surface* surface;
   SDL_Log("Texture: %s", path.filename().string().c_str());
   switch (Settings->graphicsmode) {
-    case 2: {  // vulkan
-
+    case Vulkan: {
       break;
     }
-    case 1: {  // opengl
+    case OpenGL4:
+    case OpenGL3:
+    case OpenGL1: {
       std::string tempstr = path.filename().string();
       // remove file extension (png)
       for (int i = 0; i < 4; i++) tempstr.pop_back();
@@ -138,7 +160,7 @@ bool loadPNG(std::filesystem::path path) {
       SDL_DestroySurface(surface);
       break;
     }
-    default: {  // software
+    case Software: {
       surface = SDL_LoadPNG(path.string().c_str());
       if (surface == NULL) return false;
       surface = SDL_ConvertSurfaceAndColorspace(
@@ -150,6 +172,8 @@ bool loadPNG(std::filesystem::path path) {
       RendererGlobal->SRstuff->textures[tempstr] = surface;
     }
   }
+  if (Settings->graphicsmode == OpenGL4 || Settings->graphicsmode == OpenGL3)
+    glGenerateMipmap(GL_TEXTURE_2D);
   return true;
 }
 
@@ -276,10 +300,105 @@ bool VulkanLogicalDevice() {
   return false;
 }
 
+// https://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/
+GLuint LoadShaders(const char* vertex_file_path,
+                   const char* fragment_file_path) {
+  std::string vertexfile = Global->GameFolder.string() + "/shaders/" +
+                           std::string(vertex_file_path),
+              fragmentfile = Global->GameFolder.string() + "/shaders/" +
+                             std::string(fragment_file_path);
+  // Create the shaders
+  GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+  GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+
+  // Read the Vertex Shader code from the file
+  std::string VertexShaderCode;
+  std::ifstream VertexShaderStream(vertexfile.c_str(), std::ios::in);
+  if (VertexShaderStream.is_open()) {
+    std::stringstream sstr;
+    sstr << VertexShaderStream.rdbuf();
+    VertexShaderCode = sstr.str();
+    VertexShaderStream.close();
+  } else {
+    SDL_Log("Impossible to open %s.", vertexfile.c_str());
+    return 0;
+  }
+
+  // Read the Fragment Shader code from the file
+  std::string FragmentShaderCode;
+  std::ifstream FragmentShaderStream(fragmentfile.c_str(), std::ios::in);
+  if (FragmentShaderStream.is_open()) {
+    std::stringstream sstr;
+    sstr << FragmentShaderStream.rdbuf();
+    FragmentShaderCode = sstr.str();
+    FragmentShaderStream.close();
+  }
+
+  GLint Result = GL_FALSE;
+  int InfoLogLength;
+
+  // Compile Vertex Shader
+  SDL_Log("Compiling shader : %s", vertexfile.c_str());
+  char const* VertexSourcePointer = VertexShaderCode.c_str();
+  glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
+  glCompileShader(VertexShaderID);
+
+  // Check Vertex Shader
+  glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
+  glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+  if (InfoLogLength > 0) {
+    std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
+    glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL,
+                       &VertexShaderErrorMessage[0]);
+    SDL_Log("%s", &VertexShaderErrorMessage[0]);
+  }
+
+  // Compile Fragment Shader
+  SDL_Log("Compiling shader : %s", fragmentfile.c_str());
+  char const* FragmentSourcePointer = FragmentShaderCode.c_str();
+  glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
+  glCompileShader(FragmentShaderID);
+
+  // Check Fragment Shader
+  glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
+  glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+  if (InfoLogLength > 0) {
+    std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
+    glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL,
+                       &FragmentShaderErrorMessage[0]);
+    SDL_Log("%s\n", &FragmentShaderErrorMessage[0]);
+  }
+
+  // Link the program
+  SDL_Log("Linking program");
+  GLuint ProgramID = glCreateProgram();
+  glAttachShader(ProgramID, VertexShaderID);
+  glAttachShader(ProgramID, FragmentShaderID);
+  glLinkProgram(ProgramID);
+
+  // Check the program
+  glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
+  glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+  if (InfoLogLength > 0) {
+    std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
+    glGetProgramInfoLog(ProgramID, InfoLogLength, NULL,
+                        &ProgramErrorMessage[0]);
+    SDL_Log("%s", &ProgramErrorMessage[0]);
+  }
+
+  glDetachShader(ProgramID, VertexShaderID);
+  glDetachShader(ProgramID, FragmentShaderID);
+
+  glDeleteShader(VertexShaderID);
+  glDeleteShader(FragmentShaderID);
+
+  return ProgramID;
+}
+
 // renderer initialization code
 bool setRenderer() {
   switch (Settings->graphicsmode) {
-    case 2: {  // vulkan
+    case Vulkan: {
       // ADD VALIDATION LAYERS IF YOU EVER LEARN HOW TO USE THEM
       RendererGlobal->Vulkanstuff = new RendererStuff::VulkanRenderer();
 
@@ -299,8 +418,27 @@ bool setRenderer() {
 
       break;
     }
-    case 1: {  // opengl
-      SDL_Surface* surface;
+    case OpenGL4: {
+      RendererGlobal->GLstuff = new RendererStuff::OpenGLRenderer();
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                          SDL_GL_CONTEXT_PROFILE_CORE);
+
+      break;
+    }
+    case OpenGL3: {
+      RendererGlobal->GLstuff = new RendererStuff::OpenGLRenderer();
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                          SDL_GL_CONTEXT_PROFILE_CORE);
+
+      break;
+    }
+    case OpenGL1: {
       RendererGlobal->GLstuff = new RendererStuff::OpenGLRenderer();
 
       // set opengl version to 1.2 (for n64 compatibility. just in case.)
@@ -311,58 +449,19 @@ bool setRenderer() {
                           SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
       // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
       // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-
-      // create opengl window
-      RendererGlobal->window = SDL_CreateWindow(
-          "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
-          SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-
-      // Create OpenGL context
-      RendererGlobal->GLstuff->GLContext =
-          SDL_GL_CreateContext(RendererGlobal->window);
-
-      if (!SDL_GL_MakeCurrent(RendererGlobal->window,
-                              RendererGlobal->GLstuff->GLContext))
-        return false;
-
-      if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) return false;
-
-      // set vsync
-      if (!SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0)) return false;
-
-      // opengl set stuff
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 256.f);
-
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-      // set texture map
-      std::unordered_map<std::string, GLuint> tempmap;
-      tempmap.reserve(64);
-
-      RendererGlobal->GLstuff->textures = tempmap;
-      // set backface culling
-      glEnable(GL_CULL_FACE);
-      glCullFace(GL_BACK);
-      glFrontFace(GL_CW);
-      // SDL_Log("%d", glGetError());
-
       break;
     }
-    default: {  // software
+    case Software: {
       SDL_Surface* surface;
-      std::string basepath = SDL_GetBasePath(), tempstr = basepath;
       std::unordered_map<std::string, SDL_Surface*> tempvector;
       tempvector.reserve(64);
 
       RendererGlobal->SRstuff = new RendererStuff::SoftwareRenderer();
 
       RendererGlobal->SRstuff->textures = tempvector;
-      tempstr = basepath;
-      tempstr.append("/" + Global->GameName + "/res/Color_palette.png");
-      surface = SDL_LoadPNG(tempstr.c_str());
+
+      surface = SDL_LoadPNG(
+          (Global->GameFolder.string() + "/res/Color_palette.png").c_str());
 
       RendererGlobal->SRstuff->palette = SDL_GetSurfacePalette(surface);
       RendererGlobal->window =
@@ -384,10 +483,50 @@ bool setRenderer() {
     }
   }
 
+  if (Settings->graphicsmode == OpenGL1 || Settings->graphicsmode == OpenGL3 ||
+      Settings->graphicsmode == OpenGL4) {
+    // create opengl window
+    RendererGlobal->window = SDL_CreateWindow(
+        "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+
+    // Create OpenGL context
+    RendererGlobal->GLstuff->GLContext =
+        SDL_GL_CreateContext(RendererGlobal->window);
+
+    if (!SDL_GL_MakeCurrent(RendererGlobal->window,
+                            RendererGlobal->GLstuff->GLContext))
+      return false;
+
+    int version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+    SDL_Log("GL %d.%d\n", GLAD_VERSION_MAJOR(version),
+            GLAD_VERSION_MINOR(version));
+
+    // set vsync
+    if (!SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0)) return false;
+
+    // opengl set stuff
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 256.f);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // set texture map
+    std::unordered_map<std::string, GLuint> tempmap;
+    tempmap.reserve(64);
+
+    RendererGlobal->GLstuff->textures = tempmap;
+    // set backface culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CW);
+  }
+
   // load all the textures in the textures folder
-  std::string basepath = SDL_GetBasePath();
   for (const auto& entry : std::filesystem::directory_iterator(
-           basepath + Global->GameName + "/textures/")) {
+           Global->GameFolder.string() + "/textures/")) {
     if (entry.is_regular_file()) {
       if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
     }
@@ -413,7 +552,6 @@ enum argenums {
   SetFPS,                 // Sets Frame rate.
   SetFOV,                 // Sets field of view.
   SetVsync,               // Sets Vsync
-  SetGame,                // Sets the game.
   // SetLogin,               // Login for website. Work In Progress.
   // SetWebsite,             // The actual IP of the website.
   SetServerIP,  // Set the IP of the server as a client.
@@ -441,12 +579,53 @@ bool initargs(std::vector<std::string> args) {
   GlobalNetworkStuff = std::make_unique<GlobalNetworkClass>();
   if (GlobalNetworkStuff == nullptr) return false;
 
+  if (args.size() < 2) {
+    SDL_Log("You need to enter the game's directory!");
+    return false;
+  }
+
+  Global->GameFolder = args[1];
+
+  Global->LoadedStuff = new GlobalClass::LoadedData();
+
+  // read the resources file of the game.
+  FILE* file =
+      fopen((Global->GameFolder.string() + "/resources.txt").c_str(), "r");
+  if (file == NULL) {
+    SDL_Log("Impossible to open the file: %s",
+            (Global->GameFolder.string() + "/resources.txt").c_str());
+    return false;
+  }
+  // time to read the contents of the file.
+  while (true) {
+    char lineHeader[128];
+    // read the first word of the line
+    if (fscanf(file, "%s", lineHeader) == EOF) break;
+
+    if (strcmp(lineHeader, "START") == 0) {  // Starting stage.
+      char name[64];
+      fscanf(file, "%s\n", name);
+      Global->LoadedStuff->startlevel = name;
+    } else if (strcmp(lineHeader, "GAMENAME") == 0) {  // Game Name.
+      char name[64];
+      fscanf(file, "%s\n", name);
+      Global->LoadedStuff->GameName = name;
+    } else if (strcmp(lineHeader, "FONT") == 0) {  // Font.
+      char name[64];
+      fscanf(file, "%s\n", name);
+      Global->LoadedStuff->fontname = name;
+    } else if (strcmp(lineHeader, "STAGE") == 0) {  // Stage.
+      char name[64];
+      fscanf(file, "%s\n", name);
+      Global->LoadedStuff->stagenames.push_back(name);
+    }
+  }
+  fclose(file);
+
+  SDL_Log("Loaded resources data");
+
   Global->pref_path =
-      SDL_GetPrefPath("CobblerEngine", Global->GameName.c_str());
-
-  SDL_Log("%s", SDL_GetError());
-
-  Settings->fov = 90;
+      SDL_GetPrefPath("CobblerEngine", Global->LoadedStuff->GameName.c_str());
 
   // Create curlpostfield for website.
   // curlpostfield = new PostField();
@@ -474,7 +653,6 @@ bool initargs(std::vector<std::string> args) {
       {"-fps", SetFPS},
       {"-fov", SetFOV},
       {"-vsync", SetVsync},
-      {"-game", SetGame},
       // {"-login", SetLogin},
       // {"-website", SetWebsite},
       {"-IP", SetServerIP},
@@ -483,18 +661,39 @@ bool initargs(std::vector<std::string> args) {
       {"-Server", SetIsServer},
       {"-server", SetIsServer}};
 
-  for (int i = 0; i < args.size(); i++) {
+  for (int i = 2; i < args.size(); i++) {
     if (stringtoenums.contains(args[i])) {
       argenums temp = stringtoenums[args[i]];
       switch (temp) {
         case SetRendererAsVulkan:
-          Settings->graphicsmode = 2;
+          Settings->graphicsmode = Vulkan;
           break;
         case SetRendererAsOpenGL:
-          Settings->graphicsmode = 1;
+          // move to next arguement
+          i++;
+          // checks if next arguement exists and is a number.
+          if (i >= args.size() || !is_number(args[i])) {
+            SDL_Log("Wrong Arguements!(OpenGL version)");
+            return false;
+          }
+          switch (std::stoi(args[i])) {
+            case 1:
+              Settings->graphicsmode = OpenGL1;
+              break;
+            case 3:
+              Settings->graphicsmode = OpenGL3;
+              break;
+            case 4:
+              Settings->graphicsmode = OpenGL4;
+              break;
+            default: {
+              SDL_Log("Unsupported OpenGL version!");
+              return false;
+            }
+          }
           break;
         case SetRendererAsSoftware:
-          Settings->graphicsmode = 0;
+          Settings->graphicsmode = Software;
           break;
         case SetVsync:
           // move to next arguement
@@ -526,16 +725,6 @@ bool initargs(std::vector<std::string> args) {
           }
           Settings->fov = std::stoi(args[i]);
           break;
-        case SetGame:
-          // move to next arguement
-          i++;
-          // checks if next arguement exists.
-          if (i >= args.size()) {
-            SDL_Log("Wrong Arguements!(Game)");
-            return false;
-          }
-          Global->GameName = args[i];
-          break;
         // case SetLogin: {
         //   std::string password;
         //   // move to next arguement
@@ -558,7 +747,8 @@ bool initargs(std::vector<std::string> args) {
         //   password = args[i];
 
         //   // set string that you will send as post field for website.
-        //   curlloginstring = "IsGame=True&username=" + curlpostfield->username
+        //   curlloginstring = "IsGame=True&username=" +
+        //   curlpostfield->username
         //   +
         //                     "&password=" + password;
         //   break;
@@ -648,40 +838,8 @@ bool init() {
   // Your Global is running? You better go catch it.
   Global->IsRunning = true;
 
-  std::shared_ptr<ZipData> LoadedData(new ZipData());
-
-  // read the resources file of the game.
-  FILE* file = fopen((Global->GameName + "/resources.txt").c_str(), "r");
-  if (file == NULL) {
-    SDL_Log("Impossible to open the file!");
-    return false;
-  }
-  // time to read the contents of the file.
-  while (true) {
-    char lineHeader[128];
-    // read the first word of the line
-    if (fscanf(file, "%s", lineHeader) == EOF) break;
-
-    if (strcmp(lineHeader, "START") == 0) {  // Starting stage.
-      char name[64];
-      fscanf(file, "%s\n", name);
-      LoadedData->startlevel = name;
-    } else if (strcmp(lineHeader, "FONT") == 0) {  // Font.
-      char name[64];
-      fscanf(file, "%s\n", name);
-      LoadedData->fontname = name;
-    } else if (strcmp(lineHeader, "STAGE") == 0) {  // Stage.
-      char name[64];
-      fscanf(file, "%s\n", name);
-      LoadedData->stagenames.push_back(name);
-    }
-  }
-  fclose(file);
-
-  SDL_Log("Loaded resources data");
-
   // initialize SDL
-  if (!SDL_SetAppMetadata(Global->GameName.c_str(), "0.1",
+  if (!SDL_SetAppMetadata(Global->LoadedStuff->GameName.c_str(), "0.1",
                           "com.example.myapp") ||
       !SDL_Init(SDL_INIT_VIDEO))
     return false;
@@ -743,9 +901,6 @@ bool init() {
 
   if (!Global->IsRunning) return false;
 
-  // get the base path of the game.
-  std::string basepath = SDL_GetBasePath(), tempstr, namestr;
-
   // Set the Renderer.
   if (!setRenderer()) return false;
 
@@ -766,13 +921,13 @@ bool init() {
 
   // read map data.
   Mapdata tempmapdata;
-
+  FILE* file = NULL;
   for (const auto& dir : std::filesystem::directory_iterator(
-           basepath + Global->GameName + "/models/")) {
+           Global->GameFolder.string() + "/models/")) {
     if (dir.is_directory()) {
       for (const auto& entry : std::filesystem::directory_iterator(
-               basepath + Global->GameName + "/map/" + LoadedData->startlevel +
-               "/")) {
+               Global->GameFolder.string() + "/map/" +
+               Global->LoadedStuff->startlevel + "/")) {
         // check if file is a .map file.
         if (entry.is_regular_file() && entry.path().extension() == ".map") {
           file = fopen(entry.path().c_str(), "r");
@@ -920,7 +1075,9 @@ bool init() {
   //   }
   // }
 
-  if (Settings->graphicsmode == 1) LoadMapGL();
+  if (Settings->graphicsmode == OpenGL1 || Settings->graphicsmode == OpenGL3 ||
+      Settings->graphicsmode == OpenGL4)
+    LoadMapGL(Settings->graphicsmode == OpenGL1);
 
   LocalPlayer = SpawnEntities[Global->playerclass](0, 0);
   LocalPlayer->position.z = 8;
@@ -945,20 +1102,21 @@ bool init() {
 
   // set the props.
   Global->Models = tempmapdata.props;
+  std::string namestr;
 
   // get all the files in the models folder.
   for (const auto& dir : std::filesystem::directory_iterator(
-           basepath + Global->GameName + "/models/")) {
+           Global->GameFolder.string() + "/models/")) {
     if (dir.is_directory()) {
       for (const auto& entry : std::filesystem::directory_iterator(
-               basepath + Global->GameName + "/models/" +
+               Global->GameFolder.string() + "/models/" +
                dir.path().filename().string() + "/")) {
         // check if file is a .cbm file.
         if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
           ModelGroupClass modelgroup;
           GlobalClass::Model model;
 
-          tempstr = entry.path().filename().string();
+          std::string tempstr = entry.path().filename().string();
           for (int i = 0; i < 4; i++) tempstr.pop_back();
           namestr = tempstr;
           std::string posename = "default";
@@ -1118,15 +1276,15 @@ bool init() {
 
   // Freetype font library load.
   Freetypething = new FreetypeClass();
-  tempstr = basepath;
 
   if (FT_Init_FreeType(&(Freetypething->FTlibrary))) return false;
 
-  tempstr = basepath;
   // load font.
-  tempstr.append("/" + Global->GameName + "/res/" + LoadedData->fontname);
-  if (FT_New_Face(Freetypething->FTlibrary, tempstr.c_str(), 0,
-                  &(Freetypething->FTface)))
+  if (FT_New_Face(Freetypething->FTlibrary,
+                  (Global->GameFolder.string() + "/res/" +
+                   Global->LoadedStuff->fontname)
+                      .c_str(),
+                  0, &(Freetypething->FTface)))
     return false;
   FT_Select_Charmap(Freetypething->FTface, ft_encoding_unicode);
 
@@ -1200,6 +1358,8 @@ void quit() {
 
   // free pref_path
   SDL_free(Global->pref_path);
+
+  delete (Global->LoadedStuff);
 
   // free network stuff.
   CobblerQuitNet();

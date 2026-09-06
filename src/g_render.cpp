@@ -1,5 +1,5 @@
 #include <SDL3/SDL_log.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -192,7 +192,7 @@ void render2DUI() {
   for (int i = 0; i < UIGlobalStuff->UIlist.size(); i++) {
     int len = UIGlobalStuff->UImap[UIGlobalStuff->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
-      if (Settings->graphicsmode == 1) glDisable(GL_TEXTURE_2D);
+      if (Settings->graphicsmode == OpenGL1) glDisable(GL_TEXTURE_2D);
       UIGlobalStuff->UImap[UIGlobalStuff->UIlist[i]].at(j)->render();
     }
   }
@@ -366,12 +366,18 @@ void openglrender() {
   glLoadMatrixf(glm::value_ptr(modelMatrix));
 
   // OpenGL rendering goes here
-  glCallList(RendererGlobal->GLstuff->MapGLlist);
+  if (Settings->graphicsmode == OpenGL1) {
+    glCallList(RendererGlobal->GLstuff->MapGLlist);
 
-  renderProps();
-  renderEntity();
+    renderProps();
+    renderEntity();
 
-  renderParticles();
+    renderParticles();
+  } else {
+    glUseProgram(RendererGlobal->GLstuff->shaders[0]);
+    glBindVertexArray(RendererGlobal->GLstuff->VAOthing);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+  }
 
   glLoadIdentity();
 
@@ -393,40 +399,41 @@ void openglrender() {
   glDisable(GL_TEXTURE_2D);
 
   if (Global->pause) {
-    glBegin(GL_TRIANGLE_FAN);
+    if (Settings->graphicsmode == OpenGL1) {
+      glBegin(GL_TRIANGLE_FAN);
 
-    glColor4f(0, 0, 0, 0.5f);
+      glColor4f(0, 0, 0, 0.5f);
 
-    glVertex2f(-1, -1);
-    glVertex2f(1, -1);
-    glVertex2f(1, 1);
-    glVertex2f(-1, 1);
+      glVertex2f(-1, -1);
+      glVertex2f(1, -1);
+      glVertex2f(1, 1);
+      glVertex2f(-1, 1);
 
-    glEnd();
+      glEnd();
+    }
   }
-
-  render2DUI();
+  if (Settings->graphicsmode == OpenGL1) render2DUI();
 
   glFlush();
 }
 
 void render() {
   switch (Settings->graphicsmode) {
-    case 1:
+    case OpenGL1:
       openglrender();
       break;
-    default:
+    case Software:
       softwarerender();
   }
 }
 
 void renderresult() {
   switch (Settings->graphicsmode) {
-    case 1: {
+    case OpenGL1: {
       SDL_GL_SwapWindow(RendererGlobal->window);
       break;
     }
-    default: {
+    case Software: {
     }
   }
 }

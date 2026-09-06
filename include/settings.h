@@ -11,14 +11,15 @@
 #define LIB_API
 #endif
 
+enum Renderertype { Software, OpenGL1, OpenGL3, OpenGL4, Vulkan };
+
 struct SettingsClass {
  public:
   uint16_t resolutionx = 480, resolutiony = 270;
   int fov = 90;
   int fps = 60;
   bool vsync = false;
-  uint8_t graphicsmode = 0;  // 0 = software, 1 = opengl 2 = vulkan
-  bool autorun = false;
+  Renderertype graphicsmode = OpenGL1;
   glm::vec2 mousesensitivity = glm::vec2({1, 1});
 };
 

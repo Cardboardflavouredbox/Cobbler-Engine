@@ -60,7 +60,6 @@ void updatefunction() {
 }
 
 int main(int argc, char* argv[]) {
-  std::string basepath = SDL_GetBasePath();
   std::vector<std::string> args;
   args.resize(argc);
   for (int i = 0; i < argc; i++)
@@ -74,7 +73,7 @@ int main(int argc, char* argv[]) {
   // entity spawning function load from dynamic libraries
   SpawnEntities.reserve(16);
   for (const auto& entry : std::filesystem::directory_iterator(
-           basepath + Global->GameName + "/entities/")) {
+           Global->GameFolder.string() + "/entities/")) {
     if (entry.is_directory()) {
       SDL_Log("Folder: %s", entry.path().filename().string().c_str());
       SpawnEntities[entry.path().filename().string()];
@@ -83,7 +82,7 @@ int main(int argc, char* argv[]) {
   std::vector<dylib::library> entitylibs;
 
   for (auto& entry : SpawnEntities) {
-    entitylibs.push_back(dylib::library(basepath + "/" + Global->GameName +
+    entitylibs.push_back(dylib::library(Global->GameFolder.string() +
                                             "/entities/" + entry.first + "/" +
                                             entry.first,
                                         dylib::decorations::os_default()));
@@ -94,7 +93,7 @@ int main(int argc, char* argv[]) {
   // particle spawning function load from dynamic libraries
   SpawnParticles.reserve(16);
   for (const auto& entry : std::filesystem::directory_iterator(
-           basepath + Global->GameName + "/particles/")) {
+           Global->GameFolder.string() + "/particles/")) {
     if (entry.is_directory()) {
       SDL_Log("Folder: %s", entry.path().filename().string().c_str());
       SpawnParticles[entry.path().filename().string()];
@@ -103,7 +102,7 @@ int main(int argc, char* argv[]) {
   std::vector<dylib::library> particlelibs;
 
   for (auto& entry : SpawnParticles) {
-    particlelibs.push_back(dylib::library(basepath + "/" + Global->GameName +
+    particlelibs.push_back(dylib::library(Global->GameFolder.string() +
                                               "/particles/" + entry.first +
                                               "/" + entry.first,
                                           dylib::decorations::os_default()));
@@ -112,7 +111,7 @@ int main(int argc, char* argv[]) {
             "SpawnParticle");
   }
 
-  dylib::library UIlib(basepath + "/" + Global->GameName + "/bin/CobblerGameUI",
+  dylib::library UIlib(Global->GameFolder.string() + "/bin/CobblerGameUI",
                        dylib::decorations::os_default());
   SDL_Log("UI library loaded");
   bool (*UIsetup)() = UIlib.get_function<bool()>("UIsetup");
@@ -126,7 +125,7 @@ int main(int argc, char* argv[]) {
   Global->playerclass = "Gardner";
   PlayerClassUpdate.reserve(16);
   for (const auto& entry : std::filesystem::directory_iterator(
-           basepath + Global->GameName + "/class/")) {
+           Global->GameFolder.string() + "/class/")) {
     if (entry.is_directory()) {
       SDL_Log("Folder: %s", entry.path().filename().string().c_str());
       PlayerClassUpdate[entry.path().filename().string()];
@@ -136,9 +135,8 @@ int main(int argc, char* argv[]) {
 
   std::vector<dylib::library> classlibs;
   for (auto& entry : PlayerClassUpdate) {
-    classlibs.push_back(dylib::library(basepath + "/" + Global->GameName +
-                                           "/class/" + entry.first + "/" +
-                                           entry.first,
+    classlibs.push_back(dylib::library(Global->GameFolder.string() + "/class/" +
+                                           entry.first + "/" + entry.first,
                                        dylib::decorations::os_default()));
     entry.second = classlibs.back().get_function<void()>("Update");
     SpawnEntities[entry.first] =

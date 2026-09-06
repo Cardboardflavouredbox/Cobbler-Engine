@@ -386,7 +386,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
     }
 
     switch (Settings->graphicsmode) {
-      case 1: {  // opengl
+      case OpenGL1: {  // opengl
         for (int a = 0; a < modelgroup->Models.size(); a++) {
           if (modeltrans->modelvisibilityresult[modelgroup->Models[a]]) {
             GlobalClass::Model* model =
@@ -456,7 +456,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
         }
         break;
       }
-        // default: { // software
+        // case Software: {  // software
         //   for (int j = 0; j < model->faces.size(); j++) {
         //     glm::vec3 vec[3];
         //     glm::vec2 uv[3];
@@ -472,6 +472,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
         //     }
         //     DrawTri(model->texture, vec, uv, 1, 1);
         //   }
+        //   break;
         // }
     }
   }

@@ -24,5 +24,5 @@ LIB_API void LoadSettings();
 
 LIB_API void quit();
 
-LIB_API void LoadMapGL();
+LIB_API void LoadMapGL(bool IsOldGL);
 }

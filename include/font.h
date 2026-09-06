@@ -1,5 +1,5 @@
 #include <ft2build.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 #include <unordered_map>
 #include FT_FREETYPE_H

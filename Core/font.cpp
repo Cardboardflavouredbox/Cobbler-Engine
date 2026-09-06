@@ -14,7 +14,9 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
   temp.offsety = glyph->bitmap_top;
 
   switch (Settings->graphicsmode) {
-    case 1: {  // opengl
+    case OpenGL4:
+    case OpenGL3:
+    case OpenGL1: {  // opengl
 
       // I'll be honest. This code is a bit of a mess. I do not recall how
       // I managed to make it work. All I remember is that the process was
@@ -45,7 +47,7 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
       break;
     }
-    case 0: {  // software
+    case Software: {  // software
       temp.pixels = new unsigned char[temp.width * temp.height];
       for (int i = 0; i < temp.width * temp.height; i++) {
         temp.pixels[i] = glyph->bitmap.buffer[i];

@@ -46,8 +46,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(dylib)
 
-find_package (Vulkan REQUIRED)
-
 set(CORE_SOURCES 
     Core/update.cpp
     Core/components.cpp 
@@ -64,7 +62,7 @@ set(CORE_SOURCES
     Core/map.cpp
 )
 
-add_library(CobblerGLAD SHARED glad/glad.c "include/glad/glad.h")
+add_library(CobblerGLAD SHARED glad/gl.c glad/vulkan.c "include/glad/gl.h" "include/glad/vulkan.h")
 add_library(CobblerCore SHARED Core/extern.cpp ${CORE_SOURCES})
 add_library(CobblerGameUI SHARED "$CACHE{GAME}/UI/g_ui.cpp" "$CACHE{GAME}/UI/g_ui_index.cpp" "include/ui.h")
 add_library(CobblerNet SHARED Net/net.cpp "include/network.h")
@@ -85,7 +83,7 @@ src/g_main.cpp src/g_render.cpp)
 # src/e_update.cpp src/e_components.cpp)
 
 target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net)
-target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm Freetype::Freetype CobblerGLAD CobblerNet Vulkan::Vulkan)
+target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm Freetype::Freetype CobblerGLAD CobblerNet)
 target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
 target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD dylib)
@@ -93,7 +91,6 @@ target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm Freetype::Freet
  
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(CobblerCore PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/UI/include)
 target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # target_include_directories(CobblerEditorUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -112,6 +109,7 @@ FILE(COPY $CACHE{GAME}/map DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/models DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/res DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/textures DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
+FILE(COPY $CACHE{GAME}/shaders DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 
 file(GLOB ENTITIES LIST_DIRECTORIES true CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/entities/*")
 file(GLOB ENTITIES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/entities/*")

@@ -4,7 +4,7 @@
 
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_vulkan.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -48,6 +48,8 @@ struct RendererStuff {
     SDL_GLContext GLContext;
     std::unordered_map<std::string, GLuint> textures;
     GLuint MapGLlist;
+    GLuint VBOthing, VAOthing;
+    std::vector<GLuint> shaders;
   };
   OpenGLRenderer* GLstuff;
 
@@ -72,4 +74,7 @@ LIB_API void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius);
 
 LIB_API void DrawTri(std::string texture, glm::vec3 rawvectors[],
                      glm::vec2 UVs[]);
+
+LIB_API GLuint LoadShaders(const char* vertex_file_path,
+                           const char* fragment_file_path);
 }

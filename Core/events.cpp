@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 #include "extern.h"
 #include "inputs.h"
@@ -27,13 +27,13 @@ void events() {
             SDL_GetWindowDisplayScale(RendererGlobal->window);
 
         switch (Settings->graphicsmode) {
-          case 0: {  // software
+          case Software: {  // software
             // resize pixelsdepth buffer
             RendererGlobal->SRstuff->pixelsdepth.resize(Settings->resolutionx *
                                                         Settings->resolutiony);
             break;
           }
-          case 1: {  // opengl
+          case OpenGL1: {  // opengl
             // Set glViewport to middle of window.
             int w = RendererGlobal->windowx, h = RendererGlobal->windowy,
                 rtw = Settings->resolutionx, rth = Settings->resolutiony;
