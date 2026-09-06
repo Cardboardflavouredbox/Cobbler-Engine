@@ -33,6 +33,8 @@ void events() {
                                                         Settings->resolutiony);
             break;
           }
+          case OpenGL4:
+          case OpenGL3:
           case OpenGL1: {  // opengl
             // Set glViewport to middle of window.
             int w = RendererGlobal->windowx, h = RendererGlobal->windowy,

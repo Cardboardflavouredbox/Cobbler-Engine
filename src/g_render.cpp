@@ -351,68 +351,82 @@ void softwarerender() {
 }
 
 void openglrender() {
-  glEnable(GL_DEPTH_TEST);
-  glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glColor4f(1, 1, 1, 1);
-
-  glm::mat4 modelMatrix = Global->perspectivematrix;
-
-  glm::mat4 view = glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
-
-  modelMatrix = modelMatrix * view;
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadMatrixf(glm::value_ptr(modelMatrix));
-
   // OpenGL rendering goes here
   if (Settings->graphicsmode == OpenGL1) {
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glColor4f(1, 1, 1, 1);
+    glm::mat4 modelMatrix = Global->perspectivematrix;
+
+    glm::mat4 view =
+        glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
+
+    modelMatrix = modelMatrix * view;
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(glm::value_ptr(modelMatrix));
+
     glCallList(RendererGlobal->GLstuff->MapGLlist);
 
     renderProps();
     renderEntity();
 
     renderParticles();
-  } else {
-    glUseProgram(RendererGlobal->GLstuff->shaders[0]);
-    glBindVertexArray(RendererGlobal->GLstuff->VAOthing);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-  }
 
-  glLoadIdentity();
+    glLoadIdentity();
 
-  glClear(GL_DEPTH_BUFFER_BIT);
-  glMatrixMode(GL_PROJECTION);
-  modelMatrix = Global->perspectivematrix;
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    modelMatrix = Global->perspectivematrix;
 
-  view = glm::lookAt(glm::vec3(0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+    view = glm::lookAt(glm::vec3(0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
 
-  modelMatrix = modelMatrix * view;
+    modelMatrix = modelMatrix * view;
 
-  glLoadMatrixf(glm::value_ptr(modelMatrix));
-  render3DUI();
+    glLoadMatrixf(glm::value_ptr(modelMatrix));
+    render3DUI();
 
-  glMatrixMode(GL_PROJECTION);
-  glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
-  glLoadIdentity();
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_TEXTURE_2D);
+    glMatrixMode(GL_PROJECTION);
+    glOrtho(0, Settings->resolutionx, 0, Settings->resolutiony, -1, 1);
+    glLoadIdentity();
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_TEXTURE_2D);
 
-  if (Global->pause) {
-    if (Settings->graphicsmode == OpenGL1) {
-      glBegin(GL_TRIANGLE_FAN);
+    if (Global->pause) {
+      if (Settings->graphicsmode == OpenGL1) {
+        glBegin(GL_TRIANGLE_FAN);
 
-      glColor4f(0, 0, 0, 0.5f);
+        glColor4f(0, 0, 0, 0.5f);
 
-      glVertex2f(-1, -1);
-      glVertex2f(1, -1);
-      glVertex2f(1, 1);
-      glVertex2f(-1, 1);
+        glVertex2f(-1, -1);
+        glVertex2f(1, -1);
+        glVertex2f(1, 1);
+        glVertex2f(-1, 1);
 
-      glEnd();
+        glEnd();
+      }
     }
+    if (Settings->graphicsmode == OpenGL1) render2DUI();
+  } else {
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(RendererGlobal->GLstuff->shaders[0]);
+    glm::mat4 modelMatrix = Global->perspectivematrix;
+
+    glm::mat4 view =
+        glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
+
+    modelMatrix = modelMatrix * view;
+    glUniformMatrix4fv(
+        glGetUniformLocation(RendererGlobal->GLstuff->shaders[0], "model"), 1,
+        GL_FALSE, glm::value_ptr(modelMatrix));
+    glBindVertexArray(RendererGlobal->GLstuff->VAOthing);
+    glDrawElements(GL_TRIANGLES, GlobalMapStuff->Visualmapfaces.size() * 3,
+                   GL_UNSIGNED_INT, 0);
   }
-  if (Settings->graphicsmode == OpenGL1) render2DUI();
 
   glFlush();
 }
@@ -420,20 +434,26 @@ void openglrender() {
 void render() {
   switch (Settings->graphicsmode) {
     case OpenGL1:
+    case OpenGL3:
+    case OpenGL4:
       openglrender();
       break;
     case Software:
       softwarerender();
+      break;
   }
 }
 
 void renderresult() {
   switch (Settings->graphicsmode) {
-    case OpenGL1: {
+    case OpenGL1:
+    case OpenGL3:
+    case OpenGL4: {
       SDL_GL_SwapWindow(RendererGlobal->window);
       break;
     }
     case Software: {
+      break;
     }
   }
 }

@@ -90,6 +90,7 @@ void freeRenderer() {
     case OpenGL3: {
       glDeleteVertexArrays(1, &RendererGlobal->GLstuff->VAOthing);
       glDeleteBuffers(1, &RendererGlobal->GLstuff->VBOthing);
+      glDeleteBuffers(1, &RendererGlobal->GLstuff->EBOthing);
 
       // free textures
       for (auto& [key, value] : RendererGlobal->GLstuff->textures) {
@@ -505,23 +506,25 @@ bool setRenderer() {
     // set vsync
     if (!SDL_GL_SetSwapInterval(Settings->vsync ? 1 : 0)) return false;
 
-    // opengl set stuff
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 256.f);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     // set texture map
     std::unordered_map<std::string, GLuint> tempmap;
     tempmap.reserve(64);
 
     RendererGlobal->GLstuff->textures = tempmap;
-    // set backface culling
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CW);
+    if (Settings->graphicsmode == OpenGL1) {
+      // opengl set stuff
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 256.f);
+
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      // set backface culling
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_BACK);
+      glFrontFace(GL_CW);
+    }
   }
 
   // load all the textures in the textures folder

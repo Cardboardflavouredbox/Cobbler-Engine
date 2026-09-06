@@ -46,25 +46,47 @@ void LoadMapGL(bool IsOldGL) {
   } else {
     GLuint shadertemp = LoadShaders("mapshader.vert", "mapshader.frag");
 
+    std::vector<float> tempvector;
+
+    for (uint32_t i = 0; i < GlobalMapStuff->VisualPoints.size(); i++) {
+      for (int j = 0; j < 3; j++)
+        tempvector.push_back(GlobalMapStuff->VisualPoints[i].pos[j]);
+      for (int j = 0; j < 3; j++)
+        tempvector.push_back(GlobalMapStuff->VisualPoints[i].shade[j]);
+    }
+
+    std::vector<uint32_t> indices;
+
+    for (uint32_t i = 0; i < GlobalMapStuff->Visualmapfaces.size(); i++) {
+      for (int j = 0; j < 3; j++)
+        indices.push_back(GlobalMapStuff->Visualmapfaces[i].points[j]);
+    }
+
     RendererGlobal->GLstuff->shaders.push_back(shadertemp);
 
-    glGenBuffers(1, &RendererGlobal->GLstuff->VBOthing);
-    glBindBuffer(GL_ARRAY_BUFFER, RendererGlobal->GLstuff->VBOthing);
-
     glGenVertexArrays(1, &RendererGlobal->GLstuff->VAOthing);
+    glGenBuffers(1, &RendererGlobal->GLstuff->VBOthing);
+    glGenBuffers(1, &RendererGlobal->GLstuff->EBOthing);
+
     glBindVertexArray(RendererGlobal->GLstuff->VAOthing);
 
+    glBindBuffer(GL_ARRAY_BUFFER, RendererGlobal->GLstuff->VBOthing);
     glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(MapPoint) * GlobalMapStuff->VisualPoints.size(),
-                 GlobalMapStuff->VisualPoints.data(), GL_STATIC_DRAW);
+                 sizeof(float) * GlobalMapStuff->VisualPoints.size() * 6,
+                 &tempvector[0], GL_STATIC_DRAW);
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererGlobal->GLstuff->EBOthing);
+
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                 GlobalMapStuff->Visualmapfaces.size() * sizeof(uint32_t) * 3,
+                 &indices[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void*)offsetof(MapPoint, pos));
 
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void*)offsetof(MapPoint, shade));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
