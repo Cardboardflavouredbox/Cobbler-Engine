@@ -47,8 +47,14 @@ struct RendererStuff {
   struct OpenGLRenderer {
     SDL_GLContext GLContext;
     std::unordered_map<std::string, GLuint> textures;
+    struct GLObject {
+      GLuint texture;
+      GLuint VBOthing, VAOthing;
+      uint32_t size = 0;
+    };
     GLuint MapGLlist;
-    GLuint VBOthing, VAOthing, EBOthing;
+    std::vector<GLObject> GlObjects;
+
     std::vector<GLuint> shaders;
   };
   OpenGLRenderer* GLstuff;

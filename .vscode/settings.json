@@ -1,7 +1,7 @@
 {
     "C_Cpp.errorSquiggles": "disabled",
     "cmake.debugConfig": {
-        "args": ["CobblerGame","-gl","1","-vsync","1"]
+        "args": ["CobblerGame","-gl","3","-vsync","1"]
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

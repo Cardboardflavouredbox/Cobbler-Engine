@@ -413,7 +413,6 @@ void openglrender() {
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(RendererGlobal->GLstuff->shaders[0]);
     glm::mat4 modelMatrix = Global->perspectivematrix;
 
     glm::mat4 view =
@@ -423,9 +422,22 @@ void openglrender() {
     glUniformMatrix4fv(
         glGetUniformLocation(RendererGlobal->GLstuff->shaders[0], "model"), 1,
         GL_FALSE, glm::value_ptr(modelMatrix));
-    glBindVertexArray(RendererGlobal->GLstuff->VAOthing);
-    glDrawElements(GL_TRIANGLES, GlobalMapStuff->Visualmapfaces.size() * 3,
-                   GL_UNSIGNED_INT, 0);
+
+    for (auto& i : RendererGlobal->GLstuff->GlObjects) {
+      glUseProgram(RendererGlobal->GLstuff->shaders[0]);
+
+      glBindVertexArray(i.VAOthing);
+      glBindTexture(GL_TEXTURE_2D, i.texture);
+
+      glUniform1i(glGetUniformLocation(RendererGlobal->GLstuff->shaders[0],
+                                       "InputTexture"),
+                  0);
+
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, i.texture);
+
+      glDrawArrays(GL_TRIANGLES, 0, i.size);
+    }
   }
 
   glFlush();

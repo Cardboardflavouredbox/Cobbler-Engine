@@ -88,9 +88,10 @@ void freeRenderer() {
     }
     case OpenGL4:
     case OpenGL3: {
-      glDeleteVertexArrays(1, &RendererGlobal->GLstuff->VAOthing);
-      glDeleteBuffers(1, &RendererGlobal->GLstuff->VBOthing);
-      glDeleteBuffers(1, &RendererGlobal->GLstuff->EBOthing);
+      for (auto& i : RendererGlobal->GLstuff->GlObjects) {
+        glDeleteVertexArrays(1, &i.VAOthing);
+        glDeleteBuffers(1, &i.VBOthing);
+      }
 
       // free textures
       for (auto& [key, value] : RendererGlobal->GLstuff->textures) {
@@ -104,6 +105,7 @@ void freeRenderer() {
     }
     case OpenGL1: {
       // free textures
+      glDeleteLists(RendererGlobal->GLstuff->MapGLlist, 1);
       for (auto& [key, value] : RendererGlobal->GLstuff->textures) {
         glDeleteTextures(1, &value);
       }
@@ -153,12 +155,16 @@ bool loadPNG(std::filesystem::path path) {
 
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
                    GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+      if (Settings->graphicsmode == OpenGL4 ||
+          Settings->graphicsmode == OpenGL3)
+        glGenerateMipmap(GL_TEXTURE_2D);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
       SDL_DestroySurface(surface);
+      glBindTexture(GL_TEXTURE_2D, 0);
       break;
     }
     case Software: {
@@ -173,8 +179,7 @@ bool loadPNG(std::filesystem::path path) {
       RendererGlobal->SRstuff->textures[tempstr] = surface;
     }
   }
-  if (Settings->graphicsmode == OpenGL4 || Settings->graphicsmode == OpenGL3)
-    glGenerateMipmap(GL_TEXTURE_2D);
+
   return true;
 }
 
@@ -422,7 +427,7 @@ bool setRenderer() {
     case OpenGL4: {
       RendererGlobal->GLstuff = new RendererStuff::OpenGLRenderer();
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
 
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                           SDL_GL_CONTEXT_PROFILE_CORE);
@@ -516,15 +521,14 @@ bool setRenderer() {
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
       glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 256.f);
-
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-      // set backface culling
-      glEnable(GL_CULL_FACE);
-      glCullFace(GL_BACK);
-      glFrontFace(GL_CW);
     }
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // set backface culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CW);
   }
 
   // load all the textures in the textures folder
