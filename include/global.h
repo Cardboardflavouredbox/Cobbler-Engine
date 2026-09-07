@@ -72,8 +72,7 @@ struct Mapdata {
   };
   std::vector<glm::vec3> HitboxPoints;
   std::vector<std::array<uint32_t, 3>> Hitboxmapfaces;
-  std::vector<MapPoint> VisualPoints;
-  std::vector<Mapface> Visualmapfaces;
+  std::vector<VisualObject> VisualObjectsVector;
   std::vector<glm::vec3> KillboxPoints;
   std::vector<std::array<uint32_t, 3>> KillboxFaces;
   std::vector<Entitydata> Entities;

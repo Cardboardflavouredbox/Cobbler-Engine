@@ -156,13 +156,20 @@ bool loadPNG(std::filesystem::path path) {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
                    GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
       if (Settings->graphicsmode == OpenGL4 ||
-          Settings->graphicsmode == OpenGL3)
+          Settings->graphicsmode == OpenGL3) {
         glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      } else {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      }
 
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
       SDL_DestroySurface(surface);
       glBindTexture(GL_TEXTURE_2D, 0);
       break;
@@ -957,7 +964,7 @@ bool init() {
     if (fscanf(file, "%c\n", &lineHeader) == EOF) break;
 
     if (lineHeader == 'V') {  // Visual thing
-      uint32_t cnt = tempmapdata.VisualPoints.size();
+      VisualObject tempobject;
       while (true) {  // Visual Points.
         if (fscanf(file, "%c", &lineHeader) == EOF) break;
         if (lineHeader == 'E') break;
@@ -965,7 +972,7 @@ bool init() {
         fscanf(file, "%f,%f,%f %f,%f,%f\n", &temppoint.pos.x, &temppoint.pos.y,
                &temppoint.pos.z, &temppoint.shade[0], &temppoint.shade[1],
                &temppoint.shade[2]);
-        tempmapdata.VisualPoints.push_back(temppoint);
+        tempobject.VisualPoints.push_back(temppoint);
       }
       fscanf(file, "\n");
       while (true) {  // Visual Faces.
@@ -981,10 +988,11 @@ bool init() {
                &tempface.UVs[2][1]);
         tempface.texture = texture;
         tempface.doublesided = doublesided;
-        for (int i = 0; i < 3; i++) tempface.points[i] += cnt;
-        tempmapdata.Visualmapfaces.push_back(tempface);
+        for (int i = 0; i < 3; i++) tempface.points[i];
+        tempobject.Visualmapfaces.push_back(tempface);
       }
       fscanf(file, "\n");
+      tempmapdata.VisualObjectsVector.push_back(tempobject);
     } else if (lineHeader == 'H') {  // Hitbox thing
       uint32_t cnt = tempmapdata.HitboxPoints.size();
       while (true) {  // Hitbox Points.
@@ -1034,8 +1042,7 @@ bool init() {
   }
   fclose(file);
 
-  GlobalMapStuff->VisualPoints = tempmapdata.VisualPoints;
-  GlobalMapStuff->Visualmapfaces = tempmapdata.Visualmapfaces;
+  GlobalMapStuff->VisualObjectsVector = tempmapdata.VisualObjectsVector;
 
   GlobalMapStuff->HitboxPoints = tempmapdata.HitboxPoints;
   GlobalMapStuff->Hitboxmapfaces = tempmapdata.Hitboxmapfaces;
@@ -1044,13 +1051,6 @@ bool init() {
   GlobalMapStuff->KillboxFaces = tempmapdata.KillboxFaces;
 
   GlobalMapStuff->skybox = tempmapdata.skybox;
-
-  SDL_Log("%zu visual points in map", tempmapdata.VisualPoints.size());
-  SDL_Log("%zu visual faces in map", tempmapdata.Visualmapfaces.size());
-  SDL_Log("%zu hitbox points in map", tempmapdata.HitboxPoints.size());
-  SDL_Log("%zu hitbox faces in map", tempmapdata.Hitboxmapfaces.size());
-  SDL_Log("%zu killbox points in map", tempmapdata.KillboxPoints.size());
-  SDL_Log("%zu killbox faces in map", tempmapdata.KillboxFaces.size());
 
   // preprocess the faces in the map.
   // turns all quads into triangles.

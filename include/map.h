@@ -28,13 +28,19 @@ struct Mapface {
   std::array<glm::vec2, 3> UVs;
 };
 
+struct VisualObject {
+  std::vector<MapPoint> VisualPoints;
+  std::vector<Mapface> Visualmapfaces;
+};
+
 struct GlobalMapClass {
   std::vector<glm::vec3> HitboxPoints;
   std::vector<std::array<uint32_t, 3>> Hitboxmapfaces;
-  std::vector<MapPoint> VisualPoints;
-  std::vector<Mapface> Visualmapfaces;
+
   std::vector<glm::vec3> KillboxPoints;
   std::vector<std::array<uint32_t, 3>> KillboxFaces;
+
+  std::vector<VisualObject> VisualObjectsVector;
   std::string skybox;
 };
 
