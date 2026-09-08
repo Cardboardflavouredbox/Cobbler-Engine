@@ -36,15 +36,15 @@ void LoadMapGL(bool IsOldGL) {
     glEnd();
     glEndList();
   } else {
+    GLuint shadertemp = LoadShaders("mapshader.vert", "mapshader.frag");
+
+    RendererGlobal->GLstuff->shaders.push_back(shadertemp);
     for (auto& obj : GlobalMapStuff->VisualObjectsVector) {
       RendererStuff::OpenGLRenderer::GLObject globjectthing;
+      globjectthing.shader = shadertemp;
 
       globjectthing.texture =
           RendererGlobal->GLstuff->textures[obj.Visualmapfaces[0].texture];
-
-      GLuint shadertemp = LoadShaders("mapshader.vert", "mapshader.frag");
-
-      RendererGlobal->GLstuff->shaders.push_back(shadertemp);
 
       std::vector<float> vertices;
 
@@ -84,7 +84,7 @@ void LoadMapGL(bool IsOldGL) {
 
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindVertexArray(0);
-      RendererGlobal->GLstuff->GlObjects.push_back(globjectthing);
+      RendererGlobal->GLstuff->GlMapObjects.push_back(globjectthing);
     }
   }
 }

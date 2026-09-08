@@ -88,7 +88,7 @@ void freeRenderer() {
     }
     case OpenGL4:
     case OpenGL3: {
-      for (auto& i : RendererGlobal->GLstuff->GlObjects) {
+      for (auto& i : RendererGlobal->GLstuff->GlMapObjects) {
         glDeleteVertexArrays(1, &i.VAOthing);
         glDeleteBuffers(1, &i.VBOthing);
       }
@@ -547,6 +547,62 @@ bool setRenderer() {
   }
 
   return true;
+}
+
+void OpenGLCreateObjects() {
+  RendererStuff::OpenGLRenderer::GLObject* globjectthing =
+      &RendererGlobal->GLstuff->GLParticleBase;
+
+  GLuint shadertemp =
+      LoadShaders("particlesshader.vert", "particlesshader.frag");
+
+  globjectthing->shader = shadertemp;
+  RendererGlobal->GLstuff->shaders.push_back(shadertemp);
+
+  std::vector<float> vertices;
+
+  vertices.push_back(-0.5f);
+  vertices.push_back(-0.5f);
+  vertices.push_back(0.f);
+  vertices.push_back(0.f);
+  globjectthing->size++;
+
+  vertices.push_back(0.5f);
+  vertices.push_back(-0.5f);
+  vertices.push_back(1.f);
+  vertices.push_back(0.f);
+  globjectthing->size++;
+
+  vertices.push_back(0.5f);
+  vertices.push_back(0.5f);
+  vertices.push_back(1.f);
+  vertices.push_back(1.f);
+  globjectthing->size++;
+
+  vertices.push_back(-0.5f);
+  vertices.push_back(0.5f);
+  vertices.push_back(0.f);
+  vertices.push_back(1.f);
+  globjectthing->size++;
+
+  glGenVertexArrays(1, &globjectthing->VAOthing);
+  glGenBuffers(1, &globjectthing->VBOthing);
+
+  glBindVertexArray(globjectthing->VAOthing);
+
+  glBindBuffer(GL_ARRAY_BUFFER, globjectthing->VBOthing);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * globjectthing->size * 4,
+               &vertices[0], GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+  glEnableVertexAttribArray(0);
+
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                        (void*)(2 * sizeof(GLfloat)));
+  glEnableVertexAttribArray(1);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
 }
 
 // function that checks if string is a number.
@@ -1280,6 +1336,9 @@ bool init() {
       }
     }
   }
+
+  if (Settings->graphicsmode == OpenGL4 || Settings->graphicsmode == OpenGL3)
+    OpenGLCreateObjects();
 
   // Freetype font library load.
   Freetypething = new FreetypeClass();

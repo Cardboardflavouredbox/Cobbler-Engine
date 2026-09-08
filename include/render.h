@@ -51,9 +51,11 @@ struct RendererStuff {
       GLuint texture;
       GLuint VBOthing, VAOthing;
       uint32_t size = 0;
+      GLuint shader;
     };
     GLuint MapGLlist;
-    std::vector<GLObject> GlObjects;
+    std::vector<GLObject> GlMapObjects;
+    GLObject GLParticleBase;
 
     std::vector<GLuint> shaders;
   };

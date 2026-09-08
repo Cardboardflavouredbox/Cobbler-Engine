@@ -3,6 +3,8 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
 #include <string>
 
 #include "camera.h"
@@ -218,59 +220,115 @@ void renderProps() {
 }
 
 void renderParticles() {
-  float ps = std::sin(LocalPlayer->dir.x * PI / 180.f);
-  float pc = std::cos(LocalPlayer->dir.x * PI / 180.f);
-  float what = std::cos(LocalPlayer->dir.y * PI / 180.f);
+  switch (Settings->graphicsmode) {
+    case OpenGL1: {
+      float ps = std::sin(LocalPlayer->dir.x * PI / 180.f);
+      float pc = std::cos(LocalPlayer->dir.x * PI / 180.f);
+      float what = std::cos(LocalPlayer->dir.y * PI / 180.f);
 
-  glm::vec3 dirthing = glm::normalize(glm::vec3{
-      -ps * what, pc * what, std::sin(LocalPlayer->dir.y * PI / 180.f)});
+      glm::vec3 dirthing = glm::normalize(glm::vec3{
+          -ps * what, pc * what, std::sin(LocalPlayer->dir.y * PI / 180.f)});
 
-  glm::quat quatthing =
-      glm::quatLookAt(-dirthing, glm::vec3(0, 0, 1)) *
-      glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, -1));
+      glm::quat quatthing =
+          glm::quatLookAt(-dirthing, glm::vec3(0, 0, 1)) *
+          glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, -1));
+      for (const auto& [key, i] : Particles) {
+        if (i->Texture == "") {
+          glDisable(GL_TEXTURE_2D);
+        } else {
+          glEnable(GL_TEXTURE_2D);
+          glBindTexture(GL_TEXTURE_2D,
+                        RendererGlobal->GLstuff->textures[i->Texture]);
+        }
 
-  for (const auto& [key, i] : Particles) {
-    if (i->Texture == "") {
-      glDisable(GL_TEXTURE_2D);
-    } else {
-      glEnable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D,
-                    RendererGlobal->GLstuff->textures[i->Texture]);
+        glm::vec3 quad[4];
+
+        quad[0].x = i->rect[0].x;
+        quad[0].y = 0;
+        quad[0].z = i->rect[0].y;
+
+        quad[1].x = i->rect[1].x;
+        quad[1].y = 0;
+        quad[1].z = i->rect[0].y;
+
+        quad[2].x = i->rect[1].x;
+        quad[2].y = 0;
+        quad[2].z = i->rect[1].y;
+
+        quad[3].x = i->rect[0].x;
+        quad[3].y = 0;
+        quad[3].z = i->rect[1].y;
+
+        for (int j = 0; j < 4; j++) {
+          quad[j] = quatthing * quad[j] + i->position;
+        }
+
+        glBegin(GL_QUADS);
+        glColor4f(i->color[0], i->color[1], i->color[2], i->color[3]);
+        glTexCoord2f(i->uv[0].x, i->uv[0].y);
+        glVertex3f(quad[0].x, quad[0].y, quad[0].z);
+        glTexCoord2f(i->uv[0].x + i->uv[1].x, i->uv[0].y);
+        glVertex3f(quad[1].x, quad[1].y, quad[1].z);
+        glTexCoord2f(i->uv[0].x + i->uv[1].x, i->uv[0].y + i->uv[1].y);
+        glVertex3f(quad[2].x, quad[2].y, quad[2].z);
+        glTexCoord2f(i->uv[0].x, i->uv[0].y + i->uv[1].y);
+        glVertex3f(quad[3].x, quad[3].y, quad[3].z);
+        glEnd();
+      }
+      break;
     }
+    case OpenGL3:
+    case OpenGL4: {
+      glm::mat4 modelMatrix = Global->perspectivematrix;
 
-    glm::vec3 quad[4];
+      glm::mat4 view =
+          glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
 
-    quad[0].x = i->rect[0].x;
-    quad[0].y = 0;
-    quad[0].z = i->rect[0].y;
+      modelMatrix = modelMatrix * view;
 
-    quad[1].x = i->rect[1].x;
-    quad[1].y = 0;
-    quad[1].z = i->rect[0].y;
+      glm::vec3 scale, translation, skew;
+      glm::quat rotation;
+      glm::vec4 perspective;
 
-    quad[2].x = i->rect[1].x;
-    quad[2].y = 0;
-    quad[2].z = i->rect[1].y;
+      glm::decompose(modelMatrix, scale, rotation, translation, skew,
+                     perspective);
 
-    quad[3].x = i->rect[0].x;
-    quad[3].y = 0;
-    quad[3].z = i->rect[1].y;
+      // Recompose without the rotation (use identity quaternion)
+      modelMatrix = glm::recompose(scale, glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+                                   translation, skew, perspective);
 
-    for (int j = 0; j < 4; j++) {
-      quad[j] = quatthing * quad[j] + i->position;
+      uint32_t shadertemp = RendererGlobal->GLstuff->GLParticleBase.shader;
+      glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1, GL_FALSE,
+                         glm::value_ptr(modelMatrix));
+      glUseProgram(shadertemp);
+
+      for (const auto& [key, i] : Particles) {
+        if (i->Texture != "") {
+          glEnable(GL_TEXTURE_2D);
+          glBindTexture(GL_TEXTURE_2D,
+                        RendererGlobal->GLstuff->textures[i->Texture]);
+        }
+
+        glBindVertexArray(RendererGlobal->GLstuff->GLParticleBase.VAOthing);
+
+        glUniform1i(glGetUniformLocation(shadertemp, "InputTexture"), 0);
+
+        glUniform2f(glGetUniformLocation(shadertemp, "uvOffset"), i->uv[0].x,
+                    i->uv[0].y);
+
+        glUniform2f(glGetUniformLocation(shadertemp, "uvSize"), i->uv[1].x,
+                    i->uv[1].y);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,
+                      RendererGlobal->GLstuff->GLParticleBase.texture);
+
+        glDrawArrays(GL_TRIANGLES, 0,
+                     RendererGlobal->GLstuff->GLParticleBase.size);
+      }
+      SDL_Log("%d", glad_glGetError());
+      break;
     }
-
-    glBegin(GL_QUADS);
-    glColor4f(i->color[0], i->color[1], i->color[2], i->color[3]);
-    glTexCoord2f(i->uv[0].x, i->uv[0].y);
-    glVertex3f(quad[0].x, quad[0].y, quad[0].z);
-    glTexCoord2f(i->uv[0].x + i->uv[1].x, i->uv[0].y);
-    glVertex3f(quad[1].x, quad[1].y, quad[1].z);
-    glTexCoord2f(i->uv[0].x + i->uv[1].x, i->uv[0].y + i->uv[1].y);
-    glVertex3f(quad[2].x, quad[2].y, quad[2].z);
-    glTexCoord2f(i->uv[0].x, i->uv[0].y + i->uv[1].y);
-    glVertex3f(quad[3].x, quad[3].y, quad[3].z);
-    glEnd();
   }
 }
 
@@ -419,19 +477,24 @@ void openglrender() {
         glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
 
     modelMatrix = modelMatrix * view;
-    glUniformMatrix4fv(
-        glGetUniformLocation(RendererGlobal->GLstuff->shaders[0], "model"), 1,
-        GL_FALSE, glm::value_ptr(modelMatrix));
 
-    for (auto& i : RendererGlobal->GLstuff->GlObjects) {
-      glUseProgram(RendererGlobal->GLstuff->shaders[0]);
+    // renderProps();
+    // renderEntity();
+
+    // renderParticles();
+
+    glUniformMatrix4fv(
+        glGetUniformLocation(RendererGlobal->GLstuff->GlMapObjects[0].shader,
+                             "model"),
+        1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+    for (auto& i : RendererGlobal->GLstuff->GlMapObjects) {
+      glUseProgram(i.shader);
 
       glBindVertexArray(i.VAOthing);
       glBindTexture(GL_TEXTURE_2D, i.texture);
 
-      glUniform1i(glGetUniformLocation(RendererGlobal->GLstuff->shaders[0],
-                                       "InputTexture"),
-                  0);
+      glUniform1i(glGetUniformLocation(i.shader, "InputTexture"), 0);
 
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, i.texture);
