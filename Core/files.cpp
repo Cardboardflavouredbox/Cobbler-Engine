@@ -93,6 +93,10 @@ void freeRenderer() {
         glDeleteBuffers(1, &i.VBOthing);
       }
 
+      glDeleteVertexArrays(1,
+                           &RendererGlobal->GLstuff->GLParticleBase.VAOthing);
+      glDeleteBuffers(1, &RendererGlobal->GLstuff->GLParticleBase.VBOthing);
+
       // free textures
       for (auto& [key, value] : RendererGlobal->GLstuff->textures) {
         glDeleteTextures(1, &value);
@@ -438,6 +442,8 @@ bool setRenderer() {
 
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                           SDL_GL_CONTEXT_PROFILE_CORE);
+      SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+      SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
       break;
     }
@@ -448,6 +454,8 @@ bool setRenderer() {
 
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                           SDL_GL_CONTEXT_PROFILE_CORE);
+      SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+      SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
       break;
     }

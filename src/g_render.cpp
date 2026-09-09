@@ -279,32 +279,17 @@ void renderParticles() {
     }
     case OpenGL3:
     case OpenGL4: {
-      glm::mat4 modelMatrix = Global->perspectivematrix;
-
       glm::mat4 view =
           glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
 
-      modelMatrix = modelMatrix * view;
-
-      glm::vec3 scale, translation, skew;
-      glm::quat rotation;
-      glm::vec4 perspective;
-
-      glm::decompose(modelMatrix, scale, rotation, translation, skew,
-                     perspective);
-
-      // Recompose without the rotation (use identity quaternion)
-      modelMatrix = glm::recompose(scale, glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
-                                   translation, skew, perspective);
-
       uint32_t shadertemp = RendererGlobal->GLstuff->GLParticleBase.shader;
-      glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1, GL_FALSE,
-                         glm::value_ptr(modelMatrix));
+      glUniformMatrix4fv(glGetUniformLocation(shadertemp, "particlemodel"), 1,
+                         GL_FALSE, glm::value_ptr(view));
       glUseProgram(shadertemp);
 
       for (const auto& [key, i] : Particles) {
         if (i->Texture != "") {
-          glEnable(GL_TEXTURE_2D);
+          glActiveTexture(GL_TEXTURE0);
           glBindTexture(GL_TEXTURE_2D,
                         RendererGlobal->GLstuff->textures[i->Texture]);
         }
@@ -313,17 +298,19 @@ void renderParticles() {
 
         glUniform1i(glGetUniformLocation(shadertemp, "InputTexture"), 0);
 
+        glUniform3f(glGetUniformLocation(shadertemp, "BillboardPosition"),
+                    i->position.x, i->position.y, i->position.z);
+
+        glUniform2f(glGetUniformLocation(shadertemp, "BillboardSize"),
+                    i->rect[1].x - i->rect[0].x, i->rect[1].y - i->rect[0].y);
+
         glUniform2f(glGetUniformLocation(shadertemp, "uvOffset"), i->uv[0].x,
                     i->uv[0].y);
 
         glUniform2f(glGetUniformLocation(shadertemp, "uvSize"), i->uv[1].x,
                     i->uv[1].y);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D,
-                      RendererGlobal->GLstuff->GLParticleBase.texture);
-
-        glDrawArrays(GL_TRIANGLES, 0,
+        glDrawArrays(GL_TRIANGLE_STRIP, 0,
                      RendererGlobal->GLstuff->GLParticleBase.size);
       }
       SDL_Log("%d", glad_glGetError());
@@ -483,12 +470,9 @@ void openglrender() {
 
     // renderParticles();
 
-    glUniformMatrix4fv(
-        glGetUniformLocation(RendererGlobal->GLstuff->GlMapObjects[0].shader,
-                             "model"),
-        1, GL_FALSE, glm::value_ptr(modelMatrix));
-
     for (auto& i : RendererGlobal->GLstuff->GlMapObjects) {
+      glUniformMatrix4fv(glGetUniformLocation(i.shader, "model"), 1, GL_FALSE,
+                         glm::value_ptr(modelMatrix));
       glUseProgram(i.shader);
 
       glBindVertexArray(i.VAOthing);
