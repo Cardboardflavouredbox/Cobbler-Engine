@@ -150,8 +150,8 @@ bool loadPNG(std::filesystem::path path) {
       surface = SDL_LoadPNG(path.string().c_str());
       if (surface == NULL) return false;
       // that one magenta color as transparent color
-      SDL_SetSurfaceColorKey(surface, true,
-                             SDL_MapSurfaceRGB(surface, 255, 0, 255));
+      // SDL_SetSurfaceColorKey(surface, true,
+      //                        SDL_MapSurfaceRGB(surface, 255, 0, 255));
       // Set texture format.
       surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
 
@@ -159,17 +159,18 @@ bool loadPNG(std::filesystem::path path) {
 
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
                    GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+
       if (Settings->graphicsmode == OpenGL4 ||
           Settings->graphicsmode == OpenGL3) {
         glGenerateMipmap(GL_TEXTURE_2D);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                        GL_NEAREST_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
       } else {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
       }
@@ -537,9 +538,9 @@ bool setRenderer() {
       glLoadIdentity();
       glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 256.f);
     }
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // set backface culling
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);

@@ -82,9 +82,9 @@ void LoadMapGL(bool IsOldGL) {
                             (void*)(6 * sizeof(GLfloat)));
       glEnableVertexAttribArray(2);
 
+      RendererGlobal->GLstuff->GlMapObjects.push_back(globjectthing);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glBindVertexArray(0);
-      RendererGlobal->GLstuff->GlMapObjects.push_back(globjectthing);
     }
   }
 }

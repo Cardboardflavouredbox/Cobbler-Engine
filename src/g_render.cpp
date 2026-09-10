@@ -279,9 +279,9 @@ void renderParticles() {
     }
     case OpenGL3:
     case OpenGL4: {
-      glm::mat4 modelMatrix = Global->perspectivematrix;
-      modelMatrix = modelMatrix * glm::lookAt(Camera->pos, Camera->lookat,
-                                              glm::vec3(0, 0, 1));
+      glm::mat4 modelMatrix =
+          Global->perspectivematrix *
+          glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
 
       float ps = std::sin(LocalPlayer->dir.x * PI / 180.f);
       float pc = std::cos(LocalPlayer->dir.x * PI / 180.f);
