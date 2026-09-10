@@ -93,6 +93,11 @@ void freeRenderer() {
         glDeleteBuffers(1, &i.VBOthing);
       }
 
+      for (auto& i : RendererGlobal->GLstuff->GLModels) {
+        glDeleteVertexArrays(1, &i.second.VAOthing);
+        glDeleteBuffers(1, &i.second.VBOthing);
+      }
+
       glDeleteVertexArrays(1,
                            &RendererGlobal->GLstuff->GLParticleBase.VAOthing);
       glDeleteBuffers(1, &RendererGlobal->GLstuff->GLParticleBase.VBOthing);
@@ -609,6 +614,49 @@ void OpenGLCreateObjects() {
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
                         (void*)(2 * sizeof(GLfloat)));
   glEnableVertexAttribArray(1);
+
+  shadertemp = LoadShaders("objectshader.vert", "objectshader.frag");
+
+  RendererGlobal->GLstuff->shaders.push_back(shadertemp);
+  for (auto& [name, model] : Global->Modelmap) {
+    RendererStuff::OpenGLRenderer::GLObject globjectthing;
+
+    globjectthing.texture = RendererGlobal->GLstuff->textures[model.texture];
+
+    globjectthing.shader = shadertemp;
+
+    std::vector<float> vertices;
+
+    for (auto& face : model.faces) {
+      for (int j = 2; j >= 0; j--) {
+        for (int a = 0; a < 3; a++) {
+          vertices.push_back(model.points[face.point[j]].pos[a]);
+        }
+        for (int a = 0; a < 2; a++) {
+          vertices.push_back(face.uv[j][a]);
+        }
+        globjectthing.size++;
+      }
+    }
+
+    glGenVertexArrays(1, &globjectthing.VAOthing);
+    glGenBuffers(1, &globjectthing.VBOthing);
+
+    glBindVertexArray(globjectthing.VAOthing);
+
+    glBindBuffer(GL_ARRAY_BUFFER, globjectthing.VBOthing);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * globjectthing.size * 5,
+                 &vertices[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    RendererGlobal->GLstuff->GLModels[name] = globjectthing;
+  }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);

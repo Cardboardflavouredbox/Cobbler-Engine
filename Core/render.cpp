@@ -4,6 +4,9 @@
 
 #include <cmath>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 #include <utility>
 
 #include "camera.h"
@@ -386,7 +389,54 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
     }
 
     switch (Settings->graphicsmode) {
-      case OpenGL1: {  // opengl
+      case OpenGL4:
+      case OpenGL3: {
+        glm::mat4 modelMatrix;
+        if (isUI) {
+          modelMatrix = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0),
+                                    glm::vec3(0, 0, 1));
+        } else {
+          modelMatrix =
+              Global->perspectivematrix *
+              glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
+        }
+
+        GLuint shadertemp =
+            RendererGlobal->GLstuff->GLModels.begin()->second.shader;
+
+        glUseProgram(shadertemp);
+
+        glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1,
+                           GL_FALSE, glm::value_ptr(modelMatrix));
+
+        for (const auto& modelname : modelgroup->Models) {
+          RendererStuff::OpenGLRenderer::GLObject* globjectthing =
+              &RendererGlobal->GLstuff->GLModels[modelname];
+          glActiveTexture(GL_TEXTURE0);
+          glBindTexture(GL_TEXTURE_2D, globjectthing->texture);
+
+          glUniform1i(glGetUniformLocation(shadertemp, "InputTexture"), 0);
+
+          glUniform3f(glGetUniformLocation(shadertemp, "position"),
+                      modeltrans->position.x, modeltrans->position.y,
+                      modeltrans->position.z);
+
+          glUniform3f(glGetUniformLocation(shadertemp, "size"),
+                      modeltrans->size.x, modeltrans->size.y,
+                      modeltrans->size.z);
+
+          glm::mat4 tempmat4 = glm::toMat4(modeltrans->rot);
+
+          glUniformMatrix4fv(glGetUniformLocation(shadertemp, "rot"), 1,
+                             GL_FALSE, glm::value_ptr(tempmat4));
+
+          glBindVertexArray(globjectthing->VAOthing);
+
+          glDrawArrays(GL_TRIANGLES, 0, globjectthing->size);
+        }
+        break;
+      }
+      case OpenGL1: {  // opengl 1
         for (int a = 0; a < modelgroup->Models.size(); a++) {
           if (modeltrans->modelvisibilityresult[modelgroup->Models[a]]) {
             GlobalClass::Model* model =

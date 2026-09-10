@@ -55,6 +55,7 @@ struct RendererStuff {
     };
     GLuint MapGLlist;
     std::vector<GLObject> GlMapObjects;
+    std::unordered_map<std::string, GLObject> GLModels;
     GLObject GLParticleBase;
 
     std::vector<GLuint> shaders;

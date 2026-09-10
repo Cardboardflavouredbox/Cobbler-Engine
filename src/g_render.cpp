@@ -503,6 +503,8 @@ void openglrender() {
 
       glDrawArrays(GL_TRIANGLES, 0, i.size);
     }
+
+    render3DUI();
   }
 
   glFlush();
