@@ -94,8 +94,12 @@ void freeRenderer() {
       }
 
       for (auto& i : RendererGlobal->GLstuff->GLModels) {
-        glDeleteVertexArrays(1, &i.second.VAOthing);
         glDeleteBuffers(1, &i.second.VBOthing);
+      }
+
+      for (auto& i : RendererGlobal->GLstuff->GLModelGroups) {
+        glDeleteVertexArrays(1, &i.VAOthing);
+        glDeleteBuffers(1, &i.VBOthing);
       }
 
       glDeleteVertexArrays(1,
@@ -563,6 +567,18 @@ bool setRenderer() {
   return true;
 }
 
+struct AnimationVBOclass {
+  uint32_t bonestartingpoint[32];  // how many anims there are in a bone
+  uint32_t boneparent[32];         // bone parent
+  glm::vec3 bonehead[32];          // bone head
+  glm::vec3 bonetail[32];          // bone tail
+  uint32_t animsize[512];          // how many keys there are in a animation
+  uint32_t animindex[256];
+  glm::vec3 animpos[256];
+  glm::vec3 animscale[256];
+  glm::vec4 animrot[256];
+};
+
 void OpenGLCreateObjects() {
   RendererStuff::OpenGLRenderer::GLObject* globjectthing =
       &RendererGlobal->GLstuff->GLParticleBase;
@@ -619,7 +635,7 @@ void OpenGLCreateObjects() {
 
   RendererGlobal->GLstuff->shaders.push_back(shadertemp);
   for (auto& [name, model] : Global->Modelmap) {
-    RendererStuff::OpenGLRenderer::GLObject globjectthing;
+    RendererStuff::OpenGLRenderer::GLModel globjectthing;
 
     globjectthing.texture = RendererGlobal->GLstuff->textures[model.texture];
 
@@ -658,14 +674,22 @@ void OpenGLCreateObjects() {
     RendererGlobal->GLstuff->GLModels[name] = globjectthing;
   }
 
-  GLuint UBOobject;
-  for (auto& modelgroup : ModelGroupMap) {
-    // for (auto& model : modelgroup.second.Models) {
-    //   RendererStuff::OpenGLRenderer::GLModelGroupModel globjectthing;
-    //   RendererGlobal->GLstuff->GLModelGroups[model].push_back(globjectthing);
-    // }
+  for (auto& [name, modelgroup] : ModelGroupMap) {
+    RendererStuff::OpenGLRenderer::GLModelGroup globjectthing;
+    AnimationVBOclass AnimationVBOthingy;
+    GLuint AnimationsVBO;
+    glGenBuffers(1, &globjectthing.VBOthing);
+
+    for (auto& [index, bone] : modelgroup.Bonemap) {
+        }
+
+    AnimationVBOthingy.bonestartingpoint = ;
+    glBindBuffer(GL_ARRAY_BUFFER, AnimationsVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(AnimationVBOthingy),
+                 &AnimationVBOthingy, GL_STATIC_DRAW);
+
+    RendererGlobal->GLstuff->GLModelGroups[name] = AnimationsVBO;
   }
-  RendererGlobal->GLstuff->AnimationsUBO = UBOobject;
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);

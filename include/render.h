@@ -55,12 +55,24 @@ struct RendererStuff {
     };
     GLuint MapGLlist;
     std::vector<GLObject> GlMapObjects;
-    std::unordered_map<std::string, GLObject> GLModels;
+
+    struct GLModel {
+      GLuint texture;
+      GLuint VBOthing;
+      uint32_t size = 0;
+      GLuint shader;
+    };
+
+    std::unordered_map<std::string, GLModel> GLModels;
     GLObject GLParticleBase;
 
     std::vector<GLuint> shaders;
 
-    GLuint AnimationsUBO;
+    struct GLModelGroup {
+      GLuint VBOthing, VAOthing;
+    };
+
+    std::unordered_map<std::string, GLModelGroup> GLModelGroups;
   };
   OpenGLRenderer* GLstuff;
 
