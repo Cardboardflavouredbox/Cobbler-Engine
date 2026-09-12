@@ -59,6 +59,8 @@ struct RendererStuff {
     GLObject GLParticleBase;
 
     std::vector<GLuint> shaders;
+
+    GLuint AnimationsUBO;
   };
   OpenGLRenderer* GLstuff;
 

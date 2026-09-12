@@ -482,8 +482,8 @@ void openglrender() {
 
     modelMatrix = modelMatrix * view;
 
-    // renderProps();
-    // renderEntity();
+    renderProps();
+    renderEntity();
 
     renderParticles();
 

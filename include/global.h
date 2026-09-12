@@ -42,7 +42,7 @@ struct GlobalClass {
     std::string texture;
     struct Vertex {
       glm::vec3 pos;
-      std::string bone;
+      uint32_t bone;
     };
     std::vector<Vertex> points;
     struct Face {

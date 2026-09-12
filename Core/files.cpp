@@ -658,6 +658,15 @@ void OpenGLCreateObjects() {
     RendererGlobal->GLstuff->GLModels[name] = globjectthing;
   }
 
+  GLuint UBOobject;
+  for (auto& modelgroup : ModelGroupMap) {
+    // for (auto& model : modelgroup.second.Models) {
+    //   RendererStuff::OpenGLRenderer::GLModelGroupModel globjectthing;
+    //   RendererGlobal->GLstuff->GLModelGroups[model].push_back(globjectthing);
+    // }
+  }
+  RendererGlobal->GLstuff->AnimationsUBO = UBOobject;
+
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 }
@@ -958,6 +967,16 @@ bool initargs(std::vector<std::string> args) {
   }
   SDL_Log("args done");
   return true;
+}
+
+// bone name to index
+uint32_t getboneindex(std::string name) {
+  if (name == "null") return uint32_t(-1);
+  if (!BonetoInt.contains(name)) {
+    BonetoInt[name] = newboneindex;
+    newboneindex++;
+  }
+  return BonetoInt[name];
 }
 
 // overall initialization function.
@@ -1262,6 +1281,7 @@ bool init() {
               char name[64], parent[64];
               glm::vec3 head, tail;
               ModelGroupClass::Bone::Pose temppose;
+
               int what = fscanf(
                   file, "%s %f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f %f %s",
                   name, &head.x, &head.y, &head.z, &tail.x, &tail.y, &tail.z,
@@ -1269,11 +1289,12 @@ bool init() {
                   &temppose.scale[0], &temppose.scale[1], &temppose.scale[2],
                   &temppose.rot[3], &temppose.rot[0], &temppose.rot[1],
                   &temppose.rot[2], parent);
+              uint32_t boneindex = getboneindex(name);
 
-              modelgroup.Bonemap[name].parent = parent;
-              modelgroup.Bonemap[name].head = head;
-              modelgroup.Bonemap[name].tail = tail;
-              modelgroup.Bonemap[name].restpose = temppose;
+              modelgroup.Bonemap[boneindex].parent = getboneindex(parent);
+              modelgroup.Bonemap[boneindex].head = head;
+              modelgroup.Bonemap[boneindex].tail = tail;
+              modelgroup.Bonemap[boneindex].restpose = temppose;
 
             } else if (strcmp(lineHeader, "FCV") == 0) {  // object visibility
               char name[64];
@@ -1296,24 +1317,28 @@ bool init() {
               char newlinecheck = 'w';
               fscanf(file, "%*48[^\"]\"%48[^\"]\"].%s %d\n ", name, thing,
                      &index);
-              modelgroup.Bonemap.try_emplace(name);
+              uint32_t boneindex = getboneindex(name);
+              modelgroup.Bonemap.try_emplace(boneindex);
               if (strcmp(thing, "location") == 0) {
                 while (newlinecheck != '\n') {
                   uint32_t index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
-                  modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);
-                  modelgroup.Bonemap[name].Poses[posename][index2].pos[index] =
-                      temp;
+                  modelgroup.Bonemap[boneindex].Poses[posename].try_emplace(
+                      index2);
+                  modelgroup.Bonemap[boneindex]
+                      .Poses[posename][index2]
+                      .pos[index] = temp;
                 }
               } else if (strcmp(thing, "rotation_quaternion") == 0) {
                 while (newlinecheck != '\n') {
                   uint32_t index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-                  modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);
-                  modelgroup.Bonemap[name]
+                  modelgroup.Bonemap[boneindex].Poses[posename].try_emplace(
+                      index2);
+                  modelgroup.Bonemap[boneindex]
                       .Poses[posename][index2]
                       .rot[(index + 3) % 4] = temp;
                 }
@@ -1322,8 +1347,9 @@ bool init() {
                   uint32_t index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-                  modelgroup.Bonemap[name].Poses[posename].try_emplace(index2);
-                  modelgroup.Bonemap[name]
+                  modelgroup.Bonemap[boneindex].Poses[posename].try_emplace(
+                      index2);
+                  modelgroup.Bonemap[boneindex]
                       .Poses[posename][index2]
                       .scale[index] = temp;
                 }
@@ -1357,7 +1383,7 @@ bool init() {
                 char name[64];
                 float temp;
                 fscanf(file, "%s %f%c", name, &temp, &newlinecheck);
-                vertex.bone = name;
+                vertex.bone = getboneindex(name);
               }
               model.points.push_back(vertex);
             } else if (strcmp(lineHeader, "F") == 0) {  // Faces.

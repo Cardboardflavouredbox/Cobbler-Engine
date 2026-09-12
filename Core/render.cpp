@@ -219,9 +219,9 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
 
   bool check = false;
 
-  std::string tempstr = input.bone;
+  uint32_t boneindex = input.bone;
 
-  ModelGroupClass::Bone* basebone = &modelgroup->Bonemap[tempstr];
+  ModelGroupClass::Bone* basebone = &modelgroup->Bonemap[boneindex];
 
   temp.x *= basebone->restpose.scale.x;
   temp.y *= basebone->restpose.scale.y;
@@ -233,9 +233,9 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
 
   // apply bones basically recursively(?).
   // if tempstr is null, that means the bone has no parent.
-  while (tempstr != "null") {
+  while (boneindex != uint32_t(-1)) {
     // SDL_Log("%s", tempstr.c_str());
-    ModelGroupClass::Bone* bone = &modelgroup->Bonemap[tempstr];
+    ModelGroupClass::Bone* bone = &modelgroup->Bonemap[boneindex];
 
     glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
     glm::quat rot = glm::quat(1, 0, 0, 0);
@@ -289,37 +289,38 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
 
     // some lil correction for some bones.
     // find a way to not hardcode this!
-    if (tempstr == "Spine") {
-      float tempdir = lookdir;
+    // if (tempstr == "Spine") {
+    //   float tempdir = lookdir;
 
-      if (tempdir > 0)
-        tempdir /= 3.f;
-      else
-        tempdir /= 2.f;
+    //   if (tempdir > 0)
+    //     tempdir /= 3.f;
+    //   else
+    //     tempdir /= 2.f;
 
-      final_quat = final_quat *
-                   glm::angleAxis(glm::radians(tempdir), glm::vec3(1, 0, 0));
-    } else if (tempstr == "Head") {
-      float tempdir = lookdir;
+    //   final_quat = final_quat *
+    //                glm::angleAxis(glm::radians(tempdir), glm::vec3(1, 0, 0));
+    // } else if (tempstr == "Head") {
+    //   float tempdir = lookdir;
 
-      if (tempdir > 0)
-        tempdir *= 2.f / 3.f;
-      else
-        tempdir /= 2.f;
+    //   if (tempdir > 0)
+    //     tempdir *= 2.f / 3.f;
+    //   else
+    //     tempdir /= 2.f;
 
-      final_quat = final_quat *
-                   glm::angleAxis(glm::radians(tempdir), glm::vec3(1, 0, 0));
-    } else if (tempstr == "Arm.L") {
-      float tempdir = lookdir;
+    //   final_quat = final_quat *
+    //                glm::angleAxis(glm::radians(tempdir), glm::vec3(1, 0, 0));
+    // } else if (tempstr == "Arm.L") {
+    //   float tempdir = lookdir;
 
-      if (tempdir > 0)
-        tempdir *= 2.f / 3.f;
-      else
-        tempdir /= 2.f;
+    //   if (tempdir > 0)
+    //     tempdir *= 2.f / 3.f;
+    //   else
+    //     tempdir /= 2.f;
 
-      final_quat = final_quat *
-                   glm::angleAxis(glm::radians(-tempdir), glm::vec3(0, 1, 0));
-    }
+    //   final_quat = final_quat *
+    //                glm::angleAxis(glm::radians(-tempdir), glm::vec3(0, 1,
+    //                0));
+    // }
 
     temp = (final_quat) * (temp - bone->head);
     temp += bone->head;
@@ -327,7 +328,7 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
     temp.x *= scale.x;
     temp.y *= scale.y;
     temp.z *= scale.z;
-    tempstr = bone->parent;
+    boneindex = bone->parent;
   }
 
   return std::make_pair(temp, check);
@@ -393,7 +394,8 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
       case OpenGL3: {
         glm::mat4 modelMatrix;
         if (isUI) {
-          modelMatrix = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0),
+          modelMatrix = Global->perspectivematrix *
+                        glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0),
                                     glm::vec3(0, 0, 1));
         } else {
           modelMatrix =

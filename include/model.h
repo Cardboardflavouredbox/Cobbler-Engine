@@ -5,6 +5,7 @@
 #include <glm/vec3.hpp>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #ifdef _WIN32
@@ -21,7 +22,7 @@ struct ModelGroupClass {
   std::vector<std::string> Models;
   struct Bone {
     glm::vec3 head, tail;
-    std::string parent;
+    uint32_t parent;
     struct Pose {
       glm::vec3 pos, scale;
       glm::quat rot;
@@ -35,9 +36,12 @@ struct ModelGroupClass {
   };
   std::unordered_map<std::string, std::vector<visibilitything>> modelvisibility;
 
-  std::unordered_map<std::string, Bone> Bonemap;
+  std::unordered_map<uint32_t, Bone> Bonemap;
   std::unordered_map<std::string, std::array<uint32_t, 2>> anim;
 };
+
+LIB_API extern std::unordered_map<std::string, uint32_t> BonetoInt;
+LIB_API extern uint32_t newboneindex;
 
 LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 
