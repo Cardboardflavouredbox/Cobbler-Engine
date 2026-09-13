@@ -212,7 +212,7 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[]) {
 
 // apply animations of bones to vertex.
 std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
-                                           std::string actionname,
+                                           uint32_t actioncode,
                                            ModelGroupClass* modelgroup,
                                            float frame, float lookdir) {
   glm::vec3 temp = input.pos;
@@ -242,12 +242,12 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
     if (bone->Poses.empty()) {
       // SDL_Log("no poses lol");
     } else {
-      pos = bone->Poses[actionname].begin()->second.pos;
-      scale = bone->Poses[actionname].begin()->second.scale;
-      rot = bone->Poses[actionname].begin()->second.rot;
-      uint32_t framebefore = modelgroup->anim[actionname][0];
+      pos = bone->Poses[actioncode].begin()->second.pos;
+      scale = bone->Poses[actioncode].begin()->second.scale;
+      rot = bone->Poses[actioncode].begin()->second.rot;
+      uint32_t framebefore = modelgroup->anim[actioncode][0];
 
-      for (auto const& [key, val] : bone->Poses[actionname]) {
+      for (auto const& [key, val] : bone->Poses[actioncode]) {
         if (frame == key) {
           pos = val.pos;
           rot = val.rot;
@@ -340,22 +340,22 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
   if (modeltrans->visible) {
     // code of animation frames.
     for (int i = 0; i < modeltrans->actions.size(); i++) {
+      uint32_t poseindex = PosetoInt[modeltrans->actions[i].name];
+
       modeltrans->actions[i].frame +=
           deltatime * 24 * modeltrans->actions[i].speed;
-      if ((float)modelgroup->anim[modeltrans->actions[i].name][0] ==
-          (float)modelgroup->anim[modeltrans->actions[i].name][1]) {
-        modeltrans->actions[i].frame =
-            (float)modelgroup->anim[modeltrans->actions[i].name][0];
+      if ((float)modelgroup->anim[poseindex][0] ==
+          (float)modelgroup->anim[poseindex][1]) {
+        modeltrans->actions[i].frame = (float)modelgroup->anim[poseindex][0];
       } else {
         while (modeltrans->actions[i].frame >=
-               (float)modelgroup->anim[modeltrans->actions[i].name][1])
+               (float)modelgroup->anim[poseindex][1])
           modeltrans->actions[i].frame +=
-              ((float)modelgroup->anim[modeltrans->actions[i].name][0] -
-               (float)modelgroup->anim[modeltrans->actions[i].name][1]);
+              ((float)modelgroup->anim[poseindex][0] -
+               (float)modelgroup->anim[poseindex][1]);
         if (modeltrans->actions[i].frame <
-            (float)modelgroup->anim[modeltrans->actions[i].name][0])
-          modeltrans->actions[i].frame =
-              (float)modelgroup->anim[modeltrans->actions[i].name][0];
+            (float)modelgroup->anim[poseindex][0])
+          modeltrans->actions[i].frame = (float)modelgroup->anim[poseindex][0];
       }
     }
 
@@ -375,7 +375,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
     if (!modeltrans->actions.empty()) {
       for (auto const& action : modeltrans->actions) {
         for (auto const& visiblething :
-             modelgroup->modelvisibility[action.name]) {
+             modelgroup->modelvisibility[PosetoInt[action.name]]) {
           bool result = modeltrans->modelvisibilityresult[visiblething.name];
           for (auto const& [key, val] : visiblething.value) {
             if (key > action.frame) {
@@ -412,10 +412,9 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
                            GL_FALSE, glm::value_ptr(modelMatrix));
 
         for (const auto& modelname : modelgroup->Models) {
-          RendererStuff::OpenGLRenderer::GLObject* globjectthing =
-              &RendererGlobal->GLstuff->GLModels[modelname];
           glActiveTexture(GL_TEXTURE0);
-          glBindTexture(GL_TEXTURE_2D, globjectthing->texture);
+          glBindTexture(GL_TEXTURE_2D,
+                        RendererGlobal->GLstuff->GLModels[modelname].texture);
 
           glUniform1i(glGetUniformLocation(shadertemp, "InputTexture"), 0);
 
@@ -432,9 +431,10 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
           glUniformMatrix4fv(glGetUniformLocation(shadertemp, "rot"), 1,
                              GL_FALSE, glm::value_ptr(tempmat4));
 
-          glBindVertexArray(globjectthing->VAOthing);
+          glBindVertexArray(RendererGlobal->GLstuff->GLModelVAOs[modelname]);
 
-          glDrawArrays(GL_TRIANGLES, 0, globjectthing->size);
+          glDrawArrays(GL_TRIANGLES, 0,
+                       RendererGlobal->GLstuff->GLModels[modelname].size);
         }
         break;
       }
@@ -462,7 +462,7 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
 
                   temp = modelapplybones(
                       model->points[model->faces[j].point[k]],
-                      modeltrans->actions[cnt].name, modelgroup,
+                      PosetoInt[modeltrans->actions[cnt].name], modelgroup,
                       modeltrans->actions[cnt].frame, modeltrans->lookdir.y);
 
                   if (cnt == 0 || (temp.second && !std::isnan(temp.first.x) &&

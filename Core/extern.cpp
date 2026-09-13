@@ -72,6 +72,9 @@ std::unique_ptr<GlobalNetworkClass> GlobalNetworkStuff;
 std::unordered_map<std::string, uint32_t> BonetoInt;
 uint32_t newboneindex = 0;
 
+std::unordered_map<std::string, uint32_t> PosetoInt;
+uint32_t newposeindex = 0;
+
 template <typename S>
 void serialize(S& s, ParticleSpawnInfo& o) {
   s.value4b(o.ParticleCode);

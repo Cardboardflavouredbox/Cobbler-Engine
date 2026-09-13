@@ -98,8 +98,11 @@ void freeRenderer() {
       }
 
       for (auto& i : RendererGlobal->GLstuff->GLModelGroups) {
-        glDeleteVertexArrays(1, &i.VAOthing);
-        glDeleteBuffers(1, &i.VBOthing);
+        glDeleteBuffers(1, &i.second);
+      }
+
+      for (auto& i : RendererGlobal->GLstuff->GLModelVAOs) {
+        glDeleteBuffers(1, &i.second);
       }
 
       glDeleteVertexArrays(1,
@@ -568,11 +571,13 @@ bool setRenderer() {
 }
 
 struct AnimationVBOclass {
+  uint32_t bonecode[32];
   uint32_t bonestartingpoint[32];  // how many anims there are in a bone
   uint32_t boneparent[32];         // bone parent
   glm::vec3 bonehead[32];          // bone head
   glm::vec3 bonetail[32];          // bone tail
   uint32_t animsize[512];          // how many keys there are in a animation
+  uint32_t animcode[512];
   uint32_t animindex[256];
   glm::vec3 animpos[256];
   glm::vec3 animscale[256];
@@ -655,40 +660,120 @@ void OpenGLCreateObjects() {
       }
     }
 
-    glGenVertexArrays(1, &globjectthing.VAOthing);
     glGenBuffers(1, &globjectthing.VBOthing);
-
-    glBindVertexArray(globjectthing.VAOthing);
 
     glBindBuffer(GL_ARRAY_BUFFER, globjectthing.VBOthing);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * globjectthing.size * 5,
                  &vertices[0], GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-
     RendererGlobal->GLstuff->GLModels[name] = globjectthing;
   }
 
   for (auto& [name, modelgroup] : ModelGroupMap) {
-    RendererStuff::OpenGLRenderer::GLModelGroup globjectthing;
+    GLuint glanimationsvbobjecthing;
     AnimationVBOclass AnimationVBOthingy;
-    GLuint AnimationsVBO;
-    glGenBuffers(1, &globjectthing.VBOthing);
 
-    for (auto& [index, bone] : modelgroup.Bonemap) {
+    glGenBuffers(1, &glanimationsvbobjecthing);
+
+    uint32_t boneindex = 0, actionindex = 0, poseindex = 0;
+    for (auto& [bonecode, bone] : modelgroup.Bonemap) {
+      AnimationVBOthingy.bonestartingpoint[boneindex + 1] =
+          bone.Poses.size() + AnimationVBOthingy.bonestartingpoint[boneindex];
+      AnimationVBOthingy.bonecode[boneindex] = bonecode;
+      AnimationVBOthingy.boneparent[boneindex] = bone.parent;
+      AnimationVBOthingy.bonehead[boneindex] = bone.head;
+      AnimationVBOthingy.bonetail[boneindex] = bone.tail;
+      for (auto& [actioncode, action] : bone.Poses) {
+        AnimationVBOthingy.animcode[actionindex] = actioncode;
+        AnimationVBOthingy.animsize[actionindex + 1] =
+            action.size() + AnimationVBOthingy.animsize[actionindex];
+        for (auto& [poseframe, pose] : action) {
+          AnimationVBOthingy.animindex[poseindex] = poseframe;
+          AnimationVBOthingy.animpos[poseindex] = pose.pos;
+          AnimationVBOthingy.animscale[poseindex] = pose.scale;
+          for (int i = 0; i < 4; i++)
+            AnimationVBOthingy.animrot[poseindex][i] = pose.rot[i];
+          poseindex++;
         }
+        actionindex++;
+      }
+      boneindex++;
+    }
 
-    AnimationVBOthingy.bonestartingpoint = ;
-    glBindBuffer(GL_ARRAY_BUFFER, AnimationsVBO);
+    // AnimationVBOthingy.bonestartingpoint = ;
+    glBindBuffer(GL_ARRAY_BUFFER, glanimationsvbobjecthing);
+    SDL_Log("size %u", sizeof(AnimationVBOthingy));
     glBufferData(GL_ARRAY_BUFFER, sizeof(AnimationVBOthingy),
                  &AnimationVBOthingy, GL_STATIC_DRAW);
 
-    RendererGlobal->GLstuff->GLModelGroups[name] = AnimationsVBO;
+    RendererGlobal->GLstuff->GLModelGroups[name] = glanimationsvbobjecthing;
+
+    for (const auto& modelname : modelgroup.Models) {
+      RendererStuff::OpenGLRenderer::GLModel* glmodel =
+          &RendererGlobal->GLstuff->GLModels[modelname];
+      GLuint vaothing;
+      glGenVertexArrays(1, &vaothing);
+      glBindVertexArray(vaothing);
+
+      glBindBuffer(GL_ARRAY_BUFFER, glmodel->VBOthing);
+      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+      glEnableVertexAttribArray(0);
+
+      glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                            (void*)(3 * sizeof(GLfloat)));
+      glEnableVertexAttribArray(1);
+
+      glBindBuffer(GL_ARRAY_BUFFER, glanimationsvbobjecthing);
+
+      glVertexAttribPointer(2, 32, GL_UNSIGNED_INT, GL_FALSE, 0,
+                            (void*)offsetof(AnimationVBOclass, bonecode));
+      glEnableVertexAttribArray(2);
+
+      glVertexAttribPointer(
+          3, 32, GL_UNSIGNED_INT, GL_FALSE, 0,
+          (void*)offsetof(AnimationVBOclass, bonestartingpoint));
+      glEnableVertexAttribArray(3);
+
+      glVertexAttribPointer(4, 32, GL_UNSIGNED_INT, GL_FALSE, 0,
+                            (void*)offsetof(AnimationVBOclass, boneparent));
+      glEnableVertexAttribArray(4);
+
+      glVertexAttribPointer(5, 96, GL_FLOAT, GL_FALSE, 0,
+                            (void*)offsetof(AnimationVBOclass, bonehead));
+      glEnableVertexAttribArray(5);
+
+      glVertexAttribPointer(6, 96, GL_FLOAT, GL_FALSE, 0,
+                            (void*)offsetof(AnimationVBOclass, bonetail));
+      glEnableVertexAttribArray(6);
+
+      glVertexAttribPointer(7, 512, GL_UNSIGNED_INT, GL_FALSE, 0,
+                            (void*)offsetof(AnimationVBOclass, animsize));
+      glEnableVertexAttribArray(7);
+
+      glVertexAttribPointer(8, 64, GL_UNSIGNED_INT, GL_FALSE, 0,
+                            (void*)offsetof(AnimationVBOclass, animcode));
+      glEnableVertexAttribArray(8);
+
+      glVertexAttribPointer(9, 256, GL_UNSIGNED_INT, GL_FALSE, 0,
+                            (void*)offsetof(AnimationVBOclass, animindex));
+      glEnableVertexAttribArray(9);
+
+      glVertexAttribPointer(10, 256 * 3, GL_FLOAT, GL_FALSE, 0,
+                            (void*)offsetof(AnimationVBOclass, animpos));
+      glEnableVertexAttribArray(10);
+
+      glVertexAttribPointer(11, 256 * 3, GL_FLOAT, GL_FALSE, 0,
+                            (void*)offsetof(AnimationVBOclass, animscale));
+      glEnableVertexAttribArray(11);
+
+      glVertexAttribPointer(12, 256 * 4, GL_FLOAT, GL_FALSE, 0,
+                            (void*)offsetof(AnimationVBOclass, animrot));
+      glEnableVertexAttribArray(12);
+
+      RendererGlobal->GLstuff->GLModelVAOs[name + "/" + modelname] = vaothing;
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glBindVertexArray(0);
+    }
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1003,6 +1088,15 @@ uint32_t getboneindex(std::string name) {
   return BonetoInt[name];
 }
 
+// pose name to index
+uint32_t getposeindex(std::string name) {
+  if (!BonetoInt.contains(name)) {
+    PosetoInt[name] = newposeindex;
+    newposeindex++;
+  }
+  return PosetoInt[name];
+}
+
 // overall initialization function.
 bool init() {
   // Your Global is running? You better go catch it.
@@ -1282,7 +1376,7 @@ bool init() {
           std::string tempstr = entry.path().filename().string();
           for (int i = 0; i < 4; i++) tempstr.pop_back();
           namestr = tempstr;
-          std::string posename = "default";
+          uint32_t poseindex = (uint32_t)-1;
           FILE* file = fopen(entry.path().string().c_str(), "r");
           if (file == NULL) {
             SDL_Log("Impossible to open the file !");
@@ -1298,9 +1392,10 @@ bool init() {
               char name[64];
               uint32_t animend, animstart;
               fscanf(file, "%s %u %u\n", name, &animstart, &animend);
-              modelgroup.anim[name][0] = animstart;
-              modelgroup.anim[name][1] = animend;
-              posename = name;
+              uint32_t indexthing = getposeindex(name);
+              modelgroup.anim[indexthing][0] = animstart;
+              modelgroup.anim[indexthing][1] = animend;
+              poseindex = indexthing;
             } else if (strcmp(lineHeader, "SB") == 0) {  // Static(?) Bone.
               char name[64], parent[64];
               glm::vec3 head, tail;
@@ -1324,7 +1419,7 @@ bool init() {
               char name[64];
               char newlinecheck = 'w';
               fscanf(file, "%s\n", name);
-              modelgroup.modelvisibility.try_emplace(posename);
+              modelgroup.modelvisibility.try_emplace(poseindex);
               while (newlinecheck != '\n') {
                 uint32_t index2;
                 float temp;
@@ -1333,7 +1428,7 @@ bool init() {
                 ModelGroupClass::visibilitything tempvisibility;
                 tempvisibility.name = name;
                 tempvisibility.value[index2] = (temp < 0.5f);
-                modelgroup.modelvisibility[posename].push_back(tempvisibility);
+                modelgroup.modelvisibility[poseindex].push_back(tempvisibility);
               }
             } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
               char name[64], thing[64];
@@ -1349,10 +1444,10 @@ bool init() {
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
-                  modelgroup.Bonemap[boneindex].Poses[posename].try_emplace(
+                  modelgroup.Bonemap[boneindex].Poses[poseindex].try_emplace(
                       index2);
                   modelgroup.Bonemap[boneindex]
-                      .Poses[posename][index2]
+                      .Poses[poseindex][index2]
                       .pos[index] = temp;
                 }
               } else if (strcmp(thing, "rotation_quaternion") == 0) {
@@ -1360,10 +1455,11 @@ bool init() {
                   uint32_t index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-                  modelgroup.Bonemap[boneindex].Poses[posename].try_emplace(
+
+                  modelgroup.Bonemap[boneindex].Poses[poseindex].try_emplace(
                       index2);
                   modelgroup.Bonemap[boneindex]
-                      .Poses[posename][index2]
+                      .Poses[poseindex][index2]
                       .rot[(index + 3) % 4] = temp;
                 }
               } else if (strcmp(thing, "scale") == 0) {
@@ -1371,10 +1467,10 @@ bool init() {
                   uint32_t index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-                  modelgroup.Bonemap[boneindex].Poses[posename].try_emplace(
+                  modelgroup.Bonemap[boneindex].Poses[poseindex].try_emplace(
                       index2);
                   modelgroup.Bonemap[boneindex]
-                      .Poses[posename][index2]
+                      .Poses[poseindex][index2]
                       .scale[index] = temp;
                 }
               }

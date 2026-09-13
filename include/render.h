@@ -68,11 +68,8 @@ struct RendererStuff {
 
     std::vector<GLuint> shaders;
 
-    struct GLModelGroup {
-      GLuint VBOthing, VAOthing;
-    };
-
-    std::unordered_map<std::string, GLModelGroup> GLModelGroups;
+    std::unordered_map<std::string, GLuint> GLModelGroups;
+    std::unordered_map<std::string, GLuint> GLModelVAOs;
   };
   OpenGLRenderer* GLstuff;
 
