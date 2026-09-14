@@ -97,8 +97,11 @@ void freeRenderer() {
         glDeleteBuffers(1, &i.second.VBOthing);
       }
 
-      for (auto& i : RendererGlobal->GLstuff->GLModelGroups) {
-        glDeleteBuffers(1, &i.second);
+      for (auto& i : RendererGlobal->GLstuff->GLTBOstuff) {
+        for (auto& j : i.second) {
+          glDeleteBuffers(1, &j.TBOBuffer);
+          glDeleteTextures(1, &j.TBOTexture);
+        }
       }
 
       for (auto& i : RendererGlobal->GLstuff->GLModelVAOs) {
@@ -571,18 +574,41 @@ bool setRenderer() {
 }
 
 struct AnimationVBOclass {
-  uint32_t bonecode[32];
-  uint32_t bonestartingpoint[32];  // how many anims there are in a bone
-  uint32_t boneparent[32];         // bone parent
-  glm::vec3 bonehead[32];          // bone head
-  glm::vec3 bonetail[32];          // bone tail
-  uint32_t animsize[512];          // how many keys there are in a animation
-  uint32_t animcode[512];
-  uint32_t animindex[256];
-  glm::vec3 animpos[256];
-  glm::vec3 animscale[256];
-  glm::vec4 animrot[256];
+  uint32_t bonecode[32] = {};
+  uint32_t bonestartingpoint[32] = {};  // how many anims there are in a bone
+  uint32_t boneparent[32] = {};         // bone parent
+  glm::vec3 bonehead[32] = {};          // bone head
+  glm::vec3 bonetail[32] = {};          // bone tail
+  uint32_t animsize[2048] = {};  // how many keys there are in a animation
+  uint32_t animcode[2048] = {};
+  uint32_t animindex[1024] = {};
+  glm::vec3 animpos[1024] = {};
+  glm::vec3 animscale[1024] = {};
+  glm::vec4 animrot[1024] = {};
 };
+
+void AnimationVBOtoTBO(void* pointertoarray, uint32_t size,
+                       GLenum internalformat, std::string ModelGroupName) {
+  GLuint tboBuffer;
+  glGenBuffers(1, &tboBuffer);
+  glBindBuffer(GL_TEXTURE_BUFFER, tboBuffer);
+  glBufferData(GL_TEXTURE_BUFFER, size, pointertoarray, GL_STATIC_DRAW);
+  glBindBuffer(GL_TEXTURE_BUFFER, 0);
+
+  GLuint tboTexture;
+  glGenTextures(1, &tboTexture);
+  glBindTexture(GL_TEXTURE_BUFFER, tboTexture);
+
+  glTexBuffer(GL_TEXTURE_BUFFER, internalformat, tboBuffer);
+  glBindTexture(GL_TEXTURE_BUFFER, 0);
+
+  RendererStuff::OpenGLRenderer::GLModelGroupTexturebuffers tbothing;
+
+  tbothing.TBOBuffer = tboBuffer;
+  tbothing.TBOTexture = tboTexture;
+
+  RendererGlobal->GLstuff->GLTBOstuff[ModelGroupName].push_back(tbothing);
+}
 
 void OpenGLCreateObjects() {
   RendererStuff::OpenGLRenderer::GLObject* globjectthing =
@@ -670,29 +696,27 @@ void OpenGLCreateObjects() {
   }
 
   for (auto& [name, modelgroup] : ModelGroupMap) {
-    GLuint glanimationsvbobjecthing;
-    AnimationVBOclass AnimationVBOthingy;
-
-    glGenBuffers(1, &glanimationsvbobjecthing);
+    AnimationVBOclass VBOthing;
 
     uint32_t boneindex = 0, actionindex = 0, poseindex = 0;
     for (auto& [bonecode, bone] : modelgroup.Bonemap) {
-      AnimationVBOthingy.bonestartingpoint[boneindex + 1] =
-          bone.Poses.size() + AnimationVBOthingy.bonestartingpoint[boneindex];
-      AnimationVBOthingy.bonecode[boneindex] = bonecode;
-      AnimationVBOthingy.boneparent[boneindex] = bone.parent;
-      AnimationVBOthingy.bonehead[boneindex] = bone.head;
-      AnimationVBOthingy.bonetail[boneindex] = bone.tail;
+      VBOthing.bonestartingpoint[boneindex + 1] =
+          bone.Poses.size() + VBOthing.bonestartingpoint[boneindex];
+
+      VBOthing.bonecode[boneindex] = bonecode;
+      VBOthing.boneparent[boneindex] = bone.parent;
+      VBOthing.bonehead[boneindex] = bone.head;
+      VBOthing.bonetail[boneindex] = bone.tail;
       for (auto& [actioncode, action] : bone.Poses) {
-        AnimationVBOthingy.animcode[actionindex] = actioncode;
-        AnimationVBOthingy.animsize[actionindex + 1] =
-            action.size() + AnimationVBOthingy.animsize[actionindex];
+        VBOthing.animcode[actionindex] = actioncode;
+        VBOthing.animsize[actionindex + 1] =
+            action.size() + VBOthing.animsize[actionindex];
         for (auto& [poseframe, pose] : action) {
-          AnimationVBOthingy.animindex[poseindex] = poseframe;
-          AnimationVBOthingy.animpos[poseindex] = pose.pos;
-          AnimationVBOthingy.animscale[poseindex] = pose.scale;
+          VBOthing.animindex[poseindex] = poseframe;
+          VBOthing.animpos[poseindex] = pose.pos;
+          VBOthing.animscale[poseindex] = pose.scale;
           for (int i = 0; i < 4; i++)
-            AnimationVBOthingy.animrot[poseindex][i] = pose.rot[i];
+            VBOthing.animrot[poseindex][i] = pose.rot[i];
           poseindex++;
         }
         actionindex++;
@@ -700,13 +724,33 @@ void OpenGLCreateObjects() {
       boneindex++;
     }
 
-    // AnimationVBOthingy.bonestartingpoint = ;
-    glBindBuffer(GL_ARRAY_BUFFER, glanimationsvbobjecthing);
-    SDL_Log("size %u", sizeof(AnimationVBOthingy));
-    glBufferData(GL_ARRAY_BUFFER, sizeof(AnimationVBOthingy),
-                 &AnimationVBOthingy, GL_STATIC_DRAW);
+    // VBOthing.bonestartingpoint = ;
 
-    RendererGlobal->GLstuff->GLModelGroups[name] = glanimationsvbobjecthing;
+    AnimationVBOtoTBO(&VBOthing.bonecode[0], 32 * sizeof(uint32_t), GL_R32F,
+                      name);
+    AnimationVBOtoTBO(&VBOthing.bonestartingpoint[0], 32 * sizeof(uint32_t),
+                      GL_R32F, name);
+    AnimationVBOtoTBO(&VBOthing.boneparent[0], 32 * sizeof(uint32_t), GL_R32F,
+                      name);
+
+    AnimationVBOtoTBO(&VBOthing.bonehead[0], 3 * 32 * sizeof(float), GL_RGB32F,
+                      name);
+    AnimationVBOtoTBO(&VBOthing.bonetail[0], 3 * 32 * sizeof(float), GL_RGB32F,
+                      name);
+
+    AnimationVBOtoTBO(&VBOthing.animsize[0], 2048 * sizeof(uint32_t), GL_R32UI,
+                      name);
+    AnimationVBOtoTBO(&VBOthing.animcode[0], 2048 * sizeof(uint32_t), GL_R32UI,
+                      name);
+
+    AnimationVBOtoTBO(&VBOthing.animindex[0], 1024 * sizeof(uint32_t), GL_R32UI,
+                      name);
+    AnimationVBOtoTBO(&VBOthing.animpos[0], 3 * 1024 * sizeof(uint32_t),
+                      GL_RGB32F, name);
+    AnimationVBOtoTBO(&VBOthing.animscale[0], 3 * 1024 * sizeof(uint32_t),
+                      GL_RGB32F, name);
+    AnimationVBOtoTBO(&VBOthing.animrot[0], 4 * 1024 * sizeof(uint32_t),
+                      GL_RGBA32F, name);
 
     for (const auto& modelname : modelgroup.Models) {
       RendererStuff::OpenGLRenderer::GLModel* glmodel =
@@ -722,53 +766,6 @@ void OpenGLCreateObjects() {
       glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                             (void*)(3 * sizeof(GLfloat)));
       glEnableVertexAttribArray(1);
-
-      glBindBuffer(GL_ARRAY_BUFFER, glanimationsvbobjecthing);
-
-      glVertexAttribPointer(2, 32, GL_UNSIGNED_INT, GL_FALSE, 0,
-                            (void*)offsetof(AnimationVBOclass, bonecode));
-      glEnableVertexAttribArray(2);
-
-      glVertexAttribPointer(
-          3, 32, GL_UNSIGNED_INT, GL_FALSE, 0,
-          (void*)offsetof(AnimationVBOclass, bonestartingpoint));
-      glEnableVertexAttribArray(3);
-
-      glVertexAttribPointer(4, 32, GL_UNSIGNED_INT, GL_FALSE, 0,
-                            (void*)offsetof(AnimationVBOclass, boneparent));
-      glEnableVertexAttribArray(4);
-
-      glVertexAttribPointer(5, 96, GL_FLOAT, GL_FALSE, 0,
-                            (void*)offsetof(AnimationVBOclass, bonehead));
-      glEnableVertexAttribArray(5);
-
-      glVertexAttribPointer(6, 96, GL_FLOAT, GL_FALSE, 0,
-                            (void*)offsetof(AnimationVBOclass, bonetail));
-      glEnableVertexAttribArray(6);
-
-      glVertexAttribPointer(7, 512, GL_UNSIGNED_INT, GL_FALSE, 0,
-                            (void*)offsetof(AnimationVBOclass, animsize));
-      glEnableVertexAttribArray(7);
-
-      glVertexAttribPointer(8, 64, GL_UNSIGNED_INT, GL_FALSE, 0,
-                            (void*)offsetof(AnimationVBOclass, animcode));
-      glEnableVertexAttribArray(8);
-
-      glVertexAttribPointer(9, 256, GL_UNSIGNED_INT, GL_FALSE, 0,
-                            (void*)offsetof(AnimationVBOclass, animindex));
-      glEnableVertexAttribArray(9);
-
-      glVertexAttribPointer(10, 256 * 3, GL_FLOAT, GL_FALSE, 0,
-                            (void*)offsetof(AnimationVBOclass, animpos));
-      glEnableVertexAttribArray(10);
-
-      glVertexAttribPointer(11, 256 * 3, GL_FLOAT, GL_FALSE, 0,
-                            (void*)offsetof(AnimationVBOclass, animscale));
-      glEnableVertexAttribArray(11);
-
-      glVertexAttribPointer(12, 256 * 4, GL_FLOAT, GL_FALSE, 0,
-                            (void*)offsetof(AnimationVBOclass, animrot));
-      glEnableVertexAttribArray(12);
 
       RendererGlobal->GLstuff->GLModelVAOs[name + "/" + modelname] = vaothing;
       glBindBuffer(GL_ARRAY_BUFFER, 0);

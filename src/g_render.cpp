@@ -180,12 +180,11 @@ void render3DUI() {
     for (int j = 0; j < len; j++) {
       Modeltransform* model =
           UIGlobalStuff->UImap3D[UIGlobalStuff->UIlist[i]][j]->modeltrans;
-      ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
       // SDL_Log("%f %f %f", model->position.x, model->position.y,
       //         model->position.z);
 
-      renderModelGroup(model, modelgroup, true, renderdeltaTime);
+      renderModelGroup(model, model->name, true, renderdeltaTime);
     }
   }
 }
@@ -213,9 +212,8 @@ void renderEntity() {
 void renderProps() {
   for (int i = 0; i < Global->Models.size(); i++) {
     Modeltransform* model = &Global->Models[i];
-    ModelGroupClass* modelgroup = &ModelGroupMap[model->name];
 
-    renderModelGroup(model, modelgroup, false, renderdeltaTime);
+    renderModelGroup(model, model->name, false, renderdeltaTime);
   }
 }
 

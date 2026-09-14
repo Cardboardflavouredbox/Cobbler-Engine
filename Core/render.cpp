@@ -335,8 +335,9 @@ std::pair<glm::vec3, bool> modelapplybones(GlobalClass::Model::Vertex input,
 }
 
 // renders modelgroup.
-void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
+void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                       bool isUI, float deltatime) {
+  ModelGroupClass* modelgroup = &ModelGroupMap[modelgroupname];
   if (modeltrans->visible) {
     // code of animation frames.
     for (int i = 0; i < modeltrans->actions.size(); i++) {
@@ -411,11 +412,76 @@ void renderModelGroup(Modeltransform* modeltrans, ModelGroupClass* modelgroup,
         glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1,
                            GL_FALSE, glm::value_ptr(modelMatrix));
 
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][0].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "bonestartingpoint"), 1);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][1].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "boneparent"), 2);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][2].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "boneparent"), 3);
+
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][3].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "bonehead"), 4);
+
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][4].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "bonetail"), 5);
+
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][5].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "animsize"), 6);
+
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][6].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "animcode"), 7);
+
+        glActiveTexture(GL_TEXTURE8);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][7].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "animindex"), 8);
+
+        glActiveTexture(GL_TEXTURE9);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][8].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "animpos"), 9);
+
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][9].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "animscale"), 10);
+
+        glActiveTexture(GL_TEXTURE11);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][10].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "animrot"), 11);
+
         for (const auto& modelname : modelgroup->Models) {
           glActiveTexture(GL_TEXTURE0);
           glBindTexture(GL_TEXTURE_2D,
                         RendererGlobal->GLstuff->GLModels[modelname].texture);
-
           glUniform1i(glGetUniformLocation(shadertemp, "InputTexture"), 0);
 
           glUniform3f(glGetUniformLocation(shadertemp, "position"),

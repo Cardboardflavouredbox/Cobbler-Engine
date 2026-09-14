@@ -68,7 +68,11 @@ struct RendererStuff {
 
     std::vector<GLuint> shaders;
 
-    std::unordered_map<std::string, GLuint> GLModelGroups;
+    struct GLModelGroupTexturebuffers {
+      GLuint TBOBuffer, TBOTexture;
+    };
+    std::unordered_map<std::string, std::vector<GLModelGroupTexturebuffers>>
+        GLTBOstuff;
     std::unordered_map<std::string, GLuint> GLModelVAOs;
   };
   OpenGLRenderer* GLstuff;
@@ -85,7 +89,7 @@ LIB_API extern std::unique_ptr<RendererStuff> RendererGlobal;
 
 extern "C" {
 LIB_API void renderModelGroup(Modeltransform* modeltrans,
-                              ModelGroupClass* modelgroup, bool isUI,
+                              std::string modelgroupname, bool isUI,
                               float deltatime);
 
 LIB_API void DrawLine(unsigned char color, glm::vec3 rawvectors[]);
