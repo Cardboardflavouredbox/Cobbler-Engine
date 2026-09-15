@@ -95,6 +95,7 @@ void freeRenderer() {
 
       for (auto& i : RendererGlobal->GLstuff->GLModels) {
         glDeleteBuffers(1, &i.second.VBOthing);
+        glDeleteBuffers(1, &i.second.VAOthing);
       }
 
       for (auto& i : RendererGlobal->GLstuff->GLTBOstuff) {
@@ -102,10 +103,6 @@ void freeRenderer() {
           glDeleteBuffers(1, &j.TBOBuffer);
           glDeleteTextures(1, &j.TBOTexture);
         }
-      }
-
-      for (auto& i : RendererGlobal->GLstuff->GLModelVAOs) {
-        glDeleteBuffers(1, &i.second);
       }
 
       glDeleteVertexArrays(1,
@@ -592,14 +589,12 @@ void AnimationVBOtoTBO(void* pointertoarray, uint32_t size,
   glGenBuffers(1, &tboBuffer);
   glBindBuffer(GL_TEXTURE_BUFFER, tboBuffer);
   glBufferData(GL_TEXTURE_BUFFER, size, pointertoarray, GL_STATIC_DRAW);
-  glBindBuffer(GL_TEXTURE_BUFFER, 0);
 
   GLuint tboTexture;
   glGenTextures(1, &tboTexture);
   glBindTexture(GL_TEXTURE_BUFFER, tboTexture);
 
   glTexBuffer(GL_TEXTURE_BUFFER, internalformat, tboBuffer);
-  glBindTexture(GL_TEXTURE_BUFFER, 0);
 
   RendererStuff::OpenGLRenderer::GLModelGroupTexturebuffers tbothing;
 
@@ -607,6 +602,8 @@ void AnimationVBOtoTBO(void* pointertoarray, uint32_t size,
   tbothing.TBOTexture = tboTexture;
 
   RendererGlobal->GLstuff->GLTBOstuff[ModelGroupName].push_back(tbothing);
+  glBindTexture(GL_TEXTURE_BUFFER, 0);
+  glBindBuffer(GL_TEXTURE_BUFFER, 0);
 }
 
 void OpenGLCreateObjects() {
@@ -665,7 +662,7 @@ void OpenGLCreateObjects() {
 
   RendererGlobal->GLstuff->shaders.push_back(shadertemp);
   for (auto& [name, model] : Global->Modelmap) {
-    RendererStuff::OpenGLRenderer::GLModel globjectthing;
+    RendererStuff::OpenGLRenderer::GLObject globjectthing;
 
     globjectthing.texture = RendererGlobal->GLstuff->textures[model.texture];
 
@@ -685,11 +682,24 @@ void OpenGLCreateObjects() {
       }
     }
 
+    glGenVertexArrays(1, &globjectthing.VAOthing);
     glGenBuffers(1, &globjectthing.VBOthing);
+
+    glBindVertexArray(globjectthing.VAOthing);
 
     glBindBuffer(GL_ARRAY_BUFFER, globjectthing.VBOthing);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * globjectthing.size * 5,
                  &vertices[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     RendererGlobal->GLstuff->GLModels[name] = globjectthing;
   }
@@ -750,26 +760,6 @@ void OpenGLCreateObjects() {
                       GL_RGB32F, name);
     AnimationVBOtoTBO(&VBOthing.animrot[0], 4 * 1024 * sizeof(uint32_t),
                       GL_RGBA32F, name);
-
-    for (const auto& modelname : modelgroup.Models) {
-      RendererStuff::OpenGLRenderer::GLModel* glmodel =
-          &RendererGlobal->GLstuff->GLModels[modelname];
-      GLuint vaothing;
-      glGenVertexArrays(1, &vaothing);
-      glBindVertexArray(vaothing);
-
-      glBindBuffer(GL_ARRAY_BUFFER, glmodel->VBOthing);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-      glEnableVertexAttribArray(0);
-
-      glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                            (void*)(3 * sizeof(GLfloat)));
-      glEnableVertexAttribArray(1);
-
-      RendererGlobal->GLstuff->GLModelVAOs[name + "/" + modelname] = vaothing;
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      glBindVertexArray(0);
-    }
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);

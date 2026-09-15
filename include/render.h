@@ -56,14 +56,7 @@ struct RendererStuff {
     GLuint MapGLlist;
     std::vector<GLObject> GlMapObjects;
 
-    struct GLModel {
-      GLuint texture;
-      GLuint VBOthing;
-      uint32_t size = 0;
-      GLuint shader;
-    };
-
-    std::unordered_map<std::string, GLModel> GLModels;
+    std::unordered_map<std::string, GLObject> GLModels;
     GLObject GLParticleBase;
 
     std::vector<GLuint> shaders;
@@ -73,7 +66,6 @@ struct RendererStuff {
     };
     std::unordered_map<std::string, std::vector<GLModelGroupTexturebuffers>>
         GLTBOstuff;
-    std::unordered_map<std::string, GLuint> GLModelVAOs;
   };
   OpenGLRenderer* GLstuff;
 

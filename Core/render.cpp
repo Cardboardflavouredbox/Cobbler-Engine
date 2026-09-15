@@ -416,13 +416,13 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
         glBindTexture(
             GL_TEXTURE_BUFFER,
             RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][0].TBOTexture);
-        glUniform1i(glGetUniformLocation(shadertemp, "bonestartingpoint"), 1);
+        glUniform1i(glGetUniformLocation(shadertemp, "bonecode"), 1);
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(
             GL_TEXTURE_BUFFER,
             RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][1].TBOTexture);
-        glUniform1i(glGetUniformLocation(shadertemp, "boneparent"), 2);
+        glUniform1i(glGetUniformLocation(shadertemp, "bonestartingpoint"), 2);
 
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(
@@ -497,8 +497,10 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
           glUniformMatrix4fv(glGetUniformLocation(shadertemp, "rot"), 1,
                              GL_FALSE, glm::value_ptr(tempmat4));
 
-          glBindVertexArray(RendererGlobal->GLstuff->GLModelVAOs[modelname]);
+          glBindVertexArray(
+              RendererGlobal->GLstuff->GLModels[modelname].VAOthing);
 
+          // this part brings an opengl error
           glDrawArrays(GL_TRIANGLES, 0,
                        RendererGlobal->GLstuff->GLModels[modelname].size);
         }
