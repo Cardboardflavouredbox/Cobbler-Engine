@@ -486,18 +486,16 @@ void openglrender() {
     renderParticles();
 
     for (auto& i : RendererGlobal->GLstuff->GlMapObjects) {
-      glUniformMatrix4fv(glGetUniformLocation(i.shader, "model"), 1, GL_FALSE,
-                         glm::value_ptr(modelMatrix));
       glUseProgram(i.shader);
       // SDL_Log("map object %u", i.shader);
+      glUniformMatrix4fv(glGetUniformLocation(i.shader, "model"), 1, GL_FALSE,
+                         glm::value_ptr(modelMatrix));
 
       glBindVertexArray(i.VAOthing);
+      glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, i.texture);
 
       glUniform1i(glGetUniformLocation(i.shader, "InputTexture"), 0);
-
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, i.texture);
 
       glDrawArrays(GL_TRIANGLES, 0, i.size);
     }

@@ -472,7 +472,6 @@ bool setRenderer() {
                           SDL_GL_CONTEXT_PROFILE_CORE);
       SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
       SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-
       break;
     }
     case OpenGL1: {
@@ -1589,6 +1588,11 @@ void quit() {
 
   // free all the pixels of Glyphs.
   for (auto& [key, value] : Freetypething->Glyphmap) {
+    if (Settings->graphicsmode == OpenGL1 ||
+        Settings->graphicsmode == OpenGL3 ||
+        Settings->graphicsmode == OpenGL4) {
+      glDeleteTextures(1, &value.GLTexture);
+    }
     delete[] (value.pixels);
   }
 

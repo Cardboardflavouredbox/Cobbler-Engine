@@ -38,8 +38,8 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
 
       glBindTexture(GL_TEXTURE_2D, temp.GLTexture);
 
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, temp.width, temp.height, 0,
-                   GL_ALPHA, GL_UNSIGNED_BYTE, temp.pixels);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, temp.width, temp.height, 0, GL_RED,
+                   GL_UNSIGNED_BYTE, temp.pixels);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
