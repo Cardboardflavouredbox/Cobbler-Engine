@@ -478,6 +478,24 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
             RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][10].TBOTexture);
         glUniform1i(glGetUniformLocation(shadertemp, "animrot"), 11);
 
+        glActiveTexture(GL_TEXTURE12);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][11].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "animpos"), 12);
+
+        glActiveTexture(GL_TEXTURE13);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][12].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "animscale"), 13);
+
+        glActiveTexture(GL_TEXTURE14);
+        glBindTexture(
+            GL_TEXTURE_BUFFER,
+            RendererGlobal->GLstuff->GLTBOstuff[modelgroupname][13].TBOTexture);
+        glUniform1i(glGetUniformLocation(shadertemp, "animrot"), 14);
+
         for (const auto& modelname : modelgroup->Models) {
           glActiveTexture(GL_TEXTURE0);
           glBindTexture(GL_TEXTURE_2D,

@@ -573,14 +573,17 @@ struct AnimationVBOclass {
   uint32_t bonecode[32] = {};
   uint32_t bonestartingpoint[32] = {};  // how many anims there are in a bone
   uint32_t boneparent[32] = {};         // bone parent
-  glm::vec3 bonehead[32] = {};          // bone head
-  glm::vec3 bonetail[32] = {};          // bone tail
+  float bonehead[32 * 4] = {};          // bone head
+  float bonetail[32 * 4] = {};          // bone tail
   uint32_t animsize[2048] = {};  // how many keys there are in a animation
   uint32_t animcode[2048] = {};
   uint32_t animindex[1024] = {};
-  glm::vec3 animpos[1024] = {};
-  glm::vec3 animscale[1024] = {};
-  glm::vec4 animrot[1024] = {};
+  float animpos[1024 * 4] = {};
+  float animscale[1024 * 4] = {};
+  float animrot[1024 * 4] = {};
+  float bonepos[32 * 4] = {};
+  float bonescale[32 * 4] = {};
+  float bonerot[32 * 4] = {};
 };
 
 void AnimationVBOtoTBO(void* pointertoarray, uint32_t size,
@@ -707,6 +710,17 @@ void OpenGLCreateObjects() {
   for (auto& [name, modelgroup] : ModelGroupMap) {
     AnimationVBOclass VBOthing;
 
+    for (int i = 0; i < 1024; i++) {
+      VBOthing.animscale[i * 4 + 0] = 1;
+      VBOthing.animscale[i * 4 + 1] = 1;
+      VBOthing.animscale[i * 4 + 2] = 1;
+      VBOthing.animscale[i * 4 + 3] = 1;
+      VBOthing.animrot[i * 4 + 0] = 1;
+      VBOthing.animrot[i * 4 + 1] = 0;
+      VBOthing.animrot[i * 4 + 2] = 0;
+      VBOthing.animrot[i * 4 + 3] = 0;
+    }
+
     uint32_t boneindex = 0, actionindex = 0, poseindex = 0;
     for (auto& [bonecode, bone] : modelgroup.Bonemap) {
       VBOthing.bonestartingpoint[boneindex + 1] =
@@ -714,37 +728,58 @@ void OpenGLCreateObjects() {
 
       VBOthing.bonecode[boneindex] = bonecode;
       VBOthing.boneparent[boneindex] = bone.parent;
-      VBOthing.bonehead[boneindex] = bone.head;
-      VBOthing.bonetail[boneindex] = bone.tail;
+      for (int i = 0; i < 3; i++) {
+        VBOthing.bonehead[boneindex * 4 + i] = bone.head[i];
+        VBOthing.bonetail[boneindex * 4 + i] = bone.tail[i];
+        VBOthing.bonepos[boneindex * 4 + i] = bone.restpose.pos[i];
+        VBOthing.bonescale[boneindex * 4 + i] = bone.restpose.scale[i];
+      }
+
+      for (int i = 0; i < 4; i++)
+        VBOthing.bonerot[boneindex * 4 + i] = bone.restpose.rot[i];
+
       for (auto& [actioncode, action] : bone.Poses) {
         VBOthing.animcode[actionindex] = actioncode;
         VBOthing.animsize[actionindex + 1] =
             action.size() + VBOthing.animsize[actionindex];
         for (auto& [poseframe, pose] : action) {
           VBOthing.animindex[poseindex] = poseframe;
-          VBOthing.animpos[poseindex] = pose.pos;
-          VBOthing.animscale[poseindex] = pose.scale;
+          for (int i = 0; i < 3; i++) {
+            VBOthing.animpos[poseindex * 4 + i] = pose.pos[i];
+            VBOthing.animscale[poseindex * 4 + i] = pose.scale[i];
+          }
           for (int i = 0; i < 4; i++)
-            VBOthing.animrot[poseindex][i] = pose.rot[i];
+            VBOthing.animrot[poseindex * 4 + i] = pose.rot[i];
           poseindex++;
         }
         actionindex++;
       }
       boneindex++;
     }
+    SDL_Log("%s", name.c_str());
+    for (int i = 0; i < 32; i++) {
+      SDL_Log("what %u", VBOthing.bonestartingpoint[i]);
+      // SDL_Log("what2 %f %f %f", VBOthing.bonescale[i * 4 + 0],
+      //         VBOthing.bonescale[i * 4 + 1], VBOthing.bonescale[i * 4 + 2]);
+      // SDL_Log("what3 %f %f %f", VBOthing.bonestartingpoint[i]);
+      // SDL_Log("what4 %f %f %f %f", VBOthing.bonestartingpoint[i]);
+    }
+
+    // for (int i = 0; i < 32; i++)
+    //   SDL_Log("what2 %u", VBOthing.animindex[i]);
 
     // VBOthing.bonestartingpoint = ;
 
-    AnimationVBOtoTBO(&VBOthing.bonecode[0], 32 * sizeof(uint32_t), GL_R32F,
+    AnimationVBOtoTBO(&VBOthing.bonecode[0], 32 * sizeof(uint32_t), GL_R32UI,
                       name);
     AnimationVBOtoTBO(&VBOthing.bonestartingpoint[0], 32 * sizeof(uint32_t),
-                      GL_R32F, name);
-    AnimationVBOtoTBO(&VBOthing.boneparent[0], 32 * sizeof(uint32_t), GL_R32F,
+                      GL_R32UI, name);
+    AnimationVBOtoTBO(&VBOthing.boneparent[0], 32 * sizeof(uint32_t), GL_R32UI,
                       name);
 
-    AnimationVBOtoTBO(&VBOthing.bonehead[0], 3 * 32 * sizeof(float), GL_RGB32F,
+    AnimationVBOtoTBO(&VBOthing.bonehead[0], 4 * 32 * sizeof(float), GL_RGBA32F,
                       name);
-    AnimationVBOtoTBO(&VBOthing.bonetail[0], 3 * 32 * sizeof(float), GL_RGB32F,
+    AnimationVBOtoTBO(&VBOthing.bonetail[0], 4 * 32 * sizeof(float), GL_RGBA32F,
                       name);
 
     AnimationVBOtoTBO(&VBOthing.animsize[0], 2048 * sizeof(uint32_t), GL_R32UI,
@@ -754,12 +789,18 @@ void OpenGLCreateObjects() {
 
     AnimationVBOtoTBO(&VBOthing.animindex[0], 1024 * sizeof(uint32_t), GL_R32UI,
                       name);
-    AnimationVBOtoTBO(&VBOthing.animpos[0], 3 * 1024 * sizeof(uint32_t),
-                      GL_RGB32F, name);
-    AnimationVBOtoTBO(&VBOthing.animscale[0], 3 * 1024 * sizeof(uint32_t),
-                      GL_RGB32F, name);
-    AnimationVBOtoTBO(&VBOthing.animrot[0], 4 * 1024 * sizeof(uint32_t),
+    AnimationVBOtoTBO(&VBOthing.animpos[0], 4 * 1024 * sizeof(float),
                       GL_RGBA32F, name);
+    AnimationVBOtoTBO(&VBOthing.animscale[0], 4 * 1024 * sizeof(float),
+                      GL_RGBA32F, name);
+    AnimationVBOtoTBO(&VBOthing.animrot[0], 4 * 1024 * sizeof(float),
+                      GL_RGBA32F, name);
+    AnimationVBOtoTBO(&VBOthing.bonepos[0], 4 * 32 * sizeof(float), GL_RGBA32F,
+                      name);
+    AnimationVBOtoTBO(&VBOthing.bonescale[0], 4 * 32 * sizeof(float),
+                      GL_RGBA32F, name);
+    AnimationVBOtoTBO(&VBOthing.bonerot[0], 4 * 32 * sizeof(float), GL_RGBA32F,
+                      name);
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
