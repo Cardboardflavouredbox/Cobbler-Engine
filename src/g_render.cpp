@@ -499,7 +499,7 @@ void openglrender() {
 
       glDrawArrays(GL_TRIANGLES, 0, i.size);
     }
-
+    glClear(GL_DEPTH_BUFFER_BIT);
     render3DUI();
   }
 

@@ -735,8 +735,10 @@ void OpenGLCreateObjects() {
         VBOthing.bonescale[boneindex * 4 + i] = bone.restpose.scale[i];
       }
 
-      for (int i = 0; i < 4; i++)
-        VBOthing.bonerot[boneindex * 4 + i] = bone.restpose.rot[i];
+      VBOthing.bonerot[boneindex * 4 + 0] = bone.restpose.rot.x;
+      VBOthing.bonerot[boneindex * 4 + 1] = bone.restpose.rot.y;
+      VBOthing.bonerot[boneindex * 4 + 2] = bone.restpose.rot.z;
+      VBOthing.bonerot[boneindex * 4 + 3] = bone.restpose.rot.w;
 
       for (auto& [actioncode, action] : bone.Poses) {
         VBOthing.animcode[actionindex] = actioncode;
@@ -748,8 +750,10 @@ void OpenGLCreateObjects() {
             VBOthing.animpos[poseindex * 4 + i] = pose.pos[i];
             VBOthing.animscale[poseindex * 4 + i] = pose.scale[i];
           }
-          for (int i = 0; i < 4; i++)
-            VBOthing.animrot[poseindex * 4 + i] = pose.rot[i];
+          VBOthing.animrot[poseindex * 4 + 0] = pose.rot.x;
+          VBOthing.animrot[poseindex * 4 + 1] = pose.rot.y;
+          VBOthing.animrot[poseindex * 4 + 2] = pose.rot.z;
+          VBOthing.animrot[poseindex * 4 + 3] = pose.rot.w;
           poseindex++;
         }
         actionindex++;
