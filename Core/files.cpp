@@ -715,10 +715,23 @@ void OpenGLCreateObjects() {
       VBOthing.animscale[i * 4 + 1] = 1;
       VBOthing.animscale[i * 4 + 2] = 1;
       VBOthing.animscale[i * 4 + 3] = 1;
+
       VBOthing.animrot[i * 4 + 0] = 1;
       VBOthing.animrot[i * 4 + 1] = 0;
       VBOthing.animrot[i * 4 + 2] = 0;
       VBOthing.animrot[i * 4 + 3] = 0;
+    }
+
+    for (int i = 0; i < 32; i++) {
+      VBOthing.bonerot[i * 4 + 0] = 1;
+      VBOthing.bonerot[i * 4 + 1] = 0;
+      VBOthing.bonerot[i * 4 + 2] = 0;
+      VBOthing.bonerot[i * 4 + 3] = 0;
+
+      VBOthing.bonescale[i * 4 + 0] = 1;
+      VBOthing.bonescale[i * 4 + 1] = 1;
+      VBOthing.bonescale[i * 4 + 2] = 1;
+      VBOthing.bonescale[i * 4 + 3] = 1;
     }
 
     uint32_t boneindex = 0, actionindex = 0, poseindex = 0;
@@ -760,51 +773,51 @@ void OpenGLCreateObjects() {
       }
       boneindex++;
     }
-    SDL_Log("%s", name.c_str());
-    for (int i = 0; i < 32; i++) {
-      SDL_Log("what %u", VBOthing.bonestartingpoint[i]);
-      // SDL_Log("what2 %f %f %f", VBOthing.bonescale[i * 4 + 0],
-      //         VBOthing.bonescale[i * 4 + 1], VBOthing.bonescale[i * 4 + 2]);
-      // SDL_Log("what3 %f %f %f", VBOthing.bonestartingpoint[i]);
-      // SDL_Log("what4 %f %f %f %f", VBOthing.bonestartingpoint[i]);
-    }
+    // SDL_Log("%s", name.c_str());
+    // for (int i = 0; i < 32; i++) {
+    //   SDL_Log("what %u", VBOthing.bonestartingpoint[i]);
+    //   SDL_Log("what2 %f %f %f", VBOthing.bonepos[i * 4 + 0],
+    //           VBOthing.bonepos[i * 4 + 1], VBOthing.bonepos[i * 4 + 2]);
+    //   // SDL_Log("what3 %f %f %f", VBOthing.bonestartingpoint[i]);
+    //   // SDL_Log("what4 %f %f %f %f", VBOthing.bonestartingpoint[i]);
+    // }
 
     // for (int i = 0; i < 32; i++)
     //   SDL_Log("what2 %u", VBOthing.animindex[i]);
 
     // VBOthing.bonestartingpoint = ;
 
-    AnimationVBOtoTBO(&VBOthing.bonecode[0], 32 * sizeof(uint32_t), GL_R32UI,
-                      name);
-    AnimationVBOtoTBO(&VBOthing.bonestartingpoint[0], 32 * sizeof(uint32_t),
+    AnimationVBOtoTBO(&VBOthing.bonecode[0], sizeof(VBOthing.bonecode),
                       GL_R32UI, name);
-    AnimationVBOtoTBO(&VBOthing.boneparent[0], 32 * sizeof(uint32_t), GL_R32UI,
-                      name);
+    AnimationVBOtoTBO(&VBOthing.bonestartingpoint[0],
+                      sizeof(VBOthing.bonestartingpoint), GL_R32UI, name);
+    AnimationVBOtoTBO(&VBOthing.boneparent[0], sizeof(VBOthing.boneparent),
+                      GL_R32UI, name);
 
-    AnimationVBOtoTBO(&VBOthing.bonehead[0], 4 * 32 * sizeof(float), GL_RGBA32F,
-                      name);
-    AnimationVBOtoTBO(&VBOthing.bonetail[0], 4 * 32 * sizeof(float), GL_RGBA32F,
-                      name);
+    AnimationVBOtoTBO(&VBOthing.bonehead[0], sizeof(VBOthing.bonehead),
+                      GL_RGBA32F, name);
+    AnimationVBOtoTBO(&VBOthing.bonetail[0], sizeof(VBOthing.bonetail),
+                      GL_RGBA32F, name);
 
-    AnimationVBOtoTBO(&VBOthing.animsize[0], 2048 * sizeof(uint32_t), GL_R32UI,
-                      name);
-    AnimationVBOtoTBO(&VBOthing.animcode[0], 2048 * sizeof(uint32_t), GL_R32UI,
-                      name);
+    AnimationVBOtoTBO(&VBOthing.animsize[0], sizeof(VBOthing.animsize),
+                      GL_R32UI, name);
+    AnimationVBOtoTBO(&VBOthing.animcode[0], sizeof(VBOthing.animcode),
+                      GL_R32UI, name);
 
-    AnimationVBOtoTBO(&VBOthing.animindex[0], 1024 * sizeof(uint32_t), GL_R32UI,
-                      name);
-    AnimationVBOtoTBO(&VBOthing.animpos[0], 4 * 1024 * sizeof(float),
+    AnimationVBOtoTBO(&VBOthing.animindex[0], sizeof(VBOthing.animindex),
+                      GL_R32UI, name);
+    AnimationVBOtoTBO(&VBOthing.animpos[0], sizeof(VBOthing.animpos),
                       GL_RGBA32F, name);
-    AnimationVBOtoTBO(&VBOthing.animscale[0], 4 * 1024 * sizeof(float),
+    AnimationVBOtoTBO(&VBOthing.animscale[0], sizeof(VBOthing.animscale),
                       GL_RGBA32F, name);
-    AnimationVBOtoTBO(&VBOthing.animrot[0], 4 * 1024 * sizeof(float),
+    AnimationVBOtoTBO(&VBOthing.animrot[0], sizeof(VBOthing.animrot),
                       GL_RGBA32F, name);
-    AnimationVBOtoTBO(&VBOthing.bonepos[0], 4 * 32 * sizeof(float), GL_RGBA32F,
-                      name);
-    AnimationVBOtoTBO(&VBOthing.bonescale[0], 4 * 32 * sizeof(float),
+    AnimationVBOtoTBO(&VBOthing.bonepos[0], sizeof(VBOthing.bonepos),
                       GL_RGBA32F, name);
-    AnimationVBOtoTBO(&VBOthing.bonerot[0], 4 * 32 * sizeof(float), GL_RGBA32F,
-                      name);
+    AnimationVBOtoTBO(&VBOthing.bonescale[0], sizeof(VBOthing.bonescale),
+                      GL_RGBA32F, name);
+    AnimationVBOtoTBO(&VBOthing.bonerot[0], sizeof(VBOthing.bonerot),
+                      GL_RGBA32F, name);
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
