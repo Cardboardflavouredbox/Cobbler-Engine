@@ -98,13 +98,6 @@ void freeRenderer() {
         glDeleteBuffers(1, &i.second.VAOthing);
       }
 
-      for (auto& i : RendererGlobal->GLstuff->GLTBOstuff) {
-        for (auto& j : i.second) {
-          glDeleteBuffers(1, &j.TBOBuffer);
-          glDeleteTextures(1, &j.TBOTexture);
-        }
-      }
-
       glDeleteVertexArrays(1,
                            &RendererGlobal->GLstuff->GLParticleBase.VAOthing);
       glDeleteBuffers(1, &RendererGlobal->GLstuff->GLParticleBase.VBOthing);
@@ -569,46 +562,6 @@ bool setRenderer() {
   return true;
 }
 
-struct AnimationVBOclass {
-  uint32_t bonecode[32] = {};
-  uint32_t bonestartingpoint[32] = {};  // how many anims there are in a bone
-  uint32_t boneparent[32] = {};         // bone parent
-  float bonehead[32 * 4] = {};          // bone head
-  float bonetail[32 * 4] = {};          // bone tail
-  uint32_t animsize[2048] = {};  // how many keys there are in a animation
-  uint32_t animcode[2048] = {};
-  uint32_t animindex[1024] = {};
-  float animpos[1024 * 4] = {};
-  float animscale[1024 * 4] = {};
-  float animrot[1024 * 4] = {};
-  float bonepos[32 * 4] = {};
-  float bonescale[32 * 4] = {};
-  float bonerot[32 * 4] = {};
-};
-
-void AnimationVBOtoTBO(void* pointertoarray, uint32_t size,
-                       GLenum internalformat, std::string ModelGroupName) {
-  GLuint tboBuffer;
-  glGenBuffers(1, &tboBuffer);
-  glBindBuffer(GL_TEXTURE_BUFFER, tboBuffer);
-  glBufferData(GL_TEXTURE_BUFFER, size, pointertoarray, GL_STATIC_DRAW);
-
-  GLuint tboTexture;
-  glGenTextures(1, &tboTexture);
-  glBindTexture(GL_TEXTURE_BUFFER, tboTexture);
-
-  glTexBuffer(GL_TEXTURE_BUFFER, internalformat, tboBuffer);
-
-  RendererStuff::OpenGLRenderer::GLModelGroupTexturebuffers tbothing;
-
-  tbothing.TBOBuffer = tboBuffer;
-  tbothing.TBOTexture = tboTexture;
-
-  RendererGlobal->GLstuff->GLTBOstuff[ModelGroupName].push_back(tbothing);
-  glBindTexture(GL_TEXTURE_BUFFER, 0);
-  glBindBuffer(GL_TEXTURE_BUFFER, 0);
-}
-
 void OpenGLCreateObjects() {
   RendererStuff::OpenGLRenderer::GLObject* globjectthing =
       &RendererGlobal->GLstuff->GLParticleBase;
@@ -705,119 +658,6 @@ void OpenGLCreateObjects() {
     glBindVertexArray(0);
 
     RendererGlobal->GLstuff->GLModels[name] = globjectthing;
-  }
-
-  for (auto& [name, modelgroup] : ModelGroupMap) {
-    AnimationVBOclass VBOthing;
-
-    for (int i = 0; i < 1024; i++) {
-      VBOthing.animscale[i * 4 + 0] = 1;
-      VBOthing.animscale[i * 4 + 1] = 1;
-      VBOthing.animscale[i * 4 + 2] = 1;
-      VBOthing.animscale[i * 4 + 3] = 1;
-
-      VBOthing.animrot[i * 4 + 0] = 1;
-      VBOthing.animrot[i * 4 + 1] = 0;
-      VBOthing.animrot[i * 4 + 2] = 0;
-      VBOthing.animrot[i * 4 + 3] = 0;
-    }
-
-    for (int i = 0; i < 32; i++) {
-      VBOthing.bonerot[i * 4 + 0] = 1;
-      VBOthing.bonerot[i * 4 + 1] = 0;
-      VBOthing.bonerot[i * 4 + 2] = 0;
-      VBOthing.bonerot[i * 4 + 3] = 0;
-
-      VBOthing.bonescale[i * 4 + 0] = 1;
-      VBOthing.bonescale[i * 4 + 1] = 1;
-      VBOthing.bonescale[i * 4 + 2] = 1;
-      VBOthing.bonescale[i * 4 + 3] = 1;
-    }
-
-    uint32_t boneindex = 0, actionindex = 0, poseindex = 0;
-    for (auto& [bonecode, bone] : modelgroup.Bonemap) {
-      VBOthing.bonestartingpoint[boneindex + 1] =
-          bone.Poses.size() + VBOthing.bonestartingpoint[boneindex];
-
-      VBOthing.bonecode[boneindex] = bonecode;
-      VBOthing.boneparent[boneindex] = bone.parent;
-      for (int i = 0; i < 3; i++) {
-        VBOthing.bonehead[boneindex * 4 + i] = bone.head[i];
-        VBOthing.bonetail[boneindex * 4 + i] = bone.tail[i];
-        VBOthing.bonepos[boneindex * 4 + i] = bone.restpose.pos[i];
-        VBOthing.bonescale[boneindex * 4 + i] = bone.restpose.scale[i];
-      }
-
-      VBOthing.bonerot[boneindex * 4 + 0] = bone.restpose.rot.x;
-      VBOthing.bonerot[boneindex * 4 + 1] = bone.restpose.rot.y;
-      VBOthing.bonerot[boneindex * 4 + 2] = bone.restpose.rot.z;
-      VBOthing.bonerot[boneindex * 4 + 3] = bone.restpose.rot.w;
-
-      for (auto& [actioncode, action] : bone.Poses) {
-        VBOthing.animcode[actionindex] = actioncode;
-        VBOthing.animsize[actionindex + 1] =
-            action.size() + VBOthing.animsize[actionindex];
-        for (auto& [poseframe, pose] : action) {
-          VBOthing.animindex[poseindex] = poseframe;
-          for (int i = 0; i < 3; i++) {
-            VBOthing.animpos[poseindex * 4 + i] = pose.pos[i];
-            VBOthing.animscale[poseindex * 4 + i] = pose.scale[i];
-          }
-          VBOthing.animrot[poseindex * 4 + 0] = pose.rot.x;
-          VBOthing.animrot[poseindex * 4 + 1] = pose.rot.y;
-          VBOthing.animrot[poseindex * 4 + 2] = pose.rot.z;
-          VBOthing.animrot[poseindex * 4 + 3] = pose.rot.w;
-          poseindex++;
-        }
-        actionindex++;
-      }
-      boneindex++;
-    }
-    // SDL_Log("%s", name.c_str());
-    // for (int i = 0; i < 32; i++) {
-    //   SDL_Log("what %u", VBOthing.bonestartingpoint[i]);
-    //   SDL_Log("what2 %f %f %f", VBOthing.bonepos[i * 4 + 0],
-    //           VBOthing.bonepos[i * 4 + 1], VBOthing.bonepos[i * 4 + 2]);
-    //   // SDL_Log("what3 %f %f %f", VBOthing.bonestartingpoint[i]);
-    //   // SDL_Log("what4 %f %f %f %f", VBOthing.bonestartingpoint[i]);
-    // }
-
-    // for (int i = 0; i < 32; i++)
-    //   SDL_Log("what2 %u", VBOthing.animindex[i]);
-
-    // VBOthing.bonestartingpoint = ;
-
-    AnimationVBOtoTBO(&VBOthing.bonecode[0], sizeof(VBOthing.bonecode),
-                      GL_R32UI, name);
-    AnimationVBOtoTBO(&VBOthing.bonestartingpoint[0],
-                      sizeof(VBOthing.bonestartingpoint), GL_R32UI, name);
-    AnimationVBOtoTBO(&VBOthing.boneparent[0], sizeof(VBOthing.boneparent),
-                      GL_R32UI, name);
-
-    AnimationVBOtoTBO(&VBOthing.bonehead[0], sizeof(VBOthing.bonehead),
-                      GL_RGBA32F, name);
-    AnimationVBOtoTBO(&VBOthing.bonetail[0], sizeof(VBOthing.bonetail),
-                      GL_RGBA32F, name);
-
-    AnimationVBOtoTBO(&VBOthing.animsize[0], sizeof(VBOthing.animsize),
-                      GL_R32UI, name);
-    AnimationVBOtoTBO(&VBOthing.animcode[0], sizeof(VBOthing.animcode),
-                      GL_R32UI, name);
-
-    AnimationVBOtoTBO(&VBOthing.animindex[0], sizeof(VBOthing.animindex),
-                      GL_R32UI, name);
-    AnimationVBOtoTBO(&VBOthing.animpos[0], sizeof(VBOthing.animpos),
-                      GL_RGBA32F, name);
-    AnimationVBOtoTBO(&VBOthing.animscale[0], sizeof(VBOthing.animscale),
-                      GL_RGBA32F, name);
-    AnimationVBOtoTBO(&VBOthing.animrot[0], sizeof(VBOthing.animrot),
-                      GL_RGBA32F, name);
-    AnimationVBOtoTBO(&VBOthing.bonepos[0], sizeof(VBOthing.bonepos),
-                      GL_RGBA32F, name);
-    AnimationVBOtoTBO(&VBOthing.bonescale[0], sizeof(VBOthing.bonescale),
-                      GL_RGBA32F, name);
-    AnimationVBOtoTBO(&VBOthing.bonerot[0], sizeof(VBOthing.bonerot),
-                      GL_RGBA32F, name);
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);

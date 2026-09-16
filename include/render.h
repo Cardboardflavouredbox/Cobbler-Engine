@@ -60,12 +60,6 @@ struct RendererStuff {
     GLObject GLParticleBase;
 
     std::vector<GLuint> shaders;
-
-    struct GLModelGroupTexturebuffers {
-      GLuint TBOBuffer, TBOTexture;
-    };
-    std::unordered_map<std::string, std::vector<GLModelGroupTexturebuffers>>
-        GLTBOstuff;
   };
   OpenGLRenderer* GLstuff;
 
