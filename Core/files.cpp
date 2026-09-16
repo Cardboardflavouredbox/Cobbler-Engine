@@ -326,10 +326,8 @@ bool VulkanLogicalDevice() {
 // https://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/
 GLuint LoadShaders(const char* vertex_file_path,
                    const char* fragment_file_path) {
-  std::string vertexfile = Global->GameFolder.string() + "/shaders/" +
-                           std::string(vertex_file_path),
-              fragmentfile = Global->GameFolder.string() + "/shaders/" +
-                             std::string(fragment_file_path);
+  std::string vertexfile = "shaders/" + std::string(vertex_file_path),
+              fragmentfile = "shaders/" + std::string(fragment_file_path);
   // Create the shaders
   GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
   GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
@@ -448,8 +446,8 @@ bool setRenderer() {
 
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                           SDL_GL_CONTEXT_PROFILE_CORE);
-      SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-      SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+      // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+      // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
       break;
     }
@@ -460,8 +458,8 @@ bool setRenderer() {
 
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                           SDL_GL_CONTEXT_PROFILE_CORE);
-      SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-      SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+      // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+      // SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
       break;
     }
     case OpenGL1: {

@@ -409,10 +409,47 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                            GL_FALSE, glm::value_ptr(modelMatrix));
 
         for (const auto& modelname : modelgroup->Models) {
+          if (Global->Modelmap[modelname].points.empty() ||
+              !modeltrans->modelvisibilityresult[modelname])
+            continue;
+          uint32_t bonecode = Global->Modelmap[modelname].points.front().bone;
+          Modeltransform::BoneResult* boneresult =
+              &modeltrans->Bonemap[bonecode];
+          ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
           glActiveTexture(GL_TEXTURE0);
           glBindTexture(GL_TEXTURE_2D,
                         RendererGlobal->GLstuff->GLModels[modelname].texture);
           glUniform1i(glGetUniformLocation(shadertemp, "InputTexture"), 0);
+
+          glUniform3f(glGetUniformLocation(shadertemp, "bonehead"),
+                      bone->head.x, bone->head.y, bone->head.z);
+
+          glUniform3f(glGetUniformLocation(shadertemp, "restpos"),
+                      bone->restpose.pos.x, bone->restpose.pos.y,
+                      bone->restpose.pos.z);
+
+          glUniform3f(glGetUniformLocation(shadertemp, "restscale"),
+                      bone->restpose.scale.x, bone->restpose.scale.y,
+                      bone->restpose.scale.z);
+
+          glUniform4f(glGetUniformLocation(shadertemp, "restrot"),
+                      bone->restpose.rot.x, bone->restpose.rot.y,
+                      bone->restpose.rot.z, bone->restpose.rot.w);
+
+          glUniform3f(glGetUniformLocation(shadertemp, "resultbonehead"),
+                      boneresult->head.x, boneresult->head.y,
+                      boneresult->head.z);
+
+          glUniform3f(glGetUniformLocation(shadertemp, "resultbonescale"),
+                      boneresult->scale.x, boneresult->scale.y,
+                      boneresult->scale.z);
+
+          glUniform4f(glGetUniformLocation(shadertemp, "resultbonerot"),
+                      boneresult->rot.x, boneresult->rot.y, boneresult->rot.z,
+                      boneresult->rot.w);
+
+          glUniform1f(glGetUniformLocation(shadertemp, "lookdirx"),
+                      modeltrans->lookdir.x);
 
           glUniform3f(glGetUniformLocation(shadertemp, "position"),
                       modeltrans->position.x, modeltrans->position.y,
@@ -422,15 +459,16 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                       modeltrans->size.x, modeltrans->size.y,
                       modeltrans->size.z);
 
-          glm::mat4 tempmat4 = glm::toMat4(modeltrans->rot);
+          glUniform4f(glGetUniformLocation(shadertemp, "rot"),
+                      modeltrans->rot.x, modeltrans->rot.y, modeltrans->rot.z,
+                      modeltrans->rot.w);
 
-          glUniformMatrix4fv(glGetUniformLocation(shadertemp, "rot"), 1,
-                             GL_FALSE, glm::value_ptr(tempmat4));
+          glUniform1i(glGetUniformLocation(shadertemp, "hasaction"),
+                      modeltrans->actions.size());
 
           glBindVertexArray(
               RendererGlobal->GLstuff->GLModels[modelname].VAOthing);
 
-          // this part brings an opengl error
           glDrawArrays(GL_TRIANGLES, 0,
                        RendererGlobal->GLstuff->GLModels[modelname].size);
         }
