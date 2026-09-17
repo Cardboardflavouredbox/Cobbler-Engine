@@ -9,6 +9,7 @@
 #include <glad/gl.h>
 #include <stdio.h>
 
+#include <bit>
 #include <filesystem>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
@@ -605,7 +606,7 @@ void OpenGLCreateObjects() {
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * globjectthing->size * 4,
                &vertices[0], GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
   glEnableVertexAttribArray(0);
 
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
@@ -632,6 +633,8 @@ void OpenGLCreateObjects() {
         for (int a = 0; a < 2; a++) {
           vertices.push_back(face.uv[j][a]);
         }
+        vertices.push_back(
+            std::bit_cast<float>(model.points[face.point[j]].bone));
         globjectthing.size++;
       }
     }
@@ -645,12 +648,16 @@ void OpenGLCreateObjects() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * globjectthing.size * 5,
                  &vertices[0], GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                           (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 1, GL_UNSIGNED_INT, GL_FALSE, 6 * sizeof(float),
+                          (void*)(5 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

@@ -418,6 +418,45 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
         glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1,
                            GL_FALSE, glm::value_ptr(modelMatrix));
 
+        if (modeltrans->Bonecodevec.empty()) {
+          for (const auto& [code, bone] : modelgroup->Bonemap) {
+            modeltrans->Bonecodevec.push_back(code);
+          }
+        }
+        for (int i = 0; i < modeltrans->Bonecodevec.size(); i++) {
+          ModelGroupClass::Bone* bone =
+              &modelgroup->Bonemap[modeltrans->Bonecodevec[i]];
+          Modeltransform::BoneResult* boneresult =
+              &modeltrans->Bonemap[modeltrans->Bonecodevec[i]];
+
+          glm::mat4 resultbonemat = transtomatrix(
+                        boneresult->head, boneresult->scale, boneresult->rot),
+                    restmat =
+                        transtomatrix(bone->restpose.pos, bone->restpose.scale,
+                                      bone->restpose.rot);
+
+          glUniform1ui(
+              glGetUniformLocation(
+                  shadertemp, ("bonelist[" + std::to_string(i) + "]").c_str()),
+              modeltrans->Bonecodevec[i]);
+
+          glUniformMatrix4fv(
+              glGetUniformLocation(
+                  shadertemp, ("restmat[" + std::to_string(i) + "]").c_str()),
+              1, GL_FALSE, glm::value_ptr(restmat));
+
+          glUniform3f(
+              glGetUniformLocation(
+                  shadertemp, ("bonehead[" + std::to_string(i) + "]").c_str()),
+              bone->head.x, bone->head.y, bone->head.z);
+
+          glUniformMatrix4fv(
+              glGetUniformLocation(
+                  shadertemp,
+                  ("resultbonemat[" + std::to_string(i) + "]").c_str()),
+              1, GL_FALSE, glm::value_ptr(resultbonemat));
+        }
+
         for (const auto& modelname : modelgroup->Models) {
           if (Global->Modelmap[modelname].points.empty() ||
               !modeltrans->modelvisibilityresult[modelname])
@@ -427,28 +466,13 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
               &modeltrans->Bonemap[bonecode];
           ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
 
-          glm::mat4 resultbonemat = transtomatrix(
-                        boneresult->head, boneresult->scale, boneresult->rot),
-                    restmat =
-                        transtomatrix(bone->restpose.pos, bone->restpose.scale,
-                                      bone->restpose.rot),
-                    transformmat =
-                        transtomatrix(modeltrans->position, modeltrans->size,
-                                      modeltrans->rot);
+          glm::mat4 transformmat = transtomatrix(
+              modeltrans->position, modeltrans->size, modeltrans->rot);
 
           glActiveTexture(GL_TEXTURE0);
           glBindTexture(GL_TEXTURE_2D,
                         RendererGlobal->GLstuff->GLModels[modelname].texture);
           glUniform1i(glGetUniformLocation(shadertemp, "InputTexture"), 0);
-
-          glUniform3f(glGetUniformLocation(shadertemp, "bonehead"),
-                      bone->head.x, bone->head.y, bone->head.z);
-
-          glUniformMatrix4fv(glGetUniformLocation(shadertemp, "restmat"), 1,
-                             GL_FALSE, glm::value_ptr(restmat));
-
-          glUniformMatrix4fv(glGetUniformLocation(shadertemp, "resultbonemat"),
-                             1, GL_FALSE, glm::value_ptr(resultbonemat));
 
           glUniform1f(glGetUniformLocation(shadertemp, "lookdirx"),
                       modeltrans->lookdir.x);

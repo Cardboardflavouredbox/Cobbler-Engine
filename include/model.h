@@ -65,6 +65,7 @@ struct Modeltransform {
     glm::quat rot;
   };
 
+  std::vector<uint32_t> Bonecodevec;
   std::unordered_map<uint32_t, BoneResult> Bonemap;
   std::unordered_map<std::string, bool> modelvisibilityresult;
 };

@@ -2,21 +2,29 @@
 
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
-
-uniform vec3 bonehead;
-
-uniform mat4 restmat;
-
-uniform mat4 resultbonemat;
+layout(location = 2) in uint boneindex;
 
 uniform mat4 model;
 
+uniform uint bonelist[64];
+uniform mat4 restmat[64];
+uniform vec3 bonehead[64];
+uniform mat4 resultbonemat[64];
+uniform mat4 transformmat;
+
 uniform int hasaction;
 uniform float lookdirx;
-uniform mat4 transformmat;
 
 out vec4 vertexColor;
 out vec2 TexCoord;
+
+int getboneindexreal() {
+  for (int i = 0; i < 64; i++) {
+    if (bonelist[i] == boneindex)
+      return i;
+  }
+  return 0;
+}
 
 vec3 qtransform(vec4 q, vec3 v) {
 
@@ -40,14 +48,14 @@ vec4 angleAxis(float angle, vec3 v) {
 }
 
 void main() {
-
+  int index = getboneindexreal();
   vec4 result = vec4(aPos, 1.0);
   if (hasaction > 0) {
-    result = restmat * result;
+    result = restmat[index] * result;
 
-    result -= vec4(bonehead, 0.0);
+    result -= vec4(bonehead[index], 0.0);
 
-    result = resultbonemat * result;
+    result = resultbonemat[index] * result;
   }
 
   result =
