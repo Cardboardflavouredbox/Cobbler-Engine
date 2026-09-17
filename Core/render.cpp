@@ -325,6 +325,16 @@ void modelapplybones(Modeltransform* modeltrans, uint32_t actioncode,
   }
 }
 
+glm::mat4 transtomatrix(glm::vec3 pos, glm::vec3 scale, glm::quat rot) {
+  glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), pos);
+
+  glm::mat4 rotationMatrix = glm::toMat4(rot);
+
+  glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale);
+
+  return translationMatrix * rotationMatrix * scaleMatrix;
+}
+
 // renders modelgroup.
 void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                       bool isUI, float deltatime) {
@@ -416,6 +426,16 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
           Modeltransform::BoneResult* boneresult =
               &modeltrans->Bonemap[bonecode];
           ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
+
+          glm::mat4 resultbonemat = transtomatrix(
+                        boneresult->head, boneresult->scale, boneresult->rot),
+                    restmat =
+                        transtomatrix(bone->restpose.pos, bone->restpose.scale,
+                                      bone->restpose.rot),
+                    transformmat =
+                        transtomatrix(modeltrans->position, modeltrans->size,
+                                      modeltrans->rot);
+
           glActiveTexture(GL_TEXTURE0);
           glBindTexture(GL_TEXTURE_2D,
                         RendererGlobal->GLstuff->GLModels[modelname].texture);
@@ -424,44 +444,17 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
           glUniform3f(glGetUniformLocation(shadertemp, "bonehead"),
                       bone->head.x, bone->head.y, bone->head.z);
 
-          glUniform3f(glGetUniformLocation(shadertemp, "restpos"),
-                      bone->restpose.pos.x, bone->restpose.pos.y,
-                      bone->restpose.pos.z);
+          glUniformMatrix4fv(glGetUniformLocation(shadertemp, "restmat"), 1,
+                             GL_FALSE, glm::value_ptr(restmat));
 
-          glUniform3f(glGetUniformLocation(shadertemp, "restscale"),
-                      bone->restpose.scale.x, bone->restpose.scale.y,
-                      bone->restpose.scale.z);
-
-          glUniform4f(glGetUniformLocation(shadertemp, "restrot"),
-                      bone->restpose.rot.x, bone->restpose.rot.y,
-                      bone->restpose.rot.z, bone->restpose.rot.w);
-
-          glUniform3f(glGetUniformLocation(shadertemp, "resultbonehead"),
-                      boneresult->head.x, boneresult->head.y,
-                      boneresult->head.z);
-
-          glUniform3f(glGetUniformLocation(shadertemp, "resultbonescale"),
-                      boneresult->scale.x, boneresult->scale.y,
-                      boneresult->scale.z);
-
-          glUniform4f(glGetUniformLocation(shadertemp, "resultbonerot"),
-                      boneresult->rot.x, boneresult->rot.y, boneresult->rot.z,
-                      boneresult->rot.w);
+          glUniformMatrix4fv(glGetUniformLocation(shadertemp, "resultbonemat"),
+                             1, GL_FALSE, glm::value_ptr(resultbonemat));
 
           glUniform1f(glGetUniformLocation(shadertemp, "lookdirx"),
                       modeltrans->lookdir.x);
 
-          glUniform3f(glGetUniformLocation(shadertemp, "position"),
-                      modeltrans->position.x, modeltrans->position.y,
-                      modeltrans->position.z);
-
-          glUniform3f(glGetUniformLocation(shadertemp, "size"),
-                      modeltrans->size.x, modeltrans->size.y,
-                      modeltrans->size.z);
-
-          glUniform4f(glGetUniformLocation(shadertemp, "rot"),
-                      modeltrans->rot.x, modeltrans->rot.y, modeltrans->rot.z,
-                      modeltrans->rot.w);
+          glUniformMatrix4fv(glGetUniformLocation(shadertemp, "transformmat"),
+                             1, GL_FALSE, glm::value_ptr(transformmat));
 
           glUniform1i(glGetUniformLocation(shadertemp, "hasaction"),
                       modeltrans->actions.size());
