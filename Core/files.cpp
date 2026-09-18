@@ -645,7 +645,7 @@ void OpenGLCreateObjects() {
     glBindVertexArray(globjectthing.VAOthing);
 
     glBindBuffer(GL_ARRAY_BUFFER, globjectthing.VBOthing);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * globjectthing.size * 5,
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * globjectthing.size * 6,
                  &vertices[0], GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
