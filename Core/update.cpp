@@ -22,6 +22,7 @@
 #include "extern.h"
 #include "global.h"
 #include "inputs.h"
+#include "lights.h"
 #include "network.h"
 #include "networkextern.h"
 #include "pi.h"
@@ -445,6 +446,13 @@ void update() {
     ParticledeleteQueue.pop();
     delete (Particles[index]);
     Particles.erase(index);
+  }
+
+  while (!LightdeleteQueue.empty()) {
+    uint32_t index = LightdeleteQueue.front();
+    LightdeleteQueue.pop();
+    delete (Lights[index]);
+    Lights.erase(index);
   }
 
   CameraUpdate();

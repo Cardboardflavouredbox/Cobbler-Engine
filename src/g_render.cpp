@@ -493,13 +493,19 @@ void openglrender() {
     glUniform3f(glGetUniformLocation(shadertemp, "viewPos"), Camera->pos.x,
                 Camera->pos.y, Camera->pos.z);
 
-    if (!Lights.empty()) {
-      glm::vec4 lightpos =
-          (Global->perspectivematrix *
-           glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1))) *
-          glm::vec4(Lights[0], 1);
-      glUniform3f(glGetUniformLocation(shadertemp, "lightPos"), lightpos.x,
-                  lightpos.y, lightpos.z);
+    glUniform1i(glGetUniformLocation(shadertemp, "lightcnt"), Lights.size());
+
+    int cnt = 0;
+    for (auto& [index, light] : Lights) {
+      glUniform3f(
+          glGetUniformLocation(
+              shadertemp, ("lightPos[" + std::to_string(cnt) + "]").c_str()),
+          light->position.x, light->position.y, light->position.z);
+      glUniform3f(
+          glGetUniformLocation(
+              shadertemp, ("lightColor[" + std::to_string(cnt) + "]").c_str()),
+          light->color[0], light->color[1], light->color[2]);
+      cnt++;
     }
 
     for (auto& i : RendererGlobal->GLstuff->GlMapObjects) {

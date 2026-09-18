@@ -36,7 +36,7 @@ void LoadMapGL(bool IsOldGL) {
     glEnd();
     glEndList();
   } else {
-    GLuint shadertemp = LoadShaders("mapshader.vert", "mapshader.frag");
+    GLuint shadertemp = LoadShaders("mapshader.vert", "lighting.frag");
 
     RendererGlobal->GLstuff->shaders.push_back(shadertemp);
     for (auto& obj : GlobalMapStuff->VisualObjectsVector) {

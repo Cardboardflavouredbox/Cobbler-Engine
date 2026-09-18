@@ -614,7 +614,7 @@ void OpenGLCreateObjects() {
                         (void*)(2 * sizeof(GLfloat)));
   glEnableVertexAttribArray(1);
 
-  shadertemp = LoadShaders("objectshader.vert", "objectshader.frag");
+  shadertemp = LoadShaders("objectshader.vert", "lighting.frag");
 
   RendererGlobal->GLstuff->shaders.push_back(shadertemp);
   for (auto& [name, model] : Global->Modelmap) {
@@ -1260,7 +1260,11 @@ bool init() {
     }
   }
 
-  Lights[0] = glm::vec3(1, 1, 4);
+  Lights[0] = new StaticLight(0);
+  Lights[0]->color[0] = 1;
+  Lights[0]->color[1] = 1;
+  Lights[0]->color[2] = 1;
+  Lights[0]->position = glm::vec3(1, 1, 4);
 
   // set the props.
   Global->Models = tempmapdata.props;
@@ -1532,6 +1536,11 @@ void quit() {
 
   // free particles
   for (auto& i : Particles) {
+    delete (i.second);
+  }
+
+  // free lights
+  for (auto& i : Lights) {
     delete (i.second);
   }
 

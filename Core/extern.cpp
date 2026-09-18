@@ -13,6 +13,7 @@
 #include "entity.h"
 #include "font.h"
 #include "inputs.h"
+#include "lights.h"
 #include "map.h"
 #include "model.h"
 #include "network.h"
@@ -62,7 +63,7 @@ std::map<uint32_t, Particle*> Particles;
 std::queue<uint32_t> ParticledeleteQueue;
 
 // Lights map. Contains all the Lights.
-std::map<uint32_t, glm::vec3> Lights;
+std::map<uint32_t, Light*> Lights;
 // Guess what this does. It's a queue of all the Lights to be deleted.
 std::queue<uint32_t> LightdeleteQueue;
 

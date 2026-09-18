@@ -1,5 +1,6 @@
 #include "components.h"
 
+#include "lights.h"
 #include "networkextern.h"
 #include "particles.h"
 #include "physics.h"
@@ -17,6 +18,10 @@ void componentsupdatelate() {
   }
   // call particle late updates
   for (auto& i : Particles) {
+    i.second->lateupdate();
+  }
+  // call light late updates
+  for (auto& i : Lights) {
     i.second->lateupdate();
   }
   // call UI components updates
@@ -44,6 +49,10 @@ void componentsupdate() {
   }
   // call particle updates
   for (auto& i : Particles) {
+    i.second->update();
+  }
+  // call light updates
+  for (auto& i : Lights) {
     i.second->update();
   }
 }

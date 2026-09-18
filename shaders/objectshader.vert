@@ -5,7 +5,9 @@ layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in uint boneindex;
 layout(location = 3) in vec3 aNormal;
 
+uniform int IsUI;
 uniform mat4 model;
+uniform mat4 UIreversemodel;
 
 uniform uint bonelist[64];
 uniform mat4 restmat[64];
@@ -68,8 +70,13 @@ void main() {
 
   result = transformmat * result;
 
-  gl_Position = model * result;
   TexCoord = aTexCoord;
   Normal = aNormal;
-  FragPos = aPos;
+
+  if (IsUI > 0) {
+    FragPos = (UIreversemodel * result).xyz;
+  } else {
+    FragPos = result.xyz;
+  }
+  gl_Position = model * result;
 }

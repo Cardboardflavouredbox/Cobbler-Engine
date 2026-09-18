@@ -400,11 +400,17 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
     switch (Settings->graphicsmode) {
       case OpenGL4:
       case OpenGL3: {
-        glm::mat4 modelMatrix;
+        glm::mat4 modelMatrix, UImatrix;
         if (isUI) {
           modelMatrix = Global->perspectivematrix *
                         glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0),
                                     glm::vec3(0, 0, 1));
+          UImatrix =
+              Global->perspectivematrix *
+              glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1)) *
+              (glm::translate(
+                  glm::scale(glm::mat4(1), LocalPlayer->Modelthing->size),
+                  Camera->pos));
         } else {
           modelMatrix =
               Global->perspectivematrix *
@@ -416,19 +422,31 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
 
         glUseProgram(shadertemp);
 
+        glUniformMatrix4fv(glGetUniformLocation(shadertemp, "UIreversemodel"),
+                           1, GL_FALSE, glm::value_ptr(UImatrix));
+
         glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1,
                            GL_FALSE, glm::value_ptr(modelMatrix));
 
         glUniform3f(glGetUniformLocation(shadertemp, "viewPos"), Camera->pos.x,
                     Camera->pos.y, Camera->pos.z);
 
-        if (!Lights.empty()) {
-          glm::vec4 lightpos =
-              (Global->perspectivematrix *
-               glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1))) *
-              glm::vec4(Lights[0], 1);
-          glUniform3f(glGetUniformLocation(shadertemp, "lightPos"), lightpos.x,
-                      lightpos.y, lightpos.z);
+        glUniform1i(glGetUniformLocation(shadertemp, "IsUI"), isUI);
+
+        glUniform1i(glGetUniformLocation(shadertemp, "lightcnt"),
+                    Lights.size());
+
+        int cnt = 0;
+        for (auto& [index, light] : Lights) {
+          glUniform3f(glGetUniformLocation(
+                          shadertemp,
+                          ("lightPos[" + std::to_string(cnt) + "]").c_str()),
+                      light->position.x, light->position.y, light->position.z);
+          glUniform3f(glGetUniformLocation(
+                          shadertemp,
+                          ("lightColor[" + std::to_string(cnt) + "]").c_str()),
+                      light->color[0], light->color[1], light->color[2]);
+          cnt++;
         }
 
         if (modeltrans->Bonecodevec.empty()) {
