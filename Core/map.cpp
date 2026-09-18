@@ -49,12 +49,18 @@ void LoadMapGL(bool IsOldGL) {
       std::vector<float> vertices;
 
       for (auto& i : obj.Visualmapfaces) {
+        glm::vec3 tri[3];
+        for (int a = 2; a >= 0; a--) {
+          tri[a] = obj.VisualPoints[i.points[a]].pos;
+        }
+        glm::vec3 normal =
+            glm::normalize(glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
         for (int a = 2; a >= 0; a--) {
           for (int j = 0; j < 3; j++) {
             vertices.push_back(obj.VisualPoints[i.points[a]].pos[j]);
           }
           for (int j = 0; j < 3; j++) {
-            vertices.push_back(obj.VisualPoints[i.points[a]].shade[j]);
+            vertices.push_back(normal[j]);
           }
           for (int j = 0; j < 2; j++) {
             vertices.push_back(i.UVs[a][j]);

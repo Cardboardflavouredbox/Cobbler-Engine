@@ -10,6 +10,7 @@
 #include "camera.h"
 #include "deltaTime.h"
 #include "extern.h"
+#include "lights.h"
 #include "map.h"
 #include "model.h"
 #include "networkextern.h"
@@ -485,11 +486,24 @@ void openglrender() {
 
     renderParticles();
 
+    GLuint shadertemp = RendererGlobal->GLstuff->GlMapObjects.back().shader;
+    glUseProgram(shadertemp);
+    glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1, GL_FALSE,
+                       glm::value_ptr(modelMatrix));
+    glUniform3f(glGetUniformLocation(shadertemp, "viewPos"), Camera->pos.x,
+                Camera->pos.y, Camera->pos.z);
+
+    if (!Lights.empty()) {
+      glm::vec4 lightpos =
+          (Global->perspectivematrix *
+           glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1))) *
+          glm::vec4(Lights[0], 1);
+      glUniform3f(glGetUniformLocation(shadertemp, "lightPos"), lightpos.x,
+                  lightpos.y, lightpos.z);
+    }
+
     for (auto& i : RendererGlobal->GLstuff->GlMapObjects) {
-      glUseProgram(i.shader);
       // SDL_Log("map object %u", i.shader);
-      glUniformMatrix4fv(glGetUniformLocation(i.shader, "model"), 1, GL_FALSE,
-                         glm::value_ptr(modelMatrix));
 
       glBindVertexArray(i.VAOthing);
       glActiveTexture(GL_TEXTURE0);

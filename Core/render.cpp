@@ -11,6 +11,7 @@
 
 #include "camera.h"
 #include "extern.h"
+#include "lights.h"
 #include "pi.h"
 #include "rendermath.h"
 #include "screen.h"
@@ -417,6 +418,18 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
 
         glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1,
                            GL_FALSE, glm::value_ptr(modelMatrix));
+
+        glUniform3f(glGetUniformLocation(shadertemp, "viewPos"), Camera->pos.x,
+                    Camera->pos.y, Camera->pos.z);
+
+        if (!Lights.empty()) {
+          glm::vec4 lightpos =
+              (Global->perspectivematrix *
+               glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1))) *
+              glm::vec4(Lights[0], 1);
+          glUniform3f(glGetUniformLocation(shadertemp, "lightPos"), lightpos.x,
+                      lightpos.y, lightpos.z);
+        }
 
         if (modeltrans->Bonecodevec.empty()) {
           for (const auto& [code, bone] : modelgroup->Bonemap) {

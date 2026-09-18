@@ -61,6 +61,11 @@ std::map<uint32_t, Particle*> Particles;
 // Queue that contains all the Particles to delete this frame.
 std::queue<uint32_t> ParticledeleteQueue;
 
+// Lights map. Contains all the Lights.
+std::map<uint32_t, glm::vec3> Lights;
+// Guess what this does. It's a queue of all the Lights to be deleted.
+std::queue<uint32_t> LightdeleteQueue;
+
 std::unique_ptr<GlobalMapClass> GlobalMapStuff;
 
 std::unique_ptr<RendererStuff> RendererGlobal;
@@ -147,6 +152,18 @@ uint32_t ParticleMapEmptyIndex() {
   uint32_t i = 1;
   while (i != 0) {
     if (!Particles.contains(i)) return i;
+    i++;
+  }
+  return 0;
+}
+
+uint32_t LightMapEmptyIndex() {
+  if (!Lights.contains(0)) {
+    return 0;
+  }
+  uint32_t i = 1;
+  while (i != 0) {
+    if (!Lights.contains(i)) return i;
     i++;
   }
   return 0;

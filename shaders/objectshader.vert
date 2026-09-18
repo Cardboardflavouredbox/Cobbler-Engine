@@ -3,6 +3,7 @@
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in uint boneindex;
+layout(location = 3) in vec3 aNormal;
 
 uniform mat4 model;
 
@@ -17,6 +18,8 @@ uniform float lookdirx;
 
 out vec4 vertexColor;
 out vec2 TexCoord;
+out vec3 Normal;
+out vec3 FragPos;
 
 int getboneindexreal() {
   for (int i = 0; i < 64; i++) {
@@ -67,4 +70,6 @@ void main() {
 
   gl_Position = model * result;
   TexCoord = aTexCoord;
+  Normal = aNormal;
+  FragPos = aPos;
 }

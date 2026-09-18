@@ -25,6 +25,7 @@
 #include "font.h"
 #include "global.h"
 #include "inputs.h"
+#include "lights.h"
 #include "model.h"
 #include "network.h"
 #include "networkextern.h"
@@ -626,6 +627,12 @@ void OpenGLCreateObjects() {
     std::vector<float> vertices;
 
     for (auto& face : model.faces) {
+      glm::vec3 tri[3];
+      for (int j = 2; j >= 0; j--) {
+        tri[j] = model.points[face.point[j]].pos;
+      }
+      glm::vec3 normal =
+          glm::normalize(glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
       for (int j = 2; j >= 0; j--) {
         for (int a = 0; a < 3; a++) {
           vertices.push_back(model.points[face.point[j]].pos[a]);
@@ -635,6 +642,9 @@ void OpenGLCreateObjects() {
         }
         vertices.push_back(
             std::bit_cast<float>(model.points[face.point[j]].bone));
+        for (int a = 0; a < 3; a++) {
+          vertices.push_back(normal[a]);
+        }
         globjectthing.size++;
       }
     }
@@ -645,19 +655,23 @@ void OpenGLCreateObjects() {
     glBindVertexArray(globjectthing.VAOthing);
 
     glBindBuffer(GL_ARRAY_BUFFER, globjectthing.VBOthing);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * globjectthing.size * 6,
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * globjectthing.size * 9,
                  &vertices[0], GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
                           (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 1, GL_UNSIGNED_INT, GL_FALSE, 6 * sizeof(float),
+    glVertexAttribPointer(2, 1, GL_UNSIGNED_INT, GL_FALSE, 9 * sizeof(float),
                           (void*)(5 * sizeof(GLfloat)));
     glEnableVertexAttribArray(2);
+
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                          (void*)(6 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(3);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -1245,6 +1259,8 @@ bool init() {
       Entities[index]->position = tempmapdata.Entities[i].pos;
     }
   }
+
+  Lights[0] = glm::vec3(1, 1, 4);
 
   // set the props.
   Global->Models = tempmapdata.props;
