@@ -2,6 +2,7 @@
 
 #include <deltaTime.h>
 
+#include <cmath>
 #include <glm/vec3.hpp>
 #include <map>
 #include <queue>
@@ -20,7 +21,10 @@ LIB_API extern std::queue<uint32_t> LightdeleteQueue;
 
 struct Light {
   uint32_t Lightindex;
-  float timeleft;
+  float starttime, timeleft;
+
+  float startspecularStrength = 0.5f, specularStrength = 0.5f;
+  float startdiffusionStrength = 1.f, diffusionStrength = 1.f;
 
   float color[3] = {1, 1, 1};
 
@@ -41,6 +45,7 @@ struct StaticLight : Light {
 struct TempLight : Light {
   TempLight(uint32_t Index, float length) {
     Lightindex = Index;
+    starttime = length;
     timeleft = length;
   }
   void update() {
@@ -49,7 +54,11 @@ struct TempLight : Light {
       LightdeleteQueue.push(Lightindex);
     }
   }
-  void lateupdate() {}
+  void lateupdate() {
+    float t = 1 - timeleft / starttime;
+    specularStrength = std::lerp(startspecularStrength, 0, t);
+    diffusionStrength = std::lerp(startdiffusionStrength, 0, t);
+  }
 };
 
 LIB_API extern std::map<uint32_t, Light*> Lights;

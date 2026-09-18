@@ -505,6 +505,16 @@ void openglrender() {
           glGetUniformLocation(
               shadertemp, ("lightColor[" + std::to_string(cnt) + "]").c_str()),
           light->color[0], light->color[1], light->color[2]);
+      glUniform1f(
+          glGetUniformLocation(
+              shadertemp,
+              ("specularStrength[" + std::to_string(cnt) + "]").c_str()),
+          light->specularStrength);
+      glUniform1f(
+          glGetUniformLocation(
+              shadertemp,
+              ("diffusionStrength[" + std::to_string(cnt) + "]").c_str()),
+          light->diffusionStrength);
       cnt++;
     }
 
