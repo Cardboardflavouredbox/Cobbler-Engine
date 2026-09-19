@@ -471,8 +471,7 @@ void openglrender() {
     if (Settings->graphicsmode == OpenGL1) render2DUI();
   } else {
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     glm::mat4 modelMatrix = Global->perspectivematrix;
 

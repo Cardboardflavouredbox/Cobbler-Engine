@@ -495,6 +495,7 @@ void EntityMove(Entity* tempentity) {
         break;
       } else if (anglething < 45) {
         tempentity->IsGrounded = false;
+        tempentity->Collided = true;
         tempentity->velocityvec3.z = -0.1f;
         break;
       } else {
