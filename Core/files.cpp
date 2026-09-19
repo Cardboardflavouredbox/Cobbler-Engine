@@ -202,6 +202,44 @@ bool loadPNG(std::filesystem::path path) {
   return true;
 }
 
+bool loadCubemap(std::filesystem::path path) {
+  SDL_Log("Cubemap: %s", path.filename().string().c_str());
+  switch (Settings->graphicsmode) {
+    case OpenGL4:
+    case OpenGL3: {
+      GLuint textureID;
+      glGenTextures(1, &textureID);
+      glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+      std::array<std::string, 6> faces{"right.png",  "left.png",  "top.png",
+                                       "bottom.png", "front.png", "back.png"};
+      SDL_Surface* surface;
+      for (unsigned int i = 0; i < 6; i++) {
+        surface = SDL_LoadPNG((path.string() + "/" + faces[i]).c_str());
+
+        if (surface == NULL) return false;
+
+        surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, surface->w,
+                     surface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+        SDL_DestroySurface(surface);
+      }
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+      RendererGlobal->GLstuff->textures[path.filename().string()] = textureID;
+
+      break;
+    }
+  }
+
+  return true;
+}
+
 bool VulkanInstancething() {
   auto vkGetInstanceProcAddr =
       (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
@@ -540,6 +578,14 @@ bool setRenderer() {
     }
   }
 
+  // load all the textures in the Cubemaps folder
+  for (const auto& entry : std::filesystem::directory_iterator(
+           Global->GameFolder.string() + "/textures/Cubemaps")) {
+    if (entry.is_directory()) {
+      if (!loadCubemap(entry.path())) SDL_Log("Cubemap load fail!");
+    }
+  }
+
   return true;
 }
 
@@ -551,7 +597,7 @@ void OpenGLCreateObjects() {
       {"particlesshader.vert", "particlesshader.frag"}));
 
   globjectthing->shader = shadertemp;
-  RendererGlobal->GLstuff->shaders.push_back(shadertemp);
+  RendererGlobal->GLstuff->shaders["particles"] = shadertemp;
 
   std::vector<float> vertices;
 
@@ -598,7 +644,7 @@ void OpenGLCreateObjects() {
   shadertemp = LoadShaders(std::vector<std::filesystem::path>(
       {"objectshader.vert", "lighting.frag"}));
 
-  RendererGlobal->GLstuff->shaders.push_back(shadertemp);
+  RendererGlobal->GLstuff->shaders["Object"] = (shadertemp);
   for (auto& [name, model] : Global->Modelmap) {
     RendererStuff::OpenGLRenderer::GLObject globjectthing;
 
@@ -660,6 +706,43 @@ void OpenGLCreateObjects() {
 
     RendererGlobal->GLstuff->GLModels[name] = globjectthing;
   }
+
+  shadertemp = (LoadShaders(
+      std::vector<std::filesystem::path>({"skybox.vert", "skybox.frag"})));
+  RendererGlobal->GLstuff->shaders["Skybox"] = shadertemp;
+
+  globjectthing = &RendererGlobal->GLstuff->GLSkybox;
+  globjectthing->shader = shadertemp;
+
+  vertices.clear();
+
+  vertices.push_back(1);
+  vertices.push_back(1);
+  globjectthing->size++;
+
+  vertices.push_back(1);
+  vertices.push_back(-1);
+  globjectthing->size++;
+
+  vertices.push_back(-1);
+  vertices.push_back(1);
+  globjectthing->size++;
+
+  vertices.push_back(-1);
+  vertices.push_back(-1);
+  globjectthing->size++;
+
+  glGenVertexArrays(1, &globjectthing->VAOthing);
+  glGenBuffers(1, &globjectthing->VBOthing);
+
+  glBindVertexArray(globjectthing->VAOthing);
+
+  glBindBuffer(GL_ARRAY_BUFFER, globjectthing->VBOthing);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2 * globjectthing->size,
+               &vertices[0], GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+  glEnableVertexAttribArray(0);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);

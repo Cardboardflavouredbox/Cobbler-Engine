@@ -59,8 +59,9 @@ struct RendererStuff {
 
     std::unordered_map<std::string, GLObject> GLModels;
     GLObject GLParticleBase;
+    GLObject GLSkybox;
 
-    std::vector<GLuint> shaders;
+    std::unordered_map<std::string, GLuint> shaders;
   };
   OpenGLRenderer* GLstuff;
 

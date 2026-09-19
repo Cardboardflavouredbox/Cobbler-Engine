@@ -481,6 +481,37 @@ void openglrender() {
 
     modelMatrix = modelMatrix * view;
 
+    RendererStuff::OpenGLRenderer::GLObject* globjectthing =
+        &RendererGlobal->GLstuff->GLSkybox;
+
+    glUseProgram(globjectthing->shader);
+
+    glBindVertexArray(globjectthing->VAOthing);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP,
+                  RendererGlobal->GLstuff->textures["Sky"]);
+
+    glUniform1i(glGetUniformLocation(globjectthing->shader, "uTexture"), 0);
+
+    glm::mat4 orientation =
+        glm::toMat4(glm::angleAxis(glm::radians(-90.f), glm::vec3(1, 0, 0)));
+
+    glUniformMatrix4fv(
+        glGetUniformLocation(globjectthing->shader, "uOrientmat"), 1, GL_FALSE,
+        glm::value_ptr(orientation));
+
+    glUniformMatrix4fv(
+        glGetUniformLocation(globjectthing->shader, "uProjectionMatrix"), 1,
+        GL_FALSE, glm::value_ptr(Global->perspectivematrix));
+
+    glUniformMatrix4fv(
+        glGetUniformLocation(globjectthing->shader, "uWorldToCameraMatrix"), 1,
+        GL_FALSE, glm::value_ptr(view));
+
+    glDepthMask(GL_FALSE);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, globjectthing->size);
+    glDepthMask(GL_TRUE);
+
     renderProps();
     renderEntity();
 

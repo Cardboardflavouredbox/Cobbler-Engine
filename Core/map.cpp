@@ -39,7 +39,7 @@ void LoadMapGL(bool IsOldGL) {
     GLuint shadertemp = LoadShaders(std::vector<std::filesystem::path>(
         {"mapshader.vert", "lighting.frag"}));
 
-    RendererGlobal->GLstuff->shaders.push_back(shadertemp);
+    RendererGlobal->GLstuff->shaders["map"] = shadertemp;
     for (auto& obj : GlobalMapStuff->VisualObjectsVector) {
       RendererStuff::OpenGLRenderer::GLObject globjectthing;
       globjectthing.shader = shadertemp;
