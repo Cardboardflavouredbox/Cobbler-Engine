@@ -400,36 +400,36 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
     switch (Settings->graphicsmode) {
       case OpenGL4:
       case OpenGL3: {
+        GLuint shadertemp =
+            RendererGlobal->GLstuff->GLModels.begin()->second.shader;
+
+        glUseProgram(shadertemp);
+
         glm::mat4 modelMatrix, UImatrix;
         if (isUI) {
           modelMatrix = Global->perspectivematrix *
                         glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0),
                                     glm::vec3(0, 0, 1));
-          UImatrix =
-              Global->perspectivematrix *
-              glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1)) *
-              (glm::translate(
-                  glm::scale(glm::mat4(1), LocalPlayer->Modelthing->size),
-                  Camera->pos));
+          UImatrix = transtomatrix(
+              Camera->pos, LocalPlayer->Modelthing->size,
+              glm::inverse(glm::lookAt(Camera->pos, Camera->lookat,
+                                       glm::vec3(0, 0, 1))));
+
+          glUniform3f(glGetUniformLocation(shadertemp, "viewPos"), 0, 0, 0);
         } else {
           modelMatrix =
               Global->perspectivematrix *
               glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
+
+          glUniform3f(glGetUniformLocation(shadertemp, "viewPos"),
+                      Camera->pos.x, Camera->pos.y, Camera->pos.z);
         }
-
-        GLuint shadertemp =
-            RendererGlobal->GLstuff->GLModels.begin()->second.shader;
-
-        glUseProgram(shadertemp);
 
         glUniformMatrix4fv(glGetUniformLocation(shadertemp, "UIreversemodel"),
                            1, GL_FALSE, glm::value_ptr(UImatrix));
 
         glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1,
                            GL_FALSE, glm::value_ptr(modelMatrix));
-
-        glUniform3f(glGetUniformLocation(shadertemp, "viewPos"), Camera->pos.x,
-                    Camera->pos.y, Camera->pos.z);
 
         glUniform1i(glGetUniformLocation(shadertemp, "IsUI"), isUI);
 
