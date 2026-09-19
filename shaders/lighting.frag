@@ -10,6 +10,8 @@ in vec2 TexCoord;
 
 uniform sampler2D InputTexture;
 uniform int lightcnt;
+uniform float ambientStrength;
+uniform vec3 ambientColor;
 uniform vec3 lightPos[16];
 uniform vec3 lightColor[16];
 uniform float specularStrength[16];
@@ -42,5 +44,8 @@ void main() {
 
     result += (diffuse + specular) * tempcolor.xyz;
   }
+  vec3 ambient = ambientStrength * ambientColor;
+  result += ambient * tempcolor.xyz;
+
   FragColor = vec4(result, 1.0);
 }

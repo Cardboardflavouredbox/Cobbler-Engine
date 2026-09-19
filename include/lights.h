@@ -2,6 +2,7 @@
 
 #include <deltaTime.h>
 
+#include <array>
 #include <cmath>
 #include <glm/vec3.hpp>
 #include <map>
@@ -62,6 +63,8 @@ struct TempLight : Light {
 };
 
 LIB_API extern std::map<uint32_t, Light*> Lights;
+LIB_API extern std::array<float, 3> AmbientColor;
+LIB_API extern float AmbientStrength;
 
 extern "C" {
 LIB_API uint32_t LightMapEmptyIndex();

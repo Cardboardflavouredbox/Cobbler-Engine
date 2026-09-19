@@ -67,6 +67,9 @@ std::map<uint32_t, Light*> Lights;
 // Guess what this does. It's a queue of all the Lights to be deleted.
 std::queue<uint32_t> LightdeleteQueue;
 
+std::array<float, 3> AmbientColor = {1, 1, 1};
+float AmbientStrength = 0.5f;
+
 std::unique_ptr<GlobalMapClass> GlobalMapStuff;
 
 std::unique_ptr<RendererStuff> RendererGlobal;

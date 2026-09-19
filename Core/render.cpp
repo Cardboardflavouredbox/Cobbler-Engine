@@ -431,6 +431,11 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
         glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1,
                            GL_FALSE, glm::value_ptr(modelMatrix));
 
+        glUniform1f(glGetUniformLocation(shadertemp, "ambientStrength"),
+                    AmbientStrength);
+        glUniform3f(glGetUniformLocation(shadertemp, "ambientColor"),
+                    AmbientColor[0], AmbientColor[1], AmbientColor[2]);
+
         glUniform1i(glGetUniformLocation(shadertemp, "IsUI"), isUI);
 
         glUniform1i(glGetUniformLocation(shadertemp, "lightcnt"),

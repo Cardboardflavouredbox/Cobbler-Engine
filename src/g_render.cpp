@@ -526,6 +526,11 @@ void openglrender() {
 
     glUniform1i(glGetUniformLocation(shadertemp, "lightcnt"), Lights.size());
 
+    glUniform1f(glGetUniformLocation(shadertemp, "ambientStrength"),
+                AmbientStrength);
+    glUniform3f(glGetUniformLocation(shadertemp, "ambientColor"),
+                AmbientColor[0], AmbientColor[1], AmbientColor[2]);
+
     int cnt = 0;
     for (auto& [index, light] : Lights) {
       glUniform3f(
