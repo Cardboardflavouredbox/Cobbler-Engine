@@ -6,6 +6,7 @@
 #include <SDL3/SDL_vulkan.h>
 #include <glad/gl.h>
 
+#include <filesystem>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <memory>
@@ -85,6 +86,5 @@ LIB_API void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius);
 LIB_API void DrawTri(std::string texture, glm::vec3 rawvectors[],
                      glm::vec2 UVs[]);
 
-LIB_API GLuint LoadShaders(const char* vertex_file_path,
-                           const char* fragment_file_path);
+LIB_API GLuint LoadShaders(std::vector<std::filesystem::path> file_paths);
 }

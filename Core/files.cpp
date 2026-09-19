@@ -326,77 +326,56 @@ bool VulkanLogicalDevice() {
 }
 
 // https://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/
-GLuint LoadShaders(const char* vertex_file_path,
-                   const char* fragment_file_path) {
-  std::string vertexfile = "shaders/" + std::string(vertex_file_path),
-              fragmentfile = "shaders/" + std::string(fragment_file_path);
-  // Create the shaders
-  GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-  GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-  // Read the Vertex Shader code from the file
-  std::string VertexShaderCode;
-  std::ifstream VertexShaderStream(vertexfile.c_str(), std::ios::in);
-  if (VertexShaderStream.is_open()) {
-    std::stringstream sstr;
-    sstr << VertexShaderStream.rdbuf();
-    VertexShaderCode = sstr.str();
-    VertexShaderStream.close();
-  } else {
-    SDL_Log("Impossible to open %s.", vertexfile.c_str());
-    return 0;
-  }
-
-  // Read the Fragment Shader code from the file
-  std::string FragmentShaderCode;
-  std::ifstream FragmentShaderStream(fragmentfile.c_str(), std::ios::in);
-  if (FragmentShaderStream.is_open()) {
-    std::stringstream sstr;
-    sstr << FragmentShaderStream.rdbuf();
-    FragmentShaderCode = sstr.str();
-    FragmentShaderStream.close();
-  }
-
-  GLint Result = GL_FALSE;
+GLuint LoadShaders(std::vector<std::filesystem::path> file_paths) {
+  std::vector<GLuint> ShaderIDs;
   int InfoLogLength;
 
-  // Compile Vertex Shader
-  SDL_Log("Compiling shader : %s", vertexfile.c_str());
-  char const* VertexSourcePointer = VertexShaderCode.c_str();
-  glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
-  glCompileShader(VertexShaderID);
+  GLint Result = GL_FALSE;
+  for (auto& file_path : file_paths) {
+    std::string file = "shaders/" + file_path.string();
 
-  // Check Vertex Shader
-  glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-  glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-  if (InfoLogLength > 0) {
-    std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
-    glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL,
-                       &VertexShaderErrorMessage[0]);
-    SDL_Log("%s", &VertexShaderErrorMessage[0]);
+    GLuint ShaderID;
+    if (file_path.extension() == ".vert")
+      ShaderID = glCreateShader(GL_VERTEX_SHADER);
+    else
+      ShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+
+    // Read the Shader code from the file
+    std::string ShaderCode;
+    std::ifstream ShaderStream(file.c_str(), std::ios::in);
+    if (ShaderStream.is_open()) {
+      std::stringstream sstr;
+      sstr << ShaderStream.rdbuf();
+      ShaderCode = sstr.str();
+      ShaderStream.close();
+    } else {
+      SDL_Log("Impossible to open %s.", file_path.c_str());
+      return 0;
+    }
+
+    // Compile Vertex Shader
+    SDL_Log("Compiling shader : %s", file_path.c_str());
+    char const* SourcePointer = ShaderCode.c_str();
+    glShaderSource(ShaderID, 1, &SourcePointer, NULL);
+    glCompileShader(ShaderID);
+
+    // Check Vertex Shader
+    glGetShaderiv(ShaderID, GL_COMPILE_STATUS, &Result);
+    glGetShaderiv(ShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    if (InfoLogLength > 0) {
+      std::vector<char> ShaderErrorMessage(InfoLogLength + 1);
+      glGetShaderInfoLog(ShaderID, InfoLogLength, NULL, &ShaderErrorMessage[0]);
+      SDL_Log("%s", &ShaderErrorMessage[0]);
+    }
+
+    ShaderIDs.push_back(ShaderID);
   }
-
-  // Compile Fragment Shader
-  SDL_Log("Compiling shader : %s", fragmentfile.c_str());
-  char const* FragmentSourcePointer = FragmentShaderCode.c_str();
-  glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
-  glCompileShader(FragmentShaderID);
-
-  // Check Fragment Shader
-  glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-  glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-  if (InfoLogLength > 0) {
-    std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
-    glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL,
-                       &FragmentShaderErrorMessage[0]);
-    SDL_Log("%s\n", &FragmentShaderErrorMessage[0]);
-  }
-
   // Link the program
   SDL_Log("Linking program");
   GLuint ProgramID = glCreateProgram();
-  glAttachShader(ProgramID, VertexShaderID);
-  glAttachShader(ProgramID, FragmentShaderID);
+  for (auto i : ShaderIDs) {
+    glAttachShader(ProgramID, i);
+  }
   glLinkProgram(ProgramID);
 
   // Check the program
@@ -409,11 +388,13 @@ GLuint LoadShaders(const char* vertex_file_path,
     SDL_Log("%s", &ProgramErrorMessage[0]);
   }
 
-  glDetachShader(ProgramID, VertexShaderID);
-  glDetachShader(ProgramID, FragmentShaderID);
+  for (auto i : ShaderIDs) {
+    glDetachShader(ProgramID, i);
+  }
 
-  glDeleteShader(VertexShaderID);
-  glDeleteShader(FragmentShaderID);
+  for (auto i : ShaderIDs) {
+    glDeleteShader(i);
+  }
 
   return ProgramID;
 }
@@ -566,8 +547,8 @@ void OpenGLCreateObjects() {
   RendererStuff::OpenGLRenderer::GLObject* globjectthing =
       &RendererGlobal->GLstuff->GLParticleBase;
 
-  GLuint shadertemp =
-      LoadShaders("particlesshader.vert", "particlesshader.frag");
+  GLuint shadertemp = LoadShaders(std::vector<std::filesystem::path>(
+      {"particlesshader.vert", "particlesshader.frag"}));
 
   globjectthing->shader = shadertemp;
   RendererGlobal->GLstuff->shaders.push_back(shadertemp);
@@ -614,7 +595,8 @@ void OpenGLCreateObjects() {
                         (void*)(2 * sizeof(GLfloat)));
   glEnableVertexAttribArray(1);
 
-  shadertemp = LoadShaders("objectshader.vert", "lighting.frag");
+  shadertemp = LoadShaders(std::vector<std::filesystem::path>(
+      {"objectshader.vert", "lighting.frag"}));
 
   RendererGlobal->GLstuff->shaders.push_back(shadertemp);
   for (auto& [name, model] : Global->Modelmap) {
