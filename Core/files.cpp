@@ -104,6 +104,8 @@ void freeRenderer() {
                            &RendererGlobal->GLstuff->GLParticleBase.VAOthing);
       glDeleteBuffers(1, &RendererGlobal->GLstuff->GLParticleBase.VBOthing);
 
+      glDeleteVertexArrays(1, &RendererGlobal->GLstuff->emptyVAO);
+
       // free textures
       for (auto& [key, value] : RendererGlobal->GLstuff->textures) {
         glDeleteTextures(1, &value);
@@ -828,6 +830,11 @@ void OpenGLCreateObjects() {
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
                         (void*)(2 * sizeof(GLfloat)));
   glEnableVertexAttribArray(1);
+
+  RendererGlobal->GLstuff->shaders["UI"] = (LoadShaders(
+      std::vector<std::filesystem::path>({"uishader.vert", "uishader.frag"})));
+
+  glGenVertexArrays(1, &RendererGlobal->GLstuff->emptyVAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);

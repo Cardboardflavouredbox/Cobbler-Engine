@@ -468,7 +468,7 @@ void openglrender() {
         glEnd();
       }
     }
-    if (Settings->graphicsmode == OpenGL1) render2DUI();
+    render2DUI();
   } else {
     glBindFramebuffer(GL_FRAMEBUFFER, RendererGlobal->GLstuff->FBO);
     glViewport(0, 0, Settings->resolutionx, Settings->resolutiony);
@@ -569,6 +569,9 @@ void openglrender() {
     }
     glClear(GL_DEPTH_BUFFER_BIT);
     render3DUI();
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+    render2DUI();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);  // back to default
 

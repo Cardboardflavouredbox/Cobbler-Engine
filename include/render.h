@@ -66,6 +66,8 @@ struct RendererStuff {
 
     std::unordered_map<std::string, GLuint> shaders;
 
+    GLuint emptyVAO;
+
     GLuint FBO, RBO, FBTexture;
     GLObject GLFrameBufferthing;
   };
