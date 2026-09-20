@@ -470,6 +470,9 @@ void openglrender() {
     }
     if (Settings->graphicsmode == OpenGL1) render2DUI();
   } else {
+    glBindFramebuffer(GL_FRAMEBUFFER, RendererGlobal->GLstuff->FBO);
+    glViewport(0, 0, Settings->resolutionx, Settings->resolutiony);
+
     glEnable(GL_DEPTH_TEST);
     glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -566,6 +569,23 @@ void openglrender() {
     }
     glClear(GL_DEPTH_BUFFER_BIT);
     render3DUI();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);  // back to default
+
+    glViewport(RendererGlobal->viewportdata[0], RendererGlobal->viewportdata[1],
+               RendererGlobal->viewportdata[2],
+               RendererGlobal->viewportdata[3]);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    shadertemp = RendererGlobal->GLstuff->GLFrameBufferthing.shader;
+    glUseProgram(shadertemp);
+    glBindVertexArray(RendererGlobal->GLstuff->GLFrameBufferthing.VAOthing);
+    glDisable(GL_DEPTH_TEST);
+    glBindTexture(GL_TEXTURE_2D,
+                  RendererGlobal->GLstuff->GLFrameBufferthing.texture);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, globjectthing->size);
   }
 
   glFlush();

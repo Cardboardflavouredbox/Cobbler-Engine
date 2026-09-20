@@ -34,8 +34,27 @@ void events() {
             break;
           }
           case OpenGL4:
-          case OpenGL3:
-          case OpenGL1: {  // opengl
+          case OpenGL3: {  // opengl newer
+            float w = RendererGlobal->windowx, h = RendererGlobal->windowy,
+                  rtw = Settings->resolutionx, rth = Settings->resolutiony;
+            float size = w / rtw;
+            if (size > h / rth) size = h / rth;
+
+            rtw *= size;
+            rth *= size;
+
+            w /= 2.f;
+            h /= 2.f;
+            w -= rtw / 2.f;
+            h -= rth / 2.f;
+
+            RendererGlobal->viewportdata[0] = std::roundf(w);
+            RendererGlobal->viewportdata[1] = std::roundf(h);
+            RendererGlobal->viewportdata[2] = std::roundf(rtw);
+            RendererGlobal->viewportdata[3] = std::roundf(rth);
+            break;
+          }
+          case OpenGL1: {  // opengl 1
             // Set glViewport to middle of window.
             int w = RendererGlobal->windowx, h = RendererGlobal->windowy,
                 rtw = Settings->resolutionx, rth = Settings->resolutiony;

@@ -108,6 +108,11 @@ void freeRenderer() {
       for (auto& [key, value] : RendererGlobal->GLstuff->textures) {
         glDeleteTextures(1, &value);
       }
+
+      glDeleteFramebuffers(1, &RendererGlobal->GLstuff->FBO);
+
+      glDeleteTextures(1, &RendererGlobal->GLstuff->FBTexture);
+
       SDL_GL_DestroyContext(RendererGlobal->GLstuff->GLContext);
 
       // delete opengl pointer
@@ -560,6 +565,36 @@ bool setRenderer() {
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
       glFrustum(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 256.f);
+    } else {
+      glGenFramebuffers(1, &RendererGlobal->GLstuff->FBO);
+      glBindFramebuffer(GL_FRAMEBUFFER, RendererGlobal->GLstuff->FBO);
+
+      glGenTextures(1, &RendererGlobal->GLstuff->FBTexture);
+      glBindTexture(GL_TEXTURE_2D, RendererGlobal->GLstuff->FBTexture);
+
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Settings->resolutionx,
+                   Settings->resolutiony, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                             GL_TEXTURE_2D, RendererGlobal->GLstuff->FBTexture,
+                             0);
+
+      glGenRenderbuffers(1, &RendererGlobal->GLstuff->RBO);
+      glBindRenderbuffer(GL_RENDERBUFFER, RendererGlobal->GLstuff->RBO);
+      glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+                            Settings->resolutionx, Settings->resolutiony);
+      glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                GL_RENDERBUFFER, RendererGlobal->GLstuff->RBO);
+
+      if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        SDL_Log("FRAMEBUFFER NOT COMPLETE!");
+      }
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -743,6 +778,56 @@ void OpenGLCreateObjects() {
 
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
   glEnableVertexAttribArray(0);
+
+  shadertemp = (LoadShaders(std::vector<std::filesystem::path>(
+      {"renderbuffer.vert", "renderbuffer.frag"})));
+  RendererGlobal->GLstuff->shaders["RenderBuffer"] = shadertemp;
+
+  globjectthing = &RendererGlobal->GLstuff->GLFrameBufferthing;
+  globjectthing->shader = shadertemp;
+
+  vertices.clear();
+
+  vertices.push_back(1);
+  vertices.push_back(1);
+  vertices.push_back(1);
+  vertices.push_back(1);
+  globjectthing->size++;
+
+  vertices.push_back(1);
+  vertices.push_back(-1);
+  vertices.push_back(1);
+  vertices.push_back(0);
+  globjectthing->size++;
+
+  vertices.push_back(-1);
+  vertices.push_back(1);
+  vertices.push_back(0);
+  vertices.push_back(1);
+  globjectthing->size++;
+
+  vertices.push_back(-1);
+  vertices.push_back(-1);
+  vertices.push_back(0);
+  vertices.push_back(0);
+  globjectthing->size++;
+
+  globjectthing->texture = RendererGlobal->GLstuff->FBTexture;
+  glGenVertexArrays(1, &globjectthing->VAOthing);
+  glGenBuffers(1, &globjectthing->VBOthing);
+
+  glBindVertexArray(globjectthing->VAOthing);
+
+  glBindBuffer(GL_ARRAY_BUFFER, globjectthing->VBOthing);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * globjectthing->size,
+               &vertices[0], GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+  glEnableVertexAttribArray(0);
+
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                        (void*)(2 * sizeof(GLfloat)));
+  glEnableVertexAttribArray(1);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
@@ -1544,6 +1629,24 @@ bool init() {
 
   SDL_GetWindowSizeInPixels(RendererGlobal->window, &RendererGlobal->windowx,
                             &RendererGlobal->windowy);
+
+  float w = RendererGlobal->windowx, h = RendererGlobal->windowy,
+        rtw = Settings->resolutionx, rth = Settings->resolutiony;
+  float size = w / rtw;
+  if (size > h / rth) size = h / rth;
+
+  rtw *= size;
+  rth *= size;
+
+  w /= 2.f;
+  h /= 2.f;
+  w -= rtw / 2.f;
+  h -= rth / 2.f;
+
+  RendererGlobal->viewportdata[0] = std::roundf(w);
+  RendererGlobal->viewportdata[1] = std::roundf(h);
+  RendererGlobal->viewportdata[2] = std::roundf(rtw);
+  RendererGlobal->viewportdata[3] = std::roundf(rth);
 
   return true;
 }

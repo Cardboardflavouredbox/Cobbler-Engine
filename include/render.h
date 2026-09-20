@@ -6,6 +6,7 @@
 #include <SDL3/SDL_vulkan.h>
 #include <glad/gl.h>
 
+#include <array>
 #include <filesystem>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -30,6 +31,8 @@ struct RendererStuff {
   SDL_Window* window;
 
   int windowx = 320, windowy = 200;
+
+  std::array<float, 4> viewportdata;
 
   float windowscale = 1.f;
 
@@ -62,6 +65,9 @@ struct RendererStuff {
     GLObject GLSkybox;
 
     std::unordered_map<std::string, GLuint> shaders;
+
+    GLuint FBO, RBO, FBTexture;
+    GLObject GLFrameBufferthing;
   };
   OpenGLRenderer* GLstuff;
 
