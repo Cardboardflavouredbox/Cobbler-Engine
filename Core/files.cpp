@@ -111,6 +111,10 @@ void freeRenderer() {
         glDeleteTextures(1, &value);
       }
 
+      for (auto& [key, value] : Freetypething->Glyphmap) {
+        glDeleteTextures(1, &value.GLTexture);
+      }
+
       glDeleteFramebuffers(1, &RendererGlobal->GLstuff->FBO);
 
       glDeleteTextures(1, &RendererGlobal->GLstuff->FBTexture);
@@ -126,6 +130,9 @@ void freeRenderer() {
       glDeleteLists(RendererGlobal->GLstuff->MapGLlist, 1);
       for (auto& [key, value] : RendererGlobal->GLstuff->textures) {
         glDeleteTextures(1, &value);
+      }
+      for (auto& [key, value] : Freetypething->Glyphmap) {
+        glDeleteTextures(1, &value.GLTexture);
       }
       SDL_GL_DestroyContext(RendererGlobal->GLstuff->GLContext);
 
