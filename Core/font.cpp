@@ -24,22 +24,23 @@ CustomGlyphthing CreateGlyph(FT_GlyphSlot glyph) {
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
       glGenTextures(1, &temp.GLTexture);
-      temp.pixels = new unsigned char[8 * temp.pitch * temp.height];
+      temp.pixels = new unsigned char[32 * temp.pitch * temp.height];
       for (int j = 0; j < temp.height; j++) {
         for (int i = 0; i < temp.width; i++) {
           // the bitmap data is literally packed by the bit.
-          temp.pixels[i + j * temp.width] =
-              (glyph->bitmap.buffer[i / 8 + j * temp.pitch] &
-               (0x01 << (7 - i % 8)))
-                  ? 255
-                  : 0;
+          for (int k = 0; k < 4; k++)
+            temp.pixels[(i + j * temp.width) * 4 + k] =
+                (glyph->bitmap.buffer[i / 8 + j * temp.pitch] &
+                 (0x01 << (7 - i % 8)))
+                    ? 255
+                    : 0;
         }
       }
 
       glBindTexture(GL_TEXTURE_2D, temp.GLTexture);
 
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, temp.width, temp.height, 0, GL_RED,
-                   GL_UNSIGNED_BYTE, temp.pixels);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, temp.width, temp.height, 0,
+                   GL_RGBA, GL_UNSIGNED_BYTE, temp.pixels);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
