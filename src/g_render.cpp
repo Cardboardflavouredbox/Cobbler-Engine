@@ -570,7 +570,7 @@ void openglrender() {
     glClear(GL_DEPTH_BUFFER_BIT);
     render3DUI();
 
-    glClear(GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
     render2DUI();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);  // back to default
@@ -585,7 +585,6 @@ void openglrender() {
     shadertemp = RendererGlobal->GLstuff->GLFrameBufferthing.shader;
     glUseProgram(shadertemp);
     glBindVertexArray(RendererGlobal->GLstuff->GLFrameBufferthing.VAOthing);
-    glDisable(GL_DEPTH_TEST);
     glBindTexture(GL_TEXTURE_2D,
                   RendererGlobal->GLstuff->GLFrameBufferthing.texture);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, globjectthing->size);

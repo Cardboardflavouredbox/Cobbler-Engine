@@ -13,12 +13,13 @@ void main() {
   vec2 uvresult = uvpos;
   if (ID % 2 == 1) {
     result.x += size.x;
-    uvresult += uvsize.x;
+    uvresult.x += uvsize.x;
   }
   if (ID / 2 == 0) {
     result.y += size.y;
-    uvresult += uvsize.y;
+    uvresult.y += uvsize.y;
   }
+  uvresult.y = 1 - uvresult.y;
   uvout = uvresult;
   gl_Position = vec4(result, 0, 1);
 }
