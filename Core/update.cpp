@@ -2,19 +2,12 @@
 
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_timer.h>
-#include <bitsery/adapter/buffer.h>
-#include <bitsery/bitsery.h>
-#include <bitsery/brief_syntax.h>
-#include <bitsery/brief_syntax/map.h>
-#include <bitsery/brief_syntax/set.h>
-#include <bitsery/traits/array.h>
-#include <bitsery/traits/string.h>
-#include <bitsery/traits/vector.h>
 
 #include <cmath>
 #include <glm/glm.hpp>
 #include <queue>
 
+#include "bitserytemplates.h"
 #include "camera.h"
 #include "components.h"
 #include "deltaTime.h"
@@ -29,41 +22,6 @@
 #include "player.h"
 #include "render.h"
 #include "settings.h"
-
-template <typename S>
-void serialize(S& s, ParticleSpawnInfo& o) {
-  s.value4b(o.ParticleCode);
-  s.container4b(o.position);
-  s.text1b(o.name, 32);
-}
-
-template <typename S>
-void serialize(S& s, EntitySpawnInfo& o) {
-  s.value4b(o.teamindex);
-  s.value4b(o.hp);
-  s.text1b(o.name, 32);
-  s.value4b(o.EntityCode);
-  s.value4b(o.EntityIndex);
-  s.container4b(o.direction);
-  s.container4b(o.position);
-  s.container4b(o.velocityvec3);
-  s.value4b(o.State);
-}
-
-template <typename S>
-void serialize(S& s, playerdatapacket& o) {
-  s.value1b(o.altattack);
-  s.value1b(o.attack);
-  s.value8b(o.ID);
-  s.value4b(o.teamindex);
-  s.value1b(o.IsGrounded);
-  s.value1b(o.jump);
-  s.container4b(o.lookdir);
-  s.container4b(o.movevec2);
-  s.container4b(o.position);
-  s.value4b(o.State);
-  s.container4b(o.velocityvec3);
-}
 
 playerinputs Loadinputdata(playerdatapacket input) {
   playerinputs temp;
@@ -254,6 +212,30 @@ void RecieveNetData() {
           Entities[entityindex]->deltatimelocal =
               GlobalNetworkStuff->PlayerNetStuff[tempdata->ID].deltatimelocal;
         }
+      } else if (tempdata->name == "DamageEntity") {
+        EntityDamageInfo tempinfo;
+        auto state = bitsery::quickDeserialization<
+            bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
+            {tempdata->buffer.begin(), tempdata->size}, tempinfo);
+        if (state.first == bitsery::ReaderError::NoError && state.second) {
+          if (!tempinfo.IsPlayer && tempinfo.EntityIndex == 0) {
+            tempinfo.IsPlayer = true;
+            tempinfo.EntityIndex = tempdata->ID;
+          }
+          DamageEntity(tempinfo);
+        }
+      } else if (tempdata->name == "S2CPlayerData") {
+        S2CPlayerInfo tempinfo;
+
+        auto state = bitsery::quickDeserialization<
+            bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
+            {tempdata->buffer.begin(), tempdata->size}, tempinfo);
+        if (state.first == bitsery::ReaderError::NoError && state.second) {
+          if (GlobalNetworkStuff->UserIDs.contains(tempinfo.ID))
+            GlobalNetworkStuff->PlayerNetStuff[tempinfo.ID].PlayerEntity->hp =
+                tempinfo.hp;
+        }
+
       } else if (tempdata->name == "ParticleSpawn") {
         ParticleSpawnInfo tempinfo;
         auto state = bitsery::quickDeserialization<
@@ -352,6 +334,20 @@ void SendNetData() {
       }
     }
 
+    for (const auto& [ID, player] : GlobalNetworkStuff->PlayerNetStuff) {
+      if (ID > 0) {
+        S2CPlayerInfo tempinfo;
+        tempinfo.ID = ID;
+        tempinfo.hp = player.PlayerEntity->hp;
+
+        std::vector<uint8_t> buffer{};
+        auto writtenSize = bitsery::quickSerialization<
+            bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
+                                                                tempinfo);
+
+        CobblerQueueData("S2CPlayerData", buffer, writtenSize);
+      }
+    }
     for (const auto& [ID, entity] : Entities) {
       if (ID > 0) {
         std::vector<uint8_t> buffer{};

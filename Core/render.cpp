@@ -411,9 +411,8 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                         glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0),
                                     glm::vec3(0, 0, 1));
           UImatrix = transtomatrix(
-              Camera->pos, LocalPlayer->Modelthing->size,
-              glm::inverse(glm::lookAt(Camera->pos, Camera->lookat,
-                                       glm::vec3(0, 0, 1))));
+              Camera->pos, glm::vec3(1),
+              glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1)));
 
           glUniform3f(glGetUniformLocation(shadertemp, "viewPos"), 0, 0, 0);
         } else {

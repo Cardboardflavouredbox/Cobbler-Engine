@@ -1,13 +1,8 @@
 #include "extern.h"
 
 #include <SDL3/SDL_timer.h>
-#include <bitsery/adapter/buffer.h>
-#include <bitsery/bitsery.h>
-#include <bitsery/brief_syntax.h>
-#include <bitsery/traits/array.h>
-#include <bitsery/traits/string.h>
-#include <bitsery/traits/vector.h>
 
+#include "bitserytemplates.h"
 #include "camera.h"
 #include "deltaTime.h"
 #include "entity.h"
@@ -84,26 +79,6 @@ uint32_t newboneindex = 0;
 std::unordered_map<std::string, uint32_t> PosetoInt;
 uint32_t newposeindex = 0;
 
-template <typename S>
-void serialize(S& s, ParticleSpawnInfo& o) {
-  s.value4b(o.ParticleCode);
-  s.container4b(o.position);
-  s.text1b(o.name, 32);
-}
-
-template <typename S>
-void serialize(S& s, EntitySpawnInfo& o) {
-  s.value4b(o.teamindex);
-  s.value4b(o.hp);
-  s.text1b(o.name, 32);
-  s.value4b(o.EntityCode);
-  s.value4b(o.EntityIndex);
-  s.container4b(o.direction);
-  s.container4b(o.position);
-  s.container4b(o.velocityvec3);
-  s.value4b(o.State);
-}
-
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {
     return 0;
@@ -147,6 +122,27 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
   }
   Entities[temp] = tempentity;
   return temp;
+}
+
+void DamageEntity(EntityDamageInfo damageinfo) {
+  if (IsServer) {
+    if (damageinfo.IsPlayer) {
+      if (!GlobalNetworkStuff->PlayerNetStuff[damageinfo.EntityIndex]
+               .PlayerEntity->invincible)
+        GlobalNetworkStuff->PlayerNetStuff[damageinfo.EntityIndex]
+            .PlayerEntity->hp -= damageinfo.damage;
+    } else {
+      if (!Entities[damageinfo.EntityIndex]->invincible)
+        Entities[damageinfo.EntityIndex]->hp -= damageinfo.damage;
+    }
+  } else {
+    std::vector<uint8_t> buffer{};
+
+    auto writtenSize = bitsery::quickSerialization<
+        bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
+                                                            damageinfo);
+    CobblerQueueData("DamageEntity", buffer, buffer.size());
+  }
 }
 
 uint32_t ParticleMapEmptyIndex() {

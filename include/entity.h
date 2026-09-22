@@ -34,6 +34,17 @@ struct EntitySpawnInfo {
   float hp = -1;
 };
 
+struct EntityDamageInfo {
+  bool IsPlayer = false;
+  uint64_t EntityIndex;
+  float damage = 0;
+};
+
+struct S2CPlayerInfo {  // Server to Client player info
+  uint64_t ID;
+  float hp = 0;
+};
+
 struct Entity {
   uint32_t EntityIndex;
   std::string name;
@@ -75,4 +86,5 @@ LIB_API extern std::unordered_map<std::string, Entity* (*)(uint32_t, uint32_t)>
 extern "C" {
 LIB_API uint32_t EntityMapEmptyIndex();
 LIB_API uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend);
+LIB_API void DamageEntity(EntityDamageInfo damageinfo);
 }
