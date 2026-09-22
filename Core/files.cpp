@@ -1212,7 +1212,7 @@ bool init() {
     // check if the server acknowledged you
     while (Global->IsRunning && !check) {
       events();
-      CobblerQueueData("PlayerAdd", buffer, 0);
+      CobblerQueueData("PlayerAdd", buffer, 0, false);
       std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
       if (tempvector != NULL) {
         while (!tempvector->empty()) {

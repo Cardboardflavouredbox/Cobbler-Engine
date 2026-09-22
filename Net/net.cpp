@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <deque>
+#include <map>
 #include <sstream>
 #include <vector>
 
@@ -30,6 +31,12 @@ NetworkStuffClass* NetStuff;
 // std::string curlloginstring;
 uint64_t UserID = 0;
 std::vector<uint8_t> packetbuffer;
+
+uint64_t DataSendConfirmID = 0;
+std::vector<uint8_t> Confirmedpacketbuffer;
+std::map<uint64_t, std::map<uint64_t, std::vector<uint8_t>>>
+    Confirmedpacketbuffers;
+
 bool IsServer = false;
 
 // static size_t CobblerCurlCallback(char* data, size_t size, size_t nmemb,
@@ -92,12 +99,19 @@ bool CobblerInitNet() {
   return true;
 }
 
-bool CobblerQueueData(const char* name, std::vector<uint8_t> buf, size_t size) {
+bool CobblerQueueData(const char* name, std::vector<uint8_t> buf, size_t size,
+                      bool confirmrecv) {
+  std::vector<uint8_t>* bufferpointer;
+  if (confirmrecv) {
+    bufferpointer = &Confirmedpacketbuffer;
+  } else {
+    bufferpointer = &packetbuffer;
+  }
   int len = std::strlen(name);
   for (int i = 0; i < len; i++) {
-    packetbuffer.push_back(uint8_t(name[i]));
+    bufferpointer->push_back(uint8_t(name[i]));
   }
-  packetbuffer.push_back(uint8_t('\0'));
+  bufferpointer->push_back(uint8_t('\0'));
 
   uint32_t buflen = size;
 
@@ -106,9 +120,10 @@ bool CobblerQueueData(const char* name, std::vector<uint8_t> buf, size_t size) {
     return false;
   }
 
-  packetbuffer.push_back(static_cast<uint8_t>(buflen));
+  bufferpointer->push_back(static_cast<uint8_t>(buflen));
 
-  packetbuffer.insert(packetbuffer.end(), buf.begin(), buf.begin() + buflen);
+  bufferpointer->insert(bufferpointer->end(), buf.begin(),
+                        buf.begin() + buflen);
   return true;
 }
 
@@ -129,7 +144,10 @@ bool CobblerSendNet() {  // from: ID, to: ID
     // 2. Cast directly into a fixed-size byte array safely
     auto byte_array = std::bit_cast<std::array<uint8_t, 8>>(ID);
 
-    std::vector<uint8_t> temppacket(localID.begin(), localID.end());
+    std::vector<uint8_t> temppacket;
+    temppacket.push_back(uint8_t(0));
+
+    temppacket.insert(temppacket.end(), localID.begin(), localID.end());
 
     temppacket.insert(temppacket.end(), byte_array.begin(), byte_array.end());
 
@@ -143,6 +161,11 @@ bool CobblerSendNet() {  // from: ID, to: ID
     }
   }
   packetbuffer.clear();
+  // for (int i = 0; i < NetStuff->Clients.size(); i++) {
+  //   Confirmedpacketbuffers[NetStuff->Clients[i].ID][DataSendConfirmID] =
+  //       Confirmedpacketbuffer;
+  // }
+  Confirmedpacketbuffer.clear();
   return true;
 }
 
@@ -155,6 +178,9 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
     if (tempvec == NULL) tempvec = new std::vector<CobblerNetData>();
 
     std::deque<uint8_t> datavec(dgram->buf, dgram->buf + dgram->buflen);
+
+    uint8_t checkifconfirm = datavec.front();
+    datavec.pop_front();
 
     std::array<uint8_t, 8> tempbytes;
 

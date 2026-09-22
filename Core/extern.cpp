@@ -100,7 +100,7 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
         bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
                                                             Entityinfo);
 
-    CobblerQueueData("LocalEntity", buffer, writtenSize);
+    CobblerQueueData("LocalEntity", buffer, writtenSize, false);
     return 0;
   }
   uint32_t temp = EntityMapEmptyIndex();
@@ -127,8 +127,6 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
 
 void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer) {
   if (FromLocalPlayer || !Global->IsOnline || IsServer) {
-    SDL_Log("DamageEntity Index: %llu Damage: %f", damageinfo.EntityIndex,
-            damageinfo.damage);
     if (IsServer) {
       if (damageinfo.IsPlayer) {
         if (!GlobalNetworkStuff->PlayerNetStuff[damageinfo.EntityIndex]
@@ -145,7 +143,7 @@ void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer) {
       auto writtenSize = bitsery::quickSerialization<
           bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
                                                               damageinfo);
-      CobblerQueueData("DamageEntity", buffer, writtenSize);
+      CobblerQueueData("DamageEntity", buffer, writtenSize, true);
     }
   }
 }
@@ -182,7 +180,7 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
         bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
                                                             Particleinfo);
 
-    CobblerQueueData("ParticleSpawn", buffer, writtenSize);
+    CobblerQueueData("ParticleSpawn", buffer, writtenSize, true);
   }
   uint32_t temp = ParticleMapEmptyIndex();
   Particle* tempparticle =

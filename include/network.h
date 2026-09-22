@@ -45,6 +45,7 @@ struct CobblerNetData {
 // LIB_API extern PostField* curlpostfield;
 LIB_API extern bool IsServer;
 LIB_API extern uint64_t UserID;
+LIB_API extern uint64_t DataSendConfirmID;
 
 extern "C" {
 LIB_API bool CobblerInitNet();
@@ -55,7 +56,7 @@ LIB_API void CobblerQuitNet();
 // LIB_API bool CobblerSendCurlData();
 // LIB_API bool CobblerCurlLogin();
 LIB_API bool CobblerQueueData(const char* name, std::vector<uint8_t> buf,
-                              size_t size);
+                              size_t size, bool confirmrecv);
 LIB_API bool CobblerSendNet();
 LIB_API std::vector<CobblerNetData>* CobblerRecvNet();
 }

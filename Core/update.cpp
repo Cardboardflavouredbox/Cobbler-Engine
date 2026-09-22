@@ -225,6 +225,7 @@ void RecieveNetData() {
           DamageEntity(tempinfo, false);
         }
       } else if (tempdata->name == "S2CPlayerData") {
+        SDL_Log("WHAT");
         S2CPlayerInfo tempinfo;
 
         auto state = bitsery::quickDeserialization<
@@ -234,6 +235,8 @@ void RecieveNetData() {
           if (GlobalNetworkStuff->UserIDs.contains(tempinfo.ID))
             GlobalNetworkStuff->PlayerNetStuff[tempinfo.ID].PlayerEntity->hp =
                 tempinfo.hp;
+          else if (UserID == tempinfo.ID)
+            LocalPlayer->hp = tempinfo.hp;
         }
 
       } else if (tempdata->name == "ParticleSpawn") {
@@ -243,12 +246,13 @@ void RecieveNetData() {
             {tempdata->buffer.begin(), tempdata->size}, tempinfo);
         if (state.first == bitsery::ReaderError::NoError && state.second) {
           if (IsServer) {
-            CobblerQueueData("ParticleSpawn", tempdata->buffer, tempdata->size);
+            CobblerQueueData("ParticleSpawn", tempdata->buffer, tempdata->size,
+                             false);
           }
           ParticleSpawn(tempinfo, false);
         }
       } else if (tempdata->name == "SendTick") {
-        CobblerQueueData("ReturnTick", tempdata->buffer, tempdata->size);
+        CobblerQueueData("ReturnTick", tempdata->buffer, tempdata->size, false);
       } else if (tempdata->name == "ReturnTick") {
         if (GlobalNetworkStuff->PlayerNetStuff.contains(tempdata->ID)) {
           uint64_t temp;
@@ -309,7 +313,7 @@ void SendNetData() {
         bitsery::OutputBufferAdapter<std::vector<uint8_t>>>(
         {buffer}, GlobalNetworkStuff->UserIDs);
 
-    CobblerQueueData("PlayerList", buffer, writtenSize);
+    CobblerQueueData("PlayerList", buffer, writtenSize, false);
 
     buffer.clear();
 
@@ -330,12 +334,12 @@ void SendNetData() {
         auto writtenSize = bitsery::quickSerialization<
             bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
 
-        CobblerQueueData("Player", buffer, writtenSize);
+        CobblerQueueData("Player", buffer, writtenSize, false);
       }
     }
 
     for (const auto& [ID, player] : GlobalNetworkStuff->PlayerNetStuff) {
-      if (ID > 0) {
+      if (ID != UserID) {
         S2CPlayerInfo tempinfo;
         tempinfo.ID = ID;
         tempinfo.hp = player.PlayerEntity->hp;
@@ -345,7 +349,7 @@ void SendNetData() {
             bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
                                                                 tempinfo);
 
-        CobblerQueueData("S2CPlayerData", buffer, writtenSize);
+        CobblerQueueData("S2CPlayerData", buffer, writtenSize, false);
       }
     }
     for (const auto& [ID, entity] : Entities) {
@@ -366,7 +370,7 @@ void SendNetData() {
         auto writtenSize = bitsery::quickSerialization<
             bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
 
-        CobblerQueueData("LocalEntity", buffer, writtenSize);
+        CobblerQueueData("LocalEntity", buffer, writtenSize, false);
       }
     }
   }
@@ -384,7 +388,7 @@ void SendNetData() {
     }
     auto writtenSize = bitsery::quickSerialization<
         bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
-    CobblerQueueData("Player", buffer, writtenSize);
+    CobblerQueueData("Player", buffer, writtenSize, false);
     // SDL_Log("%u Send", writtenSize);
 
     buffer.clear();
@@ -392,7 +396,7 @@ void SendNetData() {
   auto writtenSize = bitsery::quickSerialization<
       bitsery::OutputBufferAdapter<std::vector<uint8_t>>>(
       {buffer}, SDL_GetPerformanceCounter());
-  CobblerQueueData("SendTick", buffer, writtenSize);
+  CobblerQueueData("SendTick", buffer, writtenSize, false);
 
   GlobalNetworkStuff->Onlinesendwait -= updatedeltaTime;
   while (GlobalNetworkStuff->Onlinesendwait <= 0) {
@@ -464,7 +468,7 @@ void PlayerQuit() {
   std::vector<uint8_t> buffer{};
 
   for (int i = 0; i < 30; i++) {
-    CobblerQueueData("PlayerQuit", buffer, 0);
+    CobblerQueueData("PlayerQuit", buffer, 0, false);
     std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
     if (tempvector != NULL) {
       bool check = false;
