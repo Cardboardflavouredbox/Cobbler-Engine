@@ -222,7 +222,7 @@ void RecieveNetData() {
             tempinfo.IsPlayer = true;
             tempinfo.EntityIndex = tempdata->ID;
           }
-          DamageEntity(tempinfo);
+          DamageEntity(tempinfo, false);
         }
       } else if (tempdata->name == "S2CPlayerData") {
         S2CPlayerInfo tempinfo;

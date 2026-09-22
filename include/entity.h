@@ -86,5 +86,5 @@ LIB_API extern std::unordered_map<std::string, Entity* (*)(uint32_t, uint32_t)>
 extern "C" {
 LIB_API uint32_t EntityMapEmptyIndex();
 LIB_API uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend);
-LIB_API void DamageEntity(EntityDamageInfo damageinfo);
+LIB_API void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer);
 }

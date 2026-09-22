@@ -1,5 +1,6 @@
 #include "extern.h"
 
+#include <SDL3/SDL_log.h>
 #include <SDL3/SDL_timer.h>
 
 #include "bitserytemplates.h"
@@ -124,24 +125,28 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
   return temp;
 }
 
-void DamageEntity(EntityDamageInfo damageinfo) {
-  if (IsServer) {
-    if (damageinfo.IsPlayer) {
-      if (!GlobalNetworkStuff->PlayerNetStuff[damageinfo.EntityIndex]
-               .PlayerEntity->invincible)
-        GlobalNetworkStuff->PlayerNetStuff[damageinfo.EntityIndex]
-            .PlayerEntity->hp -= damageinfo.damage;
+void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer) {
+  if (FromLocalPlayer || !Global->IsOnline || IsServer) {
+    SDL_Log("DamageEntity Index: %llu Damage: %f", damageinfo.EntityIndex,
+            damageinfo.damage);
+    if (IsServer) {
+      if (damageinfo.IsPlayer) {
+        if (!GlobalNetworkStuff->PlayerNetStuff[damageinfo.EntityIndex]
+                 .PlayerEntity->invincible)
+          GlobalNetworkStuff->PlayerNetStuff[damageinfo.EntityIndex]
+              .PlayerEntity->hp -= damageinfo.damage;
+      } else {
+        if (!Entities[damageinfo.EntityIndex]->invincible)
+          Entities[damageinfo.EntityIndex]->hp -= damageinfo.damage;
+      }
     } else {
-      if (!Entities[damageinfo.EntityIndex]->invincible)
-        Entities[damageinfo.EntityIndex]->hp -= damageinfo.damage;
-    }
-  } else {
-    std::vector<uint8_t> buffer{};
+      std::vector<uint8_t> buffer{};
 
-    auto writtenSize = bitsery::quickSerialization<
-        bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
-                                                            damageinfo);
-    CobblerQueueData("DamageEntity", buffer, buffer.size());
+      auto writtenSize = bitsery::quickSerialization<
+          bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
+                                                              damageinfo);
+      CobblerQueueData("DamageEntity", buffer, writtenSize);
+    }
   }
 }
 
