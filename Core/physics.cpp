@@ -371,7 +371,8 @@ glm::vec3 collisionloop(Entity* tempentity, glm::vec3 tempposition) {
 // Also add more comments! This looks like nonsense to most people.
 void EntityMove(Entity* tempentity) {
   // consider round trip time in deltatime.
-  float dt = tempentity->deltatimelocal + updatedeltaTime;
+  float dt = (tempentity->deltatimelocal > 0.f) ? tempentity->deltatimelocal
+                                                : updatedeltaTime;
   tempentity->velocityvec3.z -= tempentity->gravity * dt;
 
   // set goal of movement.

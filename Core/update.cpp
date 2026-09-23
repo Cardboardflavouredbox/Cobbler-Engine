@@ -18,6 +18,7 @@
 #include "lights.h"
 #include "network.h"
 #include "networkextern.h"
+#include "physics.h"
 #include "pi.h"
 #include "player.h"
 #include "render.h"
@@ -95,6 +96,9 @@ void CameraUpdate() {
 void RecieveNetData() {
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
     if (i.first != UserID) i.second.Timecounter += updatedeltaTime;
+    i.second.PlayerInput.jump = 0;
+    i.second.PlayerInput.altattack = 0;
+    i.second.PlayerInput.attack = 0;
   }
   std::queue<uint64_t> deleteplayerqueue;
 
@@ -116,34 +120,45 @@ void RecieveNetData() {
                   nullptr) {
             GlobalNetworkClass::PlayerNetClass* tempplayerthing =
                 &GlobalNetworkStuff->PlayerNetStuff[temp.ID];
+
+            unsigned char jump = tempplayerthing->PlayerInput.jump,
+                          attack = tempplayerthing->PlayerInput.attack,
+                          altattack = tempplayerthing->PlayerInput.altattack;
+
             tempplayerthing->PlayerInput = Loadinputdata(temp);
-            for (int i = 0; i < 3; i++) {
-              tempplayerthing->PlayerEntity->velocityvec3[i] =
-                  temp.velocityvec3[i];
-              // if (!IsServer)
-              tempplayerthing->PlayerEntity->position[i] = temp.position[i];
+
+            if (jump > tempplayerthing->PlayerInput.jump)
+              tempplayerthing->PlayerInput.jump = jump;
+            if (attack > tempplayerthing->PlayerInput.attack)
+              tempplayerthing->PlayerInput.attack = attack;
+            if (altattack > tempplayerthing->PlayerInput.altattack)
+              tempplayerthing->PlayerInput.altattack = altattack;
+
+            if (!IsServer) {
+              for (int i = 0; i < 3; i++) {
+                tempplayerthing->PlayerEntity->velocityvec3[i] =
+                    temp.velocityvec3[i];
+                tempplayerthing->PlayerEntity->position[i] = temp.position[i];
+              }
+              tempplayerthing->PlayerEntity->IsGrounded = temp.IsGrounded;
             }
             tempplayerthing->PlayerEntity->teamindex = temp.teamindex;
-            tempplayerthing->PlayerEntity->IsGrounded = temp.IsGrounded;
             tempplayerthing->PlayerEntity->State = temp.State;
+            // EntityMove(tempplayerthing->PlayerEntity);
+            // tempplayerthing->PlayerEntity->deltatimelocal = 0;
+          } else if (temp.ID == UserID) {
+            glm::vec3 tempvec3;
+            for (int i = 0; i < 3; i++) {
+              tempvec3[i] = temp.position[i];
+            }
+            LocalPlayer->position = tempvec3;
+
+            for (int i = 0; i < 3; i++) {
+              tempvec3[i] = temp.velocityvec3[i];
+            }
+            LocalPlayer->velocityvec3 = tempvec3;
           }
-          //  else if (temp.ID == UserID) {
-          //   glm::vec3 tempvec3;
-          //   for (int i = 0; i < 3; i++) {
-          //     tempvec3[i] = temp.position[i];
-          //   }
-          //   if (glm::distance(LocalPlayer->position, tempvec3) > 1.5f)
-          //     LocalPlayer->position = tempvec3;
-          //   for (int i = 0; i < 3; i++) {
-          //     tempvec3[i] = temp.velocityvec3[i];
-          //   }
-          //   if (glm::distance(LocalPlayer->position, tempvec3) > 1.5f)
-          //     LocalPlayer->velocityvec3 = tempvec3;
-          // }
         }
-        // else {
-        //   SDL_Log("%u Receive", tempdata->size);
-        // }
 
       } else if (IsServer && tempdata->name == "PlayerAdd") {
         if (!CobblerCheckHasIP(tempdata->IP, tempdata->PORT)) {
@@ -389,7 +404,11 @@ void SendNetData() {
     }
     auto writtenSize = bitsery::quickSerialization<
         bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
-    CobblerQueueData("Player", buffer, writtenSize);
+
+    if (IsServer)
+      CobblerQueueData("Player", buffer, writtenSize);
+    else
+      CobblerQueueConfirmedData(0, "Player", buffer, writtenSize);
     // SDL_Log("%u Send", writtenSize);
 
     buffer.clear();

@@ -100,7 +100,7 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
         bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
                                                             Entityinfo);
 
-    CobblerQueueData("LocalEntity", buffer, writtenSize);
+    CobblerQueueConfirmedData(0, "LocalEntity", buffer, writtenSize);
     return 0;
   }
   uint32_t temp = EntityMapEmptyIndex();
@@ -127,7 +127,7 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
 
 void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer) {
   if (FromLocalPlayer || !Global->IsOnline || IsServer) {
-    if (IsServer) {
+    if (!Global->IsOnline || IsServer) {
       if (damageinfo.IsPlayer) {
         if (!GlobalNetworkStuff->PlayerNetStuff[damageinfo.EntityIndex]
                  .PlayerEntity->invincible)
