@@ -32,10 +32,12 @@ NetworkStuffClass* NetStuff;
 uint64_t UserID = 0;
 std::vector<uint8_t> packetbuffer;
 
-uint64_t DataSendConfirmID = 0;
-std::vector<uint8_t> Confirmedpacketbuffer;
-std::map<uint64_t, std::map<uint64_t, std::vector<uint8_t>>>
-    Confirmedpacketbuffers;
+struct ConfirmedSendStuffClass {
+  uint64_t DataSendConfirmID = 0, DataRecvConfirmID = 0;
+  std::map<uint64_t, std::vector<uint8_t>> DataSendPacketBuffers;
+};
+
+std::map<uint64_t, ConfirmedSendStuffClass> ConfirmedSendMap;
 
 bool IsServer = false;
 
@@ -99,14 +101,11 @@ bool CobblerInitNet() {
   return true;
 }
 
-bool CobblerQueueData(const char* name, std::vector<uint8_t> buf, size_t size,
-                      bool confirmrecv) {
-  std::vector<uint8_t>* bufferpointer;
-  if (confirmrecv) {
-    bufferpointer = &Confirmedpacketbuffer;
-  } else {
-    bufferpointer = &packetbuffer;
-  }
+bool CobblerQueueConfirmedData(uint64_t ID, const char* name,
+                               std::vector<uint8_t> buf, size_t size) {
+  std::vector<uint8_t>* bufferpointer =
+      &ConfirmedSendMap[ID]
+           .DataSendPacketBuffers[ConfirmedSendMap[ID].DataSendConfirmID];
   int len = std::strlen(name);
   for (int i = 0; i < len; i++) {
     bufferpointer->push_back(uint8_t(name[i]));
@@ -124,6 +123,26 @@ bool CobblerQueueData(const char* name, std::vector<uint8_t> buf, size_t size,
 
   bufferpointer->insert(bufferpointer->end(), buf.begin(),
                         buf.begin() + buflen);
+  return true;
+}
+
+bool CobblerQueueData(const char* name, std::vector<uint8_t> buf, size_t size) {
+  int len = std::strlen(name);
+  for (int i = 0; i < len; i++) {
+    packetbuffer.push_back(uint8_t(name[i]));
+  }
+  packetbuffer.push_back(uint8_t('\0'));
+
+  uint32_t buflen = size;
+
+  if (buflen > 255) {
+    SDL_Log("buffer too long!");
+    return false;
+  }
+
+  packetbuffer.push_back(static_cast<uint8_t>(buflen));
+
+  packetbuffer.insert(packetbuffer.end(), buf.begin(), buf.begin() + buflen);
   return true;
 }
 
@@ -161,11 +180,44 @@ bool CobblerSendNet() {  // from: ID, to: ID
     }
   }
   packetbuffer.clear();
-  // for (int i = 0; i < NetStuff->Clients.size(); i++) {
-  //   Confirmedpacketbuffers[NetStuff->Clients[i].ID][DataSendConfirmID] =
-  //       Confirmedpacketbuffer;
-  // }
-  Confirmedpacketbuffer.clear();
+  for (int i = 0; i < NetStuff->Clients.size(); i++) {
+    uint64_t ID = NetStuff->Clients[i].ID;
+    if constexpr (std::endian::native == std::endian::little) {
+      ID = std::byteswap(ID);
+    }
+    auto ID_byte_array = std::bit_cast<std::array<uint8_t, 8>>(ID);
+
+    for (auto& [idthing, packet] : ConfirmedSendMap[ID].DataSendPacketBuffers) {
+      uint64_t DataConfirmID = idthing;
+      if constexpr (std::endian::native == std::endian::little) {
+        DataConfirmID = std::byteswap(DataConfirmID);
+      }
+      auto ID_byte_array2 =
+          std::bit_cast<std::array<uint8_t, 8>>(DataConfirmID);
+
+      std::vector<uint8_t> temppacket;
+      temppacket.push_back(uint8_t(1));
+
+      temppacket.insert(temppacket.end(), ID_byte_array2.begin(),
+                        ID_byte_array2.end());
+
+      temppacket.insert(temppacket.end(), localID.begin(), localID.end());
+
+      temppacket.insert(temppacket.end(), ID_byte_array.begin(),
+                        ID_byte_array.end());
+
+      temppacket.insert(temppacket.end(), packet.begin(), packet.end());
+
+      if (!NET_SendDatagram(NetStuff->Socket, NetStuff->Clients[i].RealAddress,
+                            NetStuff->Clients[i].PORT, temppacket.data(),
+                            temppacket.size())) {
+        SDL_Log("%s", SDL_GetError());
+      }
+      if (ConfirmedSendMap[ID].DataSendPacketBuffers.contains(
+              ConfirmedSendMap[ID].DataSendConfirmID))
+        ConfirmedSendMap[ID].DataSendConfirmID++;
+    }
+  }
   return true;
 }
 
@@ -181,55 +233,173 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
 
     uint8_t checkifconfirm = datavec.front();
     datavec.pop_front();
+    if (checkifconfirm == 2) {
+      std::array<uint8_t, 8> tempbytes;
 
-    std::array<uint8_t, 8> tempbytes;
-
-    for (int i = 0; i < 8; i++) {
-      tempbytes[i] = datavec.front();
-      datavec.pop_front();
-    }
-
-    uint64_t ID = std::bit_cast<uint64_t>(tempbytes);
-
-    if constexpr (std::endian::native == std::endian::little) {
-      ID = std::byteswap(ID);
-    }
-
-    for (int i = 0; i < 8; i++) {
-      tempbytes[i] = datavec.front();
-      datavec.pop_front();
-    }
-
-    UserID = std::bit_cast<uint64_t>(tempbytes);
-
-    if constexpr (std::endian::native == std::endian::little) {
-      UserID = std::byteswap(UserID);
-    }
-
-    while (!datavec.empty()) {
-      CobblerNetData temp;
-      temp.IP = NET_GetAddressString(dgram->addr);
-      temp.PORT = dgram->port;
-      temp.ID = ID;
-
-      if (!datavec.empty()) {
-        while (datavec.front() != uint8_t(0) && !datavec.empty()) {
-          temp.name.push_back(char(datavec.front()));
-          datavec.pop_front();
-        }
+      for (int i = 0; i < 8; i++) {
+        tempbytes[i] = datavec.front();
         datavec.pop_front();
-
-        uint8_t len = datavec.front();
-        datavec.pop_front();
-
-        temp.size = len;
-
-        temp.buffer.insert(temp.buffer.end(), datavec.begin(),
-                           datavec.begin() + len);
-        datavec.erase(datavec.begin(), datavec.begin() + len);
       }
 
-      tempvec->push_back(temp);
+      uint64_t ConfirmID = std::bit_cast<uint64_t>(tempbytes);
+
+      if constexpr (std::endian::native == std::endian::little) {
+        ConfirmID = std::byteswap(ConfirmID);
+      }
+
+      for (int i = 0; i < 8; i++) {
+        tempbytes[i] = datavec.front();
+        datavec.pop_front();
+      }
+
+      uint64_t SenderID = std::bit_cast<uint64_t>(tempbytes);
+
+      if constexpr (std::endian::native == std::endian::little) {
+        SenderID = std::byteswap(SenderID);
+      }
+
+      ConfirmedSendMap[SenderID].DataSendPacketBuffers.erase(ConfirmID);
+    } else if (checkifconfirm == 1) {
+      std::array<uint8_t, 8> tempbytes;
+
+      for (int i = 0; i < 8; i++) {
+        tempbytes[i] = datavec.front();
+        datavec.pop_front();
+      }
+
+      uint64_t ConfirmID = std::bit_cast<uint64_t>(tempbytes);
+
+      if constexpr (std::endian::native == std::endian::little) {
+        ConfirmID = std::byteswap(ConfirmID);
+      }
+
+      for (int i = 0; i < 8; i++) {
+        tempbytes[i] = datavec.front();
+        datavec.pop_front();
+      }
+
+      uint64_t ID = std::bit_cast<uint64_t>(tempbytes);
+
+      if constexpr (std::endian::native == std::endian::little) {
+        ID = std::byteswap(ID);
+      }
+      for (int i = 0; i < 8; i++) {
+        tempbytes[i] = datavec.front();
+        datavec.pop_front();
+      }
+
+      UserID = std::bit_cast<uint64_t>(tempbytes);
+
+      if constexpr (std::endian::native == std::endian::little) {
+        UserID = std::byteswap(UserID);
+      }
+
+      if (ConfirmID >= ConfirmedSendMap[ID].DataRecvConfirmID) {
+        ConfirmedSendMap[ID].DataRecvConfirmID = ConfirmID;
+        while (!datavec.empty()) {
+          CobblerNetData temp;
+          temp.IP = NET_GetAddressString(dgram->addr);
+          temp.PORT = dgram->port;
+          temp.ID = ID;
+
+          if (!datavec.empty()) {
+            while (datavec.front() != uint8_t(0) && !datavec.empty()) {
+              temp.name.push_back(char(datavec.front()));
+              datavec.pop_front();
+            }
+            datavec.pop_front();
+
+            uint8_t len = datavec.front();
+            datavec.pop_front();
+
+            temp.size = len;
+
+            temp.buffer.insert(temp.buffer.end(), datavec.begin(),
+                               datavec.begin() + len);
+            datavec.erase(datavec.begin(), datavec.begin() + len);
+          }
+
+          tempvec->push_back(temp);
+        }
+
+        if constexpr (std::endian::native == std::endian::little) {
+          ConfirmID = std::byteswap(ConfirmID);
+        }
+        auto ID_byte_array = std::bit_cast<std::array<uint8_t, 8>>(ConfirmID);
+
+        std::vector<uint8_t> temppacket;
+        temppacket.push_back(uint8_t(2));
+
+        temppacket.insert(temppacket.end(), ID_byte_array.begin(),
+                          ID_byte_array.end());
+
+        uint64_t localID = UserID;
+
+        if constexpr (std::endian::native == std::endian::little) {
+          localID = std::byteswap(localID);
+        }
+
+        ID_byte_array = std::bit_cast<std::array<uint8_t, 8>>(localID);
+
+        temppacket.insert(temppacket.end(), ID_byte_array.begin(),
+                          ID_byte_array.end());
+
+        if (!NET_SendDatagram(NetStuff->Socket, dgram->addr, dgram->port,
+                              temppacket.data(), temppacket.size())) {
+          SDL_Log("%s", SDL_GetError());
+        }
+      }
+
+    } else {
+      std::array<uint8_t, 8> tempbytes;
+
+      for (int i = 0; i < 8; i++) {
+        tempbytes[i] = datavec.front();
+        datavec.pop_front();
+      }
+
+      uint64_t ID = std::bit_cast<uint64_t>(tempbytes);
+
+      if constexpr (std::endian::native == std::endian::little) {
+        ID = std::byteswap(ID);
+      }
+
+      for (int i = 0; i < 8; i++) {
+        tempbytes[i] = datavec.front();
+        datavec.pop_front();
+      }
+
+      UserID = std::bit_cast<uint64_t>(tempbytes);
+
+      if constexpr (std::endian::native == std::endian::little) {
+        UserID = std::byteswap(UserID);
+      }
+
+      while (!datavec.empty()) {
+        CobblerNetData temp;
+        temp.IP = NET_GetAddressString(dgram->addr);
+        temp.PORT = dgram->port;
+        temp.ID = ID;
+
+        if (!datavec.empty()) {
+          while (datavec.front() != uint8_t(0) && !datavec.empty()) {
+            temp.name.push_back(char(datavec.front()));
+            datavec.pop_front();
+          }
+          datavec.pop_front();
+
+          uint8_t len = datavec.front();
+          datavec.pop_front();
+
+          temp.size = len;
+
+          temp.buffer.insert(temp.buffer.end(), datavec.begin(),
+                             datavec.begin() + len);
+          datavec.erase(datavec.begin(), datavec.begin() + len);
+        }
+
+        tempvec->push_back(temp);
+      }
     }
     NET_DestroyDatagram(dgram);
   }

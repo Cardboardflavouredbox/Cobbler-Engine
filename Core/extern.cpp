@@ -100,7 +100,7 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
         bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
                                                             Entityinfo);
 
-    CobblerQueueData("LocalEntity", buffer, writtenSize, false);
+    CobblerQueueData("LocalEntity", buffer, writtenSize);
     return 0;
   }
   uint32_t temp = EntityMapEmptyIndex();
@@ -143,7 +143,7 @@ void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer) {
       auto writtenSize = bitsery::quickSerialization<
           bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
                                                               damageinfo);
-      CobblerQueueData("DamageEntity", buffer, writtenSize, true);
+      CobblerQueueConfirmedData(0, "DamageEntity", buffer, writtenSize);
     }
   }
 }
@@ -180,7 +180,7 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
         bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
                                                             Particleinfo);
 
-    CobblerQueueData("ParticleSpawn", buffer, writtenSize, true);
+    CobblerQueueData("ParticleSpawn", buffer, writtenSize);
   }
   uint32_t temp = ParticleMapEmptyIndex();
   Particle* tempparticle =

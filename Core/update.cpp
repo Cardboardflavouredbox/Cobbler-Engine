@@ -114,30 +114,32 @@ void RecieveNetData() {
           if (GlobalNetworkStuff->PlayerNetStuff.contains(temp.ID) &&
               GlobalNetworkStuff->PlayerNetStuff[temp.ID].PlayerEntity !=
                   nullptr) {
-            if (temp.ID != UserID) {
-              GlobalNetworkClass::PlayerNetClass* tempplayerthing =
-                  &GlobalNetworkStuff->PlayerNetStuff[temp.ID];
-              tempplayerthing->PlayerInput = Loadinputdata(temp);
-              for (int i = 0; i < 3; i++) {
-                tempplayerthing->PlayerEntity->velocityvec3[i] =
-                    temp.velocityvec3[i];
-                tempplayerthing->PlayerEntity->position[i] = temp.position[i];
-              }
-              tempplayerthing->PlayerEntity->teamindex = temp.teamindex;
-              tempplayerthing->PlayerEntity->IsGrounded = temp.IsGrounded;
-              tempplayerthing->PlayerEntity->State = temp.State;
-            } else {
-              for (int i = 0; i < 3; i++) {
-                LocalPlayer->velocityvec3[i] = temp.velocityvec3[i];
-                LocalPlayer->position[i] = temp.position[i];
-              }
-              LocalPlayer->teamindex = temp.teamindex;
-              LocalPlayer->IsGrounded = temp.IsGrounded;
-              LocalPlayer->State = temp.State;
+            GlobalNetworkClass::PlayerNetClass* tempplayerthing =
+                &GlobalNetworkStuff->PlayerNetStuff[temp.ID];
+            tempplayerthing->PlayerInput = Loadinputdata(temp);
+            for (int i = 0; i < 3; i++) {
+              tempplayerthing->PlayerEntity->velocityvec3[i] =
+                  temp.velocityvec3[i];
+              // if (!IsServer)
+              tempplayerthing->PlayerEntity->position[i] = temp.position[i];
             }
-          } else {
-            // SDL_Log("%llu %llu", temp.ID, UserID);
+            tempplayerthing->PlayerEntity->teamindex = temp.teamindex;
+            tempplayerthing->PlayerEntity->IsGrounded = temp.IsGrounded;
+            tempplayerthing->PlayerEntity->State = temp.State;
           }
+          //  else if (temp.ID == UserID) {
+          //   glm::vec3 tempvec3;
+          //   for (int i = 0; i < 3; i++) {
+          //     tempvec3[i] = temp.position[i];
+          //   }
+          //   if (glm::distance(LocalPlayer->position, tempvec3) > 1.5f)
+          //     LocalPlayer->position = tempvec3;
+          //   for (int i = 0; i < 3; i++) {
+          //     tempvec3[i] = temp.velocityvec3[i];
+          //   }
+          //   if (glm::distance(LocalPlayer->position, tempvec3) > 1.5f)
+          //     LocalPlayer->velocityvec3 = tempvec3;
+          // }
         }
         // else {
         //   SDL_Log("%u Receive", tempdata->size);
@@ -225,7 +227,7 @@ void RecieveNetData() {
           DamageEntity(tempinfo, false);
         }
       } else if (tempdata->name == "S2CPlayerData") {
-        SDL_Log("WHAT");
+        // SDL_Log("WHAT");
         S2CPlayerInfo tempinfo;
 
         auto state = bitsery::quickDeserialization<
@@ -246,13 +248,12 @@ void RecieveNetData() {
             {tempdata->buffer.begin(), tempdata->size}, tempinfo);
         if (state.first == bitsery::ReaderError::NoError && state.second) {
           if (IsServer) {
-            CobblerQueueData("ParticleSpawn", tempdata->buffer, tempdata->size,
-                             false);
+            CobblerQueueData("ParticleSpawn", tempdata->buffer, tempdata->size);
           }
           ParticleSpawn(tempinfo, false);
         }
       } else if (tempdata->name == "SendTick") {
-        CobblerQueueData("ReturnTick", tempdata->buffer, tempdata->size, false);
+        CobblerQueueData("ReturnTick", tempdata->buffer, tempdata->size);
       } else if (tempdata->name == "ReturnTick") {
         if (GlobalNetworkStuff->PlayerNetStuff.contains(tempdata->ID)) {
           uint64_t temp;
@@ -313,7 +314,7 @@ void SendNetData() {
         bitsery::OutputBufferAdapter<std::vector<uint8_t>>>(
         {buffer}, GlobalNetworkStuff->UserIDs);
 
-    CobblerQueueData("PlayerList", buffer, writtenSize, false);
+    CobblerQueueData("PlayerList", buffer, writtenSize);
 
     buffer.clear();
 
@@ -334,7 +335,7 @@ void SendNetData() {
         auto writtenSize = bitsery::quickSerialization<
             bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
 
-        CobblerQueueData("Player", buffer, writtenSize, false);
+        CobblerQueueData("Player", buffer, writtenSize);
       }
     }
 
@@ -349,7 +350,7 @@ void SendNetData() {
             bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
                                                                 tempinfo);
 
-        CobblerQueueData("S2CPlayerData", buffer, writtenSize, false);
+        CobblerQueueData("S2CPlayerData", buffer, writtenSize);
       }
     }
     for (const auto& [ID, entity] : Entities) {
@@ -370,7 +371,7 @@ void SendNetData() {
         auto writtenSize = bitsery::quickSerialization<
             bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
 
-        CobblerQueueData("LocalEntity", buffer, writtenSize, false);
+        CobblerQueueData("LocalEntity", buffer, writtenSize);
       }
     }
   }
@@ -388,7 +389,7 @@ void SendNetData() {
     }
     auto writtenSize = bitsery::quickSerialization<
         bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer}, temp);
-    CobblerQueueData("Player", buffer, writtenSize, false);
+    CobblerQueueData("Player", buffer, writtenSize);
     // SDL_Log("%u Send", writtenSize);
 
     buffer.clear();
@@ -396,7 +397,7 @@ void SendNetData() {
   auto writtenSize = bitsery::quickSerialization<
       bitsery::OutputBufferAdapter<std::vector<uint8_t>>>(
       {buffer}, SDL_GetPerformanceCounter());
-  CobblerQueueData("SendTick", buffer, writtenSize, false);
+  CobblerQueueData("SendTick", buffer, writtenSize);
 
   GlobalNetworkStuff->Onlinesendwait -= updatedeltaTime;
   while (GlobalNetworkStuff->Onlinesendwait <= 0) {
@@ -468,7 +469,7 @@ void PlayerQuit() {
   std::vector<uint8_t> buffer{};
 
   for (int i = 0; i < 30; i++) {
-    CobblerQueueData("PlayerQuit", buffer, 0, false);
+    CobblerQueueData("PlayerQuit", buffer, 0);
     std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
     if (tempvector != NULL) {
       bool check = false;

@@ -56,7 +56,9 @@ LIB_API void CobblerQuitNet();
 // LIB_API bool CobblerSendCurlData();
 // LIB_API bool CobblerCurlLogin();
 LIB_API bool CobblerQueueData(const char* name, std::vector<uint8_t> buf,
-                              size_t size, bool confirmrecv);
+                              size_t size);
+LIB_API bool CobblerQueueConfirmedData(uint64_t ID, const char* name,
+                                       std::vector<uint8_t> buf, size_t size);
 LIB_API bool CobblerSendNet();
 LIB_API std::vector<CobblerNetData>* CobblerRecvNet();
 }
