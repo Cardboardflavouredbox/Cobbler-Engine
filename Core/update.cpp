@@ -128,11 +128,11 @@ void RecieveNetData() {
             tempplayerthing->PlayerInput = Loadinputdata(temp);
 
             if (jump > tempplayerthing->PlayerInput.jump)
-              tempplayerthing->PlayerInput.jump = jump;
+              tempplayerthing->PlayerInput.jump = 2;
             if (attack > tempplayerthing->PlayerInput.attack)
-              tempplayerthing->PlayerInput.attack = attack;
+              tempplayerthing->PlayerInput.attack = 2;
             if (altattack > tempplayerthing->PlayerInput.altattack)
-              tempplayerthing->PlayerInput.altattack = altattack;
+              tempplayerthing->PlayerInput.altattack = 2;
 
             if (!IsServer) {
               for (int i = 0; i < 3; i++) {
@@ -157,6 +157,11 @@ void RecieveNetData() {
               tempvec3[i] = temp.velocityvec3[i];
             }
             LocalPlayer->velocityvec3 = tempvec3;
+
+            inputtoentity(Loadinputdata(temp), LocalPlayer);
+            LocalPlayer->update();
+            EntityMove(LocalPlayer);
+            LocalPlayer->deltatimelocal = 0;
           }
         }
 
@@ -285,6 +290,10 @@ void RecieveNetData() {
                 .PlayerEntity->deltatimelocal = result;
             GlobalNetworkStuff->PlayerNetStuff[tempdata->ID].deltatimelocal =
                 result;
+            if (tempdata->ID == 0) {
+              LocalPlayer->deltatimelocal =
+                  GlobalNetworkStuff->PlayerNetStuff[0].deltatimelocal;
+            }
             // SDL_Log("%f",
             // Entities[GlobalNetworkStuff->PlayerEntity[tempdata->ID]]
             //                   ->deltatimelocal);
