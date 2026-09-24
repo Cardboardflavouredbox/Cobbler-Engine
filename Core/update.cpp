@@ -159,10 +159,13 @@ void RecieveNetData() {
             }
             GlobalNetworkStuff->RecvEntity->velocityvec3 = tempvec3;
 
-            // inputtoentity(Loadinputdata(temp), LocalPlayer);
-            // LocalPlayer->update();
-            // EntityMove(LocalPlayer);
-            // LocalPlayer->deltatimelocal = 0;
+            GlobalNetworkStuff->RecvEntity->IsGrounded = temp.IsGrounded;
+
+            // inputtoentity(Loadinputdata(temp),
+            // GlobalNetworkStuff->RecvEntity);
+            // GlobalNetworkStuff->RecvEntity->update();
+            // EntityMove(GlobalNetworkStuff->RecvEntity);
+            // GlobalNetworkStuff->RecvEntity->deltatimelocal = 0;
           }
         }
 
@@ -287,8 +290,8 @@ void RecieveNetData() {
             double result = temp / (double)SDL_GetPerformanceFrequency();
             if (result > 0.03125f) result = 0.03125f;
 
-            GlobalNetworkStuff->PlayerNetStuff[tempdata->ID]
-                .PlayerEntity->deltatimelocal = result;
+            // GlobalNetworkStuff->PlayerNetStuff[tempdata->ID]
+            //     .PlayerEntity->deltatimelocal = result;
             GlobalNetworkStuff->PlayerNetStuff[tempdata->ID].deltatimelocal =
                 result;
             // if (tempdata->ID == 0) {
@@ -438,21 +441,6 @@ void SendNetData() {
 void fixedupdate() {
   if (Global->IsOnline) {
     RecieveNetData();
-
-    if (!IsServer) {
-      if (GlobalNetworkStuff->RecvEntity != NULL) {
-        float dist = glm::distance(LocalPlayer->position,
-                                   GlobalNetworkStuff->RecvEntity->position);
-        if (dist > 1.0f)
-          LocalPlayer->position = GlobalNetworkStuff->RecvEntity->position;
-        else
-          LocalPlayer->position =
-              glm::mix(LocalPlayer->position,
-                       GlobalNetworkStuff->RecvEntity->position, 0.5f);
-        LocalPlayer->velocityvec3 =
-            GlobalNetworkStuff->RecvEntity->velocityvec3;
-      }
-    }
   }
 
   if (LocalInputs->Keys[SDL_SCANCODE_ESCAPE] == 2) {
@@ -486,6 +474,29 @@ void fixedupdate() {
     EntitydeleteQueue.pop();
     delete (Entities[index]);
     Entities.erase(index);
+  }
+
+  if (Global->IsOnline && !IsServer) {
+    if (GlobalNetworkStuff->RecvEntity != NULL) {
+      if (glm::distance(LocalPlayer->position,
+                        GlobalNetworkStuff->RecvEntity->position) > 1.0f)
+        LocalPlayer->position = GlobalNetworkStuff->RecvEntity->position;
+      else
+        LocalPlayer->position =
+            glm::mix(LocalPlayer->position,
+                     GlobalNetworkStuff->RecvEntity->position, 0.0625f);
+
+      // if (glm::distance(LocalPlayer->velocityvec3,
+      //                   GlobalNetworkStuff->RecvEntity->velocityvec3) > 1.0f)
+      //   LocalPlayer->velocityvec3 =
+      //   GlobalNetworkStuff->RecvEntity->velocityvec3;
+      // else
+      //   LocalPlayer->velocityvec3 =
+      //       glm::mix(LocalPlayer->velocityvec3,
+      //                GlobalNetworkStuff->RecvEntity->velocityvec3, 0.0625f);
+
+      LocalPlayer->velocityvec3 = GlobalNetworkStuff->RecvEntity->velocityvec3;
+    }
   }
 
   if (Global->IsOnline) SendNetData();
