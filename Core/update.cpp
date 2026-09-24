@@ -161,6 +161,9 @@ void RecieveNetData() {
 
             GlobalNetworkStuff->RecvEntity->IsGrounded = temp.IsGrounded;
 
+            GlobalNetworkStuff->RecvEntity->teamindex = temp.ID;
+            LocalPlayer->teamindex = temp.ID;
+
             // inputtoentity(Loadinputdata(temp),
             // GlobalNetworkStuff->RecvEntity);
             // GlobalNetworkStuff->RecvEntity->update();
@@ -247,6 +250,9 @@ void RecieveNetData() {
           if (!tempinfo.IsPlayer && tempinfo.EntityIndex == 0) {
             tempinfo.IsPlayer = true;
             tempinfo.EntityIndex = tempdata->ID;
+          } else if (tempinfo.IsPlayer && tempinfo.EntityIndex == UserID) {
+            tempinfo.IsPlayer = false;
+            tempinfo.EntityIndex = 0;
           }
           DamageEntity(tempinfo, false);
         }
@@ -352,7 +358,8 @@ void SendNetData() {
         playerdatapacket temp;
         Entity* entity = player.PlayerEntity;
         temp.State = entity->State;
-        temp.teamindex = entity->teamindex;
+        temp.teamindex = ID;
+        // temp.teamindex = entity->teamindex;
         temp.ID = ID;
         temp.Set(&player.PlayerInput);
         temp.IsGrounded = entity->IsGrounded;
@@ -495,7 +502,17 @@ void fixedupdate() {
       //       glm::mix(LocalPlayer->velocityvec3,
       //                GlobalNetworkStuff->RecvEntity->velocityvec3, 0.0625f);
 
-      LocalPlayer->velocityvec3 = GlobalNetworkStuff->RecvEntity->velocityvec3;
+      if (64.f > LocalPlayer->velocityvec3.z &&
+          LocalPlayer->velocityvec3.z > 1.25f &&
+          GlobalNetworkStuff->RecvEntity->velocityvec3.z < 0.125f) {
+        GlobalNetworkStuff->RecvEntity->velocityvec3.z =
+            LocalPlayer->velocityvec3.z;
+        LocalPlayer->velocityvec3 =
+            GlobalNetworkStuff->RecvEntity->velocityvec3;
+      } else {
+        LocalPlayer->velocityvec3 =
+            GlobalNetworkStuff->RecvEntity->velocityvec3;
+      }
     }
   }
 
