@@ -1409,6 +1409,12 @@ bool init() {
   LocalPlayer->teamindex = -1;
   LocalPlayer->EntityIndex = 0;
 
+  GlobalNetworkStuff->RecvEntity = SpawnEntities[Global->playerclass](0, 0);
+  GlobalNetworkStuff->RecvEntity->position.z = 8;
+  GlobalNetworkStuff->RecvEntity->Modelthing->visible = false;
+  GlobalNetworkStuff->RecvEntity->teamindex = -1;
+  GlobalNetworkStuff->RecvEntity->EntityIndex = 0;
+
   // push LocalPlayer Entity to Entities vector. LocalPlayer Entity will
   // probably always be in index zero, but that doesn't matter since there's a
   // seperate LocalPlayer pointer.
@@ -1714,6 +1720,15 @@ void quit() {
   // free npc Entities and LocalPlayer.
   for (auto& i : Entities) {
     delete (i.second);
+  }
+
+  // free PlayerNetStuff
+  if (Global->IsOnline) {
+    for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+      if (i.second.PlayerEntity != NULL) delete (i.second.PlayerEntity);
+    }
+    if (GlobalNetworkStuff->RecvEntity != NULL)
+      delete (GlobalNetworkStuff->RecvEntity);
   }
 
   // free particles

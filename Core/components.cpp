@@ -47,6 +47,12 @@ void componentsupdate() {
     EntityMove(i.second.PlayerEntity);
     i.second.PlayerEntity->deltatimelocal = 0;
   }
+
+  if (GlobalNetworkStuff->RecvEntity != NULL) {
+    GlobalNetworkStuff->RecvEntity->update();
+    EntityMove(GlobalNetworkStuff->RecvEntity);
+    GlobalNetworkStuff->RecvEntity->deltatimelocal = 0;
+  }
   // call particle updates
   for (auto& i : Particles) {
     i.second->update();

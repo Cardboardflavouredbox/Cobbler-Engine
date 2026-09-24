@@ -151,17 +151,18 @@ void RecieveNetData() {
             for (int i = 0; i < 3; i++) {
               tempvec3[i] = temp.position[i];
             }
-            LocalPlayer->position = tempvec3;
+
+            GlobalNetworkStuff->RecvEntity->position = tempvec3;
 
             for (int i = 0; i < 3; i++) {
               tempvec3[i] = temp.velocityvec3[i];
             }
-            LocalPlayer->velocityvec3 = tempvec3;
+            GlobalNetworkStuff->RecvEntity->velocityvec3 = tempvec3;
 
-            inputtoentity(Loadinputdata(temp), LocalPlayer);
-            LocalPlayer->update();
-            EntityMove(LocalPlayer);
-            LocalPlayer->deltatimelocal = 0;
+            // inputtoentity(Loadinputdata(temp), LocalPlayer);
+            // LocalPlayer->update();
+            // EntityMove(LocalPlayer);
+            // LocalPlayer->deltatimelocal = 0;
           }
         }
 
@@ -290,10 +291,10 @@ void RecieveNetData() {
                 .PlayerEntity->deltatimelocal = result;
             GlobalNetworkStuff->PlayerNetStuff[tempdata->ID].deltatimelocal =
                 result;
-            if (tempdata->ID == 0) {
-              LocalPlayer->deltatimelocal =
-                  GlobalNetworkStuff->PlayerNetStuff[0].deltatimelocal;
-            }
+            // if (tempdata->ID == 0) {
+            //   LocalPlayer->deltatimelocal =
+            //       GlobalNetworkStuff->PlayerNetStuff[0].deltatimelocal;
+            // }
             // SDL_Log("%f",
             // Entities[GlobalNetworkStuff->PlayerEntity[tempdata->ID]]
             //                   ->deltatimelocal);
@@ -435,7 +436,24 @@ void SendNetData() {
 }
 
 void fixedupdate() {
-  if (Global->IsOnline) RecieveNetData();
+  if (Global->IsOnline) {
+    RecieveNetData();
+
+    if (!IsServer) {
+      if (GlobalNetworkStuff->RecvEntity != NULL) {
+        float dist = glm::distance(LocalPlayer->position,
+                                   GlobalNetworkStuff->RecvEntity->position);
+        if (dist > 1.0f)
+          LocalPlayer->position = GlobalNetworkStuff->RecvEntity->position;
+        else
+          LocalPlayer->position =
+              glm::mix(LocalPlayer->position,
+                       GlobalNetworkStuff->RecvEntity->position, 0.5f);
+        LocalPlayer->velocityvec3 =
+            GlobalNetworkStuff->RecvEntity->velocityvec3;
+      }
+    }
+  }
 
   if (LocalInputs->Keys[SDL_SCANCODE_ESCAPE] == 2) {
     Global->pause = !Global->pause;
@@ -445,6 +463,12 @@ void fixedupdate() {
   if (!Global->pause) {
     processinputs();
     if (LocalPlayer != NULL) inputtoentity(*P1PlayerInputs, LocalPlayer);
+
+    if (Global->IsOnline && !IsServer) {
+      if (GlobalNetworkStuff->RecvEntity != NULL)
+        inputtoentity(*P1PlayerInputs, GlobalNetworkStuff->RecvEntity);
+    }
+
     for (const auto& [ID, player] : GlobalNetworkStuff->PlayerNetStuff) {
       if (player.PlayerEntity != NULL)
         inputtoentity(player.PlayerInput, player.PlayerEntity);

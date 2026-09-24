@@ -1,4 +1,5 @@
 #pragma once
+
 #include <map>
 #include <memory>
 #include <set>
@@ -25,6 +26,8 @@ struct GlobalNetworkClass {
     playerinputs PlayerInput;
   };
   std::map<uint64_t, PlayerNetClass> PlayerNetStuff;
+
+  Entity* RecvEntity;
 
   double Onlinesendwait = 0.05;
 };
