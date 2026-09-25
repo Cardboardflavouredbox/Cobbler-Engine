@@ -55,23 +55,33 @@ vec4 angleAxis(float angle, vec3 v) {
 void main() {
   int index = getboneindexreal();
   vec4 result = vec4(aPos, 1.0);
+
+  vec3 NormalResult = aNormal;
+
   if (hasaction > 0) {
     result = restmat[index] * result;
+
+    NormalResult = mat3(restmat[index]) * NormalResult;
 
     result -= vec4(bonehead[index], 0.0);
 
     result = resultbonemat[index] * result;
+
+    NormalResult = mat3(resultbonemat[index]) * NormalResult;
   }
 
-  result =
-      vec4(qtransform(angleAxis(lookdirx * 3.141592741 / 180.0, vec3(0, 0, 1)),
-                      result.xyz),
-           1.0);
+  vec4 angleaxisresult =
+      angleAxis(lookdirx * 3.141592741 / 180.0, vec3(0, 0, 1));
 
+  result = vec4(qtransform(angleaxisresult, result.xyz), 1.0);
+
+  NormalResult = qtransform(angleaxisresult, NormalResult);
+
+  NormalResult = mat3(transformmat) * NormalResult;
   result = transformmat * result;
 
   TexCoord = aTexCoord;
-  Normal = aNormal;
+  Normal = normalize(NormalResult);
 
   if (IsUI > 0) {
     FragPos = (UIreversemodel * result).xyz;

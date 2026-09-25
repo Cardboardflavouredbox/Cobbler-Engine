@@ -455,8 +455,8 @@ void fixedupdate() {
     SDL_SetWindowRelativeMouseMode(RendererGlobal->window, !Global->pause);
   }
 
-  if (!Global->pause) {
-    processinputs();
+  if (!Global->pause || Global->IsOnline) {
+    if (!Global->pause) processinputs();
     if (LocalPlayer != NULL) inputtoentity(*P1PlayerInputs, LocalPlayer);
 
     if (Global->IsOnline && !IsServer) {
@@ -486,23 +486,14 @@ void fixedupdate() {
   if (Global->IsOnline && !IsServer) {
     if (GlobalNetworkStuff->RecvEntity != NULL) {
       if (glm::distance(LocalPlayer->position,
-                        GlobalNetworkStuff->RecvEntity->position) > 1.0f)
+                        GlobalNetworkStuff->RecvEntity->position) > 1.5f)
         LocalPlayer->position = GlobalNetworkStuff->RecvEntity->position;
       else
         LocalPlayer->position =
             glm::mix(LocalPlayer->position,
                      GlobalNetworkStuff->RecvEntity->position, 0.0625f);
 
-      // if (glm::distance(LocalPlayer->velocityvec3,
-      //                   GlobalNetworkStuff->RecvEntity->velocityvec3) > 1.0f)
-      //   LocalPlayer->velocityvec3 =
-      //   GlobalNetworkStuff->RecvEntity->velocityvec3;
-      // else
-      //   LocalPlayer->velocityvec3 =
-      //       glm::mix(LocalPlayer->velocityvec3,
-      //                GlobalNetworkStuff->RecvEntity->velocityvec3, 0.0625f);
-
-      if (64.f > LocalPlayer->velocityvec3.z &&
+      if (LocalPlayer->jumpheight >= LocalPlayer->velocityvec3.z &&
           LocalPlayer->velocityvec3.z > 1.25f &&
           GlobalNetworkStuff->RecvEntity->velocityvec3.z < 0.125f) {
         GlobalNetworkStuff->RecvEntity->velocityvec3.z =
