@@ -19,7 +19,7 @@ struct SettingsClass {
   int fov = 90;
   int fps = 60;
   bool vsync = false;
-  Renderertype graphicsmode = OpenGL1;
+  Renderertype graphicsmode = OpenGL3;
   glm::vec2 mousesensitivity = glm::vec2({1, 1});
 };
 

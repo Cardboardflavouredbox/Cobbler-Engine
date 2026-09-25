@@ -5,6 +5,7 @@
 
 #include "bitserytemplates.h"
 #include "camera.h"
+#include "damageindicator.h"
 #include "deltaTime.h"
 #include "entity.h"
 #include "font.h"
@@ -79,6 +80,8 @@ uint32_t newboneindex = 0;
 
 std::unordered_map<std::string, uint32_t> PosetoInt;
 uint32_t newposeindex = 0;
+
+std::vector<DamageLocation> LocalDamageLocations;
 
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {

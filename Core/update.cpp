@@ -193,11 +193,15 @@ void RecieveNetData() {
             {tempdata->buffer.begin(), tempdata->size}, tempset);
         if (state.first == bitsery::ReaderError::NoError && state.second) {
           for (auto& key : tempset) {
-            if (key != UserID && GlobalNetworkStuff->UserIDs.find(key) ==
-                                     GlobalNetworkStuff->UserIDs.end()) {
-              GlobalNetworkStuff->UserIDs.insert(key);
-              GlobalNetworkStuff->PlayerNetStuff[key].PlayerEntity =
-                  SpawnEntities["Gardner"](0, key);
+            if (key != UserID) {
+              if (GlobalNetworkStuff->UserIDs.find(key) ==
+                  GlobalNetworkStuff->UserIDs.end()) {
+                GlobalNetworkStuff->UserIDs.insert(key);
+                GlobalNetworkStuff->PlayerNetStuff[key].PlayerEntity =
+                    SpawnEntities["Gardner"](0, key);
+              } else {
+                GlobalNetworkStuff->PlayerNetStuff[key].Timecounter = 0;
+              }
             }
           }
         }
@@ -331,8 +335,11 @@ void RecieveNetData() {
   while (!deleteplayerqueue.empty()) {
     GlobalNetworkStuff->UserIDs.erase(deleteplayerqueue.front());
 
-    delete (GlobalNetworkStuff->PlayerNetStuff[deleteplayerqueue.front()]
-                .PlayerEntity);
+    if (GlobalNetworkStuff->PlayerNetStuff[deleteplayerqueue.front()]
+            .PlayerEntity != NULL) {
+      delete (GlobalNetworkStuff->PlayerNetStuff[deleteplayerqueue.front()]
+                  .PlayerEntity);
+    }
 
     GlobalNetworkStuff->PlayerNetStuff.erase(deleteplayerqueue.front());
     deleteplayerqueue.pop();
