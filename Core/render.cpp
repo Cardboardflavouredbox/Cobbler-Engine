@@ -6,6 +6,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <utility>
 
@@ -20,27 +21,17 @@
 // function that turns vec3 into 2d point on screen.
 // for software rendering.
 ScreenPoint ToScreenSpace(glm::vec3 P) {
-  glm::vec3 p1 = (P - LocalPlayer->position);
+  glm::mat4 view = glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
+  glm::vec4 viewport(0.0f, 0.0f, Settings->resolutionx, Settings->resolutiony);
 
-  float ps = std::sin(LocalPlayer->dir.x * PI / 180.f);
-  float pc = std::cos(LocalPlayer->dir.x * PI / 180.f);
-
-  glm::quat q = glm::angleAxis(float(LocalPlayer->dir.y * PI / 180.f),
-                               glm::vec3(-pc, -ps, 0.0f));
-
-  p1 = q * p1;
-
-  float tx = p1.x * pc + p1.y * ps;
-  float ty = p1.y * pc - p1.x * ps;
+  glm::vec3 result = glm::project(P, view, Global->perspectivematrix, viewport);
 
   ScreenPoint screenpos;
-  if (ty <= 0.25f) {
+  if (result.z <= 0.25f) {
     screenpos.isbehindLocalPlayer = true;
-    ty = 0.25f;
   }
-  screenpos.p.x = (tx * Settings->fov / ty) + (Settings->resolutionx / 2);
-  screenpos.p.y = (-p1.z * Settings->fov / ty) + (Settings->resolutiony / 2);
-  screenpos.dist = 1.f / ty;
+  screenpos.p = result;
+  screenpos.dist = 1.f / result.z;
   return screenpos;
 }
 
