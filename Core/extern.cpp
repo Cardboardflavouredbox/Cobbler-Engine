@@ -81,7 +81,7 @@ uint32_t newboneindex = 0;
 std::unordered_map<std::string, uint32_t> PosetoInt;
 uint32_t newposeindex = 0;
 
-std::vector<DamageLocation> LocalDamageLocations;
+std::deque<DamageLocation> LocalDamageLocations;
 
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {
@@ -131,16 +131,38 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
 void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer) {
   if (FromLocalPlayer || !Global->IsOnline || IsServer) {
     if (!Global->IsOnline || IsServer) {
-      if (damageinfo.IsPlayer) {
-        if (!GlobalNetworkStuff->PlayerNetStuff[damageinfo.EntityIndex]
+      if (damageinfo.TargetIsPlayer) {
+        if (!GlobalNetworkStuff->PlayerNetStuff[damageinfo.TargetEntityIndex]
                  .PlayerEntity->invincible)
-          GlobalNetworkStuff->PlayerNetStuff[damageinfo.EntityIndex]
+          GlobalNetworkStuff->PlayerNetStuff[damageinfo.TargetEntityIndex]
               .PlayerEntity->hp -= damageinfo.damage;
       } else {
-        if (!Entities[damageinfo.EntityIndex]->invincible)
-          Entities[damageinfo.EntityIndex]->hp -= damageinfo.damage;
+        if (!Entities[damageinfo.TargetEntityIndex]->invincible)
+          Entities[damageinfo.TargetEntityIndex]->hp -= damageinfo.damage;
+        if (damageinfo.TargetEntityIndex == 0) {
+          DamageLocation damageloc;
+
+          if (damageinfo.FromPlayer && damageinfo.SourceEntityIndex == UserID) {
+            damageinfo.FromPlayer = false;
+            damageinfo.SourceEntityIndex = 0;
+          }
+
+          if (damageinfo.FromPlayer) {
+            damageloc.position =
+                GlobalNetworkStuff->PlayerNetStuff[damageinfo.SourceEntityIndex]
+                    .PlayerEntity->position;
+          } else {
+            damageloc.position =
+                Entities[damageinfo.SourceEntityIndex]->position;
+          }
+          LocalDamageLocations.push_back(damageloc);
+        }
       }
     } else {
+      if (!damageinfo.FromPlayer && damageinfo.SourceEntityIndex == 0) {
+        damageinfo.FromPlayer = true;
+        damageinfo.SourceEntityIndex = UserID;
+      }
       std::vector<uint8_t> buffer{};
 
       auto writtenSize = bitsery::quickSerialization<

@@ -1,7 +1,7 @@
 #pragma once
 
+#include <deque>
 #include <glm/vec3.hpp>
-#include <vector>
 
 #ifdef _WIN32
 #ifdef DLLEXPORT
@@ -18,4 +18,4 @@ struct DamageLocation {
   float lifestart = 2.f, lifetime = 2.f;
 };
 
-LIB_API extern std::vector<DamageLocation> LocalDamageLocations;
+LIB_API extern std::deque<DamageLocation> LocalDamageLocations;

@@ -10,6 +10,7 @@
 #include "bitserytemplates.h"
 #include "camera.h"
 #include "components.h"
+#include "damageindicator.h"
 #include "deltaTime.h"
 #include "entity.h"
 #include "extern.h"
@@ -251,12 +252,13 @@ void RecieveNetData() {
             bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
             {tempdata->buffer.begin(), tempdata->size}, tempinfo);
         if (state.first == bitsery::ReaderError::NoError && state.second) {
-          if (!tempinfo.IsPlayer && tempinfo.EntityIndex == 0) {
-            tempinfo.IsPlayer = true;
-            tempinfo.EntityIndex = tempdata->ID;
-          } else if (tempinfo.IsPlayer && tempinfo.EntityIndex == UserID) {
-            tempinfo.IsPlayer = false;
-            tempinfo.EntityIndex = 0;
+          if (!tempinfo.TargetIsPlayer && tempinfo.TargetEntityIndex == 0) {
+            tempinfo.TargetIsPlayer = true;
+            tempinfo.TargetEntityIndex = tempdata->ID;
+          } else if (tempinfo.TargetIsPlayer &&
+                     tempinfo.TargetEntityIndex == UserID) {
+            tempinfo.TargetIsPlayer = false;
+            tempinfo.TargetEntityIndex = 0;
           }
           DamageEntity(tempinfo, false);
         }
@@ -482,7 +484,17 @@ void fixedupdate() {
         i->update();
       }
     }
+
+    for (auto& i : LocalDamageLocations) {
+      i.lifetime -= updatedeltaTime;
+    }
   }
+
+  while (!LocalDamageLocations.empty() &&
+         LocalDamageLocations.front().lifetime <= 0) {
+    LocalDamageLocations.pop_front();
+  }
+
   while (!EntitydeleteQueue.empty()) {
     uint32_t index = EntitydeleteQueue.front();
     EntitydeleteQueue.pop();

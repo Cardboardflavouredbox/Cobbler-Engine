@@ -22,8 +22,10 @@ void serialize(S& s, ParticleSpawnInfo& o) {
 
 template <typename S>
 void serialize(S& s, EntityDamageInfo& o) {
-  s.value1b(o.IsPlayer);
-  s.value8b(o.EntityIndex);
+  s.value1b(o.TargetIsPlayer);
+  s.value8b(o.TargetEntityIndex);
+  s.value1b(o.FromPlayer);
+  s.value8b(o.SourceEntityIndex);
   s.value4b(o.damage);
 }
 

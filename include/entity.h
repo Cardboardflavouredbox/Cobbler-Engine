@@ -35,8 +35,8 @@ struct EntitySpawnInfo {
 };
 
 struct EntityDamageInfo {
-  bool IsPlayer = false;
-  uint64_t EntityIndex;
+  bool TargetIsPlayer = false, FromPlayer = false;
+  uint64_t TargetEntityIndex, SourceEntityIndex;
   float damage = 0;
 };
 
