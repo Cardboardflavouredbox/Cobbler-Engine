@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <glm/glm.hpp>
+#include <optional>
 
 #include "deltaTime.h"
 #include "extern.h"
@@ -12,55 +13,47 @@
 #include "pi.h"
 
 // Ray and Triangle collision check function.
-// https://gamedev.stackexchange.com/a/5589
-bool RayTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
-                 glm::vec3 R2, glm::vec3& PIP) {
-  glm::vec3 Normal, IntersectPos;
+// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+std::optional<glm::vec3> RayTriIntersect(glm::vec3 ray_origin,
+                                         glm::vec3 ray_vector, glm::vec3 tri1,
+                                         glm::vec3 tri2, glm::vec3 tri3) {
+  constexpr float epsilon = std::numeric_limits<float>::epsilon();
 
-  Normal = glm::cross((P2 - P1), (P3 - P1));
+  glm::vec3 edge1 = tri2 - tri1;
+  glm::vec3 edge2 = tri3 - tri1;
 
-  // Find distance from LP1 and LP2 to the plane defined by the triangle
-  float Dist1 = glm::dot(Normal, (R1 - P1));
-  float Dist2 = glm::dot(Normal, (R2 - P1));
+  // Backface culling, assuming CCW-wound triangles.
+  const glm::vec3 normal = glm::cross(edge1, edge2);  // No need to normalize
+  if (glm::dot(normal, ray_vector) > 0) return {};
 
-  if ((Dist1 * Dist2) >= 0.0f) {
-    // SFLog(@"no cross");
-    return false;
-  }  // line doesn't cross the triangle.
+  glm::vec3 ray_cross_e2 = glm::cross(ray_vector, edge2);
+  float det = glm::dot(edge1, ray_cross_e2);
 
-  if (Dist1 == Dist2) {
-    // SFLog(@"parallel");
-    return false;
-  }  // line and plane are parallel
+  if (std::abs(det) < epsilon) return {};  // Ray is parallel to triangle
 
-  // Find point on the line that intersects with the plane
-  IntersectPos = ((R1 + (R2 - R1)) * (-Dist1 / (Dist2 - Dist1)));
+  float inv_det = 1.0 / det;
+  glm::vec3 s = ray_origin - tri1;
+  float u = inv_det * glm::dot(s, ray_cross_e2);
 
-  // Find if the interesection point lies inside the triangle by testing it
-  // against all edges
-  glm::vec3 vTest;
+  if (u < -epsilon || u - 1 > epsilon)
+    return {};  // Ray passes outside edge2's bounds
 
-  vTest = glm::cross(Normal, (P2 - P1));
-  if (glm::dot(vTest, (IntersectPos - P1)) < 0.0f) {
-    // SFLog(@"no intersect P2-P1");
-    return false;
-  }
+  glm::vec3 s_cross_e1 = glm::cross(s, edge1);
+  float v = inv_det * glm::dot(ray_vector, s_cross_e1);
 
-  vTest = glm::cross(Normal, (P3 - P2));
-  if (glm::dot(vTest, (IntersectPos - P2)) < 0.0f) {
-    // SFLog(@"no intersect P3-P2");
-    return false;
-  }
+  if (v < -epsilon || u + v - 1 > epsilon)
+    return {};  // Ray passes outside edge1's bounds
 
-  vTest = glm::cross(Normal, (P1 - P3));
-  if (glm::dot(vTest, (IntersectPos - P1)) < 0.0f) {
-    // SFLog(@"no intersect P1-P3");
-    return false;
-  }
+  // The ray line intersects with the triangle.
+  // We compute t to find where on the ray the intersection is.
+  float t = inv_det * glm::dot(edge2, s_cross_e1);
 
-  PIP = IntersectPos;
-
-  return true;
+  if (t > epsilon)  // Ray intersection
+  {
+    return glm::vec3(ray_origin + ray_vector * t);
+  } else  // This means that there is a line intersection but not a ray
+          // intersection.
+    return {};
 }
 
 // checks if capsule and ray overlaps.
@@ -255,21 +248,21 @@ glm::vec3 closestPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3 b,
 bool CapsuleTriCheck(glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, glm::vec3 R1,
                      glm::vec3 R2, float radius, float& dist,
                      glm::vec3& normal) {
-  float distresult = 0;
+  float resultdist = 0;
   glm::vec3 normalresult;
   int len = (glm::distance(R1, R2) / radius) + 1;
   for (int i = 0; i < len; i++) {
     glm::vec3 temp = R1 + (R2 - R1) * (float)i / (float)len;
     glm::vec3 close = closestPointTriangle(temp, P1, P2, P3);
     float tempdist = glm::distance(temp, close);
-    if (tempdist < radius && (distresult == 0 || distresult > tempdist)) {
+    if (tempdist < radius && (resultdist == 0 || resultdist > tempdist)) {
       normalresult = glm::normalize(close - temp);
-      distresult = tempdist;
+      resultdist = tempdist;
     }
   }
-  dist = distresult;
+  dist = resultdist;
   normal = normalresult;
-  return (distresult > 0);
+  return (resultdist > 0);
 }
 
 // checks the angle of the slope.
@@ -283,22 +276,25 @@ float Slopecheck(glm::vec3 normal) {
 // returns glm::vec3(0) if you haven't collided at all.
 // returns the normal of collided triangle if you have.
 glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
-                             float radius, int teamindex, float& dist,
-                             Entity* tempentity) {
-  for (int i = 0; i < GlobalMapStuff->KillboxFaces.size(); i++) {
-    float disttemp;
-    glm::vec3 normal;
-    if (CapsuleTriCheck(
-            GlobalMapStuff->KillboxPoints[GlobalMapStuff->KillboxFaces[i][0]],
-            GlobalMapStuff->KillboxPoints[GlobalMapStuff->KillboxFaces[i][1]],
-            GlobalMapStuff->KillboxPoints[GlobalMapStuff->KillboxFaces[i][2]],
-            hitbox[0] + checkposition, hitbox[1] + checkposition, radius,
-            disttemp, normal)) {
-      tempentity->hp = -1;
+                             float radius, int teamindex,
+                             movecollisionresult& resultinfo,
+                             Entity* movingentity) {
+  if (movingentity != NULL) {
+    for (int i = 0; i < GlobalMapStuff->KillboxFaces.size(); i++) {
+      float disttemp;
+      glm::vec3 normal;
+      if (CapsuleTriCheck(
+              GlobalMapStuff->KillboxPoints[GlobalMapStuff->KillboxFaces[i][0]],
+              GlobalMapStuff->KillboxPoints[GlobalMapStuff->KillboxFaces[i][1]],
+              GlobalMapStuff->KillboxPoints[GlobalMapStuff->KillboxFaces[i][2]],
+              hitbox[0] + checkposition, hitbox[1] + checkposition, radius,
+              disttemp, normal)) {
+        movingentity->hp = -1;
+      }
     }
   }
 
-  float distresult = 0;
+  movecollisionresult resultthing;
   glm::vec3 result = glm::vec3(0);
   for (int i = 0; i < GlobalMapStuff->Hitboxmapfaces.size(); i++) {
     float disttemp;
@@ -309,9 +305,11 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
             GlobalMapStuff->HitboxPoints[GlobalMapStuff->Hitboxmapfaces[i][2]],
             hitbox[0] + checkposition, hitbox[1] + checkposition, radius,
             disttemp, normal)) {
-      if (distresult == 0 || distresult > disttemp) {
+      if (resultthing.dist == 0 || resultthing.dist > disttemp) {
         result = normal;
-        distresult = disttemp;
+        resultthing.dist = disttemp;
+        resultthing.CollidedWithPlayer = false;
+        resultthing.CollidedwithEntityAtAll = false;
       }
     }
   }
@@ -324,10 +322,13 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                           tempentity->hitbox[1] + tempentity->position);
       glm::vec3 normal = glm::normalize(temp.B - temp.A);
       if (temp.dist < radius + tempentity->hitboxradius &&
-          (distresult == 0 ||
-           distresult > -temp.dist + tempentity->hitboxradius)) {
+          (resultthing.dist == 0 ||
+           resultthing.dist > -temp.dist + tempentity->hitboxradius)) {
         result = normal;
-        dist = -temp.dist + tempentity->hitboxradius;
+        resultthing.dist = -temp.dist + tempentity->hitboxradius;
+        resultthing.CollidedWithPlayer = false;
+        resultthing.CollidedwithEntityAtAll = true;
+        resultthing.collidedID = i.first;
       }
     }
   }
@@ -340,24 +341,87 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                           tempentity->hitbox[1] + tempentity->position);
       glm::vec3 normal = glm::normalize(temp.B - temp.A);
       if (temp.dist < radius + tempentity->hitboxradius &&
-          (distresult == 0 ||
-           distresult > -temp.dist + tempentity->hitboxradius)) {
+          (resultthing.dist == 0 ||
+           resultthing.dist > -temp.dist + tempentity->hitboxradius)) {
         result = normal;
-        dist = -temp.dist + tempentity->hitboxradius;
+        resultthing.dist = -temp.dist + tempentity->hitboxradius;
+        resultthing.CollidedWithPlayer = true;
+        resultthing.CollidedwithEntityAtAll = true;
+        resultthing.collidedID = i.first;
       }
     }
   }
-  dist = distresult;
+  resultinfo = resultthing;
   return result;
 }
 
+void raycastcheck(glm::vec3 hitbox[], int teamindex,
+                  movecollisionresult& resultinfo) {
+  movecollisionresult resultthing;
+  resultthing.dist = 0;
+  for (auto& i : GlobalMapStuff->Hitboxmapfaces) {
+    std::optional<glm::vec3> check = RayTriIntersect(
+        hitbox[0], glm::normalize(hitbox[1] - hitbox[0]),
+        GlobalMapStuff->HitboxPoints[i[0]], GlobalMapStuff->HitboxPoints[i[1]],
+        GlobalMapStuff->HitboxPoints[i[2]]);
+    if (check.has_value()) {
+      float disttemp = glm::distance(hitbox[0], check.value());
+      SDL_Log("1 %f", disttemp);
+      if (resultthing.dist == 0 || resultthing.dist > disttemp) {
+        resultthing.dist = disttemp;
+        resultthing.CollidedWithPlayer = false;
+        resultthing.CollidedwithEntityAtAll = false;
+      }
+    }
+  }
+  for (auto& i : Entities) {
+    Entity* tempentity = i.second;
+    if (tempentity->teamindex != teamindex) {
+      raycheckresult temp = capsuleraycheck(
+          hitbox[0], hitbox[1], tempentity->hitbox[0] + tempentity->position,
+          tempentity->hitbox[1] + tempentity->position);
+
+      float disttemp = glm::distance(temp.A, hitbox[0]);
+
+      if (temp.dist < tempentity->hitboxradius &&
+          (resultthing.dist == 0 || resultthing.dist > disttemp)) {
+        SDL_Log("2 %f", disttemp);
+        resultthing.dist = disttemp;
+        resultthing.CollidedWithPlayer = false;
+        resultthing.CollidedwithEntityAtAll = true;
+        resultthing.collidedID = i.first;
+      }
+    }
+  }
+  for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+    Entity* tempentity = i.second.PlayerEntity;
+    if (tempentity->teamindex != teamindex) {
+      raycheckresult temp = capsuleraycheck(
+          hitbox[0], hitbox[1], tempentity->hitbox[0] + tempentity->position,
+          tempentity->hitbox[1] + tempentity->position);
+
+      float disttemp = glm::distance(temp.A, hitbox[0]);
+
+      if (temp.dist < tempentity->hitboxradius &&
+          (resultthing.dist == 0 || resultthing.dist > disttemp)) {
+        SDL_Log("3 %f", disttemp);
+        resultthing.dist = disttemp;
+        resultthing.CollidedWithPlayer = true;
+        resultthing.CollidedwithEntityAtAll = true;
+        resultthing.collidedID = i.first;
+      }
+    }
+  }
+  resultinfo = resultthing;
+}
+
 glm::vec3 collisionloop(Entity* tempentity, glm::vec3 tempposition) {
-  float dist;
+  movecollisionresult resultthing;
   glm::vec3 normal = movecollisioncheck(
       tempentity->hitbox, tempposition, tempentity->hitboxradius,
-      tempentity->teamindex, dist, tempentity);
+      tempentity->teamindex, resultthing, tempentity);
 
-  dist = -dist + tempentity->hitboxradius;
+  float dist = -resultthing.dist + tempentity->hitboxradius;
   // SDL_Log("%f", distfirst);
   glm::vec3 newmove = dist * glm::normalize(normal);
 
@@ -394,10 +458,11 @@ void EntityMove(Entity* tempentity) {
   for (int i = 0; i < temp; i++) {
     tempposition.x += tempmove.x / (float)temp;
     tempposition.y += tempmove.y / (float)temp;
-    float distfirst;
+    movecollisionresult resultthing;
     glm::vec3 normal = movecollisioncheck(
         tempentity->hitbox, tempposition, tempentity->hitboxradius,
-        tempentity->teamindex, distfirst, tempentity);
+        tempentity->teamindex, resultthing, tempentity);
+    float distfirst = resultthing.dist;
 
     // didn't collide with anything while moving on x and y axis.
     if (normal == glm::vec3(0)) {
@@ -407,12 +472,13 @@ void EntityMove(Entity* tempentity) {
       // go down a little bit just in case you're on a downwards slope.
       if (tempentity->gravity != 0) {
         for (int j = 1; j <= 16; j++) {
-          float disttemp;
+          movecollisionresult resultthing;
           glm::vec3 tempnormal = movecollisioncheck(
               tempentity->hitbox,
               tempposition - glm::vec3(0, 0, j * dist / 16.f),
-              tempentity->hitboxradius, tempentity->teamindex, disttemp,
+              tempentity->hitboxradius, tempentity->teamindex, resultthing,
               tempentity);
+          float disttemp = resultthing.dist;
           if (tempnormal != glm::vec3(0)) {
             disttemp -= tempentity->hitboxradius;
             moveresult.z -= j * dist / 16.f + disttemp;
@@ -430,12 +496,13 @@ void EntityMove(Entity* tempentity) {
       if (tempentity->gravity != 0) {
         // try moving up just in case it's an upwards slope.
         for (int j = 1; j <= 16; j++) {
-          float disttemp;
+          movecollisionresult resultthing;
           glm::vec3 tempnormal = movecollisioncheck(
               tempentity->hitbox,
               tempposition + glm::vec3(0, 0, j * dist / 16.f),
-              tempentity->hitboxradius, tempentity->teamindex, disttemp,
+              tempentity->hitboxradius, tempentity->teamindex, resultthing,
               tempentity);
+          float disttemp = resultthing.dist;
           if (tempnormal == glm::vec3(0)) {
             if (disttempcache != 0)
               disttempcache = tempentity->hitboxradius - disttempcache;
@@ -478,11 +545,12 @@ void EntityMove(Entity* tempentity) {
   tempposition = moveresult + tempentity->position;
   temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 4 + 1;
   for (int i = 0; i < temp; i++) {
-    float disttempbase;
     tempposition.z += tempmove.z / (float)temp;
+    movecollisionresult resultthing;
     glm::vec3 tempnormal = movecollisioncheck(
         tempentity->hitbox, tempposition, tempentity->hitboxradius,
-        tempentity->teamindex, disttempbase, tempentity);
+        tempentity->teamindex, resultthing, tempentity);
+    float disttempbase = resultthing.dist;
     if (tempnormal == glm::vec3(0)) {
       tempentity->IsGrounded = false;
       moveresult.z += tempmove.z / (float)temp;
@@ -509,12 +577,12 @@ void EntityMove(Entity* tempentity) {
         for (int j = 1; j <= 16; j++) {
           tempposition.x += tempnormal.x * dist * j / 16.f;
           tempposition.y += tempnormal.y * dist * j / 16.f;
-          float disttemp;
+          movecollisionresult resultthing;
           if (movecollisioncheck(tempentity->hitbox, tempposition,
                                  tempentity->hitboxradius,
-                                 tempentity->teamindex, disttemp,
+                                 tempentity->teamindex, resultthing,
                                  tempentity) == glm::vec3(0)) {
-            distthing = disttemp;
+            distthing = resultthing.dist;
             result = j;
           }
           tempposition.x -= tempnormal.x * dist * j / 16.f;

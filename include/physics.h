@@ -22,11 +22,20 @@ struct LIB_API raycheckresult {
 
 LIB_API raycheckresult capsuleraycheck(glm::vec3 a0, glm::vec3 a1, glm::vec3 b0,
                                        glm::vec3 b1);
+
+struct LIB_API movecollisionresult {
+  float dist = 0;
+  bool CollidedwithEntityAtAll;
+  bool CollidedWithPlayer;
+  uint64_t collidedID;
+};
+
 extern "C" {
 LIB_API glm::vec3 movecollisioncheck(
     glm::vec3 hitbox[], glm::vec3 checkposition, float radius, int teamindex,
-    float& dist,
-    Entity* tempentity);  // returns the face normal
-
+    movecollisionresult& resultinfo,
+    Entity* movingentity);  // returns the face normal
+LIB_API void raycastcheck(glm::vec3 hitbox[], int teamindex,
+                          movecollisionresult& resultinfo);
 LIB_API void EntityMove(Entity* tempentity);
 }
