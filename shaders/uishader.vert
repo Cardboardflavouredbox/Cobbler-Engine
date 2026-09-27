@@ -4,6 +4,7 @@ uniform vec2 position;
 uniform vec2 size;
 uniform vec2 uvpos;
 uniform vec2 uvsize;
+uniform vec2 rotationoffset;
 uniform float rotateangle;
 uniform ivec2 screensize;
 
@@ -33,6 +34,9 @@ void main() {
   } else {
     result.y -= size.y / 2;
   }
+
+  result += rotationoffset;
+
   result = rotate(result, rotateangle);
 
   result += size / 2;

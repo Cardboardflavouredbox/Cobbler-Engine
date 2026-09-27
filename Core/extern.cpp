@@ -146,14 +146,21 @@ void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer) {
             damageinfo.FromPlayer = false;
             damageinfo.SourceEntityIndex = 0;
           }
+          damageloc.lifestart = damageinfo.damage / 24.f;
+          damageloc.lifetime = damageloc.lifestart;
 
           if (damageinfo.FromPlayer) {
             damageloc.position =
                 GlobalNetworkStuff->PlayerNetStuff[damageinfo.SourceEntityIndex]
                     .PlayerEntity->position;
+            damageloc.position.y +=
+                GlobalNetworkStuff->PlayerNetStuff[damageinfo.SourceEntityIndex]
+                    .PlayerEntity->cameraoffset;
           } else {
             damageloc.position =
                 Entities[damageinfo.SourceEntityIndex]->position;
+            damageloc.position.y +=
+                Entities[damageinfo.SourceEntityIndex]->cameraoffset;
           }
           LocalDamageLocations.push_back(damageloc);
         }
