@@ -118,7 +118,6 @@ bool CobblerQueueConfirmedData(uint64_t ID, const char* name,
     SDL_Log("buffer too long!");
     return false;
   }
-
   bufferpointer->push_back(static_cast<uint8_t>(buflen));
 
   bufferpointer->insert(bufferpointer->end(), buf.begin(),
@@ -187,7 +186,8 @@ bool CobblerSendNet() {  // from: ID, to: ID
     }
     auto ID_byte_array = std::bit_cast<std::array<uint8_t, 8>>(ID);
 
-    for (auto& [idthing, packet] : ConfirmedSendMap[ID].DataSendPacketBuffers) {
+    for (auto& [idthing, packet] :
+         ConfirmedSendMap[NetStuff->Clients[i].ID].DataSendPacketBuffers) {
       uint64_t DataConfirmID = idthing;
       if constexpr (std::endian::native == std::endian::little) {
         DataConfirmID = std::byteswap(DataConfirmID);
@@ -213,9 +213,10 @@ bool CobblerSendNet() {  // from: ID, to: ID
                             temppacket.size())) {
         SDL_Log("%s", SDL_GetError());
       }
-      if (ConfirmedSendMap[ID].DataSendPacketBuffers.contains(
-              ConfirmedSendMap[ID].DataSendConfirmID))
-        ConfirmedSendMap[ID].DataSendConfirmID++;
+      if (ConfirmedSendMap[NetStuff->Clients[i].ID]
+              .DataSendPacketBuffers.contains(
+                  ConfirmedSendMap[NetStuff->Clients[i].ID].DataSendConfirmID))
+        ConfirmedSendMap[NetStuff->Clients[i].ID].DataSendConfirmID++;
     }
   }
   return true;

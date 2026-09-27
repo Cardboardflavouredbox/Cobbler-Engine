@@ -9,6 +9,7 @@
 #include <bitsery/traits/string.h>
 #include <bitsery/traits/vector.h>
 
+#include "damageindicator.h"
 #include "entity.h"
 #include "particles.h"
 #include "player.h"
@@ -27,6 +28,13 @@ void serialize(S& s, EntityDamageInfo& o) {
   s.value1b(o.FromPlayer);
   s.value8b(o.SourceEntityIndex);
   s.value4b(o.damage);
+}
+
+template <typename S>
+void serialize(S& s, DamageLocation& o) {
+  s.value4b(o.lifestart);
+  s.value4b(o.lifetime);
+  s.container4b(o.position);
 }
 
 template <typename S>

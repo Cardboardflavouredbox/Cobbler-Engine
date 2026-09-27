@@ -128,6 +128,46 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
   return temp;
 }
 
+void DamageIndicatorPush(EntityDamageInfo damageinfo) {
+  DamageLocation damageloc;
+
+  if (damageinfo.FromPlayer && damageinfo.SourceEntityIndex == UserID) {
+    damageinfo.FromPlayer = false;
+    damageinfo.SourceEntityIndex = 0;
+  }
+  damageloc.lifestart = damageinfo.damage / 24.f;
+  damageloc.lifetime = damageloc.lifestart;
+
+  if (damageinfo.FromPlayer) {
+    for (int i = 0; i < 3; i++) {
+      damageloc.position[i] =
+          GlobalNetworkStuff->PlayerNetStuff[damageinfo.SourceEntityIndex]
+              .PlayerEntity->position[i];
+    }
+    damageloc.position[2] +=
+        GlobalNetworkStuff->PlayerNetStuff[damageinfo.SourceEntityIndex]
+            .PlayerEntity->cameraoffset;
+  } else {
+    for (int i = 0; i < 3; i++) {
+      damageloc.position[i] =
+          Entities[damageinfo.SourceEntityIndex]->position[i];
+    }
+    damageloc.position[2] +=
+        Entities[damageinfo.SourceEntityIndex]->cameraoffset;
+  }
+
+  if (damageinfo.TargetEntityIndex == 0 && !damageinfo.TargetIsPlayer) {
+    LocalDamageLocations.push_back(damageloc);
+  } else if (damageinfo.TargetIsPlayer) {
+    std::vector<uint8_t> buffer{};
+    auto writtenSize = bitsery::quickSerialization<
+        bitsery::OutputBufferAdapter<std::vector<uint8_t>>>({buffer},
+                                                            damageloc);
+    CobblerQueueConfirmedData(damageinfo.TargetEntityIndex, "DamageLocation",
+                              buffer, writtenSize);
+  }
+}
+
 void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer) {
   if (FromLocalPlayer || !Global->IsOnline || IsServer) {
     if (!Global->IsOnline || IsServer) {
@@ -136,33 +176,12 @@ void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer) {
                  .PlayerEntity->invincible)
           GlobalNetworkStuff->PlayerNetStuff[damageinfo.TargetEntityIndex]
               .PlayerEntity->hp -= damageinfo.damage;
+        DamageIndicatorPush(damageinfo);
       } else {
         if (!Entities[damageinfo.TargetEntityIndex]->invincible)
           Entities[damageinfo.TargetEntityIndex]->hp -= damageinfo.damage;
         if (damageinfo.TargetEntityIndex == 0) {
-          DamageLocation damageloc;
-
-          if (damageinfo.FromPlayer && damageinfo.SourceEntityIndex == UserID) {
-            damageinfo.FromPlayer = false;
-            damageinfo.SourceEntityIndex = 0;
-          }
-          damageloc.lifestart = damageinfo.damage / 24.f;
-          damageloc.lifetime = damageloc.lifestart;
-
-          if (damageinfo.FromPlayer) {
-            damageloc.position =
-                GlobalNetworkStuff->PlayerNetStuff[damageinfo.SourceEntityIndex]
-                    .PlayerEntity->position;
-            damageloc.position.y +=
-                GlobalNetworkStuff->PlayerNetStuff[damageinfo.SourceEntityIndex]
-                    .PlayerEntity->cameraoffset;
-          } else {
-            damageloc.position =
-                Entities[damageinfo.SourceEntityIndex]->position;
-            damageloc.position.y +=
-                Entities[damageinfo.SourceEntityIndex]->cameraoffset;
-          }
-          LocalDamageLocations.push_back(damageloc);
+          DamageIndicatorPush(damageinfo);
         }
       }
     } else {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <deque>
 #include <glm/vec3.hpp>
 
@@ -14,7 +15,7 @@
 #endif
 
 struct DamageLocation {
-  glm::vec3 position;
+  std::array<float, 3> position;
   float lifestart = 2.f, lifetime = 2.f;
 };
 

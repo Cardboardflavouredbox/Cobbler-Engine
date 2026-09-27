@@ -315,6 +315,14 @@ void RecieveNetData() {
             //                   ->deltatimelocal);
           }
         }
+      } else if (tempdata->name == "DamageLocation") {
+        DamageLocation temp;
+        auto state = bitsery::quickDeserialization<
+            bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
+            {tempdata->buffer.begin(), tempdata->size}, temp);
+        if (state.first == bitsery::ReaderError::NoError && state.second)
+          LocalDamageLocations.push_back(temp);
+
       } else if (tempdata->name == "PlayerQuit") {
         if (GlobalNetworkStuff->UserIDs.contains(tempdata->ID)) {
           SDL_Log("player%llu client disconnect", tempdata->ID);
@@ -397,6 +405,7 @@ void SendNetData() {
         CobblerQueueData("S2CPlayerData", buffer, writtenSize);
       }
     }
+
     for (const auto& [ID, entity] : Entities) {
       if (ID > 0) {
         std::vector<uint8_t> buffer{};
