@@ -366,7 +366,6 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
         GlobalMapStuff->HitboxPoints[i[2]]);
     if (check.has_value()) {
       float disttemp = glm::distance(hitbox[0], check.value());
-      SDL_Log("1 %f", disttemp);
       if (resultthing.dist == 0 || resultthing.dist > disttemp) {
         resultthing.dist = disttemp;
         resultthing.CollidedWithPlayer = false;
@@ -385,7 +384,6 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
 
       if (temp.dist < tempentity->hitboxradius &&
           (resultthing.dist == 0 || resultthing.dist > disttemp)) {
-        SDL_Log("2 %f", disttemp);
         resultthing.dist = disttemp;
         resultthing.CollidedWithPlayer = false;
         resultthing.CollidedwithEntityAtAll = true;
@@ -404,7 +402,6 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
 
       if (temp.dist < tempentity->hitboxradius &&
           (resultthing.dist == 0 || resultthing.dist > disttemp)) {
-        SDL_Log("3 %f", disttemp);
         resultthing.dist = disttemp;
         resultthing.CollidedWithPlayer = true;
         resultthing.CollidedwithEntityAtAll = true;
