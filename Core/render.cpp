@@ -305,13 +305,12 @@ void modelapplybones(Modeltransform* modeltrans, uint32_t actioncode,
 
       boneresult->rot = final_quat * boneresult->rot;
 
-      boneresult->scale.x *= scale.x;
-      boneresult->scale.y *= scale.y;
-      boneresult->scale.z *= scale.z;
+      boneresult->scale *= scale;
 
       boneresult->head = (final_quat) * (boneresult->head - bone->head);
       boneresult->head += bone->head;
-      boneresult->head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * pos;
+      boneresult->head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
+                          (pos * bone->restpose.scale);
       boneindex = bone->parent;
     }
   }

@@ -1157,7 +1157,7 @@ uint32_t getboneindex(std::string name) {
 
 // pose name to index
 uint32_t getposeindex(std::string name) {
-  if (!BonetoInt.contains(name)) {
+  if (!PosetoInt.contains(name)) {
     PosetoInt[name] = newposeindex;
     newposeindex++;
   }
