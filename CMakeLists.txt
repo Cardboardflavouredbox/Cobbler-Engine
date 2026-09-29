@@ -142,7 +142,7 @@ foreach(PARTICLEDIR ${PARTICLES})
         set_target_properties(${FOLDER_NAME} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/particles/${FOLDER_NAME}"
         )
-        target_link_libraries(${FOLDER_NAME} PRIVATE glm::glm CobblerCore CobblerGLAD)
+        target_link_libraries(${FOLDER_NAME} PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD)
         target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
     endif()
 endforeach()

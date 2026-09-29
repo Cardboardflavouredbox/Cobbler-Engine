@@ -36,6 +36,7 @@ struct Particle {
 
   LIB_API virtual void update() = 0;
   LIB_API virtual void lateupdate() = 0;
+  LIB_API virtual void render() = 0;
 
   virtual ~Particle() {}
 };
