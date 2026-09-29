@@ -74,6 +74,23 @@
                 "CMAKE_CXX_COMPILER": "c:/w64devkit/bin/g++.exe",
                 "CMAKE_BUILD_TYPE": "Release"
             }
+        },
+        {
+            "name": "GCC 16.2.0 x86_64-w64-mingw32",
+            "displayName": "GCC 16.2.0 x86_64-w64-mingw32",
+            "description": "Using compilers: C = d:\\w64devkit\\bin\\gcc.exe, CXX = d:\\w64devkit\\bin\\g++.exe",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "generator": "Ninja",
+            "environment": {
+                "VCPKG_ROOT": "D:\\vcpkg"
+            },
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "d:/w64devkit/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "d:/w64devkit/bin/g++.exe",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
         }
     ],
     "buildPresets": [
