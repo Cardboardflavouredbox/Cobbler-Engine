@@ -238,6 +238,7 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
       SpawnParticles[Particleinfo.name](Particleinfo.ParticleCode, temp);
   for (int i = 0; i < 3; i++) {
     tempparticle->position[i] = Particleinfo.position[i];
+    tempparticle->direction[i] = Particleinfo.direction[i];
   }
   Particles[temp] = tempparticle;
 }

@@ -843,6 +843,10 @@ void OpenGLCreateObjects() {
 
   glGenVertexArrays(1, &RendererGlobal->GLstuff->emptyVAO);
 
+  RendererGlobal->GLstuff->shaders["Ray"] =
+      (LoadShaders(std::vector<std::filesystem::path>(
+          {"rayshader.vert", "rayshader.frag"})));
+
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 }

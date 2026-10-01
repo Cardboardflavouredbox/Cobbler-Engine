@@ -20,7 +20,7 @@
 struct ParticleSpawnInfo {
   std::string name;
   uint32_t ParticleCode;
-  std::array<float, 3> position;
+  std::array<float, 3> position, direction;
 };
 
 struct Particle {
@@ -31,7 +31,7 @@ struct Particle {
 
   float color[4] = {1, 1, 1, 1};
 
-  glm::vec3 position;
+  glm::vec3 position, direction;
   glm::vec2 rect[2];
 
   LIB_API virtual void update() = 0;

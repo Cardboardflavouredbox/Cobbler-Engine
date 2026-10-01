@@ -18,6 +18,7 @@ template <typename S>
 void serialize(S& s, ParticleSpawnInfo& o) {
   s.value4b(o.ParticleCode);
   s.container4b(o.position);
+  s.container4b(o.direction);
   s.text1b(o.name, 32);
 }
 
