@@ -15,7 +15,8 @@ uniform vec3 bonehead[64];
 uniform mat4 resultbonemat[64];
 uniform mat4 transformmat;
 
-uniform int hasaction;
+uniform int actioncount;
+uniform int actionsize;
 uniform float lookdirx;
 
 out vec4 vertexColor;
@@ -58,16 +59,28 @@ void main() {
 
   vec3 NormalResult = aNormal;
 
-  if (hasaction > 0) {
-    result = restmat[index] * result;
+  if (actioncount > 0) {
+    for (int i = 0; i < 8; i++) {
+      result = vec4(aPos, 1.0);
+      vec4 resultcheck = result;
 
-    NormalResult = mat3(restmat[index]) * NormalResult;
+      NormalResult = aNormal;
 
-    result -= vec4(bonehead[index], 0.0);
+      result = restmat[index + i * actionsize] * result;
 
-    result = resultbonemat[index] * result;
+      result -= vec4(bonehead[index + i * actionsize], 0.0);
 
-    NormalResult = mat3(resultbonemat[index]) * NormalResult;
+      result = resultbonemat[index + i * actionsize] * result;
+
+      NormalResult = mat3(restmat[index + i * actionsize]) * NormalResult;
+      NormalResult = mat3(resultbonemat[index + i * actionsize]) * NormalResult;
+
+      if ((distance(result.xyz, resultcheck.xyz) > 0.001 &&
+           distance(result.xyz, vec3(0)) > 0.001) ||
+          i >= actioncount - 1) {
+        break;
+      }
+    }
   }
 
   vec4 angleaxisresult =

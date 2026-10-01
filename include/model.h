@@ -60,12 +60,13 @@ struct Modeltransform {
   glm::vec2 lookdir;
   glm::quat rot;
 
-  struct BoneResult {
-    glm::vec3 head, scale;
-    glm::quat rot;
-  };
-
   std::vector<uint32_t> Bonecodevec;
-  std::unordered_map<uint32_t, BoneResult> Bonemap;
   std::unordered_map<std::string, bool> modelvisibilityresult;
 };
+
+struct BoneResult {
+  glm::vec3 head = glm::vec3(0), scale = glm::vec3(1);
+  glm::quat rot = glm::quat(1, 0, 0, 0);
+};
+LIB_API extern std::vector<std::unordered_map<uint32_t, BoneResult>>
+    BoneResultmapVector;

@@ -83,6 +83,8 @@ uint32_t newposeindex = 0;
 
 std::deque<DamageLocation> LocalDamageLocations;
 
+std::vector<std::unordered_map<uint32_t, BoneResult>> BoneResultmapVector;
+
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {
     return 0;
