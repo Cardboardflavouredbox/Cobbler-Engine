@@ -76,7 +76,8 @@ void main() {
       NormalResult = mat3(resultbonemat[index + i * actionsize]) * NormalResult;
 
       if ((distance(result.xyz, resultcheck.xyz) > 0.001 &&
-           distance(result.xyz, vec3(0)) > 0.001) ||
+           distance(result.xyz, resultbonemat[index + i * actionsize][3].xyz) >
+               0.001) ||
           i >= actioncount - 1) {
         break;
       }

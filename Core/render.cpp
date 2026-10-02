@@ -565,23 +565,20 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                       &modelgroup->Bonemap
                            [model->points[model->faces[j].point[k]].bone];
 
-                  pos.x *= bone->restpose.scale.x;
-                  pos.y *= bone->restpose.scale.y;
-                  pos.z *= bone->restpose.scale.z;
+                  pos *= bone->restpose.scale;
                   pos = bone->restpose.rot * pos;
                   pos += bone->restpose.pos;
 
                   pos -= bone->head;
 
-                  pos.x *= boneresult->scale.x;
-                  pos.y *= boneresult->scale.y;
-                  pos.z *= boneresult->scale.z;
+                  pos *= boneresult->scale;
 
                   pos = boneresult->rot * pos;
 
                   pos += boneresult->head;
                   if ((glm::distance(checkpos, pos) > 0.001f &&
-                       glm::distance(glm::vec3(0), pos) > 0.001f)) {
+                       glm::distance(glm::vec3(boneresult->head), pos) >
+                           0.001f)) {
                     break;
                   }
                 }
