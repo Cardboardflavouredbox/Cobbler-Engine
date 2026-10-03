@@ -385,7 +385,6 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
         }
       }
     }
-
     for (auto& action : modeltrans->actions)
       modelapplybones(modeltrans, PosetoInt[action.name], modelgroup,
                       action.frame, modeltrans->lookdir.y);
@@ -462,20 +461,20 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
           }
         }
 
-        for (int i = 0; i < modeltrans->Bonecodevec.size(); i++) {
+        int sizething = BoneResultmapVector.size(),
+            actionsize = modeltrans->Bonecodevec.size();
+
+        glUniform1i(glGetUniformLocation(shadertemp, "actioncount"), sizething);
+
+        glUniform1i(glGetUniformLocation(shadertemp, "actionsize"), actionsize);
+
+        // SDL_Log("sizething: %d %d", sizething, glad_glGetError());
+        for (int i = 0; i < actionsize; i++) {
           ModelGroupClass::Bone* bone =
               &modelgroup->Bonemap[modeltrans->Bonecodevec[i]];
 
           glm::mat4 restmat = transtomatrix(
               bone->restpose.pos, bone->restpose.scale, bone->restpose.rot);
-          int sizething = BoneResultmapVector.size(),
-              actionsize = modeltrans->Bonecodevec.size();
-
-          glUniform1i(glGetUniformLocation(shadertemp, "actioncount"),
-                      sizething);
-
-          glUniform1i(glGetUniformLocation(shadertemp, "actionsize"),
-                      actionsize);
 
           for (int j = 0; j < sizething; j++) {
             BoneResult* boneresult =

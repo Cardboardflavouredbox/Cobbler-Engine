@@ -54,12 +54,12 @@ vec4 angleAxis(float angle, vec3 v) {
 }
 
 void main() {
-  int index = getboneindexreal();
   vec4 result = vec4(aPos, 1.0);
 
   vec3 NormalResult = aNormal;
 
   if (actioncount > 0) {
+    int index = getboneindexreal();
     for (int i = 0; i < 8; i++) {
       result = vec4(aPos, 1.0);
       vec4 resultcheck = result;
