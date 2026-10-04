@@ -52,7 +52,11 @@ struct Modeltransform {
   bool visible = true;
   std::string name;
   struct action {
-    std::string name;
+    struct actionpose {
+      float lerpamount = 0.f;
+      std::vector<uint32_t> posecode;
+    };
+    actionpose pose;
     float frame, speed = 1.f;
   };
   std::vector<action> actions;

@@ -202,9 +202,96 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[]) {
   }
 }
 
+BoneResult BoneResultLerp(BoneResult A, BoneResult B, float t) {
+  BoneResult result;
+  result.head = glm::mix(A.head, B.head, t);
+  result.scale = glm::mix(A.scale, B.scale, t);
+  result.rot = glm::lerp(A.rot, B.rot, t);
+  return result;
+}
+
+BoneResult applybones(uint32_t bonecode, ModelGroupClass::Bone& inputbone,
+                      uint32_t actioncode, ModelGroupClass* modelgroup,
+                      float frame) {
+  uint32_t boneindex = bonecode;
+  BoneResult boneresult;
+  boneresult.head = inputbone.head;
+  boneresult.rot = glm::quat(1, 0, 0, 0);
+  boneresult.scale = glm::vec3(1);
+  // apply bones
+  while (boneindex != uint32_t(-1)) {
+    ModelGroupClass::Bone* bone = &modelgroup->Bonemap[boneindex];
+
+    auto& poses = bone->Poses[actioncode];
+
+    glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
+    glm::quat rot = glm::quat(1, 0, 0, 0);
+    if (poses.empty()) {
+      // SDL_Log("no poses lol");
+    } else {
+      pos = poses.begin()->second.pos;
+      scale = poses.begin()->second.scale;
+      rot = poses.begin()->second.rot;
+      uint32_t framebefore = modelgroup->anim[actioncode][0];
+
+      for (auto const& [key, val] : poses) {
+        if (frame == key) {
+          pos = val.pos;
+          rot = val.rot;
+          scale = val.scale;
+          break;
+        } else if (frame > key) {
+          pos = val.pos;
+          rot = val.rot;
+          scale = val.scale;
+          framebefore = key;
+        } else {
+          float a = ((float)frame - (float)framebefore) /
+                    ((float)key - (float)framebefore);
+          // lerp values.
+          rot = glm::mix(rot, val.rot, a);
+          pos = glm::mix(pos, val.pos, a);
+          scale = glm::mix(scale, val.scale, a);
+          break;
+        }
+      }
+    }
+
+    // the axis translation code of fear and despair...
+    float angle = glm::angle(rot);
+
+    glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
+
+    glm::vec3 axis =
+        glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * glm::axis(rot);
+
+    axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
+                                         : glm::vec3(0, 1, 0);
+
+    glm::quat final_quat = glm::angleAxis(angle, axis);
+
+    // if (pos != glm::vec3(0) || scale != glm::vec3(1) ||
+    //     final_quat != glm::quat(1, 0, 0, 0))
+    //   check = true;
+
+    boneresult.rot = final_quat * boneresult.rot;
+
+    boneresult.scale *= scale;
+
+    boneresult.head = (final_quat) * (boneresult.head - bone->head);
+    boneresult.head *= scale;
+    boneresult.head += bone->head;
+    boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
+                       (pos * bone->restpose.scale);
+    boneindex = bone->parent;
+  }
+  return boneresult;
+}
+
 // apply animations of bones.
-void modelapplybones(Modeltransform* modeltrans, uint32_t actioncode,
-                     ModelGroupClass* modelgroup, float frame, float lookdir) {
+void modelapplybones(Modeltransform* modeltrans,
+                     Modeltransform::action::actionpose actionposething,
+                     ModelGroupClass* modelgroup, float frame) {
   std::unordered_map<uint32_t, BoneResult> LocalBoneResultMap;
   for (auto& [code, bone] : modelgroup->Bonemap) {
     BoneResult* boneresult = &LocalBoneResultMap[code];
@@ -213,109 +300,30 @@ void modelapplybones(Modeltransform* modeltrans, uint32_t actioncode,
     boneresult->scale = glm::vec3(1);
   }
 
-  for (auto& [code, bone] : modelgroup->Bonemap) {
-    uint32_t boneindex = code;
-    BoneResult* boneresult = &LocalBoneResultMap[code];
-    // apply bones
-    while (boneindex != uint32_t(-1)) {
-      ModelGroupClass::Bone* bone = &modelgroup->Bonemap[boneindex];
+  if (actionposething.lerpamount == std::floorf(actionposething.lerpamount)) {
+    for (auto& [code, bone] : modelgroup->Bonemap) {
+      LocalBoneResultMap[code] = applybones(
+          code, bone, actionposething.posecode[actionposething.lerpamount],
+          modelgroup, frame);
+    }
+  } else {
+    for (auto& [code, bone] : modelgroup->Bonemap) {
+      BoneResult
+          boneresult1 = applybones(
+              code, bone,
+              actionposething.posecode[std::floorf(actionposething.lerpamount)],
+              modelgroup, frame),
+          boneresult2 = applybones(
+              code, bone,
+              actionposething.posecode[std::ceilf(actionposething.lerpamount)],
+              modelgroup, frame);
 
-      glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
-      glm::quat rot = glm::quat(1, 0, 0, 0);
-      if (bone->Poses.empty()) {
-        // SDL_Log("no poses lol");
-      } else {
-        pos = bone->Poses[actioncode].begin()->second.pos;
-        scale = bone->Poses[actioncode].begin()->second.scale;
-        rot = bone->Poses[actioncode].begin()->second.rot;
-        uint32_t framebefore = modelgroup->anim[actioncode][0];
-
-        for (auto const& [key, val] : bone->Poses[actioncode]) {
-          if (frame == key) {
-            pos = val.pos;
-            rot = val.rot;
-            scale = val.scale;
-            break;
-          } else if (frame > key) {
-            pos = val.pos;
-            rot = val.rot;
-            scale = val.scale;
-            framebefore = key;
-          } else {
-            float a = ((float)frame - (float)framebefore) /
-                      ((float)key - (float)framebefore);
-            // lerp values.
-            rot = glm::mix(rot, val.rot, a);
-            pos = glm::mix(pos, val.pos, a);
-            scale = glm::mix(scale, val.scale, a);
-            break;
-          }
-        }
-      }
-
-      // the axis translation code of fear and despair...
-      float angle = glm::angle(rot);
-
-      glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
-
-      glm::vec3 axis =
-          glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * glm::axis(rot);
-
-      axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
-                                           : glm::vec3(0, 1, 0);
-
-      glm::quat final_quat = glm::angleAxis(angle, axis);
-
-      // if (pos != glm::vec3(0) || scale != glm::vec3(1) ||
-      //     final_quat != glm::quat(1, 0, 0, 0))
-      //   check = true;
-
-      // some lil correction for some bones.
-      // find a way to not hardcode this!
-      if (boneindex == BonetoInt["Spine"]) {
-        float tempdir = lookdir;
-
-        if (tempdir > 0)
-          tempdir /= 3.f;
-        else
-          tempdir /= 2.f;
-
-        final_quat = final_quat *
-                     glm::angleAxis(glm::radians(tempdir), glm::vec3(1, 0, 0));
-      } else if (boneindex == BonetoInt["Head"]) {
-        float tempdir = lookdir;
-
-        if (tempdir > 0)
-          tempdir *= 2.f / 3.f;
-        else
-          tempdir /= 2.f;
-
-        final_quat = final_quat *
-                     glm::angleAxis(glm::radians(tempdir), glm::vec3(1, 0, 0));
-      } else if (boneindex == BonetoInt["Arm.L"]) {
-        float tempdir = lookdir;
-
-        if (tempdir > 0)
-          tempdir *= 2.f / 3.f;
-        else
-          tempdir /= 2.f;
-
-        final_quat = final_quat *
-                     glm::angleAxis(glm::radians(-tempdir), glm::vec3(0, 1, 0));
-      }
-
-      boneresult->rot = final_quat * boneresult->rot;
-
-      boneresult->scale *= scale;
-
-      boneresult->head = (final_quat) * (boneresult->head - bone->head);
-      boneresult->head *= scale;
-      boneresult->head += bone->head;
-      boneresult->head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
-                          (pos * bone->restpose.scale);
-      boneindex = bone->parent;
+      LocalBoneResultMap[code] = BoneResultLerp(
+          boneresult1, boneresult2,
+          actionposething.lerpamount - std::floorf(actionposething.lerpamount));
     }
   }
+
   BoneResultmapVector.push_back(LocalBoneResultMap);
 }
 
@@ -337,7 +345,7 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
   if (modeltrans->visible) {
     // code of animation frames.
     for (int i = 0; i < modeltrans->actions.size(); i++) {
-      uint32_t poseindex = PosetoInt[modeltrans->actions[i].name];
+      uint32_t poseindex = modeltrans->actions[i].pose.posecode.front();
 
       modeltrans->actions[i].frame +=
           deltatime * 24 * modeltrans->actions[i].speed;
@@ -369,25 +377,24 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
         modeltrans->modelvisibilityresult[visiblething] = true;
       }
     }
-    if (!modeltrans->actions.empty()) {
-      for (auto const& action : modeltrans->actions) {
-        for (auto const& visiblething :
-             modelgroup->modelvisibility[PosetoInt[action.name]]) {
-          bool result = modeltrans->modelvisibilityresult[visiblething.name];
-          for (auto const& [key, val] : visiblething.value) {
-            if (key > action.frame) {
-              break;
-            } else {
-              result = val;
-            }
-          }
-          modeltrans->modelvisibilityresult[visiblething.name] = result;
-        }
-      }
-    }
+    // if (!modeltrans->actions.empty()) {
+    //   for (auto const& action : modeltrans->actions) {
+    //     for (auto const& visiblething :
+    //          modelgroup->modelvisibility[PosetoInt[action.name]]) {
+    //       bool result = modeltrans->modelvisibilityresult[visiblething.name];
+    //       for (auto const& [key, val] : visiblething.value) {
+    //         if (key > action.frame) {
+    //           break;
+    //         } else {
+    //           result = val;
+    //         }
+    //       }
+    //       modeltrans->modelvisibilityresult[visiblething.name] = result;
+    //     }
+    //   }
+    // }
     for (auto& action : modeltrans->actions)
-      modelapplybones(modeltrans, PosetoInt[action.name], modelgroup,
-                      action.frame, modeltrans->lookdir.y);
+      modelapplybones(modeltrans, action.pose, modelgroup, action.frame);
 
     switch (Settings->graphicsmode) {
       case OpenGL4:
