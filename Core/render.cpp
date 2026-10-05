@@ -307,20 +307,18 @@ void modelapplybones(Modeltransform* modeltrans,
           modelgroup, frame);
     }
   } else {
+    int posecodeindex = int(actionposething.lerpamount);
+    float t =
+        actionposething.lerpamount - std::floorf(actionposething.lerpamount);
     for (auto& [code, bone] : modelgroup->Bonemap) {
-      BoneResult
-          boneresult1 = applybones(
-              code, bone,
-              actionposething.posecode[std::floorf(actionposething.lerpamount)],
-              modelgroup, frame),
-          boneresult2 = applybones(
-              code, bone,
-              actionposething.posecode[std::ceilf(actionposething.lerpamount)],
-              modelgroup, frame);
+      BoneResult boneresult1 = applybones(
+                     code, bone, actionposething.posecode[posecodeindex],
+                     modelgroup, frame),
+                 boneresult2 = applybones(
+                     code, bone, actionposething.posecode[posecodeindex + 1],
+                     modelgroup, frame);
 
-      LocalBoneResultMap[code] = BoneResultLerp(
-          boneresult1, boneresult2,
-          actionposething.lerpamount - std::floorf(actionposething.lerpamount));
+      LocalBoneResultMap[code] = BoneResultLerp(boneresult1, boneresult2, t);
     }
   }
 
