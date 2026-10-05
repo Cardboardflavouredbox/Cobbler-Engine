@@ -202,17 +202,10 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[]) {
   }
 }
 
-BoneResult BoneResultLerp(BoneResult A, BoneResult B, float t) {
-  BoneResult result;
-  result.head = glm::mix(A.head, B.head, t);
-  result.scale = glm::mix(A.scale, B.scale, t);
-  result.rot = glm::lerp(A.rot, B.rot, t);
-  return result;
-}
-
-BoneResult applybones(uint32_t bonecode, ModelGroupClass::Bone& inputbone,
-                      uint32_t actioncode, ModelGroupClass* modelgroup,
-                      float frame) {
+BoneResult applybonessingleaction(uint32_t bonecode,
+                                  ModelGroupClass::Bone& inputbone,
+                                  uint32_t actioncode,
+                                  ModelGroupClass* modelgroup, float frame) {
   uint32_t boneindex = bonecode;
   BoneResult boneresult;
   boneresult.head = inputbone.head;
@@ -288,6 +281,119 @@ BoneResult applybones(uint32_t bonecode, ModelGroupClass::Bone& inputbone,
   return boneresult;
 }
 
+BoneResult applybonesmultipleactions(uint32_t bonecode,
+                                     ModelGroupClass::Bone& inputbone,
+                                     uint32_t actioncode[],
+                                     ModelGroupClass* modelgroup, float frame,
+                                     float lerpamount) {
+  uint32_t boneindex = bonecode;
+  BoneResult boneresult;
+  boneresult.head = inputbone.head;
+  boneresult.rot = glm::quat(1, 0, 0, 0);
+  boneresult.scale = glm::vec3(1);
+  // apply bones
+  while (boneindex != uint32_t(-1)) {
+    ModelGroupClass::Bone* bone = &modelgroup->Bonemap[boneindex];
+
+    auto& poses = bone->Poses[actioncode[0]];
+
+    glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
+    glm::quat rot = glm::quat(1, 0, 0, 0);
+    if (!poses.empty()) {
+      pos = poses.begin()->second.pos;
+      scale = poses.begin()->second.scale;
+      rot = poses.begin()->second.rot;
+      uint32_t framebefore = modelgroup->anim[actioncode[0]][0];
+
+      for (auto const& [key, val] : poses) {
+        if (frame == key) {
+          pos = val.pos;
+          rot = val.rot;
+          scale = val.scale;
+          break;
+        } else if (frame > key) {
+          pos = val.pos;
+          rot = val.rot;
+          scale = val.scale;
+          framebefore = key;
+        } else {
+          float a = ((float)frame - (float)framebefore) /
+                    ((float)key - (float)framebefore);
+          // lerp values.
+          rot = glm::mix(rot, val.rot, a);
+          pos = glm::mix(pos, val.pos, a);
+          scale = glm::mix(scale, val.scale, a);
+          break;
+        }
+      }
+    }
+
+    auto& poses2 = bone->Poses[actioncode[1]];
+
+    if (!poses2.empty()) {
+      glm::vec3 pos2 = poses2.begin()->second.pos,
+                scale2 = poses2.begin()->second.scale;
+      glm::quat rot2 = poses2.begin()->second.rot;
+      uint32_t framebefore = modelgroup->anim[actioncode[1]][0];
+
+      for (auto const& [key, val] : poses2) {
+        if (frame == key) {
+          pos2 = val.pos;
+          rot2 = val.rot;
+          scale2 = val.scale;
+          break;
+        } else if (frame > key) {
+          pos2 = val.pos;
+          rot2 = val.rot;
+          scale2 = val.scale;
+          framebefore = key;
+        } else {
+          float a = ((float)frame - (float)framebefore) /
+                    ((float)key - (float)framebefore);
+          // lerp values.
+          rot2 = glm::mix(rot2, val.rot, a);
+          pos2 = glm::mix(pos2, val.pos, a);
+          scale2 = glm::mix(scale2, val.scale, a);
+          break;
+        }
+      }
+
+      pos = glm::mix(pos, pos2, lerpamount);
+      scale = glm::mix(scale, scale2, lerpamount);
+      rot = glm::mix(rot, rot2, lerpamount);
+    }
+
+    // the axis translation code of fear and despair...
+    float angle = glm::angle(rot);
+
+    glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
+
+    glm::vec3 axis =
+        glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * glm::axis(rot);
+
+    axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
+                                         : glm::vec3(0, 1, 0);
+
+    glm::quat final_quat = glm::angleAxis(angle, axis);
+
+    // if (pos != glm::vec3(0) || scale != glm::vec3(1) ||
+    //     final_quat != glm::quat(1, 0, 0, 0))
+    //   check = true;
+
+    boneresult.rot = final_quat * boneresult.rot;
+
+    boneresult.scale *= scale;
+
+    boneresult.head = (final_quat) * (boneresult.head - bone->head);
+    boneresult.head *= scale;
+    boneresult.head += bone->head;
+    boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
+                       (pos * bone->restpose.scale);
+    boneindex = bone->parent;
+  }
+  return boneresult;
+}
+
 // apply animations of bones.
 void modelapplybones(Modeltransform* modeltrans,
                      Modeltransform::action::actionpose actionposething,
@@ -302,23 +408,19 @@ void modelapplybones(Modeltransform* modeltrans,
 
   if (actionposething.lerpamount == std::floorf(actionposething.lerpamount)) {
     for (auto& [code, bone] : modelgroup->Bonemap) {
-      LocalBoneResultMap[code] = applybones(
+      LocalBoneResultMap[code] = applybonessingleaction(
           code, bone, actionposething.posecode[actionposething.lerpamount],
           modelgroup, frame);
     }
   } else {
-    int posecodeindex = int(actionposething.lerpamount);
+    uint32_t poseindexarray[2] = {
+        actionposething.posecode[int(actionposething.lerpamount)],
+        actionposething.posecode[int(actionposething.lerpamount) + 1]};
     float t =
         actionposething.lerpamount - std::floorf(actionposething.lerpamount);
     for (auto& [code, bone] : modelgroup->Bonemap) {
-      BoneResult boneresult1 = applybones(
-                     code, bone, actionposething.posecode[posecodeindex],
-                     modelgroup, frame),
-                 boneresult2 = applybones(
-                     code, bone, actionposething.posecode[posecodeindex + 1],
-                     modelgroup, frame);
-
-      LocalBoneResultMap[code] = BoneResultLerp(boneresult1, boneresult2, t);
+      LocalBoneResultMap[code] = applybonesmultipleactions(
+          code, bone, poseindexarray, modelgroup, frame, t);
     }
   }
 
