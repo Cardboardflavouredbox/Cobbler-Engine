@@ -13,6 +13,7 @@ uniform uint bonelist[64];
 uniform mat4 restmat[64];
 uniform vec3 bonehead[64];
 uniform mat4 resultbonemat[64];
+uniform int resultbonecheck[64];
 uniform mat4 transformmat;
 
 uniform int actioncount;
@@ -75,9 +76,7 @@ void main() {
       NormalResult = mat3(restmat[index + i * actionsize]) * NormalResult;
       NormalResult = mat3(resultbonemat[index + i * actionsize]) * NormalResult;
 
-      if ((distance(result.xyz, resultcheck.xyz) > 0.001 &&
-           distance(result.xyz, resultbonemat[index + i * actionsize][3].xyz) >
-               0.001) ||
+      if (resultbonecheck[index + i * actionsize] != 0 ||
           i >= actioncount - 1) {
         break;
       }

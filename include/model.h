@@ -75,6 +75,7 @@ struct Modeltransform {
 struct BoneResult {
   glm::vec3 head = glm::vec3(0), scale = glm::vec3(1);
   glm::quat rot = glm::quat(1, 0, 0, 0);
+  bool check = false;
 };
 LIB_API extern std::vector<std::unordered_map<uint32_t, BoneResult>>
     BoneResultmapVector;

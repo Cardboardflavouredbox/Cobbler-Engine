@@ -263,9 +263,10 @@ BoneResult applybonessingleaction(uint32_t bonecode,
 
     glm::quat final_quat = glm::angleAxis(angle, axis);
 
-    // if (pos != glm::vec3(0) || scale != glm::vec3(1) ||
-    //     final_quat != glm::quat(1, 0, 0, 0))
-    //   check = true;
+    if (boneindex == bonecode &&
+        (pos != glm::vec3(0) || scale != glm::vec3(1) ||
+         final_quat != glm::quat(1, 0, 0, 0)))
+      boneresult.check = true;
 
     boneresult.rot = final_quat * boneresult.rot;
 
@@ -358,9 +359,15 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
         }
       }
 
-      pos = glm::mix(pos, pos2, lerpamount);
-      scale = glm::mix(scale, scale2, lerpamount);
-      rot = glm::mix(rot, rot2, lerpamount);
+      if (poses.empty()) {
+        pos = pos2;
+        scale = scale2;
+        rot = rot2;
+      } else {
+        pos = glm::mix(pos, pos2, lerpamount);
+        scale = glm::mix(scale, scale2, lerpamount);
+        rot = glm::mix(rot, rot2, lerpamount);
+      }
     }
 
     // the axis translation code of fear and despair...
@@ -376,9 +383,10 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
 
     glm::quat final_quat = glm::angleAxis(angle, axis);
 
-    // if (pos != glm::vec3(0) || scale != glm::vec3(1) ||
-    //     final_quat != glm::quat(1, 0, 0, 0))
-    //   check = true;
+    if (boneindex == bonecode &&
+        (pos != glm::vec3(0) || scale != glm::vec3(1) ||
+         final_quat != glm::quat(1, 0, 0, 0)))
+      boneresult.check = true;
 
     boneresult.rot = final_quat * boneresult.rot;
 
@@ -480,7 +488,7 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
     // if (!modeltrans->actions.empty()) {
     //   for (auto const& action : modeltrans->actions) {
     //     for (auto const& visiblething :
-    //          modelgroup->modelvisibility[PosetoInt[action.name]]) {
+    //          modelgroup->modelvisibility[action.pose.posecode[0]]) {
     //       bool result = modeltrans->modelvisibilityresult[visiblething.name];
     //       for (auto const& [key, val] : visiblething.value) {
     //         if (key > action.frame) {
@@ -598,6 +606,12 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                     ("bonelist[" + std::to_string(index) + "]").c_str()),
                 modeltrans->Bonecodevec[i]);
 
+            glUniform1i(
+                glGetUniformLocation(
+                    shadertemp,
+                    ("resultbonecheck[" + std::to_string(index) + "]").c_str()),
+                (boneresult->check) ? 1 : 0);
+
             glUniformMatrix4fv(
                 glGetUniformLocation(
                     shadertemp,
@@ -683,9 +697,7 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                   pos = boneresult->rot * pos;
 
                   pos += boneresult->head;
-                  if ((glm::distance(checkpos, pos) > 0.001f &&
-                       glm::distance(glm::vec3(boneresult->head), pos) >
-                           0.001f)) {
+                  if (boneresult->check) {
                     break;
                   }
                 }
@@ -708,7 +720,7 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
               glm::vec3 normal =
                   glm::normalize(glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
 
-              float angle = (glm::dot(normal, lookdir) + 1.f) / 3.f;
+              float angle = (glm::dot(normal, lookdir) + 1.f) / 3.f + 0.25f;
               glColor3f(angle, angle, angle);
 
               for (int k = 2; k >= 0; k--) {
