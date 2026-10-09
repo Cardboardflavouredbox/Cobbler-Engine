@@ -28,7 +28,7 @@ void main() {
 
   vec4 tempcolor2 = texture(InputTexture2, vec2(TexCoord2.x, 1 - TexCoord2.y));
 
-  vec3 resultcolor = mix(tempcolor.rgb, tempcolor2.rgb, tempcolor2.a);
+  vec3 resultcolor = mix(tempcolor.rgb, tempcolor2.rgb, 0.5);
 
   vec3 result = vec3(0, 0, 0);
   for (int i = 0; i < 16; i++) {

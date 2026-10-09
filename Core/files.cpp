@@ -1299,7 +1299,7 @@ bool init() {
         if (lineHeader == 'E') break;
         Mapface tempface;
         int doublesided;
-        fscanf(file, "%d", &doublesided);
+        fscanf(file, "%d ", &doublesided);
         char subHeader;
         while (true) {
           if (fscanf(file, "%c", &subHeader) == EOF) break;
@@ -1452,7 +1452,7 @@ bool init() {
   Lights[0]->color[0] = 1;
   Lights[0]->color[1] = 1;
   Lights[0]->color[2] = 1;
-  Lights[0]->position = glm::vec3(1, 1, 4);
+  Lights[0]->position = glm::vec3(1, 1, 16);
 
   // set the props.
   Global->Models = tempmapdata.props;
