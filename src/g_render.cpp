@@ -451,8 +451,11 @@ void openglrender() {
       glBindVertexArray(i.VAOthing);
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, i.texture);
+      glActiveTexture(GL_TEXTURE1);
+      glBindTexture(GL_TEXTURE_2D, i.shadowmaptexture);
 
       glUniform1i(glGetUniformLocation(i.shader, "InputTexture"), 0);
+      glUniform1i(glGetUniformLocation(i.shader, "InputTexture2"), 1);
 
       glDrawArrays(GL_TRIANGLES, 0, i.size);
     }

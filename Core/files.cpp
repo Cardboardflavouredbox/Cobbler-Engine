@@ -1289,25 +1289,33 @@ bool init() {
       while (true) {  // Visual Points.
         if (fscanf(file, "%c", &lineHeader) == EOF) break;
         if (lineHeader == 'E') break;
-        MapPoint temppoint;
-        fscanf(file, "%f,%f,%f %f,%f,%f\n", &temppoint.pos.x, &temppoint.pos.y,
-               &temppoint.pos.z, &temppoint.shade[0], &temppoint.shade[1],
-               &temppoint.shade[2]);
+        glm::vec3 temppoint;
+        fscanf(file, "%f,%f,%f\n", &temppoint.x, &temppoint.y, &temppoint.z);
         tempobject.VisualPoints.push_back(temppoint);
       }
       fscanf(file, "\n");
       while (true) {  // Visual Faces.
         if (fscanf(file, "%c", &lineHeader) == EOF) break;
         if (lineHeader == 'E') break;
-        char texture[64];
         Mapface tempface;
         int doublesided;
-        fscanf(file, "%d %s %u,%u,%u %f,%f %f,%f %f,%f\n", &doublesided,
-               texture, &tempface.points[0], &tempface.points[1],
-               &tempface.points[2], &tempface.UVs[0][0], &tempface.UVs[0][1],
-               &tempface.UVs[1][0], &tempface.UVs[1][1], &tempface.UVs[2][0],
-               &tempface.UVs[2][1]);
-        tempface.texture = texture;
+        fscanf(file, "%d", &doublesided);
+        char subHeader;
+        while (true) {
+          if (fscanf(file, "%c", &subHeader) == EOF) break;
+          if (subHeader == 'E') break;
+          Mapface::TUVthing tuv;
+          char texture[64];
+          fscanf(file, "%s %f,%f %f,%f %f,%f ", texture, &tuv.UVs[0].x,
+                 &tuv.UVs[0].y, &tuv.UVs[1].x, &tuv.UVs[1].y, &tuv.UVs[2].x,
+                 &tuv.UVs[2].y);
+          tuv.texture = texture;
+          tempface.TUVvector.push_back(tuv);
+        }
+
+        fscanf(file, "%u,%u,%u\n", &tempface.points[0], &tempface.points[1],
+               &tempface.points[2]);
+
         tempface.doublesided = doublesided;
         for (int i = 0; i < 3; i++) tempface.points[i];
         tempobject.Visualmapfaces.push_back(tempface);
@@ -1363,7 +1371,6 @@ bool init() {
       glm::vec3 pos;
       fscanf(file, "%f,%f,%f\n", &pos.x, &pos.y, &pos.z);
       tempmapdata.SpawnPoints.push_back(pos);
-      break;
     }
   }
   fclose(file);
@@ -1415,16 +1422,15 @@ bool init() {
     LoadMapGL(Settings->graphicsmode == OpenGL1);
 
   LocalPlayer = SpawnEntities[Global->playerclass](0, 0);
-  LocalPlayer->position = GlobalMapStuff->SpawnPoints.front();
+  LocalPlayer->position = GetRespawnPoint(0);
   LocalPlayer->Modelthing->visible = false;
-  LocalPlayer->teamindex = -1;
+  LocalPlayer->teamindex = 0;
   LocalPlayer->EntityIndex = 0;
 
   GlobalNetworkStuff->RecvEntity = SpawnEntities[Global->playerclass](0, 0);
-  GlobalNetworkStuff->RecvEntity->position =
-      GlobalMapStuff->SpawnPoints.front();
+  GlobalNetworkStuff->RecvEntity->position = GetRespawnPoint(0);
   GlobalNetworkStuff->RecvEntity->Modelthing->visible = false;
-  GlobalNetworkStuff->RecvEntity->teamindex = -1;
+  GlobalNetworkStuff->RecvEntity->teamindex = 0;
   GlobalNetworkStuff->RecvEntity->EntityIndex = 0;
 
   // push LocalPlayer Entity to Entities vector. LocalPlayer Entity will

@@ -26,8 +26,6 @@ def write_some_data(context, filepath, use_some_setting):
         mesh = child.data
 
         
-        active_uv_layer = mesh.uv_layers.active.data
-        
         if child.get('IsKillbox'):
             print(f"K",file=f)
             for vert in mesh.vertices:
@@ -51,30 +49,34 @@ def write_some_data(context, filepath, use_some_setting):
             print(f"E",file=f)
         else:
             print(f"V",file=f)
-            color_attr = mesh.attributes["Color"]
             
             for vert in mesh.vertices:
                 vertdata = child.matrix_world @ vert.co
-                color = color_attr.data[vert.index].color
-                print(f"D{vertdata.x:.6f},{vertdata.y:.6f},{vertdata.z:.6f} {color[0]},{color[1]},{color[2]}",file = f)
+                print(f"D{vertdata.x:.6f},{vertdata.y:.6f},{vertdata.z:.6f}",file = f)
             print(f"E",file=f)
             for face in mesh.polygons:
-                texture = ""
+                print("D0 ",end='',file = f)
+                
                 s = child.material_slots[face.material_index]
                 if s.material and s.material.use_nodes:
                     for n in s.material.node_tree.nodes:
                         if n.type == 'TEX_IMAGE':
                             texture = n.image.name
                             texture = texture[:-4]
+                            
+                            vector_input = n.inputs.get('Vector')
+                            
+                            if vector_input and vector_input.is_linked:
+                                active_uv_layer = mesh.uv_layers[vector_input.links[0].from_node.uv_map].data
+                                
+                                uvthing = ""
+                                for loop_idx in face.loop_indices:
+                                    uv_loop = active_uv_layer[loop_idx]
+                                    uvthing += " "+"%.6f" % (uv_loop.uv[0]) + "," + "%.6f" % (uv_loop.uv[1])
+                            
+                                print("D"+texture+uvthing+" ",end='',file = f)
                 
-                uvthing = ""
-                
-                for loop_idx in face.loop_indices:
-                    uv_loop = active_uv_layer[loop_idx]
-                    uvthing += str(uv_loop.uv[0]) + "," + str(uv_loop.uv[1]) + " "
-
-                facedata = [texture,face.vertices,uvthing]
-                print("D0 "+facedata[0]+" "+ ",".join(str(num) for num in facedata[1]) +" "+facedata[2],file = f)
+                print("E"+",".join(str(num) for num in face.vertices),file = f)
             print(f"E",file=f)
     print("C Sky",file = f)
     

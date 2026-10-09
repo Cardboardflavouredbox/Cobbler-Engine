@@ -57,8 +57,11 @@ struct RendererStuff {
       uint32_t size = 0;
       GLuint shader;
     };
+    struct GLMapObject : GLObject {
+      GLuint shadowmaptexture;
+    };
     GLuint MapGLlist;
-    std::vector<GLObject> GlMapObjects;
+    std::vector<GLMapObject> GlMapObjects;
 
     std::unordered_map<std::string, GLObject> GLModels;
     GLObject GLParticleBase;

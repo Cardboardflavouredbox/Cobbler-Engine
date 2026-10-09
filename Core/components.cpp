@@ -37,6 +37,9 @@ void componentsupdatelate() {
 void componentsupdate() {
   // call npc entity updates and EntityMove
   for (auto& i : Entities) {
+    if (std::isnan(i.second->position.x) || std::isnan(i.second->position.y) ||
+        std::isnan(i.second->position.z))
+      i.second->hp = 0;
     i.second->update();
     EntityMove(i.second);
     i.second->deltatimelocal = 0;

@@ -16,20 +16,18 @@
 #define LIB_API
 #endif
 
-struct MapPoint {
-  glm::vec3 pos;
-  std::array<float, 3> shade = {255, 255, 255};
-};
-
 struct Mapface {
   bool doublesided = false;
-  std::string texture;
   std::array<uint32_t, 3> points;
-  std::array<glm::vec2, 3> UVs;
+  struct TUVthing {
+    std::string texture;
+    std::array<glm::vec2, 3> UVs;
+  };
+  std::vector<TUVthing> TUVvector;
 };
 
 struct VisualObject {
-  std::vector<MapPoint> VisualPoints;
+  std::vector<glm::vec3> VisualPoints;
   std::vector<Mapface> Visualmapfaces;
 };
 
@@ -48,5 +46,5 @@ struct GlobalMapClass {
 LIB_API extern std::unique_ptr<GlobalMapClass> GlobalMapStuff;
 
 extern "C" {
-LIB_API glm::vec3 GetRespawnPoint(uint32_t teamid);
+LIB_API glm::vec3 GetRespawnPoint(int teamid);
 }

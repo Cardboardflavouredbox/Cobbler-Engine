@@ -225,7 +225,7 @@ uint32_t LightMapEmptyIndex() {
   return 0;
 }
 
-glm::vec3 GetRespawnPoint(uint32_t teamindex) {
+glm::vec3 GetRespawnPoint(int teamindex) {
   return GlobalMapStuff
       ->SpawnPoints[(teamindex % int(GlobalMapStuff->SpawnPoints.size()))];
 }
