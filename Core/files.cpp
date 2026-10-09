@@ -1354,10 +1354,15 @@ bool init() {
         tempmapdata.KillboxFaces.push_back(tempface);
       }
       fscanf(file, "\n");
-    } else if (lineHeader == 'S') {  // Skybox.
+    } else if (lineHeader == 'C') {  // Skybox.
       char name[64];
       fscanf(file, "%s", name);
       tempmapdata.skybox = name;
+      break;
+    } else if (lineHeader == 'S') {  // SpawnPoints.
+      glm::vec3 pos;
+      fscanf(file, "%f,%f,%f\n", &pos.x, &pos.y, &pos.z);
+      tempmapdata.SpawnPoints.push_back(pos);
       break;
     }
   }
@@ -1372,6 +1377,8 @@ bool init() {
   GlobalMapStuff->KillboxFaces = tempmapdata.KillboxFaces;
 
   GlobalMapStuff->skybox = tempmapdata.skybox;
+
+  GlobalMapStuff->SpawnPoints = tempmapdata.SpawnPoints;
 
   // preprocess the faces in the map.
   // turns all quads into triangles.
@@ -1408,13 +1415,14 @@ bool init() {
     LoadMapGL(Settings->graphicsmode == OpenGL1);
 
   LocalPlayer = SpawnEntities[Global->playerclass](0, 0);
-  LocalPlayer->position.z = 8;
+  LocalPlayer->position = GlobalMapStuff->SpawnPoints.front();
   LocalPlayer->Modelthing->visible = false;
   LocalPlayer->teamindex = -1;
   LocalPlayer->EntityIndex = 0;
 
   GlobalNetworkStuff->RecvEntity = SpawnEntities[Global->playerclass](0, 0);
-  GlobalNetworkStuff->RecvEntity->position.z = 8;
+  GlobalNetworkStuff->RecvEntity->position =
+      GlobalMapStuff->SpawnPoints.front();
   GlobalNetworkStuff->RecvEntity->Modelthing->visible = false;
   GlobalNetworkStuff->RecvEntity->teamindex = -1;
   GlobalNetworkStuff->RecvEntity->EntityIndex = 0;

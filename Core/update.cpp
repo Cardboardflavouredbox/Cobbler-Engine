@@ -186,6 +186,8 @@ void RecieveNetData() {
 
           GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity =
               SpawnEntities["Gardner"](0, i);
+          GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity->position =
+              GlobalMapStuff->SpawnPoints.front();
         }
       } else if (tempdata->name == "PlayerList") {
         std::set<uint64_t> tempset;

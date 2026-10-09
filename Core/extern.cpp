@@ -225,6 +225,11 @@ uint32_t LightMapEmptyIndex() {
   return 0;
 }
 
+glm::vec3 GetRespawnPoint(uint32_t teamindex) {
+  return GlobalMapStuff
+      ->SpawnPoints[(teamindex % int(GlobalMapStuff->SpawnPoints.size()))];
+}
+
 void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
   if (Global->IsOnline && OnlineSend) {  // online code stuff
     std::vector<uint8_t> buffer{};

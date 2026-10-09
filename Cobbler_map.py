@@ -37,6 +37,8 @@ def write_some_data(context, filepath, use_some_setting):
             for face in mesh.polygons:
                 print("D"+",".join(str(num) for num in face.vertices),file = f)
             print(f"E",file=f)
+        elif child.get('SpawnPoint'):
+            print(f"S{child.location.x:.6f},{child.location.y:.6f},{child.location.z:.6f}",file=f)
         elif child.get('Hitbox'):
             print(f"H",file=f)
             for vert in mesh.vertices:
@@ -74,7 +76,7 @@ def write_some_data(context, filepath, use_some_setting):
                 facedata = [texture,face.vertices,uvthing]
                 print("D0 "+facedata[0]+" "+ ",".join(str(num) for num in facedata[1]) +" "+facedata[2],file = f)
             print(f"E",file=f)
-    print("S Sky",file = f)
+    print("C Sky",file = f)
     
     f.close()
 

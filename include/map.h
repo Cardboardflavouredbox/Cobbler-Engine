@@ -42,6 +42,11 @@ struct GlobalMapClass {
 
   std::vector<VisualObject> VisualObjectsVector;
   std::string skybox;
+  std::vector<glm::vec3> SpawnPoints;
 };
 
 LIB_API extern std::unique_ptr<GlobalMapClass> GlobalMapStuff;
+
+extern "C" {
+LIB_API glm::vec3 GetRespawnPoint(uint32_t teamid);
+}

@@ -78,4 +78,5 @@ struct Mapdata {
   std::vector<Entitydata> Entities;
   std::vector<Modeltransform> props;
   std::string skybox;
+  std::vector<glm::vec3> SpawnPoints;
 };
