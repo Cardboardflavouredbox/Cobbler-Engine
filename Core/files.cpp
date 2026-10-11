@@ -260,128 +260,131 @@ bool loadCubemap(std::filesystem::path path) {
   return true;
 }
 
-bool VulkanInstancething() {
-  auto vkGetInstanceProcAddr =
-      (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
+// bool VulkanInstancething() {
+//   auto vkGetInstanceProcAddr =
+//       (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
 
-  auto const vulkanVersion{
-      RendererGlobal->Vulkanstuff->context.enumerateInstanceVersion()};
-  SDL_Log("Vulkan version %d.%d", VK_API_VERSION_MAJOR(vulkanVersion),
-          VK_API_VERSION_MINOR(vulkanVersion));
+//   auto const vulkanVersion{
+//       RendererGlobal->Vulkanstuff->context.enumerateInstanceVersion()};
+//   SDL_Log("Vulkan version %d.%d", VK_API_VERSION_MAJOR(vulkanVersion),
+//           VK_API_VERSION_MINOR(vulkanVersion));
 
-  uint32_t extensioncnt = 0;
-  const char* const* instance_extensions =
-      SDL_Vulkan_GetInstanceExtensions(&extensioncnt);
+//   uint32_t extensioncnt = 0;
+//   const char* const* instance_extensions =
+//       SDL_Vulkan_GetInstanceExtensions(&extensioncnt);
 
-  if (instance_extensions == NULL) return false;
+//   if (instance_extensions == NULL) return false;
 
-  uint32_t count_extensions = extensioncnt + 1;
-  const char** extensions =
-      (const char**)(SDL_malloc(count_extensions * sizeof(const char*)));
-  extensions[0] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-  SDL_memcpy(&extensions[1], instance_extensions,
-             extensioncnt * sizeof(const char*));
+//   uint32_t count_extensions = extensioncnt + 1;
+//   const char** extensions =
+//       (const char**)(SDL_malloc(count_extensions * sizeof(const char*)));
+//   extensions[0] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
+//   SDL_memcpy(&extensions[1], instance_extensions,
+//              extensioncnt * sizeof(const char*));
 
-  constexpr vk::ApplicationInfo appInfo{
-      .pApplicationName = "Hello Triangle",
-      .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
-      .pEngineName = "No Engine",
-      .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-      .apiVersion = vk::ApiVersion14};
+//   constexpr vk::ApplicationInfo appInfo{
+//       .pApplicationName = "Hello Triangle",
+//       .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+//       .pEngineName = "No Engine",
+//       .engineVersion = VK_MAKE_VERSION(1, 0, 0),
+//       .apiVersion = vk::ApiVersion14};
 
-  vk::InstanceCreateInfo createInfo{.pApplicationInfo = &appInfo,
-                                    .enabledExtensionCount = count_extensions,
-                                    .ppEnabledExtensionNames = extensions};
+//   vk::InstanceCreateInfo createInfo{.pApplicationInfo = &appInfo,
+//                                     .enabledExtensionCount =
+//                                     count_extensions,
+//                                     .ppEnabledExtensionNames = extensions};
 
-  RendererGlobal->Vulkanstuff->instance =
-      vk::raii::Instance(RendererGlobal->Vulkanstuff->context, createInfo);
+//   RendererGlobal->Vulkanstuff->instance =
+//       vk::raii::Instance(RendererGlobal->Vulkanstuff->context, createInfo);
 
-  SDL_free(extensions);
-  return true;
-}
+//   SDL_free(extensions);
+//   return true;
+// }
 
-std::vector<const char*> requiredDeviceExtension = {
-    vk::KHRSwapchainExtensionName};
+// std::vector<const char*> requiredDeviceExtension = {
+//     vk::KHRSwapchainExtensionName};
 
+// //
 // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/03_Physical_devices_and_queue_families.html
-bool isDeviceSuitable(vk::raii::PhysicalDevice const& physicalDevice) {
-  // Check if the physicalDevice supports the Vulkan 1.3 API version
-  bool supportsVulkan1_3 =
-      physicalDevice.getProperties().apiVersion >= vk::ApiVersion13;
+// bool isDeviceSuitable(vk::raii::PhysicalDevice const& physicalDevice) {
+//   // Check if the physicalDevice supports the Vulkan 1.3 API version
+//   bool supportsVulkan1_3 =
+//       physicalDevice.getProperties().apiVersion >= vk::ApiVersion13;
 
-  // Check if any of the queue families support graphics operations
-  auto queueFamilies = physicalDevice.getQueueFamilyProperties();
-  bool supportsGraphics =
-      std::ranges::any_of(queueFamilies, [](auto const& qfp) {
-        return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
-      });
+//   // Check if any of the queue families support graphics operations
+//   auto queueFamilies = physicalDevice.getQueueFamilyProperties();
+//   bool supportsGraphics =
+//       std::ranges::any_of(queueFamilies, [](auto const& qfp) {
+//         return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
+//       });
 
-  // Check if all required physicalDevice extensions are available
-  auto availableDeviceExtensions =
-      physicalDevice.enumerateDeviceExtensionProperties();
-  bool supportsAllRequiredExtensions = std::ranges::all_of(
-      requiredDeviceExtension,
-      [&availableDeviceExtensions](auto const& requiredDeviceExtension) {
-        return std::ranges::any_of(
-            availableDeviceExtensions,
-            [requiredDeviceExtension](auto const& availableDeviceExtension) {
-              return strcmp(availableDeviceExtension.extensionName,
-                            requiredDeviceExtension) == 0;
-            });
-      });
+//   // Check if all required physicalDevice extensions are available
+//   auto availableDeviceExtensions =
+//       physicalDevice.enumerateDeviceExtensionProperties();
+//   bool supportsAllRequiredExtensions = std::ranges::all_of(
+//       requiredDeviceExtension,
+//       [&availableDeviceExtensions](auto const& requiredDeviceExtension) {
+//         return std::ranges::any_of(
+//             availableDeviceExtensions,
+//             [requiredDeviceExtension](auto const& availableDeviceExtension) {
+//               return strcmp(availableDeviceExtension.extensionName,
+//                             requiredDeviceExtension) == 0;
+//             });
+//       });
 
-  // Check if the physicalDevice supports the required features (shader draw
-  // parameters, dynamic rendering and extended dynamic state)
-  auto features = physicalDevice.template getFeatures2<
-      vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features,
-      vk::PhysicalDeviceVulkan13Features,
-      vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
-  bool supportsRequiredFeatures =
-      features.template get<vk::PhysicalDeviceVulkan11Features>()
-          .shaderDrawParameters &&
-      features.template get<vk::PhysicalDeviceVulkan13Features>()
-          .dynamicRendering &&
-      features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>()
-          .extendedDynamicState;
+//   // Check if the physicalDevice supports the required features (shader draw
+//   // parameters, dynamic rendering and extended dynamic state)
+//   auto features = physicalDevice.template getFeatures2<
+//       vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features,
+//       vk::PhysicalDeviceVulkan13Features,
+//       vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+//   bool supportsRequiredFeatures =
+//       features.template get<vk::PhysicalDeviceVulkan11Features>()
+//           .shaderDrawParameters &&
+//       features.template get<vk::PhysicalDeviceVulkan13Features>()
+//           .dynamicRendering &&
+//       features.template
+//       get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>()
+//           .extendedDynamicState;
 
-  // Return true if the physicalDevice meets all the criteria
-  return supportsVulkan1_3 && supportsGraphics &&
-         supportsAllRequiredExtensions && supportsRequiredFeatures;
-}
+//   // Return true if the physicalDevice meets all the criteria
+//   return supportsVulkan1_3 && supportsGraphics &&
+//          supportsAllRequiredExtensions && supportsRequiredFeatures;
+// }
 
-bool VulkanPhysicalDevice() {
-  auto physicalDevices =
-      RendererGlobal->Vulkanstuff->instance.enumeratePhysicalDevices();
-  if (physicalDevices.empty()) return false;
+// bool VulkanPhysicalDevice() {
+//   auto physicalDevices =
+//       RendererGlobal->Vulkanstuff->instance.enumeratePhysicalDevices();
+//   if (physicalDevices.empty()) return false;
 
-  for (auto const& physicalDevice : physicalDevices) {
-    if (isDeviceSuitable(physicalDevice)) {
-      RendererGlobal->Vulkanstuff->physicalDevice = physicalDevice;
-      return true;
-    }
-  }
+//   for (auto const& physicalDevice : physicalDevices) {
+//     if (isDeviceSuitable(physicalDevice)) {
+//       RendererGlobal->Vulkanstuff->physicalDevice = physicalDevice;
+//       return true;
+//     }
+//   }
 
-  return false;
-}
+//   return false;
+// }
 
-bool VulkanLogicalDevice() {
-  std::vector<vk::QueueFamilyProperties> queueFamilyProperties =
-      RendererGlobal->Vulkanstuff->physicalDevice.getQueueFamilyProperties();
-  auto graphicsQueueFamilyProperty =
-      std::ranges::find_if(queueFamilyProperties, [](auto const& qfp) {
-        return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) !=
-               static_cast<vk::QueueFlags>(0);
-      });
-  auto graphicsIndex = static_cast<uint32_t>(std::distance(
-      queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
-  float queuePriority = 0.5f;
-  vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
-      .queueFamilyIndex = graphicsIndex,
-      .queueCount = 1,
-      .pQueuePriorities = &queuePriority};
+// bool VulkanLogicalDevice() {
+//   std::vector<vk::QueueFamilyProperties> queueFamilyProperties =
+//       RendererGlobal->Vulkanstuff->physicalDevice.getQueueFamilyProperties();
+//   auto graphicsQueueFamilyProperty =
+//       std::ranges::find_if(queueFamilyProperties, [](auto const& qfp) {
+//         return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) !=
+//                static_cast<vk::QueueFlags>(0);
+//       });
+//   auto graphicsIndex = static_cast<uint32_t>(std::distance(
+//       queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
+//   float queuePriority = 0.5f;
+//   vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
+//       .queueFamilyIndex = graphicsIndex,
+//       .queueCount = 1,
+//       .pQueuePriorities = &queuePriority};
 
-  return false;
-}
+//   return false;
+// }
 
 // https://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/
 GLuint LoadShaders(std::vector<std::filesystem::path> file_paths) {
@@ -460,26 +463,26 @@ GLuint LoadShaders(std::vector<std::filesystem::path> file_paths) {
 // renderer initialization code
 bool setRenderer() {
   switch (Settings->graphicsmode) {
-    case Vulkan: {
-      // ADD VALIDATION LAYERS IF YOU EVER LEARN HOW TO USE THEM
-      RendererGlobal->Vulkanstuff = new RendererStuff::VulkanRenderer();
+    // case Vulkan: {
+    //   // ADD VALIDATION LAYERS IF YOU EVER LEARN HOW TO USE THEM
+    //   RendererGlobal->Vulkanstuff = new RendererStuff::VulkanRenderer();
 
-      if (!SDL_Vulkan_LoadLibrary(nullptr)) {
-        return false;
-      }
+    //   if (!SDL_Vulkan_LoadLibrary(nullptr)) {
+    //     return false;
+    //   }
 
-      RendererGlobal->window = SDL_CreateWindow(
-          "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
-          SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+    //   RendererGlobal->window = SDL_CreateWindow(
+    //       "Cobbler Engine", Settings->resolutionx, Settings->resolutiony,
+    //       SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
-      if (!VulkanInstancething()) return false;
+    //   if (!VulkanInstancething()) return false;
 
-      if (!VulkanPhysicalDevice()) return false;
+    //   if (!VulkanPhysicalDevice()) return false;
 
-      if (!VulkanLogicalDevice()) return false;
+    //   if (!VulkanLogicalDevice()) return false;
 
-      break;
-    }
+    //   break;
+    // }
     case OpenGL4: {
       RendererGlobal->GLstuff = new RendererStuff::OpenGLRenderer();
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);

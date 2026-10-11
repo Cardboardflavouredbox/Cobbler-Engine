@@ -62,7 +62,7 @@ set(CORE_SOURCES
     Core/map.cpp
 )
 
-add_library(CobblerGLAD SHARED glad/gl.c glad/vulkan.c "include/glad/gl.h" "include/glad/vulkan.h")
+add_library(CobblerGLAD SHARED glad/gl.c "include/glad/gl.h")
 add_library(CobblerCore SHARED Core/extern.cpp ${CORE_SOURCES})
 add_library(CobblerGameUI SHARED "$CACHE{GAME}/UI/g_ui.cpp" "$CACHE{GAME}/UI/g_ui_index.cpp" "include/ui.h")
 add_library(CobblerNet SHARED Net/net.cpp "include/network.h")

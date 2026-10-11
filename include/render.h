@@ -1,9 +1,9 @@
 #pragma once
 
-#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
+// #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 
 #include <SDL3/SDL_render.h>
-#include <SDL3/SDL_vulkan.h>
+// #include <SDL3/SDL_vulkan.h>
 #include <glad/gl.h>
 
 #include <array>
@@ -13,7 +13,7 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vulkan/vulkan_raii.hpp>
+// #include <vulkan/vulkan_raii.hpp>
 
 #include "model.h"
 
@@ -76,12 +76,12 @@ struct RendererStuff {
   };
   OpenGLRenderer* GLstuff;
 
-  struct VulkanRenderer {
-    vk::raii::Context context;
-    vk::raii::Instance instance = nullptr;
-    vk::raii::PhysicalDevice physicalDevice = nullptr;
-  };
-  VulkanRenderer* Vulkanstuff;
+  // struct VulkanRenderer {
+  //   vk::raii::Context context;
+  //   vk::raii::Instance instance = nullptr;
+  //   vk::raii::PhysicalDevice physicalDevice = nullptr;
+  // };
+  // VulkanRenderer* Vulkanstuff;
 };
 
 LIB_API extern std::unique_ptr<RendererStuff> RendererGlobal;
