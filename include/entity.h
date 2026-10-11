@@ -37,7 +37,8 @@ struct EntitySpawnInfo {
 struct EntityDamageInfo {
   bool TargetIsPlayer = false, FromPlayer = false;
   uint64_t TargetEntityIndex, SourceEntityIndex;
-  float damage = 0;
+  float damage = 0, push = -1;
+  std::array<float, 3> pushdir;
 };
 
 struct S2CPlayerInfo {  // Server to Client player info
@@ -58,6 +59,7 @@ struct Entity {
   float hp, maxhp;
   float cameraoffset;
   float movespeed = 12.5f, jumpheight = 16.f;
+  float weight = 1.f;
   glm::vec2 dir, movevec2 = glm::vec3(0);
   glm::vec3 position, velocityvec3 = glm::vec3({0, 0, 0});
   int teamindex;

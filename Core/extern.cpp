@@ -123,6 +123,7 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
     EntityPool[Entityinfo.name][Entityinfo.EntityCode].pop();
 
     tempentity->invincible = false;
+    tempentity->weight = 1.f;
     tempentity->deltatimelocal = 0;
     tempentity->movespeed = 12.5f;
     tempentity->jumpheight = 16.f;
@@ -158,7 +159,7 @@ void DamageIndicatorPush(EntityDamageInfo damageinfo) {
     damageinfo.FromPlayer = false;
     damageinfo.SourceEntityIndex = 0;
   }
-  damageloc.lifestart = damageinfo.damage / 24.f;
+  damageloc.lifestart = damageinfo.damage / 4.f;
   damageloc.lifetime = damageloc.lifestart;
 
   if (damageinfo.FromPlayer) {
@@ -196,13 +197,32 @@ void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer) {
     if (!Global->IsOnline || IsServer) {
       if (damageinfo.TargetIsPlayer) {
         if (!GlobalNetworkStuff->PlayerNetStuff[damageinfo.TargetEntityIndex]
-                 .PlayerEntity->invincible)
+                 .PlayerEntity->invincible) {
           GlobalNetworkStuff->PlayerNetStuff[damageinfo.TargetEntityIndex]
               .PlayerEntity->hp -= damageinfo.damage;
+
+          if (damageinfo.push == -1) {
+            damageinfo.push = damageinfo.damage /= 8;
+          }
+          GlobalNetworkStuff->PlayerNetStuff[damageinfo.TargetEntityIndex]
+              .PlayerEntity->velocityvec3 +=
+              glm::vec3(damageinfo.pushdir[0], damageinfo.pushdir[1],
+                        damageinfo.pushdir[2]) *
+              damageinfo.push;
+        }
         DamageIndicatorPush(damageinfo);
       } else {
-        if (!Entities[damageinfo.TargetEntityIndex]->invincible)
+        if (!Entities[damageinfo.TargetEntityIndex]->invincible) {
           Entities[damageinfo.TargetEntityIndex]->hp -= damageinfo.damage;
+
+          if (damageinfo.push == -1) {
+            damageinfo.push = damageinfo.damage /= 8;
+          }
+          Entities[damageinfo.TargetEntityIndex]->velocityvec3 +=
+              glm::vec3(damageinfo.pushdir[0], damageinfo.pushdir[1],
+                        damageinfo.pushdir[2]) *
+              damageinfo.push;
+        }
         if (damageinfo.TargetEntityIndex == 0) {
           DamageIndicatorPush(damageinfo);
         }

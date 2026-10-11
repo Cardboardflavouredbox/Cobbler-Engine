@@ -29,6 +29,8 @@ void serialize(S& s, EntityDamageInfo& o) {
   s.value1b(o.FromPlayer);
   s.value8b(o.SourceEntityIndex);
   s.value4b(o.damage);
+  s.value4b(o.push);
+  s.container4b(o.pushdir);
 }
 
 template <typename S>
