@@ -68,6 +68,7 @@ struct Entity {
   Modeltransform* Modelthing;
   LIB_API void renderbillboard();
   LIB_API void rendermodelgroup();
+  LIB_API virtual void setup(uint32_t Index) = 0;
   LIB_API virtual void update() = 0;
   LIB_API virtual void lateupdate() = 0;
 
@@ -79,6 +80,9 @@ LIB_API extern Entity* LocalPlayer;
 
 LIB_API extern std::map<uint32_t, Entity*> Entities;
 LIB_API extern std::queue<uint32_t> EntitydeleteQueue;
+LIB_API extern std::unordered_map<std::string,
+                                  std::map<uint32_t, std::queue<Entity*>>>
+    EntityPool;
 
 LIB_API extern std::unordered_map<std::string, Entity* (*)(uint32_t, uint32_t)>
     SpawnEntities;

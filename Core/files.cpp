@@ -1745,6 +1745,14 @@ void quit() {
   for (auto& i : Entities) {
     delete (i.second);
   }
+  for (auto& i : EntityPool) {
+    for (auto& j : i.second) {
+      while (!j.second.empty()) {
+        delete (j.second.front());
+        j.second.pop();
+      }
+    }
+  }
 
   // free PlayerNetStuff
   if (Global->IsOnline) {

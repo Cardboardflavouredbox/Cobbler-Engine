@@ -510,7 +510,10 @@ void fixedupdate() {
   while (!EntitydeleteQueue.empty()) {
     uint32_t index = EntitydeleteQueue.front();
     EntitydeleteQueue.pop();
-    delete (Entities[index]);
+    Entity* entitything = Entities[index];
+    EntityPool[entitything->name];
+    EntityPool[entitything->name][entitything->EntityCode];
+    EntityPool[entitything->name][entitything->EntityCode].push(entitything);
     Entities.erase(index);
   }
 

@@ -53,6 +53,9 @@ CameraClass* Camera;
 std::map<uint32_t, Entity*> Entities;
 // Queue that contains all the Entities to delete this frame.
 std::queue<uint32_t> EntitydeleteQueue;
+// Entities Pool.
+std::unordered_map<std::string, std::map<uint32_t, std::queue<Entity*>>>
+    EntityPool;
 
 // Particles map. Contains all the Particles.
 std::map<uint32_t, Particle*> Particles;
@@ -112,9 +115,24 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
     return 0;
   }
   uint32_t temp = EntityMapEmptyIndex();
-  Entity* tempentity =
-      SpawnEntities[Entityinfo.name](Entityinfo.EntityCode, temp);
+  Entity* tempentity;
+  if (EntityPool[Entityinfo.name][Entityinfo.EntityCode].empty()) {
+    tempentity = SpawnEntities[Entityinfo.name](Entityinfo.EntityCode, temp);
+  } else {
+    tempentity = EntityPool[Entityinfo.name][Entityinfo.EntityCode].front();
+    EntityPool[Entityinfo.name][Entityinfo.EntityCode].pop();
 
+    tempentity->invincible = false;
+    tempentity->deltatimelocal = 0;
+    tempentity->movespeed = 12.5f;
+    tempentity->jumpheight = 16.f;
+    tempentity->movevec2 = glm::vec3(0);
+    tempentity->velocityvec3 = glm::vec3({0, 0, 0});
+    tempentity->gravity = 9.81f * 6.f;
+    tempentity->Collided = false;
+
+    tempentity->setup(temp);
+  }
   if (Entityinfo.hp != -1) tempentity->hp = Entityinfo.hp;
   tempentity->name = Entityinfo.name;
   tempentity->EntityCode = Entityinfo.EntityCode;

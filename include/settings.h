@@ -15,7 +15,7 @@ enum Renderertype { Software, OpenGL1, OpenGL3, OpenGL4, Vulkan };
 
 struct SettingsClass {
  public:
-  uint16_t resolutionx = 480, resolutiony = 270;
+  uint16_t resolutionx = 640, resolutiony = 360;
   int fov = 90;
   int fps = 60;
   bool vsync = false;
