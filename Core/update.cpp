@@ -547,7 +547,11 @@ void update() {
   while (!ParticledeleteQueue.empty()) {
     uint32_t index = ParticledeleteQueue.front();
     ParticledeleteQueue.pop();
-    delete (Particles[index]);
+    Particle* particlething = Particles[index];
+    ParticlePool[particlething->name];
+    ParticlePool[particlething->name][particlething->ParticleCode];
+    ParticlePool[particlething->name][particlething->ParticleCode].push(
+        particlething);
     Particles.erase(index);
   }
 

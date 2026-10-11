@@ -58,6 +58,9 @@ std::queue<uint32_t> EntitydeleteQueue;
 std::map<uint32_t, Particle*> Particles;
 // Queue that contains all the Particles to delete this frame.
 std::queue<uint32_t> ParticledeleteQueue;
+// Particle Pooling map.
+std::unordered_map<std::string, std::map<uint32_t, std::queue<Particle*>>>
+    ParticlePool;
 
 // Lights map. Contains all the Lights.
 std::map<uint32_t, Light*> Lights;
@@ -241,8 +244,19 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
     CobblerQueueData("ParticleSpawn", buffer, writtenSize);
   }
   uint32_t temp = ParticleMapEmptyIndex();
-  Particle* tempparticle =
-      SpawnParticles[Particleinfo.name](Particleinfo.ParticleCode, temp);
+  Particle* tempparticle;
+  if (ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].empty()) {
+    tempparticle =
+        SpawnParticles[Particleinfo.name](Particleinfo.ParticleCode, temp);
+  } else {
+    tempparticle =
+        ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].front();
+    ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].pop();
+    tempparticle->setup(temp);
+  }
+
+  tempparticle->name = Particleinfo.name;
+  tempparticle->ParticleCode = Particleinfo.ParticleCode;
   for (int i = 0; i < 3; i++) {
     tempparticle->position[i] = Particleinfo.position[i];
     tempparticle->direction[i] = Particleinfo.direction[i];

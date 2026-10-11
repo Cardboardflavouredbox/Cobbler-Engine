@@ -1759,6 +1759,14 @@ void quit() {
   for (auto& i : Particles) {
     delete (i.second);
   }
+  for (auto& i : ParticlePool) {
+    for (auto& j : i.second) {
+      while (!j.second.empty()) {
+        delete (j.second.front());
+        j.second.pop();
+      }
+    }
+  }
 
   // free lights
   for (auto& i : Lights) {
