@@ -1380,10 +1380,61 @@ bool init() {
   }
   fclose(file);
 
-  GlobalMapStuff->VisualObjectsVector = tempmapdata.VisualObjectsVector;
+  file = NULL;
+  for (const auto& entry : std::filesystem::directory_iterator(
+           Global->GameFolder.string() + "/map/" +
+           Global->LoadedStuff->startlevel + "/")) {
+    // check if file is a .map file.
+    if (entry.is_regular_file() && entry.path().extension() == ".bsp") {
+      file = fopen(entry.path().c_str(), "r");
+    }
+  }
 
-  GlobalMapStuff->HitboxPoints = tempmapdata.HitboxPoints;
-  GlobalMapStuff->Hitboxmapfaces = tempmapdata.Hitboxmapfaces;
+  if (file == NULL) {
+    SDL_Log("Impossible to open the file!");
+    return false;
+  }
+
+  GlobalMapBSP = new MapBSP();
+
+  // time to read the contents of the file.
+  while (true) {
+    char lineHeader;
+    // read the first word of the line
+    if (fscanf(file, "%c\n", &lineHeader) == EOF) break;
+
+    if (lineHeader == 'V') {  // Hitbox vertices
+      while (true) {          // Hitbox Points.
+        if (fscanf(file, "%c", &lineHeader) == EOF) break;
+        if (lineHeader == 'E') break;
+        glm::vec3 temppoint;
+        fscanf(file, "%f %f %f\n", &temppoint.x, &temppoint.y, &temppoint.z);
+        GlobalMapBSP->Points.push_back(temppoint);
+      }
+    } else if (lineHeader == 'F') {  // Hitbox Face
+      while (true) {
+        if (fscanf(file, "%c", &lineHeader) == EOF) break;
+        if (lineHeader == 'E') break;
+        std::array<uint32_t, 3> tempface;
+        fscanf(file, "%u %u %u\n", &tempface[0], &tempface[1], &tempface[2]);
+        GlobalMapBSP->Faces.push_back(tempface);
+      }
+    } else if (lineHeader == 'B') {  // Hitbox bsp
+      while (true) {
+        if (fscanf(file, "%c", &lineHeader) == EOF) break;
+        if (lineHeader == 'E') break;
+        MapBSP::BSPnode bspthing;
+        fscanf(file, "%d %d %u %f %f %f %f %f %f\n", &bspthing.A, &bspthing.B,
+               &bspthing.Face, &bspthing.normal[0], &bspthing.normal[1],
+               &bspthing.normal[2], &bspthing.point[0], &bspthing.point[1],
+               &bspthing.point[2]);
+        GlobalMapBSP->BSPtree.push_back(bspthing);
+      }
+    }
+  }
+  fclose(file);
+
+  GlobalMapStuff->VisualObjectsVector = tempmapdata.VisualObjectsVector;
 
   GlobalMapStuff->KillboxPoints = tempmapdata.KillboxPoints;
   GlobalMapStuff->KillboxFaces = tempmapdata.KillboxFaces;
@@ -1784,6 +1835,9 @@ void quit() {
   SDL_free(Global->pref_path);
 
   delete (Global->LoadedStuff);
+
+  // free bsp
+  delete (GlobalMapBSP);
 
   // free network stuff.
   CobblerQuitNet();

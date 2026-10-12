@@ -12,6 +12,7 @@
 #include "inputs.h"
 #include "lights.h"
 #include "map.h"
+#include "mapdata.h"
 #include "model.h"
 #include "network.h"
 #include "networkextern.h"
@@ -74,6 +75,8 @@ std::array<float, 3> AmbientColor = {1, 1, 1};
 float AmbientStrength = 0.5f;
 
 std::unique_ptr<GlobalMapClass> GlobalMapStuff;
+
+MapBSP* GlobalMapBSP;
 
 std::unique_ptr<RendererStuff> RendererGlobal;
 

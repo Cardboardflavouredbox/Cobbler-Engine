@@ -32,9 +32,6 @@ struct VisualObject {
 };
 
 struct GlobalMapClass {
-  std::vector<glm::vec3> HitboxPoints;
-  std::vector<std::array<uint32_t, 3>> Hitboxmapfaces;
-
   std::vector<glm::vec3> KillboxPoints;
   std::vector<std::array<uint32_t, 3>> KillboxFaces;
 

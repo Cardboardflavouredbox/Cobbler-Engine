@@ -307,14 +307,14 @@ bool readfile(std::filesystem::path path) {
 
   fprintf(file, "V\n");
   for (int i = 0; i < BSPResult.Points.size(); i++) {
-    fprintf(file, "%f %f %f\n", BSPResult.Points[i][0], BSPResult.Points[i][1],
+    fprintf(file, "D%f %f %f\n", BSPResult.Points[i][0], BSPResult.Points[i][1],
             BSPResult.Points[i][2]);
   }
   fprintf(file, "E\n");
 
   fprintf(file, "F\n");
   for (int i = 0; i < BSPResult.Faces.size(); i++) {
-    fprintf(file, "%u %u %u\n", BSPResult.Faces[i][0], BSPResult.Faces[i][1],
+    fprintf(file, "D%u %u %u\n", BSPResult.Faces[i][0], BSPResult.Faces[i][1],
             BSPResult.Faces[i][2]);
   }
   fprintf(file, "E\n");
@@ -322,7 +322,7 @@ bool readfile(std::filesystem::path path) {
   fprintf(file, "B\n");
   for (int i = 0; i < BSPResult.BSPtree.size(); i++) {
     MapBSP::BSPnode& bspthing = BSPResult.BSPtree[i];
-    fprintf(file, "%d %d %u %f %f %f %f %f %f\n", bspthing.A, bspthing.B,
+    fprintf(file, "D%d %d %u %f %f %f %f %f %f\n", bspthing.A, bspthing.B,
             bspthing.Face, bspthing.normal[0], bspthing.normal[1],
             bspthing.normal[2], bspthing.point[0], bspthing.point[1],
             bspthing.point[2]);

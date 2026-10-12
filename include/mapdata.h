@@ -35,3 +35,5 @@ struct MapBSP {
   };
   std::vector<BSPnode> BSPtree;
 };
+
+LIB_API extern MapBSP* GlobalMapBSP;
