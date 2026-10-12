@@ -9,8 +9,15 @@
 #include "deltaTime.h"
 #include "extern.h"
 #include "map.h"
+#include "mapdata.h"
 #include "networkextern.h"
 #include "pi.h"
+
+float pointSideCheck(glm::vec3 point, glm::vec3 normal, glm::vec3 coord) {
+  glm::vec3 toTarget = point - coord;
+
+  return glm::dot(toTarget, normal);
+}
 
 // Ray and Triangle collision check function.
 // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
@@ -272,6 +279,41 @@ float Slopecheck(glm::vec3 normal) {
   return std::acosf(normal.z) * 180.f / (float)PI;
 }
 
+void recursiveBSPadd(std::vector<uint32_t>* Faces, int index) {
+  if (index < 0) return;
+  for (auto& i : GlobalMapBSP->BSPtree[index].Faces) Faces->push_back(i);
+  recursiveBSPadd(Faces, GlobalMapBSP->BSPtree[index].A);
+  recursiveBSPadd(Faces, GlobalMapBSP->BSPtree[index].B);
+}
+
+std::vector<uint32_t> BSPthing(glm::vec3 pos, float radius) {
+  int index = 0;
+  std::vector<uint32_t> Faces;
+  while (true) {
+    MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
+    float tempdist = pointSideCheck(pos, bspthing->normal, bspthing->point);
+    if (std::fabs(tempdist) <= radius * 4) {
+      recursiveBSPadd(&Faces, index);
+      break;
+    }
+    for (auto& i : bspthing->Faces) Faces.push_back(i);
+    if (tempdist > 0.f) {
+      if (bspthing->A < 0) {
+        break;
+      } else {
+        index = bspthing->A;
+      }
+    } else {
+      if (bspthing->B < 0) {
+        break;
+      } else {
+        index = bspthing->B;
+      }
+    }
+  }
+  return Faces;
+}
+
 // checks if you collided with triangle while you moved.
 // returns glm::vec3(0) if you haven't collided at all.
 // returns the normal of collided triangle if you have.
@@ -296,15 +338,20 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
 
   movecollisionresult resultthing;
   glm::vec3 result = glm::vec3(0);
-  for (int i = 0; i < GlobalMapStuff->Hitboxmapfaces.size(); i++) {
+
+  glm::vec3 playerpos = checkposition + hitbox[0] / 2.f + hitbox[1] / 2.f;
+
+  std::vector<uint32_t> Faces =
+      BSPthing(playerpos, radius + glm::length(hitbox[1] - hitbox[0]));
+
+  for (int i = 0; i < Faces.size(); i++) {
     float disttemp;
     glm::vec3 normal;
-    if (CapsuleTriCheck(
-            GlobalMapStuff->HitboxPoints[GlobalMapStuff->Hitboxmapfaces[i][0]],
-            GlobalMapStuff->HitboxPoints[GlobalMapStuff->Hitboxmapfaces[i][1]],
-            GlobalMapStuff->HitboxPoints[GlobalMapStuff->Hitboxmapfaces[i][2]],
-            hitbox[0] + checkposition, hitbox[1] + checkposition, radius,
-            disttemp, normal)) {
+    if (CapsuleTriCheck(GlobalMapBSP->Points[GlobalMapBSP->Faces[Faces[i]][0]],
+                        GlobalMapBSP->Points[GlobalMapBSP->Faces[Faces[i]][1]],
+                        GlobalMapBSP->Points[GlobalMapBSP->Faces[Faces[i]][2]],
+                        hitbox[0] + checkposition, hitbox[1] + checkposition,
+                        radius, disttemp, normal)) {
       if (resultthing.dist == 0 || resultthing.dist > disttemp) {
         result = normal;
         resultthing.dist = disttemp;
@@ -359,11 +406,13 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
                   movecollisionresult& resultinfo) {
   movecollisionresult resultthing;
   resultthing.dist = 0;
-  for (auto& i : GlobalMapStuff->Hitboxmapfaces) {
-    std::optional<glm::vec3> check = RayTriIntersect(
-        hitbox[0], glm::normalize(hitbox[1] - hitbox[0]),
-        GlobalMapStuff->HitboxPoints[i[0]], GlobalMapStuff->HitboxPoints[i[1]],
-        GlobalMapStuff->HitboxPoints[i[2]]);
+
+  // make sure to add ray bsp stuff later!
+  for (auto& i : GlobalMapBSP->Faces) {
+    std::optional<glm::vec3> check =
+        RayTriIntersect(hitbox[0], glm::normalize(hitbox[1] - hitbox[0]),
+                        GlobalMapBSP->Points[i[0]], GlobalMapBSP->Points[i[1]],
+                        GlobalMapBSP->Points[i[2]]);
     if (check.has_value()) {
       float disttemp = glm::distance(hitbox[0], check.value());
       if (resultthing.dist == 0 || resultthing.dist > disttemp) {

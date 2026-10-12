@@ -29,7 +29,7 @@ struct MapBSP {
   std::vector<glm::vec3> Points;
   std::vector<std::array<uint32_t, 3>> Faces;
   struct BSPnode {
-    uint32_t Face;
+    std::vector<uint32_t> Faces;
     glm::vec3 normal, point;
     int A = -1, B = -1;
   };

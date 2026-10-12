@@ -1424,10 +1424,21 @@ bool init() {
         if (fscanf(file, "%c", &lineHeader) == EOF) break;
         if (lineHeader == 'E') break;
         MapBSP::BSPnode bspthing;
-        fscanf(file, "%d %d %u %f %f %f %f %f %f\n", &bspthing.A, &bspthing.B,
-               &bspthing.Face, &bspthing.normal[0], &bspthing.normal[1],
-               &bspthing.normal[2], &bspthing.point[0], &bspthing.point[1],
-               &bspthing.point[2]);
+        fscanf(file, "%d %d %f %f %f %f %f %f ", &bspthing.A, &bspthing.B,
+               &bspthing.normal[0], &bspthing.normal[1], &bspthing.normal[2],
+               &bspthing.point[0], &bspthing.point[1], &bspthing.point[2]);
+
+        char subHeader;
+
+        while (true) {
+          if (fscanf(file, "%c", &subHeader) == EOF) break;
+          if (subHeader == 'E') break;
+          uint32_t face;
+          fscanf(file, "%u", &face);
+          bspthing.Faces.push_back(face);
+        }
+        fscanf(file, "\n");
+
         GlobalMapBSP->BSPtree.push_back(bspthing);
       }
     }
