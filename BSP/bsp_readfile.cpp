@@ -1,7 +1,5 @@
 #include "bsp_readfile.h"
 
-#include <limits>
-
 #include "map.h"
 #include "mapdata.h"
 
@@ -29,12 +27,13 @@ bool pointSideCheck(glm::vec3 point, glm::vec3 normal, glm::vec3 coord) {
 
   float distance = glm::dot(toTarget, normal);
 
-  return distance > std::numeric_limits<float>::epsilon();
+  return distance > 0.001f;
 }
 
 struct ProcessResult {
   std::vector<std::array<uint32_t, 3>> ResultFacesA, ResultFacesB;
   glm::vec3 normal, point;
+  int cnt = 0;
 };
 
 ProcessResult ProcessFace(std::vector<std::array<uint32_t, 3>> Faces,
@@ -51,6 +50,23 @@ ProcessResult ProcessFace(std::vector<std::array<uint32_t, 3>> Faces,
   for (int a = 0; a < Faces.size(); a++) {
     if (index != a) {
       auto& face = Faces[a];
+      float dummy;
+      // if (!linePlaneIntersection(dummy, BSPResult.Points[face[1]],
+      //                            BSPResult.Points[face[0]], normal,
+      //                            BSPResult.Points[currentface[0]]) &&
+      //     !linePlaneIntersection(dummy, BSPResult.Points[face[2]],
+      //                            BSPResult.Points[face[0]], normal,
+      //                            BSPResult.Points[currentface[0]]) &&
+      //     !linePlaneIntersection(dummy, BSPResult.Points[face[2]],
+      //                            BSPResult.Points[face[1]], normal,
+      //                            BSPResult.Points[currentface[0]])) {
+      //   // MapBSP::BSPnode node;
+      //   // node.Face = BSPResult.Faces.size() - 1;
+      //   // node.normal = result.normal;
+      //   // node.point = result.point;
+      //   // BSPResult.BSPtree.push_back(node);
+
+      // }
       bool facecheck = false;
       for (int i = 0; i < 3; i++) {
         float temp, temp2;
@@ -72,31 +88,41 @@ ProcessResult ProcessFace(std::vector<std::array<uint32_t, 3>> Faces,
                         glm::normalize(BSPResult.Points[face[(i + 2) % 3]]) *
                             temp2;
 
-          BSPResult.Points.push_back(A);
-          BSPResult.Points.push_back(B);
+          if (glm::distance(A, B) > 0.001f &&
+              glm::distance(A, BSPResult.Points[face[0]]) > 0.001f &&
+              glm::distance(A, BSPResult.Points[face[1]]) > 0.001f &&
+              glm::distance(A, BSPResult.Points[face[2]]) > 0.001f &&
+              glm::distance(B, BSPResult.Points[face[0]]) > 0.001f &&
+              glm::distance(B, BSPResult.Points[face[1]]) > 0.001f &&
+              glm::distance(B, BSPResult.Points[face[2]]) > 0.001f) {
+            BSPResult.Points.push_back(A);
+            BSPResult.Points.push_back(B);
 
-          std::array<std::array<uint32_t, 3>, 3> splitfaces;
+            std::array<std::array<uint32_t, 3>, 3> splitfaces;
 
-          splitfaces[0][0] = face[i];
-          splitfaces[0][1] = BSPResult.Points.size() - 1;
-          splitfaces[0][2] = BSPResult.Points.size() - 2;
+            splitfaces[0][0] = face[i];
+            splitfaces[0][1] = BSPResult.Points.size() - 1;
+            splitfaces[0][2] = BSPResult.Points.size() - 2;
 
-          splitfaces[1][0] = face[(i + 1) % 3];
-          splitfaces[1][1] = face[(i + 2) % 3];
-          splitfaces[1][2] = BSPResult.Points.size() - 1;
+            splitfaces[1][0] = face[(i + 1) % 3];
+            splitfaces[1][1] = face[(i + 2) % 3];
+            splitfaces[1][2] = BSPResult.Points.size() - 1;
 
-          splitfaces[2][0] = face[(i + 1) % 3];
-          splitfaces[2][1] = BSPResult.Points.size() - 1;
-          splitfaces[2][2] = BSPResult.Points.size() - 2;
+            splitfaces[2][0] = face[(i + 1) % 3];
+            splitfaces[2][1] = BSPResult.Points.size() - 1;
+            splitfaces[2][2] = BSPResult.Points.size() - 2;
 
-          for (int j = 0; j < 3; j++) {
-            if (pointSideCheck(BSPResult.Points[splitfaces[j][0]], normal,
-                               BSPResult.Points[currentface[0]]))
-              result.ResultFacesA.push_back(splitfaces[j]);
-            else
-              result.ResultFacesB.push_back(splitfaces[j]);
+            result.cnt += 1;
+
+            for (int j = 0; j < 3; j++) {
+              if (pointSideCheck(BSPResult.Points[splitfaces[j][0]], normal,
+                                 BSPResult.Points[currentface[0]]))
+                result.ResultFacesA.push_back(splitfaces[j]);
+              else
+                result.ResultFacesB.push_back(splitfaces[j]);
+            }
+            facecheck = true;
           }
-          facecheck = true;
           break;
         }
       }
@@ -122,11 +148,17 @@ void BSPcreate(std::vector<std::array<uint32_t, 3>> Faces, bool isA,
     ProcessResult result;
     for (int i = 0; i < Faces.size(); i++) {
       ProcessResult temp = ProcessFace(Faces, i);
-      if (i == 0 || (std::abs((int)result.ResultFacesA.size() -
-                              (int)result.ResultFacesB.size()) >
-                     std::abs((int)temp.ResultFacesA.size() -
-                              (int)temp.ResultFacesB.size()))) {
+      if (i == 0 ||
+          (temp.ResultFacesA.size() > 0 && temp.ResultFacesB.size() > 0 &&
+           (std::abs((int)result.ResultFacesA.size() -
+                     (int)result.ResultFacesB.size()) +
+                result.cnt * 4 >
+            std::abs((int)temp.ResultFacesA.size() -
+                     (int)temp.ResultFacesB.size()) +
+                temp.cnt * 4))) {
         result = temp;
+        // printf("%lu %lu\n", result.ResultFacesA.size(),
+        //        result.ResultFacesB.size());
       }
     }
     MapBSP::BSPnode node;
@@ -259,6 +291,45 @@ bool readfile(std::filesystem::path path) {
   BSPResult.Points = tempmapdata.HitboxPoints;
   std::vector<std::array<uint32_t, 3>> Faces = tempmapdata.Hitboxmapfaces;
   BSPcreate(Faces, false, -1);
+
+  std::string paththing = path.string();
+  for (int i = 0; i < 3; i++) paththing.pop_back();
+  paththing += "bsp";
+
+  file = fopen(paththing.c_str(), "w");
+
+  if (file == NULL) {
+    printf("Impossible to write the file!");
+    return false;
+  }
+
+  printf("writing to %s", paththing.c_str());
+
+  fprintf(file, "V\n");
+  for (int i = 0; i < BSPResult.Points.size(); i++) {
+    fprintf(file, "%f %f %f\n", BSPResult.Points[i][0], BSPResult.Points[i][1],
+            BSPResult.Points[i][2]);
+  }
+  fprintf(file, "E\n");
+
+  fprintf(file, "F\n");
+  for (int i = 0; i < BSPResult.Faces.size(); i++) {
+    fprintf(file, "%u %u %u\n", BSPResult.Faces[i][0], BSPResult.Faces[i][1],
+            BSPResult.Faces[i][2]);
+  }
+  fprintf(file, "E\n");
+
+  fprintf(file, "B\n");
+  for (int i = 0; i < BSPResult.BSPtree.size(); i++) {
+    MapBSP::BSPnode& bspthing = BSPResult.BSPtree[i];
+    fprintf(file, "%d %d %u %f %f %f %f %f %f\n", bspthing.A, bspthing.B,
+            bspthing.Face, bspthing.normal[0], bspthing.normal[1],
+            bspthing.normal[2], bspthing.point[0], bspthing.point[1],
+            bspthing.point[2]);
+  }
+  fprintf(file, "E");
+
+  fclose(file);
 
   return true;
 }
