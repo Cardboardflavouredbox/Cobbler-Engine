@@ -28,10 +28,10 @@ struct Mapdata {
 struct MapBSP {
   std::vector<glm::vec3> Points;
   std::vector<std::array<uint32_t, 3>> Faces;
-  struct BSPtree {
-    std::array<uint32_t, 3> Face;
-    glm::vec3 normal;
-    BSPtree* A;
-    BSPtree* B;
+  struct BSPnode {
+    uint32_t Face;
+    glm::vec3 normal, point;
+    int A = -1, B = -1;
   };
+  std::vector<BSPnode> BSPtree;
 };

@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
   args.resize(argc);
 
   for (int i = 0; i < argc; i++) args[i] = argv[i];
-
+  printf("opening %s\n", args[1].c_str());
   readfile(std::filesystem::path(args[1]));
 
   return 0;
