@@ -12,7 +12,7 @@ bool linePlaneIntersection(float& contact, glm::vec3 ray, glm::vec3 rayOrigin,
                            glm::vec3 normal, glm::vec3 coord) {
   // get d value
   float d = glm::dot(normal, coord);
-  if (glm::dot(normal, ray) == 0) {
+  if (glm::dot(normal, ray) <= 0.0001f) {
     return false;  // No intersection, the line is parallel to the plane
   }
   // Compute the X value for the directed line ray intersecting the plane

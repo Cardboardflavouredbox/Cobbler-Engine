@@ -292,7 +292,7 @@ std::vector<uint32_t> BSPthing(glm::vec3 pos, float radius) {
   while (true) {
     MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
     float tempdist = pointSideCheck(pos, bspthing->normal, bspthing->point);
-    if (std::fabs(tempdist) <= radius * 4) {
+    if (std::fabs(tempdist) <= radius * 2) {
       recursiveBSPadd(&Faces, index);
       break;
     }
@@ -343,6 +343,7 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
 
   std::vector<uint32_t> Faces =
       BSPthing(playerpos, radius + glm::length(hitbox[1] - hitbox[0]));
+  // SDL_Log("%d", Faces.size());
 
   for (int i = 0; i < Faces.size(); i++) {
     float disttemp;
