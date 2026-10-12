@@ -78,6 +78,13 @@ set_target_properties(CobblerGameUI PROPERTIES
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/g_render.cpp)
 
+set(BSP_SOURCES 
+    BSP/bsp_main.cpp
+    BSP/bsp_readfile.cpp
+)
+
+add_executable(CobblerBSP ${BSP_SOURCES})
+
 # add_executable(Cobbler-Engine-Editor 
 # src/e_main.cpp src/e_render.cpp 
 # src/e_update.cpp src/e_components.cpp)
@@ -87,6 +94,7 @@ target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm Freetype::
 target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
 target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD dylib)
+target_link_libraries(CobblerBSP PRIVATE glm::glm)
 # target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD dylib)
  
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -95,6 +103,8 @@ target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CA
 target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # target_include_directories(CobblerEditorUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(CobblerBSP PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(CobblerBSP PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/BSP/include)
 # target_include_directories(Cobbler-Engine-Editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerNet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

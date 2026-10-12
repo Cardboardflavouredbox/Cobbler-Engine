@@ -64,19 +64,3 @@ struct GlobalClass {
 
   char* pref_path;
 };
-
-struct Mapdata {
-  struct Entitydata {
-    std::string name;
-    glm::vec3 pos;
-  };
-  std::vector<glm::vec3> HitboxPoints;
-  std::vector<std::array<uint32_t, 3>> Hitboxmapfaces;
-  std::vector<VisualObject> VisualObjectsVector;
-  std::vector<glm::vec3> KillboxPoints;
-  std::vector<std::array<uint32_t, 3>> KillboxFaces;
-  std::vector<Entitydata> Entities;
-  std::vector<Modeltransform> props;
-  std::string skybox;
-  std::vector<glm::vec3> SpawnPoints;
-};

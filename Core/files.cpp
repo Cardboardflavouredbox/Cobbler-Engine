@@ -26,6 +26,7 @@
 #include "global.h"
 #include "inputs.h"
 #include "lights.h"
+#include "mapdata.h"
 #include "model.h"
 #include "network.h"
 #include "networkextern.h"
@@ -1266,20 +1267,15 @@ bool init() {
   // read map data.
   Mapdata tempmapdata;
   FILE* file = NULL;
-  for (const auto& dir : std::filesystem::directory_iterator(
-           Global->GameFolder.string() + "/models/")) {
-    if (dir.is_directory()) {
-      for (const auto& entry : std::filesystem::directory_iterator(
-               Global->GameFolder.string() + "/map/" +
-               Global->LoadedStuff->startlevel + "/")) {
-        // check if file is a .map file.
-        if (entry.is_regular_file() && entry.path().extension() == ".map") {
-          file = fopen(entry.path().c_str(), "r");
-        } else if (entry.is_regular_file() &&
-                   entry.path().extension() == ".png") {  // Load Textures.
-          if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
-        }
-      }
+  for (const auto& entry : std::filesystem::directory_iterator(
+           Global->GameFolder.string() + "/map/" +
+           Global->LoadedStuff->startlevel + "/")) {
+    // check if file is a .map file.
+    if (entry.is_regular_file() && entry.path().extension() == ".map") {
+      file = fopen(entry.path().c_str(), "r");
+    } else if (entry.is_regular_file() &&
+               entry.path().extension() == ".png") {  // Load Textures.
+      if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
     }
   }
 
