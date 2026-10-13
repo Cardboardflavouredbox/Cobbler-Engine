@@ -292,24 +292,26 @@ std::vector<uint32_t> BSPthing(glm::vec3 pos, float radius) {
   while (true) {
     MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
     float tempdist = pointSideCheck(pos, bspthing->normal, bspthing->point);
-    if (std::fabs(tempdist) <= radius * 3) {
+    if (std::fabs(tempdist) <= radius * 2) {
       recursiveBSPadd(&Faces, index);
       break;
     }
-    for (auto& i : bspthing->Faces) Faces.push_back(i);
     if (tempdist > 0.f) {
       if (bspthing->A < 0) {
+        recursiveBSPadd(&Faces, index);
         break;
       } else {
         index = bspthing->A;
       }
     } else {
       if (bspthing->B < 0) {
+        recursiveBSPadd(&Faces, index);
         break;
       } else {
         index = bspthing->B;
       }
     }
+    for (auto& i : bspthing->Faces) Faces.push_back(i);
   }
   SDL_Log("%d %d", GlobalMapBSP->Faces.size(), Faces.size());
   return Faces;
