@@ -881,7 +881,8 @@ enum argenums {
   // SetLogin,               // Login for website. Work In Progress.
   // SetWebsite,             // The actual IP of the website.
   SetServerIP,  // Set the IP of the server as a client.
-  SetIsServer   // Set if you are the server or not.
+  SetIsServer,  // Set if you are the server or not.
+  SetIsDebug    // Sets Debug.
 };
 
 // arguements processing.
@@ -985,12 +986,17 @@ bool initargs(std::vector<std::string> args) {
       {"-ip", SetServerIP},
       {"-ServerIP", SetServerIP},
       {"-Server", SetIsServer},
-      {"-server", SetIsServer}};
+      {"-server", SetIsServer},
+      {"-d", SetIsDebug},
+      {"-debug", SetIsDebug}};
 
   for (int i = 2; i < args.size(); i++) {
     if (stringtoenums.contains(args[i])) {
       argenums temp = stringtoenums[args[i]];
       switch (temp) {
+        case SetIsDebug:
+          Global->IsDebug = true;
+          break;
         case SetRendererAsVulkan:
           Settings->graphicsmode = Vulkan;
           break;
@@ -1486,7 +1492,7 @@ bool init() {
 
   if (Settings->graphicsmode == OpenGL1 || Settings->graphicsmode == OpenGL3 ||
       Settings->graphicsmode == OpenGL4)
-    LoadMapGL(Settings->graphicsmode == OpenGL1);
+    LoadMapGL(Settings->graphicsmode == OpenGL1, Global->IsDebug);
 
   LocalPlayer = SpawnEntities[Global->playerclass](0, 0);
   LocalPlayer->position = GetRespawnPoint(0);

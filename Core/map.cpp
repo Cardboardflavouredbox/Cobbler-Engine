@@ -6,29 +6,42 @@
 #include <glm/glm.hpp>
 
 #include "files.h"
+#include "mapdata.h"
 #include "render.h"
 
-void LoadMapGL(bool IsOldGL) {
+void LoadMapGL(bool IsOldGL, bool DebugSeeHitboxes) {
   if (IsOldGL) {
     RendererGlobal->GLstuff->MapGLlist = glGenLists(1);
     glNewList(RendererGlobal->GLstuff->MapGLlist, GL_COMPILE);
 
-    for (auto& obj : GlobalMapStuff->VisualObjectsVector) {
-      for (int i = 0; i < obj.Visualmapfaces.size(); i++) {
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(
-            GL_TEXTURE_2D,
-            RendererGlobal->GLstuff
-                ->textures[obj.Visualmapfaces[i].TUVvector.front().texture]);
+    if (DebugSeeHitboxes) {
+      for (int i = 0; i < GlobalMapBSP->Faces.size(); i++) {
         glBegin(GL_TRIANGLES);
         for (int j = 2; j >= 0; j--) {
-          glm::vec3 pos = obj.VisualPoints[obj.Visualmapfaces[i].points[j]];
-          glm::vec2 uvw = obj.Visualmapfaces[i].TUVvector.front().UVs[j];
-          glColor3f(1, 1, 1);
-          glTexCoord2f(uvw.x, 1 - uvw.y);
+          glm::vec3 pos = GlobalMapBSP->Points[GlobalMapBSP->Faces[i][j]];
+          glColor3f(0, 0, (j + 1) / 3.f);
           glVertex3f(pos.x, pos.y, pos.z);
         }
         glEnd();
+      }
+    } else {
+      for (auto& obj : GlobalMapStuff->VisualObjectsVector) {
+        for (int i = 0; i < obj.Visualmapfaces.size(); i++) {
+          glEnable(GL_TEXTURE_2D);
+          glBindTexture(
+              GL_TEXTURE_2D,
+              RendererGlobal->GLstuff
+                  ->textures[obj.Visualmapfaces[i].TUVvector.front().texture]);
+          glBegin(GL_TRIANGLES);
+          for (int j = 2; j >= 0; j--) {
+            glm::vec3 pos = obj.VisualPoints[obj.Visualmapfaces[i].points[j]];
+            glm::vec2 uvw = obj.Visualmapfaces[i].TUVvector.front().UVs[j];
+            glColor3f(1, 1, 1);
+            glTexCoord2f(uvw.x, 1 - uvw.y);
+            glVertex3f(pos.x, pos.y, pos.z);
+          }
+          glEnd();
+        }
       }
     }
 

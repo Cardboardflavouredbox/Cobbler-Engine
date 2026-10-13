@@ -62,5 +62,7 @@ struct GlobalClass {
   bool IsOnline = false;
   std::string playerclass = "default";
 
+  bool IsDebug = false;
+
   char* pref_path;
 };
