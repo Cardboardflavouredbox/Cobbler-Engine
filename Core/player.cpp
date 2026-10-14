@@ -1,6 +1,7 @@
 #include "player.h"
 
 #include "deltaTime.h"
+#include "extern.h"
 
 // function that turns inputs into entity movement.
 void inputtoentity(playerinputs input, Entity* entity) {
@@ -21,6 +22,6 @@ void inputtoentity(playerinputs input, Entity* entity) {
     entity->movevec2 = glm::normalize(entity->movevec2) * entity->movespeed;
   }
 
-  if (input.jump == 2 && entity->IsGrounded)
+  if (input.jump == 2 && (entity->IsGrounded || Global->IsDebug))
     entity->velocityvec3.z = entity->jumpheight;
 }
