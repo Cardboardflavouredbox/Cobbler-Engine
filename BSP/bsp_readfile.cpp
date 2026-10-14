@@ -12,7 +12,6 @@ bool linePlaneIntersection(float& contact, glm::vec3 ray, glm::vec3 rayOrigin,
                            glm::vec3 normal, glm::vec3 coord) {
   // get d value
   ray -= rayOrigin;
-  ray = glm::normalize(ray);
   float d = glm::dot(normal, coord);
   if (glm::dot(normal, ray) <= 0.0001f) {
     return false;  // No intersection, the line is parallel to the plane
@@ -28,7 +27,7 @@ bool linePlaneIntersection(float& contact, glm::vec3 ray, glm::vec3 rayOrigin,
 float pointSideCheck(glm::vec3 point, glm::vec3 normal, glm::vec3 coord) {
   glm::vec3 toTarget = point - coord;
 
-  return glm::dot(toTarget, glm::normalize(normal));
+  return glm::dot(glm::normalize(normal), toTarget);
 }
 
 struct ProcessResult {
@@ -63,14 +62,15 @@ ProcessResult ProcessFace(std::vector<std::array<uint32_t, 3>> Faces,
       glm::vec3 v3 = BSPResult.Points[face[1]] - BSPResult.Points[face[0]],
                 v4 = BSPResult.Points[face[2]] - BSPResult.Points[face[0]];
       glm::vec3 tempnormal = glm::normalize(glm::cross(v3, v4));
-      if (1.f - glm::dot(tempnormal, normal) <= 0.00001f) {
+      if (1.f - std::fabs(glm::dot(tempnormal, normal)) <=
+          0.00001f) {  // if normals are parallel
         float dist = pointSideCheck(BSPResult.Points[face[0]], normal,
                                     BSPResult.Points[currentface[0]]);
         if (std::fabsf(dist) <= 0.00001f) {
           result.amountoffacesadded++;
           result.currentfaces.push_back(face);
         } else {
-          if (dist > 0.00001f)
+          if (dist > 0.f)
             result.ResultFacesA.push_back(face);
           else
             result.ResultFacesB.push_back(face);
@@ -92,12 +92,12 @@ ProcessResult ProcessFace(std::vector<std::array<uint32_t, 3>> Faces,
           if (check && check2 && temp > 0.f && temp < 1.0f && temp2 > 0.f &&
               temp2 < 1.0f) {
             glm::vec3 A = BSPResult.Points[face[(i) % 3]] +
-                          glm::normalize(BSPResult.Points[face[(i + 1) % 3]] -
-                                         BSPResult.Points[face[(i) % 3]]) *
+                          (BSPResult.Points[face[(i + 1) % 3]] -
+                           BSPResult.Points[face[(i) % 3]]) *
                               temp,
                       B = BSPResult.Points[face[(i) % 3]] +
-                          glm::normalize(BSPResult.Points[face[(i + 2) % 3]] -
-                                         BSPResult.Points[face[(i) % 3]]) *
+                          (BSPResult.Points[face[(i + 2) % 3]] -
+                           BSPResult.Points[face[(i) % 3]]) *
                               temp2;
             BSPResult.Points.push_back(A);
             BSPResult.Points.push_back(B);
@@ -105,8 +105,8 @@ ProcessResult ProcessFace(std::vector<std::array<uint32_t, 3>> Faces,
             std::array<std::array<uint32_t, 3>, 3> splitfaces;
 
             splitfaces[0][0] = face[(i) % 3];
-            splitfaces[0][1] = BSPResult.Points.size() - 1;
-            splitfaces[0][2] = BSPResult.Points.size() - 2;
+            splitfaces[0][1] = BSPResult.Points.size() - 2;
+            splitfaces[0][2] = BSPResult.Points.size() - 1;
 
             splitfaces[1][0] = face[(i + 1) % 3];
             splitfaces[1][1] = face[(i + 2) % 3];
@@ -161,12 +161,13 @@ void BSPcreate(std::vector<std::array<uint32_t, 3>> Faces, bool isA,
       ProcessResult temp = ProcessFace(Faces, i);
       if (!std::isnan(temp.normal.x) && !std::isnan(temp.normal.y) &&
           !std::isnan(temp.normal.z) &&
-          (!checkthing || ((std::abs((int)result.ResultFacesA.size() -
-                                     (int)result.ResultFacesB.size()) +
-                                result.cnt * 2 >
-                            std::abs((int)temp.ResultFacesA.size() -
-                                     (int)temp.ResultFacesB.size()) +
-                                temp.cnt * 2)))) {
+          (!checkthing ||
+           ((std::abs((int)result.ResultFacesA.size() -
+                      (int)result.ResultFacesB.size()) +
+                 result.cnt * 0.5f + result.amountoffacesadded * 1 >
+             std::abs((int)temp.ResultFacesA.size() -
+                      (int)temp.ResultFacesB.size()) +
+                 temp.cnt * 0.5f + temp.amountoffacesadded * 1)))) {
         checkthing = true;
         result = temp;
       }

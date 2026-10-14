@@ -16,7 +16,7 @@
 float pointSideCheck(glm::vec3 point, glm::vec3 normal, glm::vec3 coord) {
   glm::vec3 toTarget = point - coord;
 
-  return glm::dot(toTarget, normal);
+  return glm::dot(glm::normalize(normal), toTarget);
 }
 
 // Ray and Triangle collision check function.
@@ -292,7 +292,7 @@ std::vector<uint32_t> BSPthing(glm::vec3 pos, float radius) {
   while (true) {
     MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
     float tempdist = pointSideCheck(pos, bspthing->normal, bspthing->point);
-    if (std::fabs(tempdist) <= radius * 2) {
+    if (std::fabs(tempdist) <= radius * 2.25f + 1.5f) {
       recursiveBSPadd(&Faces, index);
       break;
     }
