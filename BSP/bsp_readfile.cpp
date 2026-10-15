@@ -175,10 +175,10 @@ void BSPcreate(std::vector<std::array<uint32_t, 3>> Faces, bool isA,
           !std::isnan(temp.normal.z) &&
           (!checkthing || ((std::abs((int)result.ResultFacesA.size() -
                                      (int)result.ResultFacesB.size()) +
-                                result.cnt * 2 + result.amountoffacesadded * 1 >
+                                result.cnt * 4 + result.amountoffacesadded * 5 >
                             std::abs((int)temp.ResultFacesA.size() -
                                      (int)temp.ResultFacesB.size()) +
-                                temp.cnt * 2 + temp.amountoffacesadded * 1)))) {
+                                temp.cnt * 4 + temp.amountoffacesadded * 5)))) {
         checkthing = true;
         result = temp;
       }

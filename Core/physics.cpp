@@ -279,41 +279,36 @@ float Slopecheck(glm::vec3 normal) {
   return std::acosf(normal.z) * 180.f / (float)PI;
 }
 
-void recursiveBSPadd(std::vector<uint32_t>* Faces, int index) {
-  if (index < 0) return;
-  for (auto& i : GlobalMapBSP->BSPtree[index].Faces) Faces->push_back(i);
-  recursiveBSPadd(Faces, GlobalMapBSP->BSPtree[index].A);
-  recursiveBSPadd(Faces, GlobalMapBSP->BSPtree[index].B);
+std::vector<uint32_t> recursiveBSPadd(int index) {
+  std::vector<uint32_t> Faces;
+  if (index < 0) return Faces;
+  for (auto& i : GlobalMapBSP->BSPtree[index].Faces) Faces.push_back(i);
+  std::vector<uint32_t> sub1 = recursiveBSPadd(GlobalMapBSP->BSPtree[index].A);
+  std::vector<uint32_t> sub2 = recursiveBSPadd(GlobalMapBSP->BSPtree[index].B);
+  Faces.insert(Faces.end(), sub1.begin(), sub1.end());
+  Faces.insert(Faces.end(), sub2.begin(), sub2.end());
+  return Faces;
 }
 
-std::vector<uint32_t> BSPthing(glm::vec3 pos, float radius) {
-  int index = 0;
-  std::vector<uint32_t> Faces;
-  while (true) {
-    MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
-    float tempdist = pointSideCheck(pos, bspthing->normal, bspthing->point);
-    if (std::fabs(tempdist) <= radius * 3.5f) {
-      recursiveBSPadd(&Faces, index);
-      break;
-    }
-    if (tempdist >= 0.f) {
-      if (bspthing->A < 0) {
-        for (auto& i : bspthing->Faces) Faces.push_back(i);
-        break;
-      } else {
-        index = bspthing->A;
-      }
+std::vector<uint32_t> BSPthing(glm::vec3 pos, float radius, int index) {
+  MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
+  float tempdist = pointSideCheck(pos, bspthing->normal, bspthing->point);
+  if (std::fabs(tempdist) <= radius * 3.5f) {
+    return recursiveBSPadd(index);
+  }
+  if (tempdist >= 0.f) {
+    if (bspthing->A < 0) {
+      return recursiveBSPadd(index);
     } else {
-      if (bspthing->B < 0) {
-        for (auto& i : bspthing->Faces) Faces.push_back(i);
-        break;
-      } else {
-        index = bspthing->B;
-      }
+      return BSPthing(pos, radius, bspthing->A);
+    }
+  } else {
+    if (bspthing->B < 0) {
+      return recursiveBSPadd(index);
+    } else {
+      return BSPthing(pos, radius, bspthing->B);
     }
   }
-  SDL_Log("%d %d", GlobalMapBSP->Faces.size(), Faces.size());
-  return Faces;
 }
 
 // checks if you collided with triangle while you moved.
@@ -344,8 +339,8 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   glm::vec3 playerpos = checkposition + hitbox[0] / 2.f + hitbox[1] / 2.f;
 
   std::vector<uint32_t> Faces =
-      BSPthing(playerpos, radius + glm::length(hitbox[1] - hitbox[0]));
-  // SDL_Log("%d", Faces.size());
+      BSPthing(playerpos, radius + glm::length(hitbox[1] - hitbox[0]), 0);
+  SDL_Log("facecount: %d/%d", Faces.size(), GlobalMapBSP->Faces.size());
 
   for (int i = 0; i < Faces.size(); i++) {
     float disttemp;
