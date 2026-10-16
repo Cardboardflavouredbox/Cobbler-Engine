@@ -288,25 +288,19 @@ void BSPthing(glm::vec3 pos, float radius, int index,
               std::vector<std::array<uint32_t, 3>>& out) {
   MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
   float tempdist = pointSideCheck(pos, bspthing->plane);
-  if (std::fabs(tempdist) <= radius * 2.25f + 0.5f) {
+  if (std::fabs(tempdist) <= radius * 2.25f) {
     recursiveBSPadd(index, out);
-    return;
-  }
-  if (tempdist >= 0.f) {
+  } else if (tempdist >= 0.f) {
     if (bspthing->A < 0) {
       recursiveBSPadd(index, out);
-      return;
     } else {
       BSPthing(pos, radius, bspthing->A, out);
-      return;
     }
   } else {
     if (bspthing->B < 0) {
       recursiveBSPadd(index, out);
-      return;
     } else {
       BSPthing(pos, radius, bspthing->B, out);
-      return;
     }
   }
   return;

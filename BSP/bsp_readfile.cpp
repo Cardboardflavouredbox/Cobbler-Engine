@@ -5,6 +5,8 @@
 
 MapBSP BSPResult;
 
+static float epsilon = glm::epsilon<float>();
+
 glm::vec4 CreatePlane(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2) {
   glm::vec3 edge1 = v1 - v0;
   glm::vec3 edge2 = v2 - v0;
@@ -21,12 +23,12 @@ glm::vec4 CreatePlane(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2) {
 // Retrieved 2026-10-12, License - CC BY-SA 3.0
 bool linePlaneIntersection(float& contact, glm::vec3 ray, glm::vec3 rayOrigin,
                            glm::vec4 plane) {
-  glm::vec3 normal = glm::vec3(plane), coord = normal * plane.w;
+  glm::vec3 normal = glm::vec3(plane), coord = normal * -plane.w;
 
   // get d value
   ray -= rayOrigin;
   float normalray = glm::dot(normal, ray);
-  if (std::fabs(normalray) <= 0.0000001f) {
+  if (std::fabs(normalray) < epsilon) {
     return false;  // No intersection, the line is parallel to the plane
   }
   // Compute the X value for the directed line ray intersecting the plane
@@ -78,10 +80,10 @@ ProcessResult ProcessFace(std::vector<std::array<uint32_t, 3>> Faces,
       glm::vec3 v3 = BSPResult.Points[face[1]] - BSPResult.Points[face[0]],
                 v4 = BSPResult.Points[face[2]] - BSPResult.Points[face[0]];
       glm::vec3 tempnormal = glm::normalize(glm::cross(v3, v4));
-      if (1.f - std::fabs(glm::dot(tempnormal, normal)) <=
-          0.0000001f) {  // if normals are parallel
+      if (1.f - std::fabs(glm::dot(tempnormal, normal)) <
+          epsilon) {  // if normals are parallel
         float dist = pointSideCheck(BSPResult.Points[face[0]], result.plane);
-        if (std::fabsf(dist) <= 0.0000001f) {
+        if (std::fabsf(dist) < epsilon) {
           result.amountoffacesadded++;
           result.currentfaces.push_back(face);
         } else {
@@ -97,25 +99,54 @@ ProcessResult ProcessFace(std::vector<std::array<uint32_t, 3>> Faces,
             uint32_t face0 = face[(i) % 3], face1 = face[(i + 1 + j) % 3],
                      face2 = face[(i + 2 - j) % 3];
 
-            float temp, temp2;
+            float temp, temp2, temp3;
+
+            int checkcnt = 0;
 
             bool check = linePlaneIntersection(temp, BSPResult.Points[face1],
                                                BSPResult.Points[face0],
                                                result.plane),
                  check2 = linePlaneIntersection(temp2, BSPResult.Points[face2],
                                                 BSPResult.Points[face0],
+                                                result.plane),
+                 check3 = linePlaneIntersection(temp3, BSPResult.Points[face2],
+                                                BSPResult.Points[face1],
                                                 result.plane);
 
-            if (check && check2) {
+            if (check) checkcnt++;
+            if (check2) checkcnt++;
+            if (check3) checkcnt++;
+
+            if (checkcnt == 2) {
+              float t, t2;
+
+              if (!check) {
+                t = temp2;
+                t2 = temp3;
+
+                uint32_t swap = face0;
+                face0 = face2;
+                face2 = swap;
+              } else if (!check2) {
+                t = temp;
+                t2 = temp3;
+
+                uint32_t swap = face0;
+                face0 = face1;
+                face1 = swap;
+              } else if (!check3) {
+                t = temp;
+                t2 = temp2;
+              }
+
               glm::vec3 A = BSPResult.Points[face0] +
                             (BSPResult.Points[face1] -
                              BSPResult.Points[face0]) *
-                                temp,
+                                t,
                         B = BSPResult.Points[face0] +
                             (BSPResult.Points[face2] -
                              BSPResult.Points[face0]) *
-                                temp2;
-              float epsilon = 0.00001f;
+                                t2;
               if (glm::distance(A, B) < epsilon ||
                   glm::distance(BSPResult.Points[face0], A) < epsilon ||
                   glm::distance(BSPResult.Points[face0], B) < epsilon ||
@@ -187,10 +218,10 @@ void BSPcreate(std::vector<std::array<uint32_t, 3>> Faces, bool isA,
           (!checkthing ||
            ((std::abs((int)result.ResultFacesA.size() -
                       (int)result.ResultFacesB.size()) +
-                 result.cnt / 2.f + result.amountoffacesadded * 2.f >
+                 result.cnt * 3.f + result.amountoffacesadded * 1.f >
              std::abs((int)temp.ResultFacesA.size() -
                       (int)temp.ResultFacesB.size()) +
-                 temp.cnt / 2.f + temp.amountoffacesadded * 2.f)))) {
+                 temp.cnt * 3.f + temp.amountoffacesadded * 1.f)))) {
         checkthing = true;
         result = temp;
       }
