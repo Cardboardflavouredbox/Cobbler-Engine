@@ -619,9 +619,14 @@ bool setRenderer() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // set backface culling
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CW);
+
+    if (Global->IsDebug) {
+      glDisable(GL_CULL_FACE);
+    } else {
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_BACK);
+      glFrontFace(GL_CW);
+    }
   }
 
   // load all the textures in the textures folder
@@ -1417,30 +1422,22 @@ bool init() {
         fscanf(file, "%f %f %f\n", &temppoint.x, &temppoint.y, &temppoint.z);
         GlobalMapBSP->Points.push_back(temppoint);
       }
-    } else if (lineHeader == 'F') {  // Hitbox Face
-      while (true) {
-        if (fscanf(file, "%c", &lineHeader) == EOF) break;
-        if (lineHeader == 'E') break;
-        std::array<uint32_t, 3> tempface;
-        fscanf(file, "%u %u %u\n", &tempface[0], &tempface[1], &tempface[2]);
-        GlobalMapBSP->Faces.push_back(tempface);
-      }
     } else if (lineHeader == 'B') {  // Hitbox bsp
       while (true) {
         if (fscanf(file, "%c", &lineHeader) == EOF) break;
         if (lineHeader == 'E') break;
         MapBSP::BSPnode bspthing;
-        fscanf(file, "%d %d %f %f %f %f %f %f ", &bspthing.A, &bspthing.B,
-               &bspthing.normal[0], &bspthing.normal[1], &bspthing.normal[2],
-               &bspthing.point[0], &bspthing.point[1], &bspthing.point[2]);
+        fscanf(file, "%d %d %f %f %f %f ", &bspthing.A, &bspthing.B,
+               &bspthing.plane[0], &bspthing.plane[1], &bspthing.plane[2],
+               &bspthing.plane[3]);
 
         char subHeader;
 
         while (true) {
           if (fscanf(file, "%c", &subHeader) == EOF) break;
           if (subHeader == 'E') break;
-          uint32_t face;
-          fscanf(file, "%u", &face);
+          std::array<uint32_t, 3> face;
+          fscanf(file, "%u %u %u", &face[0], &face[1], &face[2]);
           bspthing.Faces.push_back(face);
         }
         fscanf(file, "\n");

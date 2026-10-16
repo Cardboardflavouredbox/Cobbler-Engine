@@ -13,10 +13,8 @@
 #include "networkextern.h"
 #include "pi.h"
 
-float pointSideCheck(glm::vec3 point, glm::vec3 normal, glm::vec3 coord) {
-  glm::vec3 toTarget = point - coord;
-
-  return glm::dot(glm::normalize(normal), toTarget);
+float pointSideCheck(glm::vec3 point, glm::vec4 plane) {
+  return glm::dot(point, glm::vec3(plane)) + plane.w;
 }
 
 // Ray and Triangle collision check function.
@@ -279,36 +277,39 @@ float Slopecheck(glm::vec3 normal) {
   return std::acosf(normal.z) * 180.f / (float)PI;
 }
 
-std::vector<uint32_t> recursiveBSPadd(int index) {
-  std::vector<uint32_t> Faces;
-  if (index < 0) return Faces;
-  for (auto& i : GlobalMapBSP->BSPtree[index].Faces) Faces.push_back(i);
-  std::vector<uint32_t> sub1 = recursiveBSPadd(GlobalMapBSP->BSPtree[index].A);
-  std::vector<uint32_t> sub2 = recursiveBSPadd(GlobalMapBSP->BSPtree[index].B);
-  Faces.insert(Faces.end(), sub1.begin(), sub1.end());
-  Faces.insert(Faces.end(), sub2.begin(), sub2.end());
-  return Faces;
+void recursiveBSPadd(int index, std::vector<std::array<uint32_t, 3>>& out) {
+  if (index < 0) return;
+  for (auto& i : GlobalMapBSP->BSPtree[index].Faces) out.push_back(i);
+  recursiveBSPadd(GlobalMapBSP->BSPtree[index].A, out);
+  recursiveBSPadd(GlobalMapBSP->BSPtree[index].B, out);
 }
 
-std::vector<uint32_t> BSPthing(glm::vec3 pos, float radius, int index) {
+void BSPthing(glm::vec3 pos, float radius, int index,
+              std::vector<std::array<uint32_t, 3>>& out) {
   MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
-  float tempdist = pointSideCheck(pos, bspthing->normal, bspthing->point);
-  if (std::fabs(tempdist) <= radius * 3.5f) {
-    return recursiveBSPadd(index);
+  float tempdist = pointSideCheck(pos, bspthing->plane);
+  if (std::fabs(tempdist) <= radius * 2.25f + 0.5f) {
+    recursiveBSPadd(index, out);
+    return;
   }
   if (tempdist >= 0.f) {
     if (bspthing->A < 0) {
-      return recursiveBSPadd(index);
+      recursiveBSPadd(index, out);
+      return;
     } else {
-      return BSPthing(pos, radius, bspthing->A);
+      BSPthing(pos, radius, bspthing->A, out);
+      return;
     }
   } else {
     if (bspthing->B < 0) {
-      return recursiveBSPadd(index);
+      recursiveBSPadd(index, out);
+      return;
     } else {
-      return BSPthing(pos, radius, bspthing->B);
+      BSPthing(pos, radius, bspthing->B, out);
+      return;
     }
   }
+  return;
 }
 
 // checks if you collided with triangle while you moved.
@@ -338,18 +339,17 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
 
   glm::vec3 playerpos = checkposition + hitbox[0] / 2.f + hitbox[1] / 2.f;
 
-  std::vector<uint32_t> Faces =
-      BSPthing(playerpos, radius + glm::length(hitbox[1] - hitbox[0]), 0);
-  SDL_Log("facecount: %d/%d", Faces.size(), GlobalMapBSP->Faces.size());
+  std::vector<std::array<uint32_t, 3>> Faces;
+  BSPthing(playerpos, radius + glm::distance(hitbox[1], hitbox[0]), 0, Faces);
+  SDL_Log("facecount: %d", (int)Faces.size());
 
-  for (int i = 0; i < Faces.size(); i++) {
+  for (auto& face : Faces) {
     float disttemp;
     glm::vec3 normal;
-    if (CapsuleTriCheck(GlobalMapBSP->Points[GlobalMapBSP->Faces[Faces[i]][0]],
-                        GlobalMapBSP->Points[GlobalMapBSP->Faces[Faces[i]][1]],
-                        GlobalMapBSP->Points[GlobalMapBSP->Faces[Faces[i]][2]],
-                        hitbox[0] + checkposition, hitbox[1] + checkposition,
-                        radius, disttemp, normal)) {
+    if (CapsuleTriCheck(
+            GlobalMapBSP->Points[face[0]], GlobalMapBSP->Points[face[1]],
+            GlobalMapBSP->Points[face[2]], hitbox[0] + checkposition,
+            hitbox[1] + checkposition, radius, disttemp, normal)) {
       if (resultthing.dist == 0 || resultthing.dist > disttemp) {
         result = normal;
         resultthing.dist = disttemp;
@@ -405,8 +405,11 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
   movecollisionresult resultthing;
   resultthing.dist = 0;
 
+  std::vector<std::array<uint32_t, 3>> Faces;
+  recursiveBSPadd(0, Faces);
+
   // make sure to add ray bsp stuff later!
-  for (auto& i : GlobalMapBSP->Faces) {
+  for (auto& i : Faces) {
     std::optional<glm::vec3> check =
         RayTriIntersect(hitbox[0], glm::normalize(hitbox[1] - hitbox[0]),
                         GlobalMapBSP->Points[i[0]], GlobalMapBSP->Points[i[1]],

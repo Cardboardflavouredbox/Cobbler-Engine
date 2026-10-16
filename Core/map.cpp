@@ -15,10 +15,12 @@ void LoadMapGL(bool IsOldGL, bool DebugSeeHitboxes) {
     glNewList(RendererGlobal->GLstuff->MapGLlist, GL_COMPILE);
 
     if (DebugSeeHitboxes) {
-      for (int i = 0; i < GlobalMapBSP->Faces.size(); i++) {
+      std::vector<std::array<uint32_t, 3>> Faces;
+      recursiveBSPadd(0, Faces);
+      for (auto& face : Faces) {
         glBegin(GL_TRIANGLES);
         for (int j = 2; j >= 0; j--) {
-          glm::vec3 pos = GlobalMapBSP->Points[GlobalMapBSP->Faces[i][j]];
+          glm::vec3 pos = GlobalMapBSP->Points[face[j]];
           glColor3f(0, 0, (j + 1) / 3.f);
           glVertex3f(pos.x, pos.y, pos.z);
         }

@@ -27,13 +27,17 @@ struct Mapdata {
 
 struct MapBSP {
   std::vector<glm::vec3> Points;
-  std::vector<std::array<uint32_t, 3>> Faces;
   struct BSPnode {
-    std::vector<uint32_t> Faces;
-    glm::vec3 normal, point;
+    std::vector<std::array<uint32_t, 3>> Faces;
+    glm::vec4 plane;
     int A = -1, B = -1;
   };
   std::vector<BSPnode> BSPtree;
 };
 
 LIB_API extern MapBSP* GlobalMapBSP;
+
+extern "C" {
+LIB_API void recursiveBSPadd(int index,
+                             std::vector<std::array<uint32_t, 3>>& out);
+}
