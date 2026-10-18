@@ -287,33 +287,30 @@ void recursiveBSPadd(int index, std::vector<std::array<uint32_t, 3>>& out) {
   recursiveBSPadd(GlobalMapBSP->BSPtree[index].B, out);
 }
 
-void BSPthing(glm::vec3 pos, float radius, int index,
-              std::vector<std::array<uint32_t, 3>>& out, bool& solid) {
-  solid = false;
-  if (index < 0) return;
+bool BSPthing(glm::vec3 pos, float radius, int index,
+              std::vector<std::array<uint32_t, 3>>& out) {
+  if (index < 0) return false;
   MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
 
   if (bspthing->type == MapBSP::BSPnode::LEAF_SOLID) {
-    solid = true;
-    return;
+    return true;
   } else if (bspthing->type == MapBSP::BSPnode::LEAF_EMPTY) {
-    solid = false;
-    return;
+    return false;
   }
 
   for (auto& i : GlobalMapBSP->BSPtree[index].Faces) out.push_back(i);
 
   float tempdist = pointSideCheck(pos, bspthing->plane);
-  if (std::fabs(tempdist) <= radius * 2.75f) {
-    BSPthing(pos, radius, bspthing->A, out, solid);
-    BSPthing(pos, radius, bspthing->B, out, solid);
-    solid = false;
+  if (std::fabs(tempdist) <= radius * 2.25f) {
+    bool A = BSPthing(pos, radius, bspthing->A, out),
+         B = BSPthing(pos, radius, bspthing->B, out);
+    return (A || B);
   } else if (tempdist >= 0.f) {
-    BSPthing(pos, radius, bspthing->A, out, solid);
+    return BSPthing(pos, radius, bspthing->A, out);
   } else {
-    BSPthing(pos, radius, bspthing->B, out, solid);
+    return BSPthing(pos, radius, bspthing->B, out);
   }
-  return;
+  return true;
 }
 
 // checks if you collided with triangle while you moved.
@@ -344,9 +341,8 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   glm::vec3 playerpos = checkposition + hitbox[0] / 2.f + hitbox[1] / 2.f;
 
   std::vector<std::array<uint32_t, 3>> Faces;
-  bool solid;
-  BSPthing(playerpos, radius + glm::distance(hitbox[1], hitbox[0]), 0, Faces,
-           solid);
+  bool solid = BSPthing(playerpos, radius + glm::distance(hitbox[1], hitbox[0]),
+                        0, Faces);
 
   if (solid) {
     Faces.clear();
