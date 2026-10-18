@@ -304,7 +304,7 @@ void BSPthing(glm::vec3 pos, float radius, int index,
   for (auto& i : GlobalMapBSP->BSPtree[index].Faces) out.push_back(i);
 
   float tempdist = pointSideCheck(pos, bspthing->plane);
-  if (std::fabs(tempdist) <= radius * 2.25f) {
+  if (std::fabs(tempdist) <= radius * 2.75f) {
     BSPthing(pos, radius, bspthing->A, out, solid);
     BSPthing(pos, radius, bspthing->B, out, solid);
     solid = false;

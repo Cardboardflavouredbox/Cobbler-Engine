@@ -21,22 +21,16 @@ glm::vec4 CreatePlane(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2) {
 // Source - https://stackoverflow.com/a/35396994
 // Posted by Jomi
 // Retrieved 2026-10-12, License - CC BY-SA 3.0
-bool linePlaneIntersection(float& contact, glm::vec3 ray, glm::vec3 rayOrigin,
+bool linePlaneIntersection(float& t, glm::vec3 ray, glm::vec3 rayOrigin,
                            glm::vec4 plane) {
-  glm::vec3 normal = glm::vec3(plane), coord = normal * -plane.w;
+  glm::vec3 normal = glm::vec3(plane);
+  glm::vec3 dir = ray - rayOrigin;
+  float denominator = glm::dot(normal, dir);
 
-  // get d value
-  ray -= rayOrigin;
-  float normalray = glm::dot(normal, ray);
-  if (std::fabs(normalray) < epsilon) {
-    return false;  // No intersection, the line is parallel to the plane
-  }
-  // Compute the X value for the directed line ray intersecting the plane
-  float x = (glm::dot(normal, coord) - glm::dot(normal, rayOrigin)) / normalray;
-  // output contact point
-  contact = x;  // Make sure your ray vector is normalized
-  if (x <= 0 || x >= 1) return false;
-  return true;
+  if (std::fabs(denominator) < epsilon) return false;  // Parallel
+
+  t = -(glm::dot(normal, rayOrigin) + plane.w) / denominator;
+  return (t >= 0.0f && t <= 1.0f);
 }
 
 float pointSideCheck(glm::vec3 point, glm::vec4 plane) {
