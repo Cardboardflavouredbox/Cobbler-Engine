@@ -278,30 +278,40 @@ float Slopecheck(glm::vec3 normal) {
 }
 
 void recursiveBSPadd(int index, std::vector<std::array<uint32_t, 3>>& out) {
-  if (index < 0) return;
+  if (index < 0 ||
+      GlobalMapBSP->BSPtree[index].type == MapBSP::BSPnode::LEAF_SOLID ||
+      GlobalMapBSP->BSPtree[index].type == MapBSP::BSPnode::LEAF_EMPTY)
+    return;
   for (auto& i : GlobalMapBSP->BSPtree[index].Faces) out.push_back(i);
   recursiveBSPadd(GlobalMapBSP->BSPtree[index].A, out);
   recursiveBSPadd(GlobalMapBSP->BSPtree[index].B, out);
 }
 
 void BSPthing(glm::vec3 pos, float radius, int index,
-              std::vector<std::array<uint32_t, 3>>& out) {
+              std::vector<std::array<uint32_t, 3>>& out, bool& solid) {
+  solid = false;
+  if (index < 0) return;
   MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
+
+  if (bspthing->type == MapBSP::BSPnode::LEAF_SOLID) {
+    solid = true;
+    return;
+  } else if (bspthing->type == MapBSP::BSPnode::LEAF_EMPTY) {
+    solid = false;
+    return;
+  }
+
+  for (auto& i : GlobalMapBSP->BSPtree[index].Faces) out.push_back(i);
+
   float tempdist = pointSideCheck(pos, bspthing->plane);
   if (std::fabs(tempdist) <= radius * 2.25f) {
-    recursiveBSPadd(index, out);
+    BSPthing(pos, radius, bspthing->A, out, solid);
+    BSPthing(pos, radius, bspthing->B, out, solid);
+    solid = false;
   } else if (tempdist >= 0.f) {
-    if (bspthing->A < 0) {
-      recursiveBSPadd(index, out);
-    } else {
-      BSPthing(pos, radius, bspthing->A, out);
-    }
+    BSPthing(pos, radius, bspthing->A, out, solid);
   } else {
-    if (bspthing->B < 0) {
-      recursiveBSPadd(index, out);
-    } else {
-      BSPthing(pos, radius, bspthing->B, out);
-    }
+    BSPthing(pos, radius, bspthing->B, out, solid);
   }
   return;
 }
@@ -334,8 +344,16 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   glm::vec3 playerpos = checkposition + hitbox[0] / 2.f + hitbox[1] / 2.f;
 
   std::vector<std::array<uint32_t, 3>> Faces;
-  BSPthing(playerpos, radius + glm::distance(hitbox[1], hitbox[0]), 0, Faces);
-  SDL_Log("facecount: %d", (int)Faces.size());
+  bool solid;
+  BSPthing(playerpos, radius + glm::distance(hitbox[1], hitbox[0]), 0, Faces,
+           solid);
+
+  if (solid) {
+    Faces.clear();
+    recursiveBSPadd(0, Faces);
+  }
+
+  // SDL_Log("facecount: %d", (int)Faces.size());
 
   for (auto& face : Faces) {
     float disttemp;

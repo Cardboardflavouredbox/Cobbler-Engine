@@ -1427,18 +1427,23 @@ bool init() {
         if (fscanf(file, "%c", &lineHeader) == EOF) break;
         if (lineHeader == 'E') break;
         MapBSP::BSPnode bspthing;
-        fscanf(file, "%d %d %f %f %f %f ", &bspthing.A, &bspthing.B,
-               &bspthing.plane[0], &bspthing.plane[1], &bspthing.plane[2],
-               &bspthing.plane[3]);
 
-        char subHeader;
+        fscanf(file, "%d ", &bspthing.type);
 
-        while (true) {
-          if (fscanf(file, "%c", &subHeader) == EOF) break;
-          if (subHeader == 'E') break;
-          std::array<uint32_t, 3> face;
-          fscanf(file, "%u %u %u", &face[0], &face[1], &face[2]);
-          bspthing.Faces.push_back(face);
+        if (bspthing.type == MapBSP::BSPnode::Nodetype::INTERNAL) {
+          fscanf(file, "%d %d %f %f %f %f ", &bspthing.A, &bspthing.B,
+                 &bspthing.plane[0], &bspthing.plane[1], &bspthing.plane[2],
+                 &bspthing.plane[3]);
+
+          char subHeader;
+
+          while (true) {
+            if (fscanf(file, "%c", &subHeader) == EOF) break;
+            if (subHeader == 'E') break;
+            std::array<uint32_t, 3> face;
+            fscanf(file, "%u %u %u", &face[0], &face[1], &face[2]);
+            bspthing.Faces.push_back(face);
+          }
         }
         fscanf(file, "\n");
 

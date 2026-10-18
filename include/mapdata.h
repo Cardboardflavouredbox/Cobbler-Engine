@@ -28,6 +28,10 @@ struct Mapdata {
 struct MapBSP {
   std::vector<glm::vec3> Points;
   struct BSPnode {
+    enum Nodetype { INTERNAL, LEAF_EMPTY, LEAF_SOLID };
+
+    Nodetype type = INTERNAL;
+
     std::vector<std::array<uint32_t, 3>> Faces;
     glm::vec4 plane;
     int A = -1, B = -1;
