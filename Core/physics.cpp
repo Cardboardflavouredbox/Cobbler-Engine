@@ -353,8 +353,6 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
     recursiveBSPadd(0, Faces);
   }
 
-  // SDL_Log("facecount: %d", (int)Faces.size());
-
   for (auto& face : Faces) {
     float disttemp;
     glm::vec3 normal;

@@ -105,115 +105,61 @@ ProcessResult ProcessFace(std::vector<std::array<uint32_t, 3>> Faces,
       result.amountoffacesadded++;
       result.currentfaces.push_back(face);
     } else {
-      bool facecheck = false;
-      for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 2; j++) {
-          uint32_t face0 = face[(i) % 3], face1 = face[(i + 1 + j) % 3],
-                   face2 = face[(i + 2 - j) % 3];
-
-          float temp, temp2, temp3;
-
-          int checkcnt = 0;
-
-          bool check =
-                   linePlaneIntersection(temp, BSPResult.Points[face1],
-                                         BSPResult.Points[face0], result.plane),
-               check2 =
-                   linePlaneIntersection(temp2, BSPResult.Points[face2],
-                                         BSPResult.Points[face0], result.plane),
-               check3 =
-                   linePlaneIntersection(temp3, BSPResult.Points[face2],
-                                         BSPResult.Points[face1], result.plane);
-
-          if (check) checkcnt++;
-          if (check2) checkcnt++;
-          if (check3) checkcnt++;
-
-          if (checkcnt == 2) {
-            float t, t2;
-
-            if (!check) {
-              uint32_t swap = face0;
-              face0 = face2;
-              face2 = swap;
-
-              swap = face1;
-              face1 = face2;
-              face2 = swap;
-            } else if (!check2) {
-              uint32_t swap = face0;
-              face0 = face1;
-              face1 = swap;
-
-              swap = face1;
-              face1 = face2;
-              face2 = swap;
-            } else if (!check3) {
-            }
-
-            linePlaneIntersection(t, BSPResult.Points[face1],
-                                  BSPResult.Points[face0], result.plane);
-            linePlaneIntersection(t2, BSPResult.Points[face2],
-                                  BSPResult.Points[face0], result.plane);
-
-            glm::vec3 A = BSPResult.Points[face0] +
-                          (BSPResult.Points[face1] - BSPResult.Points[face0]) *
-                              t,
-                      B = BSPResult.Points[face0] +
-                          (BSPResult.Points[face2] - BSPResult.Points[face0]) *
-                              t2;
-
-            float tempepsilon = 0.0001f;
-            if (glm::distance(A, B) < tempepsilon ||
-                glm::distance(BSPResult.Points[face0], A) < tempepsilon ||
-                glm::distance(BSPResult.Points[face0], B) < tempepsilon ||
-                glm::distance(BSPResult.Points[face1], A) < tempepsilon ||
-                glm::distance(BSPResult.Points[face1], B) < tempepsilon ||
-                glm::distance(BSPResult.Points[face2], A) < tempepsilon ||
-                glm::distance(BSPResult.Points[face2], B) < tempepsilon) {
-              result.amountoffacesadded++;
-              result.currentfaces.push_back(face);
-            } else {
-              BSPResult.Points.push_back(A);
-              BSPResult.Points.push_back(B);
-
-              std::array<std::array<uint32_t, 3>, 3> splitfaces;
-
-              splitfaces[0][0] = face0;
-              splitfaces[0][1] = BSPResult.Points.size() - 2;
-              splitfaces[0][2] = BSPResult.Points.size() - 1;
-
-              splitfaces[1][0] = face1;
-              splitfaces[1][1] = face2;
-              splitfaces[1][2] = BSPResult.Points.size() - 1;
-
-              splitfaces[2][0] = face1;
-              splitfaces[2][1] = BSPResult.Points.size() - 1;
-              splitfaces[2][2] = BSPResult.Points.size() - 2;
-
-              result.cnt += 1;
-
-              for (int l = 0; l < 3; l++) {
-                float dist = pointSideCheck(BSPResult.Points[splitfaces[l][0]],
-                                            result.plane);
-                if (dist >= 0.f)
-                  result.ResultFacesA.push_back(splitfaces[l]);
-                else
-                  result.ResultFacesB.push_back(splitfaces[l]);
-              }
-            }
-            facecheck = true;
-            break;
-          }
-        }
-        if (facecheck) break;
+      // Re-order vertices so the isolated single vertex is always index 0
+      uint32_t idx0 = 0, idx1 = 1, idx2 = 2;
+      if ((frontCount == 1 && dists[1] > epsilon) ||
+          (backCount == 1 && dists[1] < -epsilon)) {
+        idx0 = 1;
+        idx1 = 2;
+        idx2 = 0;
+      } else if ((frontCount == 1 && dists[2] > epsilon) ||
+                 (backCount == 1 && dists[2] < -epsilon)) {
+        idx0 = 2;
+        idx1 = 0;
+        idx2 = 1;
       }
-      if (!facecheck) {
-        float dist = pointSideCheck(BSPResult.Points[face[0]], result.plane);
-        if (dist >= 0.f)
-          result.ResultFacesA.push_back(face);
-        else
-          result.ResultFacesB.push_back(face);
+
+      glm::vec3 v0 = BSPResult.Points[face[idx0]];
+      glm::vec3 v1 = BSPResult.Points[face[idx1]];
+      glm::vec3 v2 = BSPResult.Points[face[idx2]];
+
+      float tA = 0.5f, tB = 0.5f;
+      linePlaneIntersection(tA, v0, v1, result.plane);
+      linePlaneIntersection(tB, v0, v2, result.plane);
+
+      glm::vec3 ptA = v0 + (v1 - v0) * tA;
+      glm::vec3 ptB = v0 + (v2 - v0) * tB;
+      BSPResult.Points.push_back(ptA);
+      BSPResult.Points.push_back(ptB);
+
+      uint32_t iA = BSPResult.Points.size() - 2;
+      uint32_t iB = BSPResult.Points.size() - 1;
+
+      // Construct split sub-triangles safely
+      std::array<uint32_t, 3> tris[3] = {{face[idx0], iA, iB},
+                                         {iA, face[idx1], face[idx2]},
+                                         {iA, face[idx2], iB}};
+
+      result.cnt += 1;
+
+      for (auto& tri : tris) {
+        glm::vec3 vert[3];
+
+        for (int i = 0; i < 3; i++) vert[i] = BSPResult.Points[tri[i]];
+
+        glm::vec3 center = (vert[0] + vert[1] + vert[2]) / 3.0f;
+
+        float faceepsilon = 0.0001f;
+        if (glm::distance(vert[0], vert[1]) <= faceepsilon ||
+            glm::distance(vert[0], vert[2]) <= faceepsilon ||
+            glm::distance(vert[1], vert[2]) <= faceepsilon) {
+          result.amountoffacesadded++;
+          result.currentfaces.push_back(tri);
+        } else if (pointSideCheck(center, result.plane) >= 0.0f) {
+          result.ResultFacesA.push_back(tri);
+        } else {
+          result.ResultFacesB.push_back(tri);
+        }
       }
     }
   }
@@ -245,10 +191,10 @@ void BSPcreate(std::vector<std::array<uint32_t, 3>> Faces, bool isA,
           (!checkthing ||
            ((std::abs((int)result.ResultFacesA.size() -
                       (int)result.ResultFacesB.size()) +
-                 result.cnt * 1.f + result.amountoffacesadded * 1.f >
+                 result.cnt * 3.f + result.amountoffacesadded * 1.f >
              std::abs((int)temp.ResultFacesA.size() -
                       (int)temp.ResultFacesB.size()) +
-                 temp.cnt * 1.f + temp.amountoffacesadded * 1.f)))) {
+                 temp.cnt * 3.f + temp.amountoffacesadded * 1.f)))) {
         checkthing = true;
         result = temp;
       }
