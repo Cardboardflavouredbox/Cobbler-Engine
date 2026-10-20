@@ -206,6 +206,7 @@ BoneResult applybonessingleaction(uint32_t bonecode,
                                   ModelGroupClass::Bone& inputbone,
                                   uint32_t actioncode,
                                   ModelGroupClass* modelgroup, float frame) {
+  if (Settings->crunchyanimations) frame = std::floorf(frame);
   uint32_t boneindex = bonecode;
   BoneResult boneresult;
   boneresult.head = inputbone.head;

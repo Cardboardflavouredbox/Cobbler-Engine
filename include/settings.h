@@ -14,13 +14,15 @@
 enum Renderertype { Software, OpenGL1, OpenGL3, OpenGL4, Vulkan };
 
 struct SettingsClass {
- public:
   uint16_t resolutionx = 640, resolutiony = 360;
   int fov = 90;
   int fps = 60;
   bool vsync = false;
   Renderertype graphicsmode = OpenGL3;
   glm::vec2 mousesensitivity = glm::vec2({1, 1});
+
+  bool autoreload = false;
+  bool crunchyanimations = false;
 };
 
 LIB_API extern std::unique_ptr<SettingsClass> Settings;

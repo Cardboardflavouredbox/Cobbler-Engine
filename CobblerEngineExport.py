@@ -49,7 +49,7 @@ def write_some_data(context, filepath):
     
     
     for obj in selected_objects:
-        if obj and obj.library is None and obj.type == 'ARMATURE':
+        if obj and obj.type == 'ARMATURE':
             for bone in obj.pose.bones:
                 bone.location = (0.0, 0.0, 0.0)
                 bone.rotation_quaternion = (1.0, 0.0, 0.0, 0.0)
