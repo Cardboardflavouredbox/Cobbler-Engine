@@ -20,6 +20,8 @@ void serialize(S& s, ParticleSpawnInfo& o) {
   s.container4b(o.position);
   s.container4b(o.direction);
   s.text1b(o.name, 32);
+  s.value1b(o.SourcePlayer);
+  s.value8b(o.SourceEntityIndex);
 }
 
 template <typename S>

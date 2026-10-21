@@ -276,6 +276,10 @@ glm::vec3 GetRespawnPoint(int teamindex) {
 
 void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
   if (Global->IsOnline && OnlineSend) {  // online code stuff
+    if (!Particleinfo.SourcePlayer && Particleinfo.SourceEntityIndex == 0) {
+      Particleinfo.SourcePlayer = true;
+      Particleinfo.SourceEntityIndex = UserID;
+    }
     std::vector<uint8_t> buffer{};
 
     auto writtenSize = bitsery::quickSerialization<
@@ -284,6 +288,12 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
 
     CobblerQueueData("ParticleSpawn", buffer, writtenSize);
   }
+
+  if (Particleinfo.SourcePlayer && Particleinfo.SourceEntityIndex == UserID) {
+    Particleinfo.SourcePlayer = false;
+    Particleinfo.SourceEntityIndex = 0;
+  }
+
   uint32_t temp = ParticleMapEmptyIndex();
   Particle* tempparticle;
   if (ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].empty()) {
@@ -294,6 +304,14 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
         ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].front();
     ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].pop();
     tempparticle->setup(temp);
+  }
+
+  if (Particleinfo.SourcePlayer) {
+    tempparticle->SourceEntity =
+        GlobalNetworkStuff->PlayerNetStuff[Particleinfo.SourceEntityIndex]
+            .PlayerEntity;
+  } else {
+    tempparticle->SourceEntity = Entities[Particleinfo.SourceEntityIndex];
   }
 
   tempparticle->name = Particleinfo.name;
