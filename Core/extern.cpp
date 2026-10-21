@@ -108,6 +108,10 @@ uint32_t EntityMapEmptyIndex() {
 
 uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
   if (Global->IsOnline && OnlineSend && !IsServer) {
+    if (!Entityinfo.SourcePlayer && Entityinfo.SourceEntityIndex == 0) {
+      Entityinfo.SourcePlayer = true;
+      Entityinfo.SourceEntityIndex = UserID;
+    }
     std::vector<uint8_t> buffer{};
 
     auto writtenSize = bitsery::quickSerialization<
@@ -116,6 +120,10 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
 
     CobblerQueueConfirmedData(0, "LocalEntity", buffer, writtenSize);
     return 0;
+  }
+  if (Entityinfo.SourcePlayer && Entityinfo.SourceEntityIndex == UserID) {
+    Entityinfo.SourcePlayer = false;
+    Entityinfo.SourceEntityIndex = 0;
   }
   uint32_t temp = EntityMapEmptyIndex();
   Entity* tempentity;
@@ -151,6 +159,19 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
   for (int i = 0; i < 2; i++) {
     tempentity->dir[i] = Entityinfo.direction[i];
   }
+
+  if (Entityinfo.SourceExists) {
+    if (Entityinfo.SourcePlayer) {
+      tempentity->SourceEntity =
+          GlobalNetworkStuff->PlayerNetStuff[Entityinfo.SourceEntityIndex]
+              .PlayerEntity;
+    } else {
+      tempentity->SourceEntity = Entities[Entityinfo.SourceEntityIndex];
+    }
+  } else {
+    tempentity->SourceEntity = NULL;
+  }
+
   Entities[temp] = tempentity;
   return temp;
 }
@@ -306,12 +327,16 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
     tempparticle->setup(temp);
   }
 
-  if (Particleinfo.SourcePlayer) {
-    tempparticle->SourceEntity =
-        GlobalNetworkStuff->PlayerNetStuff[Particleinfo.SourceEntityIndex]
-            .PlayerEntity;
+  if (Particleinfo.SourceExists) {
+    if (Particleinfo.SourcePlayer) {
+      tempparticle->SourceEntity =
+          GlobalNetworkStuff->PlayerNetStuff[Particleinfo.SourceEntityIndex]
+              .PlayerEntity;
+    } else {
+      tempparticle->SourceEntity = Entities[Particleinfo.SourceEntityIndex];
+    }
   } else {
-    tempparticle->SourceEntity = Entities[Particleinfo.SourceEntityIndex];
+    tempparticle->SourceEntity = NULL;
   }
 
   tempparticle->name = Particleinfo.name;

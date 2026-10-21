@@ -243,7 +243,7 @@ BoneResult applybonessingleaction(uint32_t bonecode,
           float a = ((float)frame - (float)framebefore) /
                     ((float)key - (float)framebefore);
           // lerp values.
-          rot = glm::mix(rot, val.rot, a);
+          rot = glm::slerp(rot, val.rot, a);
           pos = glm::mix(pos, val.pos, a);
           scale = glm::mix(scale, val.scale, a);
           break;
@@ -322,7 +322,7 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
           float a = ((float)frame - (float)framebefore) /
                     ((float)key - (float)framebefore);
           // lerp values.
-          rot = glm::mix(rot, val.rot, a);
+          rot = glm::slerp(rot, val.rot, a);
           pos = glm::mix(pos, val.pos, a);
           scale = glm::mix(scale, val.scale, a);
           break;
@@ -367,7 +367,7 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
       } else {
         pos = glm::mix(pos, pos2, lerpamount);
         scale = glm::mix(scale, scale2, lerpamount);
-        rot = glm::mix(rot, rot2, lerpamount);
+        rot = glm::slerp(rot, rot2, lerpamount);
       }
     }
 

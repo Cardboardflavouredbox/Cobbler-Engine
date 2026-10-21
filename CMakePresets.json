@@ -9,8 +9,7 @@
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/usr/bin/clang",
-                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++"
             }
         },
         {
@@ -21,8 +20,7 @@
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/usr/bin/gcc",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++"
             }
         },
         {
@@ -33,8 +31,7 @@
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/usr/bin/gcc-14",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++-14",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++-14"
             }
         },
         {
@@ -45,8 +42,7 @@
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/usr/bin/gcc-14",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++-14",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++-14"
             }
         },
         {
@@ -71,8 +67,7 @@
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "c:/w64devkit/bin/gcc.exe",
-                "CMAKE_CXX_COMPILER": "c:/w64devkit/bin/g++.exe",
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_CXX_COMPILER": "c:/w64devkit/bin/g++.exe"
             }
         },
         {
@@ -88,8 +83,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "d:/w64devkit/bin/gcc.exe",
-                "CMAKE_CXX_COMPILER": "d:/w64devkit/bin/g++.exe",
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_CXX_COMPILER": "d:/w64devkit/bin/g++.exe"
             }
         }
     ],
@@ -99,6 +93,20 @@
             "displayName": "Visual Studio Community 2022 Release - x86_amd64 - Release",
             "configurePreset": "Visual Studio Community 2022 Release - x86_amd64",
             "configuration": "Release"
+        },
+        {
+            "name": "Clang Release",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "MacOS",
+            "configuration": "Release"
+        },
+        {
+            "name": "Clang Debug",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "MacOS",
+            "configuration": "Debug"
         }
     ]
 }

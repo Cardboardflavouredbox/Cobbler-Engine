@@ -21,6 +21,8 @@ struct ParticleSpawnInfo {
   std::string name;
   uint32_t ParticleCode;
   std::array<float, 3> position, direction;
+
+  bool SourceExists;
   bool SourcePlayer;
   uint64_t SourceEntityIndex;
 };

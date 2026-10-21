@@ -32,6 +32,10 @@ struct EntitySpawnInfo {
   std::array<float, 2> direction;
   int teamindex;
   float hp = -1;
+
+  bool SourceExists;
+  bool SourcePlayer;
+  uint64_t SourceEntityIndex;
 };
 
 struct EntityDamageInfo {
@@ -50,6 +54,8 @@ struct Entity {
   uint32_t EntityIndex;
   std::string name;
   uint32_t EntityCode;
+
+  Entity* SourceEntity;
 
   int State;
   // float Stateanimend = 0, Stateanim = 0;
