@@ -28,7 +28,11 @@ struct ModelGroupClass {
       glm::quat rot;
     };
     Pose restpose;
-    std::unordered_map<uint32_t, std::map<uint32_t, Pose>> Poses;
+    struct PosesStruct {
+      std::unordered_map<uint32_t, std::map<uint32_t, glm::vec3>> pos, scale;
+      std::unordered_map<uint32_t, std::map<uint32_t, glm::quat>> rot;
+    };
+    PosesStruct Poses;
   };
   struct visibilitything {
     std::string name;

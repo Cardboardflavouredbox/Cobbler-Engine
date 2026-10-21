@@ -1616,11 +1616,11 @@ bool init() {
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
-                  modelgroup.Bonemap[boneindex].Poses[poseindex].try_emplace(
-                      index2);
                   modelgroup.Bonemap[boneindex]
-                      .Poses[poseindex][index2]
-                      .pos[index] = temp;
+                      .Poses.pos[poseindex]
+                      .try_emplace(index2);
+                  modelgroup.Bonemap[boneindex]
+                      .Poses.pos[poseindex][index2][index] = temp;
                 }
               } else if (strcmp(thing, "rotation_quaternion") == 0) {
                 while (newlinecheck != '\n') {
@@ -1628,22 +1628,22 @@ bool init() {
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
-                  modelgroup.Bonemap[boneindex].Poses[poseindex].try_emplace(
-                      index2);
                   modelgroup.Bonemap[boneindex]
-                      .Poses[poseindex][index2]
-                      .rot[(index + 3) % 4] = temp;
+                      .Poses.rot[poseindex]
+                      .try_emplace(index2);
+                  modelgroup.Bonemap[boneindex]
+                      .Poses.rot[poseindex][index2][(index + 3) % 4] = temp;
                 }
               } else if (strcmp(thing, "scale") == 0) {
                 while (newlinecheck != '\n') {
                   uint32_t index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-                  modelgroup.Bonemap[boneindex].Poses[poseindex].try_emplace(
-                      index2);
                   modelgroup.Bonemap[boneindex]
-                      .Poses[poseindex][index2]
-                      .scale[index] = temp;
+                      .Poses.scale[poseindex]
+                      .try_emplace(index2);
+                  modelgroup.Bonemap[boneindex]
+                      .Poses.scale[poseindex][index2][index] = temp;
                 }
               }
             }  // Object from other file.
