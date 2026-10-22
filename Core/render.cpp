@@ -220,79 +220,78 @@ BoneResult applybonessingleaction(uint32_t bonecode,
     auto& posesscale = bone->Poses.scale[actioncode];
     auto& posesrot = bone->Poses.rot[actioncode];
 
-    uint32_t framebefore = modelgroup->anim[actioncode][0];
     glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
     glm::quat rot = glm::quat(1, 0, 0, 0);
     if (!posespos.empty()) {
-      pos = posespos.begin()->second;
-      for (auto const& [key, val] : posespos) {
-        if (frame == key) {
-          pos = val;
-          break;
-        } else if (frame > key) {
-          pos = val;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
+      auto it = posespos.lower_bound((uint32_t)std::ceilf(frame));
 
-          pos = glm::mix(pos, val, a);
-          break;
-        }
+      if (it == posespos.end()) {
+        pos = posespos.rbegin()->second;
+      } else if (it->first == frame || it == posespos.begin()) {
+        pos = it->second;
+      } else {
+        auto prev_it = std::prev(it);
+
+        float next_frame = it->first;
+        float prev_frame = prev_it->first;
+
+        float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+        pos = glm::mix(prev_it->second, it->second, a);
       }
     }
+
     if (!posesscale.empty()) {
-      scale = posesscale.begin()->second;
-      for (auto const& [key, val] : posesscale) {
-        if (frame == key) {
-          scale = val;
-          break;
-        } else if (frame > key) {
-          scale = val;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
-          // lerp values.
-          scale = glm::mix(scale, val, a);
-          break;
-        }
-      }
-    }
-    if (!posesrot.empty()) {
-      rot = posesrot.begin()->second;
-      for (auto const& [key, val] : posesrot) {
-        if (frame == key) {
-          rot = val;
-          break;
-        } else if (frame > key) {
-          rot = val;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
+      auto it = posesscale.lower_bound((uint32_t)std::ceilf(frame));
 
-          glm::quat temprot = val;
-          if (glm::dot(rot, temprot) < 0.0f) {
-            temprot = -temprot;
-          }
-          rot = glm::mix(rot, temprot, a);
-          break;
-        }
+      if (it == posesscale.end()) {
+        scale = posesscale.rbegin()->second;
+      } else if (it->first == frame || it == posesscale.begin()) {
+        scale = it->second;
+      } else {
+        auto prev_it = std::prev(it);
+
+        float next_frame = it->first;
+        float prev_frame = prev_it->first;
+
+        float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+        scale = glm::mix(prev_it->second, it->second, a);
       }
     }
+
+    if (!posesrot.empty()) {
+      auto it = posesrot.lower_bound((uint32_t)std::ceilf(frame));
+
+      if (it == posesrot.end()) {
+        rot = posesrot.rbegin()->second;
+      } else if (it->first == frame || it == posesrot.begin()) {
+        rot = it->second;
+      } else {
+        auto prev_it = std::prev(it);
+
+        float next_frame = it->first;
+        float prev_frame = prev_it->first;
+
+        float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+        rot = glm::mix(prev_it->second, it->second, a);
+      }
+    }
+
     // the axis translation code of fear and despair...
     float angle = glm::angle(rot);
 
     glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
 
-    glm::vec3 axis =
-        glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * glm::axis(rot);
+    glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis);
+
+    glm::vec3 axis = axisquat * glm::axis(rot);
 
     axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
                                          : glm::vec3(0, 1, 0);
 
-    glm::quat final_quat = glm::angleAxis(angle, axis);
+    glm::quat final_quat = glm::normalize(glm::angleAxis(angle, axis));
 
     if (boneindex == bonecode &&
         (pos != glm::vec3(0) || scale != glm::vec3(1) ||
@@ -335,64 +334,64 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
     uint32_t framebefore = modelgroup->anim[actioncode[0]][0];
     glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
     glm::quat rot = glm::quat(1, 0, 0, 0);
-    if (!posespos.empty()) {
-      pos = posespos.begin()->second;
-      for (auto const& [key, val] : posespos) {
-        if (frame == key) {
-          pos = val;
-          break;
-        } else if (frame > key) {
-          pos = val;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
+    // if (!posespos.empty()) {
+    //   pos = posespos.begin()->second;
+    //   for (auto const& [key, val] : posespos) {
+    //     if (frame == key) {
+    //       pos = val;
+    //       break;
+    //     } else if (frame > key) {
+    //       pos = val;
+    //       framebefore = key;
+    //     } else {
+    //       float a = ((float)frame - (float)framebefore) /
+    //                 ((float)key - (float)framebefore);
 
-          pos = glm::mix(pos, val, a);
-          break;
-        }
-      }
-    }
-    if (!posesscale.empty()) {
-      scale = posesscale.begin()->second;
-      for (auto const& [key, val] : posesscale) {
-        if (frame == key) {
-          scale = val;
-          break;
-        } else if (frame > key) {
-          scale = val;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
-          // lerp values.
-          scale = glm::mix(scale, val, a);
-          break;
-        }
-      }
-    }
-    if (!posesrot.empty()) {
-      rot = posesrot.begin()->second;
-      for (auto const& [key, val] : posesrot) {
-        if (frame == key) {
-          rot = val;
-          break;
-        } else if (frame > key) {
-          rot = val;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
+    //       pos = glm::mix(pos, val, a);
+    //       break;
+    //     }
+    //   }
+    // }
+    // if (!posesscale.empty()) {
+    //   scale = posesscale.begin()->second;
+    //   for (auto const& [key, val] : posesscale) {
+    //     if (frame == key) {
+    //       scale = val;
+    //       break;
+    //     } else if (frame > key) {
+    //       scale = val;
+    //       framebefore = key;
+    //     } else {
+    //       float a = ((float)frame - (float)framebefore) /
+    //                 ((float)key - (float)framebefore);
+    //       // lerp values.
+    //       scale = glm::mix(scale, val, a);
+    //       break;
+    //     }
+    //   }
+    // }
+    // if (!posesrot.empty()) {
+    //   rot = posesrot.begin()->second;
+    //   for (auto const& [key, val] : posesrot) {
+    //     if (frame == key) {
+    //       rot = val;
+    //       break;
+    //     } else if (frame > key) {
+    //       rot = val;
+    //       framebefore = key;
+    //     } else {
+    //       float a = ((float)frame - (float)framebefore) /
+    //                 ((float)key - (float)framebefore);
 
-          glm::quat temprot = val;
-          if (glm::dot(rot, temprot) < 0.0f) {
-            temprot = -temprot;
-          }
-          rot = glm::mix(rot, temprot, a);
-          break;
-        }
-      }
-    }
+    //       glm::quat temprot = val;
+    //       if (glm::dot(rot, temprot) < 0.0f) {
+    //         temprot = -temprot;
+    //       }
+    //       rot = glm::mix(rot, temprot, a);
+    //       break;
+    //     }
+    //   }
+    // }
 
     auto& posespos2 = bone->Poses.pos[actioncode[1]];
     auto& posesscale2 = bone->Poses.scale[actioncode[1]];
@@ -401,64 +400,64 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
     framebefore = modelgroup->anim[actioncode[1]][0];
     glm::vec3 pos2 = glm::vec3(0), scale2 = glm::vec3(1);
     glm::quat rot2 = glm::quat(1, 0, 0, 0);
-    if (!posespos2.empty()) {
-      pos2 = posespos2.begin()->second;
-      for (auto const& [key, val] : posespos2) {
-        if (frame == key) {
-          pos2 = val;
-          break;
-        } else if (frame > key) {
-          pos2 = val;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
+    // if (!posespos2.empty()) {
+    //   pos2 = posespos2.begin()->second;
+    //   for (auto const& [key, val] : posespos2) {
+    //     if (frame == key) {
+    //       pos2 = val;
+    //       break;
+    //     } else if (frame > key) {
+    //       pos2 = val;
+    //       framebefore = key;
+    //     } else {
+    //       float a = ((float)frame - (float)framebefore) /
+    //                 ((float)key - (float)framebefore);
 
-          pos2 = glm::mix(pos2, val, a);
-          break;
-        }
-      }
-    }
-    if (!posesscale2.empty()) {
-      scale2 = posesscale2.begin()->second;
-      for (auto const& [key, val] : posesscale2) {
-        if (frame == key) {
-          scale2 = val;
-          break;
-        } else if (frame > key) {
-          scale2 = val;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
-          // lerp values.
-          scale2 = glm::mix(scale2, val, a);
-          break;
-        }
-      }
-    }
-    if (!posesrot2.empty()) {
-      rot2 = posesrot2.begin()->second;
-      for (auto const& [key, val] : posesrot2) {
-        if (frame == key) {
-          rot2 = val;
-          break;
-        } else if (frame > key) {
-          rot2 = val;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
+    //       pos2 = glm::mix(pos2, val, a);
+    //       break;
+    //     }
+    //   }
+    // }
+    // if (!posesscale2.empty()) {
+    //   scale2 = posesscale2.begin()->second;
+    //   for (auto const& [key, val] : posesscale2) {
+    //     if (frame == key) {
+    //       scale2 = val;
+    //       break;
+    //     } else if (frame > key) {
+    //       scale2 = val;
+    //       framebefore = key;
+    //     } else {
+    //       float a = ((float)frame - (float)framebefore) /
+    //                 ((float)key - (float)framebefore);
+    //       // lerp values.
+    //       scale2 = glm::mix(scale2, val, a);
+    //       break;
+    //     }
+    //   }
+    // }
+    // if (!posesrot2.empty()) {
+    //   rot2 = posesrot2.begin()->second;
+    //   for (auto const& [key, val] : posesrot2) {
+    //     if (frame == key) {
+    //       rot2 = val;
+    //       break;
+    //     } else if (frame > key) {
+    //       rot2 = val;
+    //       framebefore = key;
+    //     } else {
+    //       float a = ((float)frame - (float)framebefore) /
+    //                 ((float)key - (float)framebefore);
 
-          glm::quat temprot = val;
-          if (glm::dot(rot2, temprot) < 0.0f) {
-            temprot = -temprot;
-          }
-          rot2 = glm::mix(rot2, temprot, a);
-          break;
-        }
-      }
-    }
+    //       glm::quat temprot = val;
+    //       if (glm::dot(rot2, temprot) < 0.0f) {
+    //         temprot = -temprot;
+    //       }
+    //       rot2 = glm::mix(rot2, temprot, a);
+    //       break;
+    //     }
+    //   }
+    // }
 
     if (posespos.empty()) {
       pos = pos2;
@@ -489,7 +488,7 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
     axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
                                          : glm::vec3(0, 1, 0);
 
-    glm::quat final_quat = glm::angleAxis(angle, axis);
+    glm::quat final_quat = glm::angleAxis(angle + bone->roll, axis);
 
     if (boneindex == bonecode &&
         (pos != glm::vec3(0) || scale != glm::vec3(1) ||

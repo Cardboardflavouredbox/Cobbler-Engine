@@ -1570,13 +1570,15 @@ bool init() {
               poseindex = indexthing;
             } else if (strcmp(lineHeader, "SB") == 0) {  // Static(?) Bone.
               char name[64], parent[64];
+              float roll;
               glm::vec3 head, tail;
               ModelGroupClass::Bone::Pose temppose;
 
               int what = fscanf(
-                  file, "%s %f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f %f %s",
-                  name, &head.x, &head.y, &head.z, &tail.x, &tail.y, &tail.z,
-                  &temppose.pos[0], &temppose.pos[1], &temppose.pos[2],
+                  file,
+                  "%s %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f %f %s",
+                  name, &roll, &head.x, &head.y, &head.z, &tail.x, &tail.y,
+                  &tail.z, &temppose.pos[0], &temppose.pos[1], &temppose.pos[2],
                   &temppose.scale[0], &temppose.scale[1], &temppose.scale[2],
                   &temppose.rot[3], &temppose.rot[0], &temppose.rot[1],
                   &temppose.rot[2], parent);
@@ -1586,6 +1588,7 @@ bool init() {
               modelgroup.Bonemap[boneindex].head = head;
               modelgroup.Bonemap[boneindex].tail = tail;
               modelgroup.Bonemap[boneindex].restpose = temppose;
+              modelgroup.Bonemap[boneindex].roll = roll;
 
             } else if (strcmp(lineHeader, "FCV") == 0) {  // object visibility
               char name[64];
