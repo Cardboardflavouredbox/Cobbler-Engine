@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtx/projection.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <utility>
 
@@ -202,6 +203,87 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[]) {
   }
 }
 
+struct posesresult {
+  glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
+  glm::quat rot = glm::quat(1, 0, 0, 0);
+};
+
+posesresult posesmapprocess(ModelGroupClass::Bone* bone, uint32_t actioncode,
+                            float frame) {
+  posesresult result;
+
+  auto& posespos = bone->Poses.pos[actioncode];
+  auto& posesscale = bone->Poses.scale[actioncode];
+  auto& posesrot = bone->Poses.rot[actioncode];
+
+  if (!posespos.empty()) {
+    auto it = posespos.lower_bound((uint32_t)std::ceilf(frame));
+
+    if (it == posespos.end()) {
+      result.pos = posespos.rbegin()->second;
+    } else if (it->first == frame || it == posespos.begin()) {
+      result.pos = it->second;
+    } else {
+      auto prev_it = std::prev(it);
+
+      float next_frame = it->first;
+      float prev_frame = prev_it->first;
+
+      float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+      result.pos = glm::mix(prev_it->second, it->second, a);
+    }
+  }
+
+  if (!posesscale.empty()) {
+    auto it = posesscale.lower_bound((uint32_t)std::ceilf(frame));
+
+    if (it == posesscale.end()) {
+      result.scale = posesscale.rbegin()->second;
+    } else if (it->first == frame || it == posesscale.begin()) {
+      result.scale = it->second;
+    } else {
+      auto prev_it = std::prev(it);
+
+      float next_frame = it->first;
+      float prev_frame = prev_it->first;
+
+      float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+      result.scale = glm::mix(prev_it->second, it->second, a);
+    }
+  }
+
+  if (!posesrot.empty()) {
+    auto it = posesrot.lower_bound((uint32_t)std::ceilf(frame));
+
+    if (it == posesrot.end()) {
+      result.rot = posesrot.rbegin()->second;
+    } else if (it->first == frame || it == posesrot.begin()) {
+      result.rot = it->second;
+    } else {
+      auto prev_it = std::prev(it);
+
+      float next_frame = it->first;
+      float prev_frame = prev_it->first;
+
+      float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+      glm::quat tempquat1 = (prev_it->second), tempquat2 = (it->second);
+
+      if (glm::dot(tempquat1, tempquat2) < 0.0f) {
+        tempquat2 = -tempquat2;
+      }
+
+      glm::quat tempresult = glm::mix(tempquat1, tempquat2, a);
+
+      result.rot = tempresult;
+    }
+  }
+
+  return result;
+}
+
 BoneResult applybonessingleaction(uint32_t bonecode,
                                   ModelGroupClass::Bone& inputbone,
                                   uint32_t actioncode,
@@ -216,97 +298,38 @@ BoneResult applybonessingleaction(uint32_t bonecode,
   while (boneindex != uint32_t(-1)) {
     ModelGroupClass::Bone* bone = &modelgroup->Bonemap[boneindex];
 
-    auto& posespos = bone->Poses.pos[actioncode];
-    auto& posesscale = bone->Poses.scale[actioncode];
-    auto& posesrot = bone->Poses.rot[actioncode];
-
-    glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
-    glm::quat rot = glm::quat(1, 0, 0, 0);
-    if (!posespos.empty()) {
-      auto it = posespos.lower_bound((uint32_t)std::ceilf(frame));
-
-      if (it == posespos.end()) {
-        pos = posespos.rbegin()->second;
-      } else if (it->first == frame || it == posespos.begin()) {
-        pos = it->second;
-      } else {
-        auto prev_it = std::prev(it);
-
-        float next_frame = it->first;
-        float prev_frame = prev_it->first;
-
-        float a = (frame - prev_frame) / (next_frame - prev_frame);
-
-        pos = glm::mix(prev_it->second, it->second, a);
-      }
-    }
-
-    if (!posesscale.empty()) {
-      auto it = posesscale.lower_bound((uint32_t)std::ceilf(frame));
-
-      if (it == posesscale.end()) {
-        scale = posesscale.rbegin()->second;
-      } else if (it->first == frame || it == posesscale.begin()) {
-        scale = it->second;
-      } else {
-        auto prev_it = std::prev(it);
-
-        float next_frame = it->first;
-        float prev_frame = prev_it->first;
-
-        float a = (frame - prev_frame) / (next_frame - prev_frame);
-
-        scale = glm::mix(prev_it->second, it->second, a);
-      }
-    }
-
-    if (!posesrot.empty()) {
-      auto it = posesrot.lower_bound((uint32_t)std::ceilf(frame));
-
-      if (it == posesrot.end()) {
-        rot = posesrot.rbegin()->second;
-      } else if (it->first == frame || it == posesrot.begin()) {
-        rot = it->second;
-      } else {
-        auto prev_it = std::prev(it);
-
-        float next_frame = it->first;
-        float prev_frame = prev_it->first;
-
-        float a = (frame - prev_frame) / (next_frame - prev_frame);
-
-        rot = glm::mix(prev_it->second, it->second, a);
-      }
-    }
+    posesresult poseresultthing = posesmapprocess(bone, actioncode, frame);
 
     // the axis translation code of fear and despair...
-    float angle = glm::angle(rot);
+    float angle = glm::angle(poseresultthing.rot);
 
-    glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
+    glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), bone->yaxis);
 
-    glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis);
-
-    glm::vec3 axis = axisquat * glm::axis(rot);
+    glm::vec3 axis = axisquat * glm::axis(poseresultthing.rot);
 
     axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
                                          : glm::vec3(0, 1, 0);
 
-    glm::quat final_quat = glm::normalize(glm::angleAxis(angle, axis));
+    glm::quat final_quat = glm::angleAxis(angle, axis);
 
-    if (boneindex == bonecode &&
-        (pos != glm::vec3(0) || scale != glm::vec3(1) ||
-         final_quat != glm::quat(1, 0, 0, 0)))
-      boneresult.check = true;
+    if (boneindex == bonecode) {
+      if (poseresultthing.pos != glm::vec3(0) ||
+          poseresultthing.scale != glm::vec3(1) ||
+          final_quat != glm::quat(1, 0, 0, 0))
+        boneresult.check = true;
+    }
+
+    final_quat = glm::quatLookAt(bone->yaxis, -bone->zaxis) * final_quat;
 
     boneresult.rot = final_quat * boneresult.rot;
 
-    boneresult.scale *= scale;
+    boneresult.scale *= poseresultthing.scale;
 
     boneresult.head = (final_quat) * (boneresult.head - bone->head);
-    boneresult.head *= scale;
+    boneresult.head *= poseresultthing.scale;
     boneresult.head += bone->head;
-    boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
-                       (pos * bone->restpose.scale);
+    boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), bone->yaxis) *
+                       (poseresultthing.pos * bone->restpose.scale);
     boneindex = bone->parent;
   }
   return boneresult;
@@ -327,183 +350,66 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
   while (boneindex != uint32_t(-1)) {
     ModelGroupClass::Bone* bone = &modelgroup->Bonemap[boneindex];
 
+    posesresult poseresultthing = posesmapprocess(bone, actioncode[0], frame),
+                poseresultthing2 = posesmapprocess(bone, actioncode[1], frame);
+
     auto& posespos = bone->Poses.pos[actioncode[0]];
     auto& posesscale = bone->Poses.scale[actioncode[0]];
     auto& posesrot = bone->Poses.rot[actioncode[0]];
 
-    uint32_t framebefore = modelgroup->anim[actioncode[0]][0];
-    glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
-    glm::quat rot = glm::quat(1, 0, 0, 0);
-    // if (!posespos.empty()) {
-    //   pos = posespos.begin()->second;
-    //   for (auto const& [key, val] : posespos) {
-    //     if (frame == key) {
-    //       pos = val;
-    //       break;
-    //     } else if (frame > key) {
-    //       pos = val;
-    //       framebefore = key;
-    //     } else {
-    //       float a = ((float)frame - (float)framebefore) /
-    //                 ((float)key - (float)framebefore);
-
-    //       pos = glm::mix(pos, val, a);
-    //       break;
-    //     }
-    //   }
-    // }
-    // if (!posesscale.empty()) {
-    //   scale = posesscale.begin()->second;
-    //   for (auto const& [key, val] : posesscale) {
-    //     if (frame == key) {
-    //       scale = val;
-    //       break;
-    //     } else if (frame > key) {
-    //       scale = val;
-    //       framebefore = key;
-    //     } else {
-    //       float a = ((float)frame - (float)framebefore) /
-    //                 ((float)key - (float)framebefore);
-    //       // lerp values.
-    //       scale = glm::mix(scale, val, a);
-    //       break;
-    //     }
-    //   }
-    // }
-    // if (!posesrot.empty()) {
-    //   rot = posesrot.begin()->second;
-    //   for (auto const& [key, val] : posesrot) {
-    //     if (frame == key) {
-    //       rot = val;
-    //       break;
-    //     } else if (frame > key) {
-    //       rot = val;
-    //       framebefore = key;
-    //     } else {
-    //       float a = ((float)frame - (float)framebefore) /
-    //                 ((float)key - (float)framebefore);
-
-    //       glm::quat temprot = val;
-    //       if (glm::dot(rot, temprot) < 0.0f) {
-    //         temprot = -temprot;
-    //       }
-    //       rot = glm::mix(rot, temprot, a);
-    //       break;
-    //     }
-    //   }
-    // }
-
-    auto& posespos2 = bone->Poses.pos[actioncode[1]];
-    auto& posesscale2 = bone->Poses.scale[actioncode[1]];
-    auto& posesrot2 = bone->Poses.rot[actioncode[1]];
-
-    framebefore = modelgroup->anim[actioncode[1]][0];
-    glm::vec3 pos2 = glm::vec3(0), scale2 = glm::vec3(1);
-    glm::quat rot2 = glm::quat(1, 0, 0, 0);
-    // if (!posespos2.empty()) {
-    //   pos2 = posespos2.begin()->second;
-    //   for (auto const& [key, val] : posespos2) {
-    //     if (frame == key) {
-    //       pos2 = val;
-    //       break;
-    //     } else if (frame > key) {
-    //       pos2 = val;
-    //       framebefore = key;
-    //     } else {
-    //       float a = ((float)frame - (float)framebefore) /
-    //                 ((float)key - (float)framebefore);
-
-    //       pos2 = glm::mix(pos2, val, a);
-    //       break;
-    //     }
-    //   }
-    // }
-    // if (!posesscale2.empty()) {
-    //   scale2 = posesscale2.begin()->second;
-    //   for (auto const& [key, val] : posesscale2) {
-    //     if (frame == key) {
-    //       scale2 = val;
-    //       break;
-    //     } else if (frame > key) {
-    //       scale2 = val;
-    //       framebefore = key;
-    //     } else {
-    //       float a = ((float)frame - (float)framebefore) /
-    //                 ((float)key - (float)framebefore);
-    //       // lerp values.
-    //       scale2 = glm::mix(scale2, val, a);
-    //       break;
-    //     }
-    //   }
-    // }
-    // if (!posesrot2.empty()) {
-    //   rot2 = posesrot2.begin()->second;
-    //   for (auto const& [key, val] : posesrot2) {
-    //     if (frame == key) {
-    //       rot2 = val;
-    //       break;
-    //     } else if (frame > key) {
-    //       rot2 = val;
-    //       framebefore = key;
-    //     } else {
-    //       float a = ((float)frame - (float)framebefore) /
-    //                 ((float)key - (float)framebefore);
-
-    //       glm::quat temprot = val;
-    //       if (glm::dot(rot2, temprot) < 0.0f) {
-    //         temprot = -temprot;
-    //       }
-    //       rot2 = glm::mix(rot2, temprot, a);
-    //       break;
-    //     }
-    //   }
-    // }
-
     if (posespos.empty()) {
-      pos = pos2;
+      poseresultthing.pos = poseresultthing2.pos;
     } else {
-      pos = glm::mix(pos, pos2, lerpamount);
+      poseresultthing.pos =
+          glm::mix(poseresultthing.pos, poseresultthing2.pos, lerpamount);
     }
 
     if (posesscale.empty()) {
-      scale = scale2;
+      poseresultthing.scale = poseresultthing2.scale;
     } else {
-      scale = glm::mix(scale, scale2, lerpamount);
+      poseresultthing.scale =
+          glm::mix(poseresultthing.scale, poseresultthing2.scale, lerpamount);
     }
 
     if (posesrot.empty()) {
-      rot = rot2;
+      poseresultthing.rot = poseresultthing2.rot;
     } else {
-      rot = glm::mix(rot, rot2, lerpamount);
+      poseresultthing.rot =
+          glm::mix(poseresultthing.rot, poseresultthing2.rot, lerpamount);
     }
 
     // the axis translation code of fear and despair...
-    float angle = glm::angle(rot);
+    float angle = glm::angle(poseresultthing.rot);
 
     glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
 
-    glm::vec3 axis =
-        glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * glm::axis(rot);
+    glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis);
+
+    glm::vec3 axis = axisquat * glm::axis(poseresultthing.rot);
 
     axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
                                          : glm::vec3(0, 1, 0);
 
-    glm::quat final_quat = glm::angleAxis(angle + bone->roll, axis);
+    glm::quat final_quat = glm::normalize(glm::angleAxis(angle, axis));
 
-    if (boneindex == bonecode &&
-        (pos != glm::vec3(0) || scale != glm::vec3(1) ||
-         final_quat != glm::quat(1, 0, 0, 0)))
-      boneresult.check = true;
+    if (boneindex == bonecode) {
+      // glm::quat manual_roll = glm::angleAxis(bone->roll, boneaxis);
+      // final_quat = manual_roll * final_quat;
+      if (poseresultthing.pos != glm::vec3(0) ||
+          poseresultthing.scale != glm::vec3(1) ||
+          final_quat != glm::quat(1, 0, 0, 0))
+        boneresult.check = true;
+    }
 
     boneresult.rot = final_quat * boneresult.rot;
 
-    boneresult.scale *= scale;
+    boneresult.scale *= poseresultthing.scale;
 
     boneresult.head = (final_quat) * (boneresult.head - bone->head);
-    boneresult.head *= scale;
+    boneresult.head *= poseresultthing.scale;
     boneresult.head += bone->head;
     boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
-                       (pos * bone->restpose.scale);
+                       (poseresultthing.pos * bone->restpose.scale);
     boneindex = bone->parent;
   }
   return boneresult;

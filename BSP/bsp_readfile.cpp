@@ -5,7 +5,7 @@
 
 MapBSP BSPResult;
 
-static float epsilon = glm::epsilon<float>();
+const float epsilon = glm::epsilon<float>();
 
 glm::vec4 CreatePlane(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2) {
   glm::vec3 edge1 = v1 - v0;

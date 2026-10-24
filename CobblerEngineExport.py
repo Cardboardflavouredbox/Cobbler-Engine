@@ -87,8 +87,12 @@ def write_some_data(context, filepath):
                         pos = matrix_world.to_translation()
                         
                         axis, roll_radians = p_bone.bone.AxisRollFromMatrix(p_bone.matrix.to_3x3())
+                        
+                        x_axis = p_bone.bone.x_axis
+                        y_axis = p_bone.bone.y_axis
+                        z_axis = p_bone.bone.z_axis
                             
-                        f.write(f"SB {bone.name} {roll_radians:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
+                        f.write(f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
                 elif obj.type == 'MESH':
                     f.write(f"L {bpy.path.display_name_from_filepath(obj.override_library.reference.library.filepath)}/{obj.override_library.reference.name}\n")
             else:
@@ -116,7 +120,11 @@ def write_some_data(context, filepath):
                         
                         axis, roll_radians = p_bone.bone.AxisRollFromMatrix(p_bone.matrix.to_3x3())
                             
-                        f.write(f"SB {bone.name} {roll_radians:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
+                        x_axis = p_bone.bone.x_axis
+                        y_axis = p_bone.bone.y_axis
+                        z_axis = p_bone.bone.z_axis
+                            
+                        f.write(f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
                 elif obj.type == 'MESH':
                     # Get the global transformation matrix
                     matrix_world = obj.matrix_world

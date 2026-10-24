@@ -22,6 +22,8 @@ struct ModelGroupClass {
   std::vector<std::string> Models;
   struct Bone {
     float roll;
+
+    glm::vec3 xaxis, yaxis, zaxis;
     glm::vec3 head, tail;
     uint32_t parent;
     struct Pose {
