@@ -9,6 +9,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtx/projection.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #include <utility>
 
 #include "camera.h"
@@ -208,6 +209,14 @@ struct posesresult {
   glm::quat rot = glm::quat(1, 0, 0, 0);
 };
 
+glm::quat processrot(glm::quat q, ModelGroupClass::Bone* bone) {
+  glm::vec3 eulerthing = glm::eulerAngles(q);
+
+  eulerthing.y = bone->roll;
+
+  return glm::quat(eulerthing);
+}
+
 posesresult posesmapprocess(ModelGroupClass::Bone* bone, uint32_t actioncode,
                             float frame) {
   posesresult result;
@@ -274,6 +283,8 @@ posesresult posesmapprocess(ModelGroupClass::Bone* bone, uint32_t actioncode,
       if (glm::dot(tempquat1, tempquat2) < 0.0f) {
         tempquat2 = -tempquat2;
       }
+      tempquat1 = processrot(tempquat1, bone);
+      tempquat2 = processrot(tempquat2, bone);
 
       glm::quat tempresult = glm::mix(tempquat1, tempquat2, a);
 
@@ -303,7 +314,9 @@ BoneResult applybonessingleaction(uint32_t bonecode,
     // the axis translation code of fear and despair...
     float angle = glm::angle(poseresultthing.rot);
 
-    glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), bone->yaxis);
+    glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
+
+    glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis);
 
     glm::vec3 axis = axisquat * glm::axis(poseresultthing.rot);
 
@@ -319,8 +332,6 @@ BoneResult applybonessingleaction(uint32_t bonecode,
         boneresult.check = true;
     }
 
-    final_quat = glm::quatLookAt(bone->yaxis, -bone->zaxis) * final_quat;
-
     boneresult.rot = final_quat * boneresult.rot;
 
     boneresult.scale *= poseresultthing.scale;
@@ -328,7 +339,7 @@ BoneResult applybonessingleaction(uint32_t bonecode,
     boneresult.head = (final_quat) * (boneresult.head - bone->head);
     boneresult.head *= poseresultthing.scale;
     boneresult.head += bone->head;
-    boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), bone->yaxis) *
+    boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
                        (poseresultthing.pos * bone->restpose.scale);
     boneindex = bone->parent;
   }
@@ -390,7 +401,7 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
     axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
                                          : glm::vec3(0, 1, 0);
 
-    glm::quat final_quat = glm::normalize(glm::angleAxis(angle, axis));
+    glm::quat final_quat = glm::angleAxis(angle, axis);
 
     if (boneindex == bonecode) {
       // glm::quat manual_roll = glm::angleAxis(bone->roll, boneaxis);

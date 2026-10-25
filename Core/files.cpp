@@ -1589,6 +1589,9 @@ bool init() {
               uint32_t boneindex = getboneindex(name);
 
               modelgroup.Bonemap[boneindex].parent = getboneindex(parent);
+              modelgroup.Bonemap[boneindex].xaxis = xaxis;
+              modelgroup.Bonemap[boneindex].yaxis = yaxis;
+              modelgroup.Bonemap[boneindex].zaxis = zaxis;
               modelgroup.Bonemap[boneindex].head = head;
               modelgroup.Bonemap[boneindex].tail = tail;
               modelgroup.Bonemap[boneindex].restpose = temppose;
