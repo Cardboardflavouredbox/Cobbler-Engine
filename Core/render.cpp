@@ -9,7 +9,6 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtx/projection.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/vector_angle.hpp>
 #include <utility>
 
 #include "camera.h"
@@ -210,11 +209,16 @@ struct posesresult {
 };
 
 glm::quat processrot(glm::quat q, ModelGroupClass::Bone* bone) {
-  glm::vec3 eulerthing = glm::eulerAngles(q);
+  glm::vec3 axis = -bone->yaxis;
+  glm::vec3 qVectorPart(q.x, q.y, q.z);
+  glm::vec3 projectedVector = glm::dot(qVectorPart, axis) * axis;
 
-  eulerthing.y = bone->roll + glm::angle(bone->zaxis, glm::vec3(0, 1, 0));
+  glm::quat twist =
+      glm::quat(q.w, projectedVector.x, projectedVector.y, projectedVector.z);
 
-  return glm::quat(eulerthing);
+  twist = glm::angleAxis(0.f, axis) * glm::normalize(twist);
+
+  return glm::normalize(twist);
 }
 
 posesresult posesmapprocess(ModelGroupClass::Bone* bone, uint32_t actioncode,
