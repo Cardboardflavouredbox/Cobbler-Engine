@@ -212,7 +212,7 @@ struct posesresult {
 glm::quat processrot(glm::quat q, ModelGroupClass::Bone* bone) {
   glm::vec3 eulerthing = glm::eulerAngles(q);
 
-  eulerthing.y = bone->roll;
+  eulerthing.y = bone->roll + glm::angle(bone->zaxis, glm::vec3(0, 1, 0));
 
   return glm::quat(eulerthing);
 }
