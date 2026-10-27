@@ -46,8 +46,11 @@ def write_some_data(context, filepath):
     
     scene = bpy.context.scene
     selected_objects = bpy.data.objects
-    
-    
+                
+    for action in bpy.data.actions:
+        if action.library is None:
+            actionthing(action, f)
+            
     for obj in selected_objects:
         if obj and obj.type == 'ARMATURE':
             for bone in obj.pose.bones:
@@ -56,10 +59,7 @@ def write_some_data(context, filepath):
                 bone.rotation_axis_angle = (0.0, 0.0, 1.0, 0.0)
                 bone.rotation_euler = (0.0, 0.0, 0.0)
                 bone.scale = (1.0, 1.0, 1.0)
-                
-    for action in bpy.data.actions:
-        if action.library is None:
-            actionthing(action, f)
+                obj.data.pose_position = 'REST'
             
     for obj in selected_objects:
         if obj and obj.library is None:
@@ -93,8 +93,14 @@ def write_some_data(context, filepath):
                         x_axis = rot_mat[0]
                         y_axis = rot_mat[1]
                         z_axis = rot_mat[2]
+                        
+                        scale = obj.scale
+                        
+                        if obj.parent:
+                            for i in range(3):
+                                scale[i] *= obj.parent.scale[i]
                             
-                        f.write(f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
+                        f.write(f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
                 elif obj.type == 'MESH':
                     f.write(f"L {bpy.path.display_name_from_filepath(obj.override_library.reference.library.filepath)}/{obj.override_library.reference.name}\n")
             else:
@@ -128,7 +134,13 @@ def write_some_data(context, filepath):
                         y_axis = rot_mat[1]
                         z_axis = rot_mat[2]
                             
-                        f.write(f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{obj.scale[0]:f} {obj.scale[1]:f} {obj.scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
+                        scale = obj.scale
+                        
+                        if obj.parent:
+                            for i in range(3):
+                                scale[i] *= obj.parent.scale[i]
+                            
+                        f.write(f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
                 elif obj.type == 'MESH':
                     # Get the global transformation matrix
                     matrix_world = obj.matrix_world
@@ -168,6 +180,8 @@ def write_some_data(context, filepath):
                             f.write(f"/{uv_loop.uv[0]:f} {uv_loop.uv[1]:f}")
                         f.write(f"\n")
     f.close()
+    
+
 
     return {'FINISHED'}
 

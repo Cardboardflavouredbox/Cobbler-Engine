@@ -1171,7 +1171,7 @@ bool initargs(std::vector<std::string> args) {
 }
 
 // bone name to index
-uint32_t getboneindex(std::string name) {
+uint32_t getboneindex(const std::string& name) {
   if (name == "null") return uint32_t(-1);
   if (!BonetoInt.contains(name)) {
     BonetoInt[name] = newboneindex;
@@ -1181,7 +1181,7 @@ uint32_t getboneindex(std::string name) {
 }
 
 // pose name to index
-uint32_t getposeindex(std::string name) {
+uint32_t getposeindex(const std::string& name) {
   if (!PosetoInt.contains(name)) {
     PosetoInt[name] = newposeindex;
     newposeindex++;

@@ -54,7 +54,7 @@ LIB_API extern std::unordered_map<std::string, uint32_t> PosetoInt;
 LIB_API extern uint32_t newposeindex;
 
 extern "C" {
-LIB_API uint32_t getposeindex(std::string name);
+LIB_API uint32_t getposeindex(const std::string& name);
 }
 
 LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;

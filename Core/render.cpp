@@ -338,8 +338,8 @@ BoneResult applybonessingleaction(const uint32_t& bonecode,
   return boneresult;
 }
 
-BoneResult applybonesmultipleactions(uint32_t bonecode,
-                                     ModelGroupClass::Bone& inputbone,
+BoneResult applybonesmultipleactions(const uint32_t& bonecode,
+                                     const ModelGroupClass::Bone& inputbone,
                                      uint32_t actioncode[],
                                      ModelGroupClass* modelgroup, float frame,
                                      float lerpamount) {
@@ -419,7 +419,7 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
 
 // apply animations of bones.
 void modelapplybones(Modeltransform* modeltrans,
-                     Modeltransform::action::actionpose actionposething,
+                     const Modeltransform::action::actionpose& actionposething,
                      ModelGroupClass* modelgroup, float frame) {
   std::unordered_map<uint32_t, BoneResult> LocalBoneResultMap;
   for (auto& [code, bone] : modelgroup->Bonemap) {
@@ -450,7 +450,8 @@ void modelapplybones(Modeltransform* modeltrans,
   BoneResultmapVector.push_back(LocalBoneResultMap);
 }
 
-glm::mat4 transtomatrix(glm::vec3 pos, glm::vec3 scale, glm::quat rot) {
+glm::mat4 transtomatrix(const glm::vec3& pos, const glm::vec3& scale,
+                        const glm::quat& rot) {
   glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), pos);
 
   glm::mat4 rotationMatrix = glm::toMat4(rot);

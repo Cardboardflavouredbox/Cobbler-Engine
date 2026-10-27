@@ -102,7 +102,7 @@ bool CobblerInitNet() {
 }
 
 bool CobblerQueueConfirmedData(uint64_t ID, const char* name,
-                               std::vector<uint8_t> buf, size_t size) {
+                               const std::vector<uint8_t>& buf, size_t size) {
   std::vector<uint8_t>* bufferpointer =
       &ConfirmedSendMap[ID]
            .DataSendPacketBuffers[ConfirmedSendMap[ID].DataSendConfirmID];
@@ -125,7 +125,8 @@ bool CobblerQueueConfirmedData(uint64_t ID, const char* name,
   return true;
 }
 
-bool CobblerQueueData(const char* name, std::vector<uint8_t> buf, size_t size) {
+bool CobblerQueueData(const char* name, const std::vector<uint8_t>& buf,
+                      size_t size) {
   int len = std::strlen(name);
   for (int i = 0; i < len; i++) {
     packetbuffer.push_back(uint8_t(name[i]));
