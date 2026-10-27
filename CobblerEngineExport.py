@@ -94,7 +94,7 @@ def write_some_data(context, filepath):
                         y_axis = rot_mat[1]
                         z_axis = rot_mat[2]
                         
-                        scale = obj.scale
+                        scale = obj.scale.copy()
                         
                         if obj.parent:
                             for i in range(3):
@@ -134,7 +134,7 @@ def write_some_data(context, filepath):
                         y_axis = rot_mat[1]
                         z_axis = rot_mat[2]
                             
-                        scale = obj.scale
+                        scale = obj.scale.copy()
                         
                         if obj.parent:
                             for i in range(3):
