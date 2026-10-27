@@ -208,19 +208,6 @@ struct posesresult {
   glm::quat rot = glm::quat(1, 0, 0, 0);
 };
 
-glm::quat processrot(glm::quat q, ModelGroupClass::Bone* bone) {
-  glm::vec3 axis = -bone->yaxis;
-  glm::vec3 qVectorPart(q.x, q.y, q.z);
-  glm::vec3 projectedVector = glm::dot(qVectorPart, axis) * axis;
-
-  glm::quat twist =
-      glm::quat(q.w, projectedVector.x, projectedVector.y, projectedVector.z);
-
-  twist = glm::angleAxis(0.f, axis) * glm::normalize(twist);
-
-  return glm::normalize(twist);
-}
-
 posesresult posesmapprocess(ModelGroupClass::Bone* bone, uint32_t actioncode,
                             float frame) {
   posesresult result;
@@ -287,8 +274,8 @@ posesresult posesmapprocess(ModelGroupClass::Bone* bone, uint32_t actioncode,
       if (glm::dot(tempquat1, tempquat2) < 0.0f) {
         tempquat2 = -tempquat2;
       }
-      tempquat1 = processrot(tempquat1, bone);
-      tempquat2 = processrot(tempquat2, bone);
+      tempquat1 = (tempquat1);
+      tempquat2 = (tempquat2);
 
       glm::quat tempresult = glm::mix(tempquat1, tempquat2, a);
 
@@ -299,9 +286,9 @@ posesresult posesmapprocess(ModelGroupClass::Bone* bone, uint32_t actioncode,
   return result;
 }
 
-BoneResult applybonessingleaction(uint32_t bonecode,
-                                  ModelGroupClass::Bone& inputbone,
-                                  uint32_t actioncode,
+BoneResult applybonessingleaction(const uint32_t& bonecode,
+                                  const ModelGroupClass::Bone& inputbone,
+                                  const uint32_t& actioncode,
                                   ModelGroupClass* modelgroup, float frame) {
   if (Settings->crunchyanimations) frame = std::floorf(frame);
   uint32_t boneindex = bonecode;
@@ -318,16 +305,17 @@ BoneResult applybonessingleaction(uint32_t bonecode,
     // the axis translation code of fear and despair...
     float angle = glm::angle(poseresultthing.rot);
 
+    glm::vec3 baseaxis = glm::axis(poseresultthing.rot);
+
     glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
 
     glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis);
 
-    glm::vec3 axis = axisquat * glm::axis(poseresultthing.rot);
+    glm::vec3 axis = axisquat * baseaxis;
 
-    axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
-                                         : glm::vec3(0, 1, 0);
+    glm::quat final_quat;
 
-    glm::quat final_quat = glm::angleAxis(angle, axis);
+    final_quat = glm::normalize(glm::angleAxis(angle, axis));
 
     if (boneindex == bonecode) {
       if (poseresultthing.pos != glm::vec3(0) ||
@@ -396,20 +384,19 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
     // the axis translation code of fear and despair...
     float angle = glm::angle(poseresultthing.rot);
 
+    glm::vec3 baseaxis = glm::axis(poseresultthing.rot);
+
     glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
 
     glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis);
 
-    glm::vec3 axis = axisquat * glm::axis(poseresultthing.rot);
+    glm::vec3 axis = axisquat * baseaxis;
 
-    axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
-                                         : glm::vec3(0, 1, 0);
+    glm::quat final_quat;
 
-    glm::quat final_quat = glm::angleAxis(angle, axis);
+    final_quat = glm::normalize(glm::angleAxis(angle, axis));
 
     if (boneindex == bonecode) {
-      // glm::quat manual_roll = glm::angleAxis(bone->roll, boneaxis);
-      // final_quat = manual_roll * final_quat;
       if (poseresultthing.pos != glm::vec3(0) ||
           poseresultthing.scale != glm::vec3(1) ||
           final_quat != glm::quat(1, 0, 0, 0))
