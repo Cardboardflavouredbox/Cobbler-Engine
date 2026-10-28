@@ -1546,6 +1546,7 @@ bool init() {
           GlobalClass::Model model;
 
           std::string tempstr = entry.path().filename().string();
+          uint32_t hitboxboneindex = (uint32_t)-1;
           for (int i = 0; i < 4; i++) tempstr.pop_back();
           namestr = tempstr;
           uint32_t poseindex = (uint32_t)-1;
@@ -1701,6 +1702,23 @@ bool init() {
                 return false;
               }
               model.faces.push_back(face);
+            } else if (strcmp(lineHeader, "H") == 0) {  // Hitbox.
+              char bonename[128];
+              fscanf(file, "%s", bonename);
+              hitboxboneindex = getboneindex(bonename);
+            } else if (strcmp(lineHeader, "HP") == 0) {  // Points.
+              glm::vec3 point;
+              fscanf(file, "%f %f %f\n", &point.x, &point.y, &point.z);
+
+              modelgroup.Bonemap[hitboxboneindex].bonehitbox.points.push_back(
+                  point);
+            } else if (strcmp(lineHeader, "HF") == 0) {  // Faces.
+              std::array<uint32_t, 3> face;
+
+              fscanf(file, "%u %u %u\n", &face[0], &face[1], &face[2]);
+
+              modelgroup.Bonemap[hitboxboneindex].bonehitbox.faces.push_back(
+                  face);
             } else if (strcmp(lineHeader, "T") == 0) {  // Textures.
               char temp[256] = {};
               fscanf(file, "%s\n", temp);

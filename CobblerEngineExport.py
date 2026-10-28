@@ -102,7 +102,30 @@ def write_some_data(context, filepath):
                             
                         f.write(f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
                 elif obj.type == 'MESH':
-                    f.write(f"L {bpy.path.display_name_from_filepath(obj.override_library.reference.library.filepath)}/{obj.override_library.reference.name}\n")
+                    if(obj.get('IsHitbox')):
+                        matrix_world = obj.matrix_world
+                
+                        active_uv_layer = obj.data.uv_layers.active.data
+                        
+                        vgroup_names = {g.index: g.name for g in obj.vertex_groups}
+                        f.write(f"H ")
+                        
+                        if obj.constraints:
+                            for constraint in obj.constraints:
+                                parentname = constraint.subtarget
+                                f.write(f"{parentname}\n")
+                                
+                        for vert in obj.data.vertices:
+                            world_coord = matrix_world @ vert.co
+                            f.write(f"HP {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
+                            f.write(f"\n")
+                        for face in obj.data.polygons:
+                            vertices = list(face.vertices)
+                            normal = face.normal
+                        
+                            f.write(f"HF {vertices[0]} {vertices[1]} {vertices[2]}\n")
+                    else:
+                        f.write(f"L {bpy.path.display_name_from_filepath(obj.override_library.reference.library.filepath)}/{obj.override_library.reference.name}\n")
             else:
                 if obj.type == 'ARMATURE':
                     bones = obj.data.bones
@@ -148,37 +171,55 @@ def write_some_data(context, filepath):
                     active_uv_layer = obj.data.uv_layers.active.data
                     
                     vgroup_names = {g.index: g.name for g in obj.vertex_groups}
-            
-                    f.write(f"O {obj.name}\n")
-                
-                    for s in obj.material_slots:
-                        if s.material and s.material.use_nodes:
-                            for n in s.material.node_tree.nodes:
-                                if n.type == 'TEX_IMAGE':
-                                    f.write(f"T {n.image.name}\n")
-                        
-                    for vert in obj.data.vertices:
-                        # Convert local coordinate to world coordinate
-                        world_coord = matrix_world @ vert.co
-                
-                        # Format and save data: Index, X, Y, Z
-                        f.write(f"P {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
-                        for g in vert.groups:
-                            group_name = vgroup_names.get(g.group, "Unknown Group")
-                            if g.weight > 0: f.write(f" {group_name} {g.weight:.4f}")
-                        f.write(f"\n")
-                    for face in obj.data.polygons:
-                        # Convert local coordinate to world coordinate
-                        vertices = list(face.vertices)
-                        normal = face.normal
                     
-                        # Format and save data: Index, X, Y, Z
-                        f.write(f"F {vertices[0]} {vertices[1]} {vertices[2]}/{normal[0]:f} {normal[1]:f} {normal[2]:f}")
+                    if(obj.get('IsHitbox')):
+                        f.write(f"H ")
                         
-                        for loop_idx in face.loop_indices:
-                            uv_loop = active_uv_layer[loop_idx]
-                            f.write(f"/{uv_loop.uv[0]:f} {uv_loop.uv[1]:f}")
-                        f.write(f"\n")
+                        if obj.constraints:
+                            for constraint in obj.constraints:
+                                parentname = constraint.subtarget
+                                f.write(f"{parentname}\n")
+                                
+                        for vert in obj.data.vertices:
+                            world_coord = matrix_world @ vert.co
+                            f.write(f"HP {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
+                            f.write(f"\n")
+                        for face in obj.data.polygons:
+                            vertices = list(face.vertices)
+                            normal = face.normal
+                        
+                            f.write(f"HF {vertices[0]} {vertices[1]} {vertices[2]}\n")
+                    else:
+                        f.write(f"O {obj.name}\n")
+                    
+                        for s in obj.material_slots:
+                            if s.material and s.material.use_nodes:
+                                for n in s.material.node_tree.nodes:
+                                    if n.type == 'TEX_IMAGE':
+                                        f.write(f"T {n.image.name}\n")
+                            
+                        for vert in obj.data.vertices:
+                            # Convert local coordinate to world coordinate
+                            world_coord = matrix_world @ vert.co
+                    
+                            # Format and save data: Index, X, Y, Z
+                            f.write(f"P {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
+                            for g in vert.groups:
+                                group_name = vgroup_names.get(g.group, "Unknown Group")
+                                if g.weight > 0: f.write(f" {group_name} {g.weight:.4f}")
+                            f.write(f"\n")
+                        for face in obj.data.polygons:
+                            # Convert local coordinate to world coordinate
+                            vertices = list(face.vertices)
+                            normal = face.normal
+                        
+                            # Format and save data: Index, X, Y, Z
+                            f.write(f"F {vertices[0]} {vertices[1]} {vertices[2]}/{normal[0]:f} {normal[1]:f} {normal[2]:f}")
+                            
+                            for loop_idx in face.loop_indices:
+                                uv_loop = active_uv_layer[loop_idx]
+                                f.write(f"/{uv_loop.uv[0]:f} {uv_loop.uv[1]:f}")
+                            f.write(f"\n")
     f.close()
     
 

@@ -10,6 +10,7 @@
 #include "extern.h"
 #include "map.h"
 #include "mapdata.h"
+#include "model.h"
 #include "networkextern.h"
 #include "pi.h"
 
@@ -59,6 +60,27 @@ std::optional<glm::vec3> RayTriIntersect(glm::vec3 ray_origin,
   } else  // This means that there is a line intersection but not a ray
           // intersection.
     return {};
+}
+
+float Entityraycheck(
+    glm::vec3 ray[],
+    Entity* checkentity) {  // returns dist (-1 if not collided)
+  float result = -1;
+  if (checkentity->Modelthing != NULL) {
+    for (auto& [index, bone] :
+         ModelGroupMap[checkentity->Modelthing->name].Bonemap) {
+      for (auto& face : bone.bonehitbox.faces) {
+        const std::vector<glm::vec3>& points = bone.bonehitbox.processedpoints;
+        std::optional<glm::vec3> check = RayTriIntersect(
+            ray[0], ray[1], points[face[0]], points[face[1]], points[face[2]]);
+
+        if (check.has_value()) {
+          result = glm::distance(ray[0], check.value());
+        }
+      }
+    }
+  }
+  return result;
 }
 
 // checks if capsule and ray overlaps.
@@ -432,15 +454,10 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
   for (auto& i : Entities) {
     Entity* tempentity = i.second;
     if (tempentity->teamindex != teamindex) {
-      raycheckresult temp = capsuleraycheck(
-          hitbox[0], hitbox[1], tempentity->hitbox[0] + tempentity->position,
-          tempentity->hitbox[1] + tempentity->position);
+      float temp = Entityraycheck(hitbox, tempentity);
 
-      float disttemp = glm::distance(temp.A, hitbox[0]);
-
-      if (temp.dist < tempentity->hitboxradius &&
-          (resultthing.dist == 0 || resultthing.dist > disttemp)) {
-        resultthing.dist = disttemp;
+      if (temp >= 0.f && (resultthing.dist == 0 || resultthing.dist > temp)) {
+        resultthing.dist = temp;
         resultthing.CollidedWithPlayer = false;
         resultthing.CollidedwithEntityAtAll = true;
         resultthing.collidedID = i.first;
@@ -450,15 +467,10 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
     Entity* tempentity = i.second.PlayerEntity;
     if (tempentity->teamindex != teamindex) {
-      raycheckresult temp = capsuleraycheck(
-          hitbox[0], hitbox[1], tempentity->hitbox[0] + tempentity->position,
-          tempentity->hitbox[1] + tempentity->position);
+      float temp = Entityraycheck(hitbox, tempentity);
 
-      float disttemp = glm::distance(temp.A, hitbox[0]);
-
-      if (temp.dist < tempentity->hitboxradius &&
-          (resultthing.dist == 0 || resultthing.dist > disttemp)) {
-        resultthing.dist = disttemp;
+      if (temp >= 0.f && (resultthing.dist == 0 || resultthing.dist > temp)) {
+        resultthing.dist = temp;
         resultthing.CollidedWithPlayer = true;
         resultthing.CollidedwithEntityAtAll = true;
         resultthing.collidedID = i.first;

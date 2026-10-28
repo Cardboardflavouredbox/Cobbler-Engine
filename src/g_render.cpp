@@ -200,13 +200,73 @@ void render2DUI() {
   }
 }
 
+void ModelGroupsethitboxes(Entity* entity) {
+  Modeltransform* modeltrans = entity->Modelthing;
+  ModelGroupClass* modelgroup = &ModelGroupMap[modeltrans->name];
+  for (auto& [index, bone] : modelgroup->Bonemap) {
+    bone.bonehitbox.processedpoints.clear();
+    for (auto& point : bone.bonehitbox.points) {
+      glm::vec3 pos = point;
+      glm::vec3 checkpos = pos;
+
+      for (auto& boneresultmap : BoneResultmapVector) {
+        pos = checkpos;
+        BoneResult* boneresult = &boneresultmap[index];
+
+        pos *= bone.restpose.scale;
+        pos = bone.restpose.rot * pos;
+        pos += bone.restpose.pos;
+
+        pos -= bone.head;
+
+        pos *= boneresult->scale;
+
+        pos = boneresult->rot * pos;
+
+        pos += boneresult->head;
+        if (boneresult->check) {
+          break;
+        }
+      }
+
+      pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
+                           glm::vec3(0, 0, 1)) *
+            pos;
+
+      pos = modeltrans->rot * pos;
+      pos.x *= modeltrans->size.x;
+      pos.y *= modeltrans->size.y;
+      pos.z *= modeltrans->size.z;
+      pos += modeltrans->position;
+      bone.bonehitbox.processedpoints.push_back(pos);
+    }
+    if (Global->IsDebug && Settings->graphicsmode == OpenGL1 &&
+        entity != LocalPlayer) {
+      for (auto& face : bone.bonehitbox.faces) {
+        glBegin(GL_TRIANGLES);
+        for (int j = 2; j >= 0; j--) {
+          glm::vec3 pos = bone.bonehitbox.processedpoints[face[j]];
+          glColor4f((j + 1) / 3.f, 0, 0, 0.5f);
+          glVertex3f(pos.x, pos.y, pos.z);
+        }
+        glEnd();
+      }
+    }
+  }
+}
+
 void renderEntity() {
   for (const auto& i : Entities) {
-    if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();
+    if (i.second->Modelthing != nullptr) {
+      i.second->rendermodelgroup();
+      ModelGroupsethitboxes(i.second);
+    }
   }
   for (const auto& i : GlobalNetworkStuff->PlayerNetStuff) {
-    if (i.second.PlayerEntity->Modelthing != nullptr)
+    if (i.second.PlayerEntity->Modelthing != nullptr) {
       i.second.PlayerEntity->rendermodelgroup();
+      ModelGroupsethitboxes(i.second.PlayerEntity);
+    }
   }
 }
 

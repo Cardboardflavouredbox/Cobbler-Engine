@@ -21,6 +21,12 @@
 struct ModelGroupClass {
   std::vector<std::string> Models;
   struct Bone {
+    struct Hitbox {
+      std::vector<glm::vec3> points, processedpoints;
+      std::vector<std::array<uint32_t, 3>> faces;
+    };
+    Hitbox bonehitbox;
+
     float roll;
 
     glm::vec3 xaxis, yaxis, zaxis;
