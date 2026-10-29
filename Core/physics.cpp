@@ -65,6 +65,7 @@ std::optional<glm::vec3> RayTriIntersect(glm::vec3 ray_origin,
 float Entityraycheck(
     glm::vec3 ray[],
     Entity* checkentity) {  // returns dist (-1 if not collided)
+  glm::vec3 normal = glm::normalize(ray[1] - ray[0]);
   float result = -1;
   if (checkentity->Modelthing != NULL) {
     for (auto& [index, bone] :
@@ -72,7 +73,7 @@ float Entityraycheck(
       for (auto& face : bone.bonehitbox.faces) {
         const std::vector<glm::vec3>& points = bone.bonehitbox.processedpoints;
         std::optional<glm::vec3> check = RayTriIntersect(
-            ray[0], ray[1], points[face[0]], points[face[1]], points[face[2]]);
+            ray[0], normal, points[face[0]], points[face[1]], points[face[2]]);
 
         if (check.has_value()) {
           result = glm::distance(ray[0], check.value());
