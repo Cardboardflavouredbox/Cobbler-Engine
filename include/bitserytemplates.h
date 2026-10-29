@@ -71,6 +71,8 @@ void serialize(S& s, playerdatapacket& o) {
   s.container4b(o.movevec2);
   s.container4b(o.position);
   s.value4b(o.State);
+  s.value1b(o.respawned);
+  s.value4b(o.StateFrame);
   s.container4b(o.velocityvec3);
 }
 

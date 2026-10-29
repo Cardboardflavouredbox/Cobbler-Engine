@@ -13,6 +13,8 @@ struct playerinputs {
 
 struct playerdatapacket {
   int State, teamindex;
+  float StateFrame;
+  bool respawned;
   // float Stateanimend = 0, Stateanim = 0;
 
   uint64_t ID;

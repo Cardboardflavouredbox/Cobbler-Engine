@@ -145,6 +145,8 @@ void RecieveNetData() {
             }
             tempplayerthing->PlayerEntity->teamindex = temp.teamindex;
             tempplayerthing->PlayerEntity->State = temp.State;
+            tempplayerthing->PlayerEntity->Modelthing->actions[1].frame =
+                temp.StateFrame;
             // EntityMove(tempplayerthing->PlayerEntity);
             // tempplayerthing->PlayerEntity->deltatimelocal = 0;
           } else if (temp.ID == UserID) {
@@ -164,6 +166,9 @@ void RecieveNetData() {
 
             GlobalNetworkStuff->RecvEntity->teamindex = temp.ID;
             LocalPlayer->teamindex = temp.ID;
+
+            LocalPlayerNetData->isdead =
+                LocalPlayerNetData->isdead || temp.respawned;
 
             // inputtoentity(Loadinputdata(temp),
             // GlobalNetworkStuff->RecvEntity);
@@ -378,6 +383,8 @@ void SendNetData() {
         playerdatapacket temp;
         Entity* entity = player.PlayerEntity;
         temp.State = entity->State;
+        temp.StateFrame = entity->Modelthing->actions[1].frame;
+        temp.respawned = entity->respawned;
         temp.teamindex = ID;
         // temp.teamindex = entity->teamindex;
         temp.ID = ID;
@@ -436,6 +443,8 @@ void SendNetData() {
     playerdatapacket temp;
     temp.teamindex = LocalPlayer->teamindex;
     temp.State = LocalPlayer->State;
+    temp.StateFrame = LocalPlayerNetData->frame;
+    temp.respawned = LocalPlayer->respawned;
     temp.ID = UserID;
     temp.Set(P1PlayerInputs);
     temp.IsGrounded = LocalPlayer->IsGrounded;

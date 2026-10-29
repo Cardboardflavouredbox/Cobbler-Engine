@@ -36,6 +36,7 @@ Inputs* LocalInputs;
 playerinputs* P1PlayerInputs;
 // LocalPlayer Entity pointer.
 Entity* LocalPlayer;
+LocalEntityNetData* LocalPlayerNetData;
 // Entity Spawn function map. Loaded from dynamic libraries.
 std::unordered_map<std::string, Entity* (*)(uint32_t, uint32_t)> SpawnEntities;
 // Particle Spawn function map. Loaded from dynamic libraries.

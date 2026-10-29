@@ -1502,6 +1502,10 @@ bool init() {
   LocalPlayer->teamindex = 0;
   LocalPlayer->EntityIndex = 0;
 
+  if (Global->IsOnline) {
+    LocalPlayerNetData = new LocalEntityNetData();
+  }
+
   GlobalNetworkStuff->RecvEntity = SpawnEntities[Global->playerclass](0, 0);
   GlobalNetworkStuff->RecvEntity->position = GetRespawnPoint(0);
   GlobalNetworkStuff->RecvEntity->Modelthing->visible = false;
@@ -1858,6 +1862,7 @@ void quit() {
     }
     if (GlobalNetworkStuff->RecvEntity != NULL)
       delete (GlobalNetworkStuff->RecvEntity);
+    delete LocalPlayerNetData;
   }
 
   // free particles

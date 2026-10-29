@@ -60,6 +60,7 @@ struct Entity {
   int State;
   // float Stateanimend = 0, Stateanim = 0;
 
+  bool respawn = false, respawned = false;
   bool invincible = false;
   float deltatimelocal = 0;
   float hp, maxhp;
@@ -85,6 +86,13 @@ struct Entity {
   }
 };
 LIB_API extern Entity* LocalPlayer;
+
+struct LocalEntityNetData {
+  float frame = 0.f;
+  bool isdead = false;
+};
+
+LIB_API extern LocalEntityNetData* LocalPlayerNetData;
 
 LIB_API extern std::map<uint32_t, Entity*> Entities;
 LIB_API extern std::queue<uint32_t> EntitydeleteQueue;

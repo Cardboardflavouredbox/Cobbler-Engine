@@ -1,6 +1,7 @@
 #include "components.h"
 
 #include "lights.h"
+#include "map.h"
 #include "networkextern.h"
 #include "particles.h"
 #include "physics.h"
@@ -41,14 +42,36 @@ void componentsupdate() {
         std::isnan(i.second->position.z))
       i.second->hp = 0;
     i.second->update();
-    EntityMove(i.second);
-    i.second->deltatimelocal = 0;
+    if (i.second->hp <= 0) {
+      if (i.second->respawn) {
+        i.second->hp = i.second->maxhp;
+        i.second->position = GetRespawnPoint(i.second->teamindex);
+        i.second->velocityvec3 = glm::vec3(0);
+        i.second->respawned = true;
+      } else {
+        EntitydeleteQueue.push(i.second->EntityIndex);
+      }
+    } else {
+      i.second->respawned = false;
+      EntityMove(i.second);
+      i.second->deltatimelocal = 0;
+    }
   }
   // call player entity updates and EntityMove
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
     i.second.PlayerEntity->update();
-    EntityMove(i.second.PlayerEntity);
-    i.second.PlayerEntity->deltatimelocal = 0;
+    if (i.second.PlayerEntity->hp <= 0) {
+      i.second.PlayerEntity->hp = i.second.PlayerEntity->maxhp;
+      i.second.PlayerEntity->position =
+          GetRespawnPoint(i.second.PlayerEntity->teamindex);
+      i.second.PlayerEntity->velocityvec3 = glm::vec3(0);
+      i.second.PlayerEntity->respawned = true;
+    } else {
+      i.second.PlayerEntity->respawned = false;
+      EntityMove(i.second.PlayerEntity);
+
+      i.second.PlayerEntity->deltatimelocal = 0;
+    }
   }
 
   if (GlobalNetworkStuff->RecvEntity != NULL) {
