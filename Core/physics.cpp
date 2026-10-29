@@ -336,6 +336,36 @@ bool BSPthing(glm::vec3 pos, float radius, int index,
   return true;
 }
 
+bool BSPraything(glm::vec3 start, glm::vec3 end, int index,
+                 std::vector<std::array<uint32_t, 3>>& out) {
+  if (index < 0) return false;
+  MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
+
+  if (bspthing->type == MapBSP::BSPnode::LEAF_SOLID) {
+    return true;
+  } else if (bspthing->type == MapBSP::BSPnode::LEAF_EMPTY) {
+    return false;
+  }
+
+  for (auto& i : GlobalMapBSP->BSPtree[index].Faces) out.push_back(i);
+
+  float dist1 = pointSideCheck(start, bspthing->plane);
+  float dist2 = pointSideCheck(end, bspthing->plane);
+
+  if (dist1 * dist2 < 0.0f) {
+    bool A = BSPraything(start, end, bspthing->A, out),
+         B = BSPraything(start, end, bspthing->B, out);
+    return (A || B);
+  } else {
+    if (dist1 >= 0.0f) {
+      return BSPraything(start, end, bspthing->A, out);
+    } else {
+      return BSPraything(start, end, bspthing->B, out);
+    }
+  }
+  return true;
+}
+
 // checks if you collided with triangle while you moved.
 // returns glm::vec3(0) if you haven't collided at all.
 // returns the normal of collided triangle if you have.
@@ -435,7 +465,7 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
   resultthing.dist = 0;
 
   std::vector<std::array<uint32_t, 3>> Faces;
-  recursiveBSPadd(0, Faces);
+  BSPraything(hitbox[0], hitbox[1], 0, Faces);
 
   // make sure to add ray bsp stuff later!
   for (auto& i : Faces) {
