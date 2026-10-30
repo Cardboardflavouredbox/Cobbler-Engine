@@ -308,7 +308,7 @@ void renderbackground() {
 
 void softwarerender() {
   SDL_Log("Software renderer is not supported anymore.");
-  Global->IsRunning = false;
+  IsRunning = false;
   // SDL_LockSurface(RendererGlobal->SRstuff->render_target);
 
   // RendererGlobal->SRstuff->pixels =

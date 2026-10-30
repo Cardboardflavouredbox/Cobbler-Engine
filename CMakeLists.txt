@@ -60,6 +60,8 @@ set(CORE_SOURCES
     Core/font.cpp
     Core/player.cpp
     Core/map.cpp
+    Core/commandline.cpp
+    Core/netconnect.cpp
 )
 
 add_library(CobblerGLAD SHARED glad/gl.c "include/glad/gl.h")

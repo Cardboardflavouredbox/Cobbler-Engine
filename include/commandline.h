@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <sstream>
 #include <string>
 
 #ifdef _WIN32
@@ -13,5 +14,9 @@
 #define LIB_API
 #endif
 
-extern LIB_API std::u32string cmdlines;
-extern LIB_API std::u32string cmdcurrentinput;
+extern LIB_API std::stringstream cmdlines;
+extern LIB_API std::stringstream cmdcurrentinput;
+
+extern "C" {
+LIB_API void pushcmd();
+}

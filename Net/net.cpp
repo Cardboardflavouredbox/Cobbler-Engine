@@ -86,17 +86,19 @@ bool CobblerSetSocket(uint32_t port) {
 void CobblerDestroySocket() { NET_DestroyDatagramSocket(NetStuff->Socket); }
 
 bool CobblerInitNet() {
-  if (!NET_Init()) return false;
-  NetStuff = new NetworkStuffClass();
+  if (NetStuff == NULL) {
+    if (!NET_Init()) return false;
+    NetStuff = new NetworkStuffClass();
 
-  // curl_global_init(CURL_GLOBAL_ALL);
+    // curl_global_init(CURL_GLOBAL_ALL);
 
-  // NetStuff->curl = curl_easy_init();
+    // NetStuff->curl = curl_easy_init();
 
-  // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEFILE, "");
+    // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEFILE, "");
 
-  // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEFILE, MyCookieFileName);
-  // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEJAR, MyCookieFileName);
+    // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEFILE, MyCookieFileName);
+    // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEJAR, MyCookieFileName);
+  }
 
   return true;
 }
@@ -409,19 +411,22 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
 }
 
 void CobblerQuitNet() {
-  if (NetStuff->Socket != nullptr) NET_DestroyDatagramSocket(NetStuff->Socket);
-  for (int i = 0; i < NetStuff->Clients.size(); i++) {
-    if (NetStuff->Clients[i].RealAddress != NULL)
-      NET_UnrefAddress(NetStuff->Clients[i].RealAddress);
+  if (NetStuff != NULL) {
+    if (NetStuff->Socket != nullptr)
+      NET_DestroyDatagramSocket(NetStuff->Socket);
+    for (int i = 0; i < NetStuff->Clients.size(); i++) {
+      if (NetStuff->Clients[i].RealAddress != NULL)
+        NET_UnrefAddress(NetStuff->Clients[i].RealAddress);
+    }
+
+    // if (NetStuff->curl) curl_easy_cleanup(NetStuff->curl);
+    // curl_global_cleanup();
+
+    // if (curlpostfield != nullptr) delete (curlpostfield);
+
+    delete (NetStuff);
+    NET_Quit();
   }
-
-  // if (NetStuff->curl) curl_easy_cleanup(NetStuff->curl);
-  // curl_global_cleanup();
-
-  // if (curlpostfield != nullptr) delete (curlpostfield);
-
-  delete (NetStuff);
-  NET_Quit();
 }
 
 // bool CobblerSendCurlData() {

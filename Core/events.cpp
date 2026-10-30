@@ -13,7 +13,7 @@ void events() {
     switch (event.type) {
       // Quit game
       case SDL_EVENT_QUIT:
-        Global->IsRunning = false;
+        IsRunning = false;
         break;
       // Resize Window
       case SDL_EVENT_WINDOW_RESIZED:

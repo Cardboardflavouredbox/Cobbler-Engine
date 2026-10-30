@@ -4,7 +4,6 @@
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
-#include <SDL3/SDL_timer.h>
 #include <ft2build.h>
 #include <glad/gl.h>
 #include <stdio.h>
@@ -35,11 +34,6 @@
 #include "settings.h"
 #include "ui.h"
 #include "update.h"
-
-// IPv4 ServerIP string.
-std::string ServerIP;
-// Server Port uint32_t.
-uint32_t ServerPort;
 
 // Settings Save function
 void SaveSettings() {
@@ -867,30 +861,6 @@ void OpenGLCreateObjects() {
   glBindVertexArray(0);
 }
 
-// function that checks if string is a number.
-// for checking arguements.
-bool is_number(const std::string s) {
-  for (int i = 0; i < s.size(); i++) {
-    if (!std::isdigit(s[i])) return false;
-  }
-  return true;
-}
-
-// enums for arguements.
-enum argenums {
-  SetRendererAsVulkan,    // Sets Renderer to Vulkan.
-  SetRendererAsOpenGL,    // Sets Renderer to OpenGL.
-  SetRendererAsSoftware,  // THIS WILL BE REMOVED EVENTUALLY.
-  SetFPS,                 // Sets Frame rate.
-  SetFOV,                 // Sets field of view.
-  SetVsync,               // Sets Vsync
-  // SetLogin,               // Login for website. Work In Progress.
-  // SetWebsite,             // The actual IP of the website.
-  SetServerIP,  // Set the IP of the server as a client.
-  SetIsServer,  // Set if you are the server or not.
-  SetIsDebug    // Sets Debug.
-};
-
 // arguements processing.
 bool initargs(std::vector<std::string> args) {
   // Create Global, Settings, LocalInputs, and P1PlayerInputs so that the
@@ -969,206 +939,16 @@ bool initargs(std::vector<std::string> args) {
 
   SDL_Log("Classes initialized");
 
-  // a map with strings as keys and argenums as values.
-  // translates arguement strings to enums.
-  std::unordered_map<std::string, argenums> stringtoenums = {
-      {"-OpenGL", SetRendererAsOpenGL},
-      {"-openGL", SetRendererAsOpenGL},
-      {"-GL", SetRendererAsOpenGL},
-      {"-gl", SetRendererAsOpenGL},
-      {"-vk", SetRendererAsVulkan},
-      {"-Vk", SetRendererAsVulkan},
-      {"-VK", SetRendererAsVulkan},
-      {"-vulkan", SetRendererAsVulkan},
-      {"-Vulkan", SetRendererAsVulkan},
-      {"-Software", SetRendererAsSoftware},
-      {"-software", SetRendererAsSoftware},
-      {"-fps", SetFPS},
-      {"-fov", SetFOV},
-      {"-vsync", SetVsync},
-      // {"-login", SetLogin},
-      // {"-website", SetWebsite},
-      {"-IP", SetServerIP},
-      {"-ip", SetServerIP},
-      {"-ServerIP", SetServerIP},
-      {"-Server", SetIsServer},
-      {"-server", SetIsServer},
-      {"-d", SetIsDebug},
-      {"-debug", SetIsDebug}};
-
   for (int i = 2; i < args.size(); i++) {
-    if (stringtoenums.contains(args[i])) {
-      argenums temp = stringtoenums[args[i]];
-      switch (temp) {
-        case SetIsDebug:
-          Global->IsDebug = true;
-          break;
-        case SetRendererAsVulkan:
-          Settings->graphicsmode = Vulkan;
-          break;
-        case SetRendererAsOpenGL:
-          // move to next arguement
-          i++;
-          // checks if next arguement exists and is a number.
-          if (i >= args.size() || !is_number(args[i])) {
-            SDL_Log("Wrong Arguements!(OpenGL version)");
-            return false;
-          }
-          switch (std::stoi(args[i])) {
-            case 1:
-              Settings->graphicsmode = OpenGL1;
-              break;
-            case 3:
-              Settings->graphicsmode = OpenGL3;
-              break;
-            case 4:
-              Settings->graphicsmode = OpenGL4;
-              break;
-            default: {
-              SDL_Log("Unsupported OpenGL version!");
-              return false;
-            }
-          }
-          break;
-        case SetRendererAsSoftware:
-          Settings->graphicsmode = Software;
-          break;
-        case SetVsync:
-          // move to next arguement
-          i++;
-          // checks if next arguement exists and is a number.
-          if (i >= args.size() || !is_number(args[i])) {
-            SDL_Log("Wrong Arguements!(Vsync)");
-            return false;
-          }
-          Settings->vsync = std::stoi(args[i]);
-          break;
-        case SetFPS:
-          // move to next arguement
-          i++;
-          // checks if next arguement exists and is a number.
-          if (i >= args.size() || !is_number(args[i])) {
-            SDL_Log("Wrong Arguements!(FPS)");
-            return false;
-          }
-          Settings->fps = std::stoi(args[i]);
-          break;
-        case SetFOV:
-          // move to next arguement
-          i++;
-          // checks if next arguement exists and is a number.
-          if (i >= args.size() || !is_number(args[i])) {
-            SDL_Log("Wrong Arguements!(FOV)");
-            return false;
-          }
-          Settings->fov = std::stoi(args[i]);
-          break;
-        // case SetLogin: {
-        //   std::string password;
-        //   // move to next arguement
-        //   i++;
-        //   // checks if next arguement exists.
-        //   if (i >= args.size()) {
-        //     SDL_Log("Wrong Arguements!(username)");
-        //     return false;
-        //   }
-        //   // sets username for the website.
-        //   curlpostfield->username = args[i];
-        //   // move to next arguement
-        //   i++;
-        //   // checks if next arguement exists.
-        //   if (i >= args.size()) {
-        //     SDL_Log("Wrong Arguements!(password)");
-        //     return false;
-        //   }
-        //   // sets password for the website.
-        //   password = args[i];
-
-        //   // set string that you will send as post field for website.
-        //   curlloginstring = "IsGame=True&username=" +
-        //   curlpostfield->username
-        //   +
-        //                     "&password=" + password;
-        //   break;
-        // }
-        // case SetWebsite:
-        //   // you probably know what this does at this point.
-        //   i++;
-        //   if (i >= args.size()) {
-        //     SDL_Log("Wrong Arguements!(Website)");
-        //     return false;
-        //   }
-        //   curlpostfield->websiteaddr = args[i];
-        //   break;
-        case SetServerIP: {
-          // If you are a server return false
-          if (IsServer) {
-            SDL_Log(
-                "Wrong Arguements!(Cannot be Server and have IP input at the "
-                "same time)");
-            return false;
-          }
-          i++;
-          if (i >= args.size()) {
-            SDL_Log("Wrong Arguements!(IP)");
-            return false;
-          }
-          int j = 0;
-          while (args[i][j] != ':') {
-            if (args[i][j] == '\0') {
-              SDL_Log("Wrong Arguements!(IP)");
-              return false;
-            }
-            ServerIP += args[i][j];
-            j++;
-          }
-          j++;
-          while (args[i][j] != '\0') {
-            int temp = args[i][j] - '0';
-            if (temp < 0 || temp > 9) {
-              SDL_Log("Wrong Arguements!(PORT)");
-              return false;
-            }
-            ServerPort *= 10;
-            ServerPort += temp;
-            j++;
-          }
-          break;
-        }
-        case SetIsServer:
-          // Add Server(0) user.
-          GlobalNetworkStuff->UserIDs.insert(0);
-          // If ServerIP is set then you can't be server.
-          if (ServerIP != "") {
-            SDL_Log(
-                "Wrong Arguements!(Cannot be Server and have IP input at the "
-                "same time)");
-            return false;
-          }
-          i++;
-          if (i >= args.size()) {
-            SDL_Log("Wrong Arguements!(ServerPort)");
-            return false;
-          }
-          int j = 0;
-          while (args[i][j] != '\0') {
-            int temp = args[i][j] - '0';
-            if (temp < 0 || temp > 9) {
-              SDL_Log("Wrong Arguements!(ServerPort)");
-              return false;
-            }
-            ServerPort *= 10;
-            ServerPort += temp;
-            j++;
-          }
-          Global->IsOnline = true;
-          IsServer = true;
-          break;
-      }
+    auto& arg = args[i];
+    if (arg[0] == '-') {
+      arg.erase(0, 1);
     }
+    cmdcurrentinput << arg << " ";
   }
+  pushcmd();
+
   SDL_Log("args done");
-  cmdlines.append(U"args done\nlmao");
   return true;
 }
 
@@ -1193,9 +973,6 @@ uint32_t getposeindex(const std::string& name) {
 
 // overall initialization function.
 bool init() {
-  // Your Global is running? You better go catch it.
-  Global->IsRunning = true;
-
   // initialize SDL
   if (!SDL_SetAppMetadata(Global->LoadedStuff->GameName.c_str(), "0.1",
                           "com.example.myapp") ||
@@ -1203,11 +980,6 @@ bool init() {
     return false;
   SDL_Log("SDL initialized");
 
-  // Initialize Network stuff
-  if (!CobblerInitNet()) {
-    return false;
-  }
-  SDL_Log("Net Loaded");
   // if (curlloginstring != "") {
   //   // try to log in.
   //   if (!CobblerCurlLogin()) {
@@ -1219,45 +991,7 @@ bool init() {
   //   }
   // }
 
-  // Server Setup.
-  if (IsServer) {
-    if (!CobblerSetSocket(ServerPort)) {
-      SDL_Log("Server Setup failed");
-    }
-  }
-
-  // Client Setup.
-  if (ServerIP != "") {
-    if (!CobblerSetSocket(0)) {
-      SDL_Log("Server connection failed");
-    }
-    CobblerAddIP(ServerIP, ServerPort, 0);
-    Global->IsOnline = true;
-    std::vector<uint8_t> buffer{};
-    bool check = false;
-
-    // check if the server acknowledged you
-    while (Global->IsRunning && !check) {
-      events();
-      CobblerQueueData("PlayerAdd", buffer, 0);
-      std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
-      if (tempvector != NULL) {
-        while (!tempvector->empty()) {
-          CobblerNetData* tempdata = &tempvector->back();
-          SDL_Log("%s", tempdata->name.c_str());
-          check = true;
-          tempvector->pop_back();
-          break;
-        }
-        delete tempvector;
-      }
-      CobblerSendNet();
-      SDL_DelayNS(1000000000 / 30);
-    }
-    // SDL_Log("What");
-  }
-
-  if (!Global->IsRunning) return false;
+  if (!IsRunning) return false;
 
   // Set the Renderer.
   if (!setRenderer()) return false;
@@ -1898,7 +1632,7 @@ void quit() {
   SDL_Log("Netfreed");
 
   // well it's not running anymore I suppose.
-  Global->IsRunning = false;
+  IsRunning = false;
   SDL_Quit();
   SDL_Log("SDL_Quit");
 }

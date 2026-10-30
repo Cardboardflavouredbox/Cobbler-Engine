@@ -28,6 +28,8 @@ float updatedeltaTime;
 float renderdeltaTime;
 // pointer to Global variables.
 std::unique_ptr<GlobalClass> Global;
+bool IsRunning;
+
 // pointer to Settings variables.
 std::unique_ptr<SettingsClass> Settings;
 // pointer to Inputs of local inputs. As in, the actual keyboard inputs.
@@ -96,8 +98,8 @@ std::deque<DamageLocation> LocalDamageLocations;
 
 std::vector<std::unordered_map<uint32_t, BoneResult>> BoneResultmapVector;
 
-std::u32string cmdlines;
-std::u32string cmdcurrentinput;
+std::stringstream cmdlines;
+std::stringstream cmdcurrentinput;
 
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {

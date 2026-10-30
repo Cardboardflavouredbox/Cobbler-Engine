@@ -33,7 +33,7 @@ void updatefunction() {
 
   uint64_t lastTime;
   uint64_t currentTime = SDL_GetPerformanceCounter();
-  while (Global->IsRunning) {
+  while (IsRunning) {
     mutexthing.lock();
 
     lastTime = currentTime;
@@ -60,6 +60,9 @@ void updatefunction() {
 }
 
 int main(int argc, char* argv[]) {
+  // Your Global is running? You better go catch it.
+  IsRunning = true;
+
   std::vector<std::string> args;
   args.resize(argc);
   for (int i = 0; i < argc; i++)
@@ -156,7 +159,7 @@ int main(int argc, char* argv[]) {
 
   uint64_t lastTime;
   uint64_t currentTime = SDL_GetPerformanceCounter();
-  while (Global->IsRunning) {
+  while (IsRunning) {
     mutexthing.lock();
 
     lastTime = currentTime;
