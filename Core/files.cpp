@@ -21,6 +21,7 @@
 #include FT_FREETYPE_H
 
 #include "camera.h"
+#include "commandline.h"
 #include "extern.h"
 #include "font.h"
 #include "global.h"
@@ -1167,6 +1168,7 @@ bool initargs(std::vector<std::string> args) {
     }
   }
   SDL_Log("args done");
+  cmdlines.append(U"args done\nlmao");
   return true;
 }
 

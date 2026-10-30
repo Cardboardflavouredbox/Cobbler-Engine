@@ -5,6 +5,7 @@
 
 #include "bitserytemplates.h"
 #include "camera.h"
+#include "commandline.h"
 #include "damageindicator.h"
 #include "deltaTime.h"
 #include "entity.h"
@@ -94,6 +95,9 @@ uint32_t newposeindex = 0;
 std::deque<DamageLocation> LocalDamageLocations;
 
 std::vector<std::unordered_map<uint32_t, BoneResult>> BoneResultmapVector;
+
+std::u32string cmdlines;
+std::u32string cmdcurrentinput;
 
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {
