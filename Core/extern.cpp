@@ -98,7 +98,7 @@ std::deque<DamageLocation> LocalDamageLocations;
 
 std::vector<std::unordered_map<uint32_t, BoneResult>> BoneResultmapVector;
 
-char textinputstate;
+bool textinputing;
 
 std::stringstream cmdlines;
 std::string cmdcurrentinput;

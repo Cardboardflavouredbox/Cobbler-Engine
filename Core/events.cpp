@@ -1,3 +1,4 @@
+#include <SDL3/SDL_clipboard.h>
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_log.h>
 #include <glad/gl.h>
@@ -11,19 +12,17 @@
 #include "settings.h"
 #include "update.h"
 
-bool textinputing = false;
+bool textinputlocalcheck = false;
 float backspacetime = 0;
 
 // process events
 void events() {
-  if (textinputstate > 0) {
-    textinputstate = 0;
+  if (textinputing && !textinputlocalcheck) {
     SDL_StartTextInput(RendererGlobal->window);
-    textinputing = true;
-  } else if (textinputstate < 0) {
-    textinputstate = 0;
+    textinputlocalcheck = true;
+  } else if (!textinputing && textinputlocalcheck) {
     SDL_StopTextInput(RendererGlobal->window);
-    textinputing = false;
+    textinputlocalcheck = false;
   }
 
   SDL_Event event;
@@ -31,7 +30,7 @@ void events() {
     switch (event.type) {
       // Text input
       case SDL_EVENT_TEXT_INPUT: {
-        if (textinputing) {
+        if (textinputlocalcheck) {
           cmdcurrentinput.append(event.text.text);
         }
         break;
@@ -126,12 +125,7 @@ void events() {
         break;
       }
       case SDL_EVENT_KEY_DOWN: {
-        if (textinputing && event.key.scancode != SDL_SCANCODE_BACKSPACE &&
-            event.key.scancode != SDL_SCANCODE_RETURN) {
-          LocalInputs->Keys[event.key.scancode] = 0;
-        } else {
-          LocalInputs->Keys[event.key.scancode] = event.key.repeat ? 1 : 2;
-        }
+        LocalInputs->Keys[event.key.scancode] = event.key.repeat ? 1 : 2;
         break;
       }
       case SDL_EVENT_KEY_UP: {
@@ -140,21 +134,35 @@ void events() {
       }
     }
   }
-  if (textinputing) {
-    if (LocalInputs->Keys[SDL_SCANCODE_BACKSPACE] > 0 &&
-        !cmdcurrentinput.empty()) {
-      if (LocalInputs->Keys[SDL_SCANCODE_BACKSPACE] == 2) {
-        cmdcurrentinput.pop_back();
-        backspacetime = 0.5f;
-      } else if (backspacetime < 0.f) {
-        cmdcurrentinput.pop_back();
-        backspacetime = 1 / 64.f;
+  if (textinputlocalcheck) {
+    if (LocalInputs->Keys[SDL_SCANCODE_ESCAPE] > 1) {
+      textinputing = false;
+    } else {
+      if (LocalInputs->Keys[SDL_SCANCODE_V] > 1 &&
+          (LocalInputs->Keys[SDL_SCANCODE_LCTRL] > 0 ||
+           LocalInputs->Keys[SDL_SCANCODE_RCTRL] > 0)) {
+        char* temp = SDL_GetClipboardText();
+        cmdcurrentinput.append(temp);
+        SDL_free(temp);
       }
-      backspacetime -= renderdeltaTime;
+      if (LocalInputs->Keys[SDL_SCANCODE_BACKSPACE] > 0 &&
+          !cmdcurrentinput.empty()) {
+        if (LocalInputs->Keys[SDL_SCANCODE_BACKSPACE] == 2) {
+          cmdcurrentinput.pop_back();
+          backspacetime = 1 / 32.f;
+        } else if (backspacetime <= 0.f) {
+          cmdcurrentinput.pop_back();
+          backspacetime = 1 / 256.f;
+        }
+        backspacetime -= renderdeltaTime;
+      }
+      if (LocalInputs->Keys[SDL_SCANCODE_RETURN] > 1) {
+        pushcmd();
+        LocalInputs->Keys[SDL_SCANCODE_RETURN] = 1;
+      }
     }
-    if (LocalInputs->Keys[SDL_SCANCODE_RETURN] > 1) {
-      pushcmd();
-      LocalInputs->Keys[SDL_SCANCODE_RETURN] = 1;
+    for (int i = 0; i < 512; i++) {
+      LocalInputs->Keys[i] = 0;
     }
   }
 }

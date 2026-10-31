@@ -14,7 +14,7 @@
 #define LIB_API
 #endif
 
-extern LIB_API char textinputstate;
+extern LIB_API bool textinputing;
 extern LIB_API std::stringstream cmdlines;
 extern LIB_API std::string cmdcurrentinput;
 
