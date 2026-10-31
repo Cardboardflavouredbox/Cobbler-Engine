@@ -20,7 +20,8 @@ enum cmdenums {
   SetVsync,               // Sets Vsync
   SetServerIP,            // Set the IP of the server as a client.
   SetIsServer,            // Set if you are the server or not.
-  SetIsDebug              // Sets Debug.
+  SetIsDebug,             // Sets Debug.
+  CMDQuit                 // Quits game
 };
 
 bool is_number(const std::string& s) {
@@ -51,15 +52,22 @@ std::unordered_map<std::string, cmdenums> stringtoenums = {
     {"Server", SetIsServer},
     {"server", SetIsServer},
     {"d", SetIsDebug},
-    {"debug", SetIsDebug}};
+    {"debug", SetIsDebug},
+    {"quit", CMDQuit},
+    {"Quit", CMDQuit}};
 
 void cmdprocess() {
+  std::stringstream cmdstream(cmdcurrentinput);
   std::string arg;
-  while (cmdcurrentinput >> arg) {
+  while (cmdstream >> arg) {
     SDL_Log("arg: %s", arg.c_str());
     if (stringtoenums.contains(arg)) {
       cmdenums cmd = stringtoenums[arg];
       switch (cmd) {
+        case CMDQuit: {
+          IsRunning = false;
+          break;
+        }
         case SetIsDebug: {
           Global->IsDebug = true;
           break;
@@ -72,7 +80,7 @@ void cmdprocess() {
           // move to next arguement
           std::string arg2;
           // checks if next arguement exists and is a number.
-          if (!(cmdcurrentinput >> arg2) || !(is_number(arg2))) {
+          if (!(cmdstream >> arg2) || !(is_number(arg2))) {
             cmdlines << "Wrong Arguements!(OpenGL version)\n";
             return;
           }
@@ -100,7 +108,7 @@ void cmdprocess() {
           // move to next arguement
           std::string arg2;
           // checks if next arguement exists and is a number.
-          if (!(cmdcurrentinput >> arg2) || !(is_number(arg2))) {
+          if (!(cmdstream >> arg2) || !(is_number(arg2))) {
             cmdlines << ("Wrong Arguements!(Vsync)\n");
             return;
           }
@@ -111,7 +119,7 @@ void cmdprocess() {
           // move to next arguement
           std::string arg2;
           // checks if next arguement exists and is a number.
-          if (!(cmdcurrentinput >> arg2) || !(is_number(arg2))) {
+          if (!(cmdstream >> arg2) || !(is_number(arg2))) {
             cmdlines << ("Wrong Arguements!(FPS)\n");
             return;
           }
@@ -122,7 +130,7 @@ void cmdprocess() {
           // move to next arguement
           std::string arg2;
           // checks if next arguement exists and is a number.
-          if (!(cmdcurrentinput >> arg2) || !(is_number(arg2))) {
+          if (!(cmdstream >> arg2) || !(is_number(arg2))) {
             cmdlines << ("Wrong Arguements!(FOV)\n");
             return;
           }
@@ -144,7 +152,7 @@ void cmdprocess() {
             return;
           }
           std::string arg2;
-          if (!(cmdcurrentinput >> arg2)) {
+          if (!(cmdstream >> arg2)) {
             cmdlines << ("Arguement doesn't exists!(IP)\n");
             return;
           }
@@ -185,7 +193,7 @@ void cmdprocess() {
             return;
           }
           std::string arg2;
-          if (!(cmdcurrentinput >> arg2)) {
+          if (!(cmdstream >> arg2)) {
             cmdlines << ("Wrong Arguements!(ServerPort)\n");
             return;
           }
@@ -213,7 +221,7 @@ void cmdprocess() {
 }
 
 void pushcmd() {
-  cmdlines << cmdcurrentinput.str() << "\n";
+  cmdlines << cmdcurrentinput << "\n";
   cmdprocess();
   cmdcurrentinput.clear();
 }

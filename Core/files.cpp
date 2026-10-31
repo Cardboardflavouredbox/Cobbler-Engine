@@ -944,7 +944,7 @@ bool initargs(std::vector<std::string> args) {
     if (arg[0] == '-') {
       arg.erase(0, 1);
     }
-    cmdcurrentinput << arg << " ";
+    cmdcurrentinput.append(arg + " ");
   }
   pushcmd();
 

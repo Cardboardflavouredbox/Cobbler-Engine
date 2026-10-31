@@ -14,8 +14,9 @@
 #define LIB_API
 #endif
 
+extern LIB_API char textinputstate;
 extern LIB_API std::stringstream cmdlines;
-extern LIB_API std::stringstream cmdcurrentinput;
+extern LIB_API std::string cmdcurrentinput;
 
 extern "C" {
 LIB_API void pushcmd();

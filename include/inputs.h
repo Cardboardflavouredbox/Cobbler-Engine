@@ -1,4 +1,6 @@
+#pragma once
 #include "glm/vec2.hpp"
+
 #ifdef _WIN32
 #ifdef DLLEXPORT
 #define LIB_API __declspec(dllexport)

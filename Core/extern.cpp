@@ -98,8 +98,10 @@ std::deque<DamageLocation> LocalDamageLocations;
 
 std::vector<std::unordered_map<uint32_t, BoneResult>> BoneResultmapVector;
 
+char textinputstate;
+
 std::stringstream cmdlines;
-std::stringstream cmdcurrentinput;
+std::string cmdcurrentinput;
 
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {
