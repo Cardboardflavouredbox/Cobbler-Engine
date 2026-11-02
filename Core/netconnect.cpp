@@ -43,7 +43,7 @@ void ClientConnect(const std::string& ServerIP, uint32_t ServerPort) {
       delete tempvector;
     }
     CobblerSendNet();
-    SDL_DelayNS(1000000000 / 30);
+    SDL_DelayPrecise(uint64_t(1 / (double)30));
   }
   // SDL_Log("What");
 }

@@ -184,9 +184,6 @@ int main(int argc, char* argv[]) {
   }
 
   updatethread.join();
-  if (Global->IsOnline) {
-    PlayerQuit();
-  }
   for (auto& entry : classlibs) {
     entry.get_function<void()>("Quit")();
   }

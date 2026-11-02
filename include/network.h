@@ -62,4 +62,5 @@ LIB_API bool CobblerQueueConfirmedData(uint64_t ID, const char* name,
                                        size_t size);
 LIB_API bool CobblerSendNet();
 LIB_API std::vector<CobblerNetData>* CobblerRecvNet();
+LIB_API void CobblerPlayerQuit();
 }

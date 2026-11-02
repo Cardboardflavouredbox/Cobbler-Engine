@@ -33,7 +33,7 @@ struct playerdatapacket {
   }
 };
 
-playerinputs Loadinputdata(playerdatapacket input);
+playerinputs Loadinputdata(const playerdatapacket& input);
 
 struct playerstate {
   int State = 0;

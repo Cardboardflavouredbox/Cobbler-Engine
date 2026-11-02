@@ -410,7 +410,31 @@ std::vector<CobblerNetData>* CobblerRecvNet() {
   return tempvec;
 }
 
+void CobblerPlayerQuit() {
+  std::vector<uint8_t> buffer{};
+
+  float deltatimething = 0.f;
+
+  while (deltatimething < 1.5f) {
+    CobblerQueueData("PlayerQuit", buffer, 0);
+    std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
+    if (tempvector != NULL) {
+      if (!tempvector->empty()) {
+        deltatimething = 0.f;
+      }
+      delete tempvector;
+    }
+
+    CobblerSendNet();
+    SDL_DelayPrecise(uint64_t(1 / (double)30));
+    deltatimething += 1.0 / 30.f;
+  }
+}
+
 void CobblerQuitNet() {
+  CobblerPlayerQuit();
+  packetbuffer.clear();
+  ConfirmedSendMap.clear();
   if (NetStuff != NULL) {
     if (NetStuff->Socket != nullptr)
       NET_DestroyDatagramSocket(NetStuff->Socket);
@@ -423,61 +447,7 @@ void CobblerQuitNet() {
     // curl_global_cleanup();
 
     // if (curlpostfield != nullptr) delete (curlpostfield);
-
     delete (NetStuff);
     NET_Quit();
   }
 }
-
-// bool CobblerSendCurlData() {
-//   curl_easy_setopt(
-//       NetStuff->curl, CURLOPT_URL,
-//       ("http://" + curlpostfield->websiteaddr + "/gamedata").c_str());
-//   std::ostringstream stream;
-//   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA, &stream);
-//   std::string tempstr = curlpostfield->ToField();
-//   curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS, tempstr.c_str());
-
-//   NetStuff->res = curl_easy_perform(NetStuff->curl);
-
-//   if (NetStuff->res != CURLE_OK) {
-//     SDL_Log("curl_easy_perform() failed: %s\n",
-//             curl_easy_strerror(NetStuff->res));
-//     curlpostfield->hasdata = false;
-//     return false;
-//   }
-//   curlpostfield->reset();
-//   bool result = (stream.str() == "Success");
-//   if (result)
-//     SDL_Log("CurlData Sent Successfully");
-//   else
-//     SDL_Log("CurlData Send Failed");
-//   return result;
-// }
-
-// bool CobblerCurlLogin() {
-//   SDL_Log("logging in...");
-//   std::ostringstream stream;
-//   curl_easy_setopt(NetStuff->curl, CURLOPT_NOPROGRESS, 1L);
-//   curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEFUNCTION,
-//   CobblerCurlCallback); curl_easy_setopt(NetStuff->curl, CURLOPT_WRITEDATA,
-//   &stream); curl_easy_setopt(NetStuff->curl, CURLOPT_URL,
-//                    ("http://" + curlpostfield->websiteaddr +
-//                    "/login").c_str());
-//   curl_easy_setopt(NetStuff->curl, CURLOPT_POSTFIELDS,
-//   curlloginstring.c_str());
-
-//   NetStuff->res = curl_easy_perform(NetStuff->curl);
-
-//   if (NetStuff->res != CURLE_OK) {
-//     SDL_Log("curl_easy_perform() failed: %s\n",
-//             curl_easy_strerror(NetStuff->res));
-//     return false;
-//   }
-
-//   bool result = (stream.str() == "Success");
-//   if (result) {
-//     curlloginstring.clear();
-//   }
-//   return result;
-// }

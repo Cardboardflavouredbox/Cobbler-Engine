@@ -18,8 +18,9 @@ enum cmdenums {
   SetFPS,                 // Sets Frame rate.
   SetFOV,                 // Sets field of view.
   SetVsync,               // Sets Vsync
-  SetServerIP,            // Set the IP of the server as a client.
-  SetIsServer,            // Set if you are the server or not.
+  ConnectClient,          // Set the IP of the server as a client.
+  HostServer,             // Set if you are the server or not.
+  DisconnectClient,       // Disconnects Client.
   SetIsDebug,             // Sets Debug.
   CMDQuit                 // Quits game
 };
@@ -46,11 +47,13 @@ std::unordered_map<std::string, cmdenums> stringtoenums = {
     {"fps", SetFPS},
     {"fov", SetFOV},
     {"vsync", SetVsync},
-    {"IP", SetServerIP},
-    {"ip", SetServerIP},
-    {"ServerIP", SetServerIP},
-    {"Server", SetIsServer},
-    {"server", SetIsServer},
+    {"IP", ConnectClient},
+    {"ip", ConnectClient},
+    {"ServerIP", ConnectClient},
+    {"Server", HostServer},
+    {"server", HostServer},
+    {"Disconnect", DisconnectClient},
+    {"disconnect", DisconnectClient},
     {"d", SetIsDebug},
     {"debug", SetIsDebug},
     {"quit", CMDQuit},
@@ -137,7 +140,7 @@ void cmdprocess() {
           Settings->fov = std::stoi(arg2);
           break;
         }
-        case SetServerIP: {
+        case ConnectClient: {
           // IPv4 ServerIP string.
           std::string ServerIP;
           // Server Port uint32_t.
@@ -179,7 +182,7 @@ void cmdprocess() {
           ClientConnect(ServerIP, ServerPort);
           break;
         }
-        case SetIsServer: {
+        case HostServer: {
           // Server Port uint32_t.
           uint32_t ServerPort = 0;
           // Add Server(0) user.
@@ -211,6 +214,12 @@ void cmdprocess() {
           ServerSetup(ServerPort);
           Global->IsOnline = true;
           IsServer = true;
+          break;
+        }
+        case DisconnectClient: {
+          CobblerQuitNet();
+          Global->IsOnline = false;
+          IsServer = false;
           break;
         }
       }

@@ -25,7 +25,7 @@
 #include "render.h"
 #include "settings.h"
 
-playerinputs Loadinputdata(playerdatapacket input) {
+playerinputs Loadinputdata(const playerdatapacket& input) {
   playerinputs temp;
   for (int i = 0; i < 2; i++) {
     temp.movevec2[i] = input.movevec2[i];
@@ -332,7 +332,14 @@ void RecieveNetData() {
           LocalDamageLocations.push_back(temp);
 
       } else if (tempdata->name == "PlayerQuit") {
-        if (GlobalNetworkStuff->UserIDs.contains(tempdata->ID)) {
+        if (tempdata->ID == 0) {
+          SDL_Log("server shutdown");
+          CobblerQuitNet();
+          Global->IsOnline = false;
+          IsServer = false;
+          SDL_Log("server shutdown done");
+          break;
+        } else if (GlobalNetworkStuff->UserIDs.contains(tempdata->ID)) {
           SDL_Log("player%llu client disconnect", tempdata->ID);
           deleteplayerqueue.push(tempdata->ID);
         }
@@ -583,38 +590,4 @@ void update() {
   //         Entities[1]->position[2]);
 
   // if (curlpostfield->hasdata && Global->LoggedIn) CobblerSendCurlData();
-}
-
-void PlayerQuit() {
-  std::vector<uint8_t> buffer{};
-
-  for (int i = 0; i < 30; i++) {
-    CobblerQueueData("PlayerQuit", buffer, 0);
-    std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
-    if (tempvector != NULL) {
-      bool check = false;
-      while (!tempvector->empty()) {
-        CobblerNetData* tempdata = &tempvector->back();
-        if (tempdata->name == "PlayerList") {
-          std::set<uint64_t> tempset;
-          auto state = bitsery::quickDeserialization<
-              bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
-              {tempdata->buffer.begin(), tempdata->size}, tempset);
-          if (state.first == bitsery::ReaderError::NoError && state.second) {
-            if (tempset.find(UserID) == tempset.end()) {
-              check = true;
-              break;
-            }
-          }
-        }
-        tempvector->pop_back();
-        break;
-      }
-      delete tempvector;
-      if (check) break;
-    }
-
-    CobblerSendNet();
-    SDL_DelayNS(1000000000 / 30);
-  }
 }
