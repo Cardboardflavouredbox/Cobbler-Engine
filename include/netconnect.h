@@ -15,4 +15,5 @@
 extern "C" {
 LIB_API void ServerSetup(uint32_t ServerPort);
 LIB_API void ClientConnect(const std::string& ServerIP, uint32_t ServerPort);
+LIB_API void NetDisconnect();
 }

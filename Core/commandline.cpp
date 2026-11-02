@@ -61,6 +61,7 @@ std::unordered_map<std::string, cmdenums> stringtoenums = {
 
 void cmdprocess() {
   std::stringstream cmdstream(cmdcurrentinput);
+  cmdcurrentinput.clear();
   std::string arg;
   while (cmdstream >> arg) {
     SDL_Log("arg: %s", arg.c_str());
@@ -146,8 +147,13 @@ void cmdprocess() {
           // Server Port uint32_t.
           uint32_t ServerPort = 0;
 
+          if (Global->IsOnline) {
+            cmdlines << ("Cannot connect to server when already online!\n");
+            return;
+          }
+
           // If you are a server return false
-          if (Global->IsOnline && IsServer) {
+          if (IsServer) {
             cmdlines
                 << ("Wrong Arguements!(Cannot be Server and have IP input at "
                     "the "
@@ -183,6 +189,11 @@ void cmdprocess() {
           break;
         }
         case HostServer: {
+          if (Global->IsOnline) {
+            cmdlines << ("Cannot connect to server when already online!\n");
+            return;
+          }
+
           // Server Port uint32_t.
           uint32_t ServerPort = 0;
           // Add Server(0) user.
@@ -217,9 +228,7 @@ void cmdprocess() {
           break;
         }
         case DisconnectClient: {
-          CobblerQuitNet();
-          Global->IsOnline = false;
-          IsServer = false;
+          NetDisconnect();
           break;
         }
       }
@@ -233,5 +242,4 @@ void cmdprocess() {
 void pushcmd() {
   cmdlines << cmdcurrentinput << "\n";
   cmdprocess();
-  cmdcurrentinput.clear();
 }

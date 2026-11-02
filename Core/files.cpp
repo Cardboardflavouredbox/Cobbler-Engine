@@ -28,6 +28,7 @@
 #include "lights.h"
 #include "mapdata.h"
 #include "model.h"
+#include "netconnect.h"
 #include "network.h"
 #include "networkextern.h"
 #include "render.h"
@@ -1510,7 +1511,7 @@ void quit() {
   delete (GlobalMapBSP);
 
   // free network stuff.
-  CobblerQuitNet();
+  NetDisconnect();
   SDL_Log("Netfreed");
 
   // well it's not running anymore I suppose.

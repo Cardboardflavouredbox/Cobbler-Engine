@@ -4,6 +4,8 @@
 #include <SDL3/SDL_timer.h>
 
 #include "extern.h"
+#include "network.h"
+#include "networkextern.h"
 #include "update.h"
 
 // Server Setup.
@@ -21,6 +23,7 @@ void ClientConnect(const std::string& ServerIP, uint32_t ServerPort) {
 
   if (!CobblerSetSocket(0)) {
     SDL_Log("Server connection failed");
+    return;
   }
   CobblerAddIP(ServerIP, ServerPort, 0);
   Global->IsOnline = true;
@@ -33,12 +36,10 @@ void ClientConnect(const std::string& ServerIP, uint32_t ServerPort) {
     CobblerQueueData("PlayerAdd", buffer, 0);
     std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
     if (tempvector != NULL) {
-      while (!tempvector->empty()) {
+      if (!tempvector->empty()) {
         CobblerNetData* tempdata = &tempvector->back();
         SDL_Log("%s", tempdata->name.c_str());
         check = true;
-        tempvector->pop_back();
-        break;
       }
       delete tempvector;
     }
@@ -46,4 +47,18 @@ void ClientConnect(const std::string& ServerIP, uint32_t ServerPort) {
     SDL_DelayPrecise(uint64_t(1 / (double)30));
   }
   // SDL_Log("What");
+}
+
+void NetDisconnect() {
+  for (const auto& ID : GlobalNetworkStuff->UserIDs) {
+    if (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity != NULL) {
+      delete (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity);
+      GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity = NULL;
+    }
+  }
+  GlobalNetworkStuff->UserIDs.clear();
+  GlobalNetworkStuff->PlayerNetStuff.clear();
+  CobblerQuitNet();
+  Global->IsOnline = false;
+  IsServer = false;
 }

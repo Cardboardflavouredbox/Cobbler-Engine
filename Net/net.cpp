@@ -83,21 +83,10 @@ bool CobblerSetSocket(uint32_t port) {
   return true;
 }
 
-void CobblerDestroySocket() { NET_DestroyDatagramSocket(NetStuff->Socket); }
-
 bool CobblerInitNet() {
   if (NetStuff == NULL) {
     if (!NET_Init()) return false;
     NetStuff = new NetworkStuffClass();
-
-    // curl_global_init(CURL_GLOBAL_ALL);
-
-    // NetStuff->curl = curl_easy_init();
-
-    // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEFILE, "");
-
-    // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEFILE, MyCookieFileName);
-    // curl_easy_setopt(NetStuff->curl, CURLOPT_COOKIEJAR, MyCookieFileName);
   }
 
   return true;
@@ -433,15 +422,20 @@ void CobblerPlayerQuit() {
 
 void CobblerQuitNet() {
   if (NetStuff != NULL) {
-    if (NetStuff->Socket != nullptr) {
+    if (NetStuff->Socket != NULL) {
       CobblerPlayerQuit();
 
       NET_DestroyDatagramSocket(NetStuff->Socket);
+
+      NetStuff->Socket = NULL;
     }
     packetbuffer.clear();
     ConfirmedSendMap.clear();
     for (auto& client : NetStuff->Clients) {
-      if (client.RealAddress != NULL) NET_UnrefAddress(client.RealAddress);
+      if (client.RealAddress != NULL) {
+        NET_UnrefAddress(client.RealAddress);
+        client.RealAddress = NULL;
+      }
     }
     NetStuff->Clients.clear();
 

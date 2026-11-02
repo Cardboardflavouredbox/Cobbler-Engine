@@ -17,6 +17,7 @@
 #include "global.h"
 #include "inputs.h"
 #include "lights.h"
+#include "netconnect.h"
 #include "network.h"
 #include "networkextern.h"
 #include "physics.h"
@@ -91,6 +92,17 @@ void CameraUpdate() {
                        std::cos(glm::radians(LocalPlayer->dir.y));
     Camera->lookat += Camera->pos;
   }
+}
+
+void RemoveUser(uint64_t ID) {
+  GlobalNetworkStuff->UserIDs.erase(ID);
+
+  if (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity != NULL) {
+    delete (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity);
+    GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity = NULL;
+  }
+
+  GlobalNetworkStuff->PlayerNetStuff.erase(ID);
 }
 
 // recieve net data
@@ -334,17 +346,12 @@ void RecieveNetData() {
       } else if (tempdata->name == "PlayerQuit") {
         if (tempdata->ID == 0) {
           SDL_Log("server shutdown");
-          CobblerQuitNet();
-          Global->IsOnline = false;
-          IsServer = false;
+          NetDisconnect();
           SDL_Log("server shutdown done");
           break;
         } else if (GlobalNetworkStuff->UserIDs.contains(tempdata->ID)) {
-          if (deleteplayerqueue.empty() ||
-              deleteplayerqueue.back() != tempdata->ID) {
-            SDL_Log("player%llu client disconnect", tempdata->ID);
-            deleteplayerqueue.push(tempdata->ID);
-          }
+          SDL_Log("player%llu client disconnect", tempdata->ID);
+          RemoveUser(tempdata->ID);
         }
       }
       tempvector->pop_back();
@@ -354,22 +361,15 @@ void RecieveNetData() {
 
   for (auto i : GlobalNetworkStuff->PlayerNetStuff) {
     if (i.second.Timecounter > 5) {  // timeout player
-      SDL_Log("player%llu timed out", i.first);
-
-      deleteplayerqueue.push(i.first);
+      if (deleteplayerqueue.empty() || deleteplayerqueue.back() != i.first) {
+        SDL_Log("player%llu timed out", i.first);
+        deleteplayerqueue.push(i.first);
+      }
     }
   }
 
   while (!deleteplayerqueue.empty()) {
-    GlobalNetworkStuff->UserIDs.erase(deleteplayerqueue.front());
-
-    if (GlobalNetworkStuff->PlayerNetStuff[deleteplayerqueue.front()]
-            .PlayerEntity != NULL) {
-      delete (GlobalNetworkStuff->PlayerNetStuff[deleteplayerqueue.front()]
-                  .PlayerEntity);
-    }
-
-    GlobalNetworkStuff->PlayerNetStuff.erase(deleteplayerqueue.front());
+    RemoveUser(deleteplayerqueue.front());
     deleteplayerqueue.pop();
   }
 }
