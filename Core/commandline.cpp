@@ -226,6 +226,7 @@ void cmdprocess() {
     } else {
       cmdlines << "arguement " << "\"" << arg << "\"" << " doesn't exist!\n";
     }
+    if (!IsRunning) break;
   }
 }
 

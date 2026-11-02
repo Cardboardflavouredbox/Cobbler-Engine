@@ -432,22 +432,21 @@ void CobblerPlayerQuit() {
 }
 
 void CobblerQuitNet() {
-  CobblerPlayerQuit();
-  packetbuffer.clear();
-  ConfirmedSendMap.clear();
   if (NetStuff != NULL) {
-    if (NetStuff->Socket != nullptr)
+    if (NetStuff->Socket != nullptr) {
+      CobblerPlayerQuit();
+
       NET_DestroyDatagramSocket(NetStuff->Socket);
-    for (int i = 0; i < NetStuff->Clients.size(); i++) {
-      if (NetStuff->Clients[i].RealAddress != NULL)
-        NET_UnrefAddress(NetStuff->Clients[i].RealAddress);
     }
+    packetbuffer.clear();
+    ConfirmedSendMap.clear();
+    for (auto& client : NetStuff->Clients) {
+      if (client.RealAddress != NULL) NET_UnrefAddress(client.RealAddress);
+    }
+    NetStuff->Clients.clear();
 
-    // if (NetStuff->curl) curl_easy_cleanup(NetStuff->curl);
-    // curl_global_cleanup();
-
-    // if (curlpostfield != nullptr) delete (curlpostfield);
     delete (NetStuff);
+    NetStuff = NULL;
     NET_Quit();
   }
 }

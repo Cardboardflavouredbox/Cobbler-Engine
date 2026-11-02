@@ -340,8 +340,11 @@ void RecieveNetData() {
           SDL_Log("server shutdown done");
           break;
         } else if (GlobalNetworkStuff->UserIDs.contains(tempdata->ID)) {
-          SDL_Log("player%llu client disconnect", tempdata->ID);
-          deleteplayerqueue.push(tempdata->ID);
+          if (deleteplayerqueue.empty() ||
+              deleteplayerqueue.back() != tempdata->ID) {
+            SDL_Log("player%llu client disconnect", tempdata->ID);
+            deleteplayerqueue.push(tempdata->ID);
+          }
         }
       }
       tempvector->pop_back();
