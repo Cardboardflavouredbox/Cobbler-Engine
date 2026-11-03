@@ -9,24 +9,39 @@
 #include "model.h"
 #include "render.h"
 
-// BillBoard angle sprite index code. Currently unused.
-int GetBillBoardIndex(float angle, int lastIndex) {
-  // front
-  if (angle > -22.5f && angle < 22.6f) return 0;
-  if (angle >= 22.5f && angle < 67.5f) return 7;
-  if (angle >= 67.5f && angle < 112.5f) return 6;
-  if (angle >= 112.5f && angle < 157.5f) return 5;
+void Entity::setup(uint32_t Index, const std::string& path) {
+  EntityIndex = Index;
+  lua.open_libraries(sol::lib::base);
 
-  // back
-  if (angle <= -157.5 || angle >= 157.5f) return 4;
-  if (angle >= -157.4f && angle < -112.5f) return 3;
-  if (angle >= -112.5f && angle < -67.5f) return 2;
-  if (angle >= -67.5f && angle <= -22.5f) return 1;
+  sol::usertype<Entity> entity_type =
+      lua.new_usertype<Entity>("Entity", sol::constructors<Entity()>());
 
-  return lastIndex;
-}
-// Call Entity's rendermodelgroup.
-void Entity::rendermodelgroup() {
-  renderModelGroup(Modelthing, Modelthing->name, false,
-                   deltatimelocal + renderdeltaTime);
+  // Modelthing = new Modeltransform();
+  // Modelthing->name = "PlayerMain";
+  // Modeltransform::action actionthing;
+  // actionthing.pose.posecode.push_back(getposeindex("Idle"));
+  // Modelthing->actions.push_back(actionthing);
+  // actionthing.pose.posecode.front() = getposeindex("AimPistolDown");
+  // actionthing.pose.posecode.push_back(getposeindex("AimPistol"));
+  // actionthing.pose.posecode.push_back(getposeindex("AimPistolUp"));
+  // actionthing.pose.lerpamount = 1.f;
+  // Modelthing->actions.push_back(actionthing);
+  // Modelthing->size = glm::vec3(1.f / 2.13447647059f);
+
+  entity_type["respawn"] = &Entity::respawn;
+  entity_type["movespeed"] = &Entity::movespeed;
+  entity_type["jumpheight"] = &Entity::jumpheight;
+  entity_type["cameraoffset"] = &Entity::cameraoffset;
+  entity_type["hitboxradius"] = &Entity::hitboxradius;
+  entity_type["hitbox"] = &Entity::hitbox;
+  entity_type["teamindex"] = &Entity::teamindex;
+  entity_type["maxhp"] = &Entity::maxhp;
+  entity_type["hp"] = &Entity::hp;
+
+  lua.script_file(Global->GameFolder.string() + "/" + path + "/entitymain.lua");
+
+  lua["luasetup"]();
+
+  luaupdate = lua["luaupdate"];
+  lualateupdate = lua["lualateupdate"];
 }

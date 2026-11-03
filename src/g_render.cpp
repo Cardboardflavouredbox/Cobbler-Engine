@@ -256,16 +256,19 @@ void ModelGroupsethitboxes(Entity* entity) {
 }
 
 void renderEntity() {
-  for (const auto& i : Entities) {
-    if (i.second->Modelthing != nullptr) {
-      i.second->rendermodelgroup();
-      ModelGroupsethitboxes(i.second);
+  for (const auto& [index, entity] : Entities) {
+    if (entity->Modelthing != nullptr) {
+      renderModelGroup(entity->Modelthing, entity->Modelthing->name, false,
+                       entity->deltatimelocal + renderdeltaTime);
+      ModelGroupsethitboxes(entity);
     }
   }
   for (const auto& i : GlobalNetworkStuff->PlayerNetStuff) {
-    if (i.second.PlayerEntity->Modelthing != nullptr) {
-      i.second.PlayerEntity->rendermodelgroup();
-      ModelGroupsethitboxes(i.second.PlayerEntity);
+    Entity* entity = i.second.PlayerEntity;
+    if (entity->Modelthing != nullptr) {
+      renderModelGroup(entity->Modelthing, entity->Modelthing->name, false,
+                       entity->deltatimelocal + renderdeltaTime);
+      ModelGroupsethitboxes(entity);
     }
   }
 }

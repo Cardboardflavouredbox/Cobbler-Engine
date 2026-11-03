@@ -40,13 +40,6 @@ playerinputs* P1PlayerInputs;
 // LocalPlayer Entity pointer.
 Entity* LocalPlayer;
 LocalEntityNetData* LocalPlayerNetData;
-// Entity Spawn function map. Loaded from dynamic libraries.
-std::unordered_map<std::string, Entity* (*)(uint32_t, uint32_t)> SpawnEntities;
-// Particle Spawn function map. Loaded from dynamic libraries.
-std::unordered_map<std::string, Particle* (*)(uint32_t, uint32_t)>
-    SpawnParticles;
-// Player Class Update function map. Loaded from dynamic libraries.
-std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
 // pointer to Freetype variables. (y'know for the fonts)
 FreetypeClass* Freetypething;
 // Map of ModelGroups. Refer to the ModelGroupClass class to see what that is.
@@ -59,16 +52,14 @@ std::map<uint32_t, Entity*> Entities;
 // Queue that contains all the Entities to delete this frame.
 std::queue<uint32_t> EntitydeleteQueue;
 // Entities Pool.
-std::unordered_map<std::string, std::map<uint32_t, std::queue<Entity*>>>
-    EntityPool;
+std::unordered_map<std::string, std::queue<Entity*>> EntityPool;
 
 // Particles map. Contains all the Particles.
 std::map<uint32_t, Particle*> Particles;
 // Queue that contains all the Particles to delete this frame.
 std::queue<uint32_t> ParticledeleteQueue;
 // Particle Pooling map.
-std::unordered_map<std::string, std::map<uint32_t, std::queue<Particle*>>>
-    ParticlePool;
+std::unordered_map<std::string, std::queue<Particle*>> ParticlePool;
 
 // Lights map. Contains all the Lights.
 std::map<uint32_t, Light*> Lights;
@@ -103,6 +94,8 @@ bool textinputing;
 std::stringstream cmdlines;
 std::string cmdcurrentinput;
 
+sol::function LocalClassUpdate;
+
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {
     return 0;
@@ -136,11 +129,12 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
   }
   uint32_t temp = EntityMapEmptyIndex();
   Entity* tempentity;
-  if (EntityPool[Entityinfo.name][Entityinfo.EntityCode].empty()) {
-    tempentity = SpawnEntities[Entityinfo.name](Entityinfo.EntityCode, temp);
+  if (EntityPool[Entityinfo.name].empty()) {
+    tempentity = new Entity();
+    tempentity->EntityIndex = temp;
   } else {
-    tempentity = EntityPool[Entityinfo.name][Entityinfo.EntityCode].front();
-    EntityPool[Entityinfo.name][Entityinfo.EntityCode].pop();
+    tempentity = EntityPool[Entityinfo.name].front();
+    EntityPool[Entityinfo.name].pop();
 
     tempentity->invincible = false;
     tempentity->weight = 1.f;
@@ -151,12 +145,11 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
     tempentity->velocityvec3 = glm::vec3({0, 0, 0});
     tempentity->gravity = 9.81f * 6.f;
     tempentity->Collided = false;
-
-    tempentity->setup(temp);
   }
+  tempentity->setup(temp, Entityinfo.name);
+
   if (Entityinfo.hp != -1) tempentity->hp = Entityinfo.hp;
   tempentity->name = Entityinfo.name;
-  tempentity->EntityCode = Entityinfo.EntityCode;
 
   tempentity->EntityIndex = temp;
   for (int i = 0; i < 3; i++) {
@@ -326,13 +319,12 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
 
   uint32_t temp = ParticleMapEmptyIndex();
   Particle* tempparticle;
-  if (ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].empty()) {
+  if (ParticlePool[Particleinfo.name].empty()) {
     tempparticle =
         SpawnParticles[Particleinfo.name](Particleinfo.ParticleCode, temp);
   } else {
-    tempparticle =
-        ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].front();
-    ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].pop();
+    tempparticle = ParticlePool[Particleinfo.name].front();
+    ParticlePool[Particleinfo.name].pop();
     tempparticle->setup(temp);
   }
 

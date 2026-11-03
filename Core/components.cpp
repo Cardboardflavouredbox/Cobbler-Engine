@@ -11,11 +11,11 @@
 void componentsupdatelate() {
   // call npc entity late updates
   for (auto& i : Entities) {
-    i.second->lateupdate();
+    i.second->lualateupdate();
   }
   // call player entity late updates
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
-    i.second.PlayerEntity->lateupdate();
+    i.second.PlayerEntity->lualateupdate();
   }
   // call particle late updates
   for (auto& i : Particles) {
@@ -41,7 +41,7 @@ void componentsupdate() {
     if (std::isnan(i.second->position.x) || std::isnan(i.second->position.y) ||
         std::isnan(i.second->position.z))
       i.second->hp = 0;
-    i.second->update();
+    i.second->luaupdate();
     if (i.second->hp <= 0) {
       if (i.second->respawn) {
         i.second->hp = i.second->maxhp;
@@ -59,7 +59,7 @@ void componentsupdate() {
   }
   // call player entity updates and EntityMove
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
-    i.second.PlayerEntity->update();
+    i.second.PlayerEntity->luaupdate();
     if (i.second.PlayerEntity->hp <= 0) {
       i.second.PlayerEntity->hp = i.second.PlayerEntity->maxhp;
       i.second.PlayerEntity->position =
@@ -75,7 +75,7 @@ void componentsupdate() {
   }
 
   if (GlobalNetworkStuff->RecvEntity != NULL) {
-    GlobalNetworkStuff->RecvEntity->update();
+    GlobalNetworkStuff->RecvEntity->luaupdate();
     EntityMove(GlobalNetworkStuff->RecvEntity);
     GlobalNetworkStuff->RecvEntity->deltatimelocal = 0;
   }

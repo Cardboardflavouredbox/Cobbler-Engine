@@ -8,6 +8,8 @@
 #include <map>
 #include <queue>
 #include <string>
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
 
 #ifdef _WIN32
 #ifdef DLLEXPORT
@@ -26,7 +28,6 @@ LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 struct EntitySpawnInfo {
   uint32_t EntityIndex;
   std::string name;
-  uint32_t EntityCode;
   int State;
   std::array<float, 3> position, velocityvec3;
   std::array<float, 2> direction;
@@ -51,9 +52,11 @@ struct S2CPlayerInfo {  // Server to Client player info
 };
 
 struct Entity {
+  sol::state lua;
+  sol::function luaupdate, lualateupdate;
+
   uint32_t EntityIndex;
   std::string name;
-  uint32_t EntityCode;
 
   Entity* SourceEntity;
 
@@ -75,11 +78,7 @@ struct Entity {
   float hitboxradius;
   bool IsGrounded, Collided = false;
   Modeltransform* Modelthing;
-  LIB_API void renderbillboard();
-  LIB_API void rendermodelgroup();
-  LIB_API virtual void setup(uint32_t Index) = 0;
-  LIB_API virtual void update() = 0;
-  LIB_API virtual void lateupdate() = 0;
+  LIB_API void setup(uint32_t Index, const std::string& path);
 
   virtual ~Entity() {
     if (Modelthing != nullptr) delete (Modelthing);
@@ -96,12 +95,7 @@ LIB_API extern LocalEntityNetData* LocalPlayerNetData;
 
 LIB_API extern std::map<uint32_t, Entity*> Entities;
 LIB_API extern std::queue<uint32_t> EntitydeleteQueue;
-LIB_API extern std::unordered_map<std::string,
-                                  std::map<uint32_t, std::queue<Entity*>>>
-    EntityPool;
-
-LIB_API extern std::unordered_map<std::string, Entity* (*)(uint32_t, uint32_t)>
-    SpawnEntities;
+LIB_API extern std::unordered_map<std::string, std::queue<Entity*>> EntityPool;
 
 extern "C" {
 LIB_API uint32_t EntityMapEmptyIndex();

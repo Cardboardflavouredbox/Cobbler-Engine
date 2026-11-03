@@ -201,8 +201,11 @@ void RecieveNetData() {
           GlobalNetworkStuff->UserIDs.insert(i);
           CobblerAddIP(tempdata->IP, tempdata->PORT, i);
 
-          GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity =
-              SpawnEntities["Gardner"](0, i);
+          GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity = new Entity();
+
+          GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity->setup(i,
+                                                                    "Gardner");
+
           GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity->position =
               GetRespawnPoint(GlobalNetworkStuff->PlayerNetStuff[i]
                                   .PlayerEntity->teamindex);
@@ -219,7 +222,9 @@ void RecieveNetData() {
                   GlobalNetworkStuff->UserIDs.end()) {
                 GlobalNetworkStuff->UserIDs.insert(key);
                 GlobalNetworkStuff->PlayerNetStuff[key].PlayerEntity =
-                    SpawnEntities["Gardner"](0, key);
+                    new Entity();
+                GlobalNetworkStuff->PlayerNetStuff[key].PlayerEntity->setup(
+                    key, "Gardner");
               } else {
                 GlobalNetworkStuff->PlayerNetStuff[key].Timecounter = 0;
               }
@@ -239,15 +244,14 @@ void RecieveNetData() {
             if (Entities.contains(tempinfo.EntityIndex)) {
               entityindex = tempinfo.EntityIndex;
               Entity* tempentity = Entities[tempinfo.EntityIndex];
-              if (tempentity->name != tempinfo.name ||
-                  tempentity->EntityCode != tempinfo.EntityCode) {
+              if (tempentity->name != tempinfo.name) {
                 delete (tempentity);
-                tempentity = SpawnEntities[tempinfo.name](tempinfo.EntityCode,
-                                                          tempinfo.EntityIndex);
+
+                tempentity = new Entity();
+                tempentity->setup(tempinfo.EntityIndex, tempinfo.name);
               }
               if (tempinfo.hp != -1) tempentity->hp = tempinfo.hp;
               tempentity->name = tempinfo.name;
-              tempentity->EntityCode = tempinfo.EntityCode;
 
               tempentity->EntityIndex = tempinfo.EntityIndex;
               for (int i = 0; i < 3; i++) {
@@ -432,7 +436,6 @@ void SendNetData() {
         EntitySpawnInfo temp;
         for (int i = 0; i < 2; i++) temp.direction[i] = entity->dir[i];
         temp.EntityIndex = entity->EntityIndex;
-        temp.EntityCode = entity->EntityCode;
         temp.hp = entity->hp;
         temp.name = entity->name;
         temp.State = entity->State;
@@ -508,7 +511,7 @@ void fixedupdate() {
       if (player.PlayerEntity != NULL)
         inputtoentity(player.PlayerInput, player.PlayerEntity);
     }
-    if (LocalPlayer != NULL) PlayerClassUpdate[Global->playerclass]();
+    if (LocalPlayer != NULL) LocalClassUpdate();
     componentsupdate();
     for (auto& [key, value] : UIGlobalStuff->UImap3D) {
       for (auto& i : value) {
@@ -531,8 +534,7 @@ void fixedupdate() {
     EntitydeleteQueue.pop();
     Entity* entitything = Entities[index];
     EntityPool[entitything->name];
-    EntityPool[entitything->name][entitything->EntityCode];
-    EntityPool[entitything->name][entitything->EntityCode].push(entitything);
+    EntityPool[entitything->name].push(entitything);
     Entities.erase(index);
   }
 

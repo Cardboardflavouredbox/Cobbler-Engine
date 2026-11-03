@@ -1115,7 +1115,9 @@ bool init() {
       Settings->graphicsmode == OpenGL4)
     LoadMapGL(Settings->graphicsmode == OpenGL1, Global->IsDebug);
 
-  LocalPlayer = SpawnEntities[Global->playerclass](0, 0);
+  LocalPlayer = new Entity();
+  LocalPlayer->setup(0, Global->playerclass);
+
   LocalPlayer->position = GetRespawnPoint(0);
   LocalPlayer->Modelthing->visible = false;
   LocalPlayer->teamindex = 0;
@@ -1125,7 +1127,9 @@ bool init() {
     LocalPlayerNetData = new LocalEntityNetData();
   }
 
-  GlobalNetworkStuff->RecvEntity = SpawnEntities[Global->playerclass](0, 0);
+  GlobalNetworkStuff->RecvEntity = new Entity();
+  GlobalNetworkStuff->RecvEntity->setup(0, Global->playerclass);
+
   GlobalNetworkStuff->RecvEntity->position = GetRespawnPoint(0);
   GlobalNetworkStuff->RecvEntity->Modelthing->visible = false;
   GlobalNetworkStuff->RecvEntity->teamindex = 0;
@@ -1138,12 +1142,10 @@ bool init() {
 
   // Spawns all the npcs in the map.
   for (int i = 0; i < tempmapdata.Entities.size(); i++) {
-    // SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
-    if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
-      uint32_t index = EntityMapEmptyIndex();
-      Entities[index] = SpawnEntities[tempmapdata.Entities[i].name](0, index);
-      Entities[index]->position = tempmapdata.Entities[i].pos;
-    }
+    uint32_t index = EntityMapEmptyIndex();
+    Entities[index] = new Entity();
+    Entities[index]->setup(index, tempmapdata.Entities[i].name);
+    Entities[index]->position = tempmapdata.Entities[i].pos;
   }
 
   Lights[0] = new StaticLight(0);
@@ -1466,11 +1468,9 @@ void quit() {
     delete (i.second);
   }
   for (auto& i : EntityPool) {
-    for (auto& j : i.second) {
-      while (!j.second.empty()) {
-        delete (j.second.front());
-        j.second.pop();
-      }
+    while (!i.second.empty()) {
+      delete (i.second.front());
+      i.second.pop();
     }
   }
 

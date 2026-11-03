@@ -52,13 +52,8 @@ struct Particle {
 
 LIB_API extern std::map<uint32_t, Particle*> Particles;
 LIB_API extern std::queue<uint32_t> ParticledeleteQueue;
-LIB_API extern std::unordered_map<std::string,
-                                  std::map<uint32_t, std::queue<Particle*>>>
+LIB_API extern std::unordered_map<std::string, std::queue<Particle*>>
     ParticlePool;
-
-LIB_API extern std::unordered_map<std::string,
-                                  Particle* (*)(uint32_t, uint32_t)>
-    SpawnParticles;
 
 extern "C" {
 LIB_API uint32_t ParticleMapEmptyIndex();

@@ -48,7 +48,6 @@ void serialize(S& s, EntitySpawnInfo& o) {
   s.value4b(o.teamindex);
   s.value4b(o.hp);
   s.text1b(o.name, 32);
-  s.value4b(o.EntityCode);
   s.value4b(o.EntityIndex);
   s.container4b(o.direction);
   s.container4b(o.position);

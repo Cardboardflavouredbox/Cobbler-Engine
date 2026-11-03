@@ -43,3 +43,5 @@ struct playerstate {
 void inputtoentity(playerinputs input, Entity* entity);
 
 LIB_API extern playerinputs* P1PlayerInputs;
+
+LIB_API extern sol::function LocalClassUpdate;
