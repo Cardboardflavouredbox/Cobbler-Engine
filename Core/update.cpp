@@ -573,10 +573,8 @@ void update() {
     ParticledeleteQueue.pop();
     if (Particles.contains(index)) {
       Particle* particlething = Particles[index];
-      ParticlePool[particlething->name];
-      ParticlePool[particlething->name][particlething->ParticleCode];
-      ParticlePool[particlething->name][particlething->ParticleCode].push(
-          particlething);
+      ParticlePool[particlething->ParticleCode];
+      ParticlePool[particlething->ParticleCode].push(particlething);
       Particles.erase(index);
     }
   }

@@ -59,6 +59,7 @@ set(CORE_SOURCES
     Core/map.cpp
     Core/commandline.cpp
     Core/netconnect.cpp
+    Core/particles.cpp
 )
 
 add_library(CobblerGLAD SHARED glad/gl.c "include/glad/gl.h")
@@ -120,4 +121,5 @@ FILE(COPY "$CACHE{GAME}/resources.txt" DESTINATION "${CMAKE_BINARY_DIR}/bin/$CAC
 FILE(COPY $CACHE{GAME}/map DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/models DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/res DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
+FILE(COPY $CACHE{GAME}/class DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/textures DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")

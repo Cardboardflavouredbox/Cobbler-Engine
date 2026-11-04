@@ -47,19 +47,12 @@ std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 // pointer to Camera.
 CameraClass* Camera;
 
-// Entities map. Contains all the npc Entities.
-std::map<uint32_t, Entity*> Entities;
-// Queue that contains all the Entities to delete this frame.
-std::queue<uint32_t> EntitydeleteQueue;
-// Entities Pool.
-std::unordered_map<std::string, std::queue<Entity*>> EntityPool;
-
 // Particles map. Contains all the Particles.
 std::map<uint32_t, Particle*> Particles;
 // Queue that contains all the Particles to delete this frame.
 std::queue<uint32_t> ParticledeleteQueue;
 // Particle Pooling map.
-std::unordered_map<std::string, std::queue<Particle*>> ParticlePool;
+std::map<uint32_t, std::queue<Particle*>> ParticlePool;
 
 // Lights map. Contains all the Lights.
 std::map<uint32_t, Light*> Lights;
@@ -319,12 +312,11 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
 
   uint32_t temp = ParticleMapEmptyIndex();
   Particle* tempparticle;
-  if (ParticlePool[Particleinfo.name].empty()) {
-    tempparticle =
-        SpawnParticles[Particleinfo.name](Particleinfo.ParticleCode, temp);
+  if (ParticlePool[Particleinfo.ParticleCode].empty()) {
+    tempparticle = NewParticle(Particleinfo.ParticleCode, temp);
   } else {
-    tempparticle = ParticlePool[Particleinfo.name].front();
-    ParticlePool[Particleinfo.name].pop();
+    tempparticle = ParticlePool[Particleinfo.ParticleCode].front();
+    ParticlePool[Particleinfo.ParticleCode].pop();
     tempparticle->setup(temp);
   }
 
@@ -340,7 +332,6 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
     tempparticle->SourceEntity = NULL;
   }
 
-  tempparticle->name = Particleinfo.name;
   tempparticle->ParticleCode = Particleinfo.ParticleCode;
   for (int i = 0; i < 3; i++) {
     tempparticle->position[i] = Particleinfo.position[i];

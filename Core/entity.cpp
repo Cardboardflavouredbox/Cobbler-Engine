@@ -9,12 +9,20 @@
 #include "model.h"
 #include "render.h"
 
+// Entities map. Contains all the npc Entities.
+std::map<uint32_t, Entity*> Entities;
+// Queue that contains all the Entities to delete this frame.
+std::queue<uint32_t> EntitydeleteQueue;
+// Entities Pool.
+std::unordered_map<std::string, std::queue<Entity*>> EntityPool;
+
+std::vector<EntityLuaStuff*> EntityLuaVec;
+
 void Entity::setup(uint32_t Index, const std::string& path) {
   EntityIndex = Index;
-  lua.open_libraries(sol::lib::base);
 
-  sol::usertype<Entity> entity_type =
-      lua.new_usertype<Entity>("Entity", sol::constructors<Entity()>());
+  EntityLuaStuff* tempLua = new EntityLuaStuff();
+  tempLua->lua.open_libraries(sol::lib::base);
 
   // Modelthing = new Modeltransform();
   // Modelthing->name = "PlayerMain";
@@ -28,20 +36,14 @@ void Entity::setup(uint32_t Index, const std::string& path) {
   // Modelthing->actions.push_back(actionthing);
   // Modelthing->size = glm::vec3(1.f / 2.13447647059f);
 
-  entity_type["respawn"] = &Entity::respawn;
-  entity_type["movespeed"] = &Entity::movespeed;
-  entity_type["jumpheight"] = &Entity::jumpheight;
-  entity_type["cameraoffset"] = &Entity::cameraoffset;
-  entity_type["hitboxradius"] = &Entity::hitboxradius;
-  entity_type["hitbox"] = &Entity::hitbox;
-  entity_type["teamindex"] = &Entity::teamindex;
-  entity_type["maxhp"] = &Entity::maxhp;
-  entity_type["hp"] = &Entity::hp;
+  tempLua->lua["entity"] = this;
 
-  lua.script_file(Global->GameFolder.string() + "/" + path + "/entitymain.lua");
+  tempLua->lua.script_file(Global->GameFolder.string() + "/class/" + path +
+                           "/entitymain.lua");
 
-  lua["luasetup"]();
+  tempLua->lua["luasetup"]();
 
-  luaupdate = lua["luaupdate"];
-  lualateupdate = lua["lualateupdate"];
+  tempLua->luaupdate = tempLua->lua["luaupdate"];
+  tempLua->lualateupdate = tempLua->lua["lualateupdate"];
+  EntityLuaVec.push_back(tempLua);
 }

@@ -8,6 +8,7 @@
 #include <map>
 #include <queue>
 #include <string>
+#include <vector>
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
@@ -52,9 +53,6 @@ struct S2CPlayerInfo {  // Server to Client player info
 };
 
 struct Entity {
-  sol::state lua;
-  sol::function luaupdate, lualateupdate;
-
   uint32_t EntityIndex;
   std::string name;
 
@@ -85,6 +83,14 @@ struct Entity {
   }
 };
 LIB_API extern Entity* LocalPlayer;
+
+struct EntityLuaStuff {
+  Entity* entity;
+  sol::state lua;
+  sol::function luaupdate, lualateupdate;
+};
+
+LIB_API extern std::vector<EntityLuaStuff*> EntityLuaVec;
 
 struct LocalEntityNetData {
   float frame = 0.f;
