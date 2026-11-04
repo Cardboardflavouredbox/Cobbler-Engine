@@ -1414,6 +1414,12 @@ bool init() {
   RendererGlobal->viewportdata[2] = std::roundf(rtw);
   RendererGlobal->viewportdata[3] = std::roundf(rth);
 
+  playerluastuff = new playerluastruct();
+
+  playerluastuff->lua.open_libraries(sol::lib::base);
+
+  playerluastuff->LocalClassUpdate = ;
+
   return true;
 }
 
@@ -1495,8 +1501,8 @@ void quit() {
     }
   }
 
-  for (auto& i : EntityLuaVec) {
-    delete (i);
+  for (auto& i : EntityLuaMap) {
+    delete (i.second);
   }
 
   // free lights
@@ -1515,6 +1521,8 @@ void quit() {
   // free network stuff.
   NetDisconnect();
   SDL_Log("Netfreed");
+
+  delete (playerluastuff);
 
   // well it's not running anymore I suppose.
   IsRunning = false;

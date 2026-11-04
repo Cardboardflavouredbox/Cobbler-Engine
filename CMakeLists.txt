@@ -20,7 +20,7 @@ endif()
 include(FetchContent)
 
 
-find_package (Lua REQUIRED)
+find_package (Lua 5.1 REQUIRED)
 
 find_package (sol2 CONFIG REQUIRED)
 

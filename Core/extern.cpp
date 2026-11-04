@@ -87,7 +87,7 @@ bool textinputing;
 std::stringstream cmdlines;
 std::string cmdcurrentinput;
 
-sol::function LocalClassUpdate;
+playerluastruct* playerluastuff;
 
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {

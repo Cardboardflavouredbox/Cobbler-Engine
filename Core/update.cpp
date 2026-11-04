@@ -489,6 +489,7 @@ void SendNetData() {
 }
 
 void fixedupdate() {
+  SDL_Log("what");
   if (Global->IsOnline) {
     RecieveNetData();
   }
@@ -497,6 +498,7 @@ void fixedupdate() {
     Global->pause = !Global->pause;
     SDL_SetWindowRelativeMouseMode(RendererGlobal->window, !Global->pause);
   }
+  SDL_Log("what2");
 
   if (!Global->pause || Global->IsOnline) {
     if (!Global->pause) processinputs();
@@ -523,6 +525,7 @@ void fixedupdate() {
       i.lifetime -= updatedeltaTime;
     }
   }
+  SDL_Log("what3");
 
   while (!LocalDamageLocations.empty() &&
          LocalDamageLocations.front().lifetime <= 0) {
@@ -563,6 +566,7 @@ void fixedupdate() {
   }
 
   if (Global->IsOnline) SendNetData();
+  SDL_Log("whatlast");
 }
 
 void update() {

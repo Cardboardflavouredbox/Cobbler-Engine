@@ -420,10 +420,11 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   for (auto& i : Entities) {
     Entity* tempentity = i.second;
     if (tempentity->teamindex != teamindex) {
-      raycheckresult temp =
-          capsuleraycheck(hitbox[0] + checkposition, hitbox[1] + checkposition,
-                          tempentity->hitbox[0] + tempentity->position,
-                          tempentity->hitbox[1] + tempentity->position);
+      raycheckresult temp = capsuleraycheck(
+          hitbox[0] + checkposition, hitbox[1] + checkposition,
+          glm::vec3(0, 0, tempentity->hitboxradius) + tempentity->position,
+          glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius) +
+              tempentity->position);
       glm::vec3 normal = glm::normalize(temp.B - temp.A);
       if (temp.dist < radius + tempentity->hitboxradius &&
           (resultthing.dist == 0 ||
@@ -439,10 +440,11 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
     Entity* tempentity = i.second.PlayerEntity;
     if (tempentity->teamindex != teamindex) {
-      raycheckresult temp =
-          capsuleraycheck(hitbox[0] + checkposition, hitbox[1] + checkposition,
-                          tempentity->hitbox[0] + tempentity->position,
-                          tempentity->hitbox[1] + tempentity->position);
+      raycheckresult temp = capsuleraycheck(
+          hitbox[0] + checkposition, hitbox[1] + checkposition,
+          glm::vec3(0, 0, tempentity->hitboxradius) + tempentity->position,
+          glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius) +
+              tempentity->position);
       glm::vec3 normal = glm::normalize(temp.B - temp.A);
       if (temp.dist < radius + tempentity->hitboxradius &&
           (resultthing.dist == 0 ||
@@ -513,9 +515,14 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
 
 glm::vec3 collisionloop(Entity* tempentity, glm::vec3 tempposition) {
   movecollisionresult resultthing;
-  glm::vec3 normal = movecollisioncheck(
-      tempentity->hitbox, tempposition, tempentity->hitboxradius,
-      tempentity->teamindex, resultthing, tempentity);
+
+  glm::vec3 hitbox[2] = {
+      glm::vec3(0, 0, tempentity->hitboxradius),
+      glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius)};
+
+  glm::vec3 normal =
+      movecollisioncheck(hitbox, tempposition, tempentity->hitboxradius,
+                         tempentity->teamindex, resultthing, tempentity);
 
   float dist = -resultthing.dist + tempentity->hitboxradius;
   // SDL_Log("%f", distfirst);
@@ -530,6 +537,9 @@ glm::vec3 collisionloop(Entity* tempentity, glm::vec3 tempposition) {
 // OPTIMIZE THIS LATER!! THIS IS HORRID.
 // Also add more comments! This looks like nonsense to most people.
 void EntityMove(Entity* tempentity) {
+  glm::vec3 hitbox[2] = {
+      glm::vec3(0, 0, tempentity->hitboxradius),
+      glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius)};
   // consider round trip time in deltatime.
   float dt = tempentity->deltatimelocal + updatedeltaTime;
   tempentity->velocityvec3.z -= tempentity->gravity * dt;
@@ -555,9 +565,9 @@ void EntityMove(Entity* tempentity) {
     tempposition.x += tempmove.x / (float)temp;
     tempposition.y += tempmove.y / (float)temp;
     movecollisionresult resultthing;
-    glm::vec3 normal = movecollisioncheck(
-        tempentity->hitbox, tempposition, tempentity->hitboxradius,
-        tempentity->teamindex, resultthing, tempentity);
+    glm::vec3 normal =
+        movecollisioncheck(hitbox, tempposition, tempentity->hitboxradius,
+                           tempentity->teamindex, resultthing, tempentity);
     float distfirst = resultthing.dist;
 
     // didn't collide with anything while moving on x and y axis.
@@ -570,8 +580,7 @@ void EntityMove(Entity* tempentity) {
         for (int j = 1; j <= 16; j++) {
           movecollisionresult resultthing;
           glm::vec3 tempnormal = movecollisioncheck(
-              tempentity->hitbox,
-              tempposition - glm::vec3(0, 0, j * dist / 16.f),
+              hitbox, tempposition - glm::vec3(0, 0, j * dist / 16.f),
               tempentity->hitboxradius, tempentity->teamindex, resultthing,
               tempentity);
           float disttemp = resultthing.dist;
@@ -594,8 +603,7 @@ void EntityMove(Entity* tempentity) {
         for (int j = 1; j <= 16; j++) {
           movecollisionresult resultthing;
           glm::vec3 tempnormal = movecollisioncheck(
-              tempentity->hitbox,
-              tempposition + glm::vec3(0, 0, j * dist / 16.f),
+              hitbox, tempposition + glm::vec3(0, 0, j * dist / 16.f),
               tempentity->hitboxradius, tempentity->teamindex, resultthing,
               tempentity);
           float disttemp = resultthing.dist;
@@ -643,9 +651,9 @@ void EntityMove(Entity* tempentity) {
   for (int i = 0; i < temp; i++) {
     tempposition.z += tempmove.z / (float)temp;
     movecollisionresult resultthing;
-    glm::vec3 tempnormal = movecollisioncheck(
-        tempentity->hitbox, tempposition, tempentity->hitboxradius,
-        tempentity->teamindex, resultthing, tempentity);
+    glm::vec3 tempnormal =
+        movecollisioncheck(hitbox, tempposition, tempentity->hitboxradius,
+                           tempentity->teamindex, resultthing, tempentity);
     float disttempbase = resultthing.dist;
     if (tempnormal == glm::vec3(0)) {
       tempentity->IsGrounded = false;
@@ -674,8 +682,7 @@ void EntityMove(Entity* tempentity) {
           tempposition.x += tempnormal.x * dist * j / 16.f;
           tempposition.y += tempnormal.y * dist * j / 16.f;
           movecollisionresult resultthing;
-          if (movecollisioncheck(tempentity->hitbox, tempposition,
-                                 tempentity->hitboxradius,
+          if (movecollisioncheck(hitbox, tempposition, tempentity->hitboxradius,
                                  tempentity->teamindex, resultthing,
                                  tempentity) == glm::vec3(0)) {
             distthing = resultthing.dist;

@@ -72,11 +72,11 @@ struct Entity {
   glm::vec3 position, velocityvec3 = glm::vec3({0, 0, 0});
   int teamindex;
   float gravity = 9.81f * 6.f;
-  glm::vec3 hitbox[2];
+  float hitboxlength;
   float hitboxradius;
   bool IsGrounded, Collided = false;
   Modeltransform* Modelthing;
-  LIB_API void setup(uint32_t Index, const std::string& path);
+  LIB_API void setup(uint32_t Index, std::string path);
 
   virtual ~Entity() {
     if (Modelthing != nullptr) delete (Modelthing);
@@ -87,10 +87,10 @@ LIB_API extern Entity* LocalPlayer;
 struct EntityLuaStuff {
   Entity* entity;
   sol::state lua;
-  sol::function luaupdate, lualateupdate;
+  sol::protected_function luaupdate, lualateupdate;
 };
 
-LIB_API extern std::vector<EntityLuaStuff*> EntityLuaVec;
+LIB_API extern std::map<uint32_t, EntityLuaStuff*> EntityLuaMap;
 
 struct LocalEntityNetData {
   float frame = 0.f;

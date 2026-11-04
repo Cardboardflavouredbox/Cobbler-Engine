@@ -22,7 +22,6 @@
 #include "settings.h"
 #include "update.h"
 
-void (*changeUIindex)();
 std::mutex mutexthing;
 const double performancefreq = (double)SDL_GetPerformanceFrequency();
 
@@ -42,7 +41,7 @@ void updatefunction() {
     currentTime = SDL_GetPerformanceCounter();
     updatedeltaTime = ((double)(currentTime - lastTime)) / performancefreq;
     fixedupdate();
-    changeUIindex();
+    // changeUIindex();
     for (int i = 0; i < 512; i++) {
       if (LocalInputs->Keys[i] > 1) LocalInputs->Keys[i] = 1;
     }

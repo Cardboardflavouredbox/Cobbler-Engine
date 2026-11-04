@@ -8,10 +8,27 @@
 #include "physics.h"
 #include "ui.h"
 
+void LuaMapCheck() {
+  std::queue<int> LuaMapdeletqueue;
+
+  for (auto& [index, i] : EntityLuaMap) {
+    if (i->entity == nullptr) {
+      LuaMapdeletqueue.push(index);
+      delete (i);
+    }
+  }
+
+  while (!LuaMapdeletqueue.empty()) {
+    EntityLuaMap.erase(LuaMapdeletqueue.front());
+    LuaMapdeletqueue.pop();
+  }
+}
+
 // components that are called after update but before render
 void componentsupdatelate() {
+  LuaMapCheck();
   // call npc entity late updates
-  for (auto& i : EntityLuaVec) {
+  for (auto& [index, i] : EntityLuaMap) {
     i->lualateupdate();
   }
   // call particle late updates
@@ -33,9 +50,10 @@ void componentsupdatelate() {
 
 // update components
 void componentsupdate() {
+  LuaMapCheck();
   // call npc entity updates and EntityMove
-  for (auto& i : EntityLuaVec) {
-    i->luaupdate();
+  for (auto& i : EntityLuaMap) {
+    i.second->luaupdate();
   }
 
   for (auto& i : Entities) {

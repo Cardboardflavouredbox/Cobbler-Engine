@@ -83,6 +83,7 @@ struct Modeltransform {
 
   std::vector<uint32_t> Bonecodevec;
   std::unordered_map<std::string, bool> modelvisibilityresult;
+  void SetActions(const std::vector<int>& input);
 };
 
 struct BoneResult {
