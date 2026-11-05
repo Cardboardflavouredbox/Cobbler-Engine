@@ -583,16 +583,7 @@ void LocalClassUpdate() {
   playerluastuff->LocalClassUpdate();
 
   auto result = playerluastuff->LocalClassStatetoPose();
-  uint32_t animationthing;
-
-  if (!result.valid()) {
-    sol::error err = result;
-    std::string msg = err.what();
-    SDL_Log("HUH??? %s", msg.c_str());
-    animationthing = 0;
-  } else {
-    animationthing = getposeindex(result);
-  }
+  uint32_t animationthing = getposeindex(result);
 
   playerluastuff->lua["animend"] =
       (float)(ModelGroupMap["PlayerMain"].anim[animationthing][1] -

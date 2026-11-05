@@ -41,7 +41,7 @@ void updatefunction() {
     currentTime = SDL_GetPerformanceCounter();
     updatedeltaTime = ((double)(currentTime - lastTime)) / performancefreq;
     fixedupdate();
-    // changeUIindex();
+    changeUIindex();
     for (int i = 0; i < 512; i++) {
       if (LocalInputs->Keys[i] > 1) LocalInputs->Keys[i] = 1;
     }

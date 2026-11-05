@@ -1431,6 +1431,8 @@ bool init() {
 
   playerluastuff->lua.collect_garbage();
 
+  UIsetup();
+
   return true;
 }
 
@@ -1440,6 +1442,8 @@ void quit() {
   // free renderer.
   freeRenderer();
   SDL_Log("freed renderer");
+
+  UIfree();
 
   // free inputs.
   delete (LocalInputs);

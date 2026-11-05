@@ -67,9 +67,6 @@ void render3DUI() {
       Modeltransform* model =
           UIGlobalStuff->UImap3D[UIGlobalStuff->UIlist[i]][j]->modeltrans;
 
-      // SDL_Log("%f %f %f", model->position.x, model->position.y,
-      //         model->position.z);
-
       renderModelGroup(model, model->name, true, renderdeltaTime);
     }
   }

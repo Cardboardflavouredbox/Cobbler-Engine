@@ -60,20 +60,14 @@ set(CORE_SOURCES
     Core/commandline.cpp
     Core/netconnect.cpp
     Core/particles.cpp
+    UI/g_ui_index.cpp
+    UI/g_ui.cpp
 )
 
 add_library(CobblerGLAD SHARED glad/gl.c "include/glad/gl.h")
 add_library(CobblerCore SHARED Core/extern.cpp ${CORE_SOURCES})
-add_library(CobblerGameUI SHARED "$CACHE{GAME}/UI/g_ui.cpp" "$CACHE{GAME}/UI/g_ui_index.cpp" "include/ui.h")
 add_library(CobblerNet SHARED Net/net.cpp "include/network.h")
 # add_library(CobblerEditorUI SHARED "$CACHE{GAME}/UI/e_ui.cpp" "$CACHE{GAME}/UI/e_ui_index.cpp" "include/ui.h")
-
-set_target_properties(CobblerGameUI PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/bin"
-)
-set_target_properties(CobblerGameUI PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/bin"
-)
 
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/g_render.cpp)
@@ -91,7 +85,6 @@ add_executable(CobblerBSP ${BSP_SOURCES})
 
 target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net)
 target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm Freetype::Freetype ${LUA_LIBRARIES} CobblerGLAD CobblerNet)
-target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
 target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
 target_link_libraries(CobblerBSP PRIVATE glm::glm)
@@ -99,8 +92,7 @@ target_link_libraries(CobblerBSP PRIVATE glm::glm)
  
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/UI/include)
-target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/UI/include)
 # target_include_directories(CobblerEditorUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerBSP PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -110,7 +102,6 @@ target_include_directories(CobblerNet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includ
 
 target_compile_definitions(Cobbler-Engine PRIVATE DLLEXPORT=0)
 target_compile_definitions(CobblerGLAD PRIVATE DLLEXPORT=1)
-target_compile_definitions(CobblerGameUI PRIVATE DLLEXPORT=0 UIEXPORT=1)
 target_compile_definitions(CobblerCore PRIVATE DLLEXPORT=1)
 target_compile_definitions(CobblerNet PRIVATE DLLEXPORT=1)
 
