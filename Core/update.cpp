@@ -488,6 +488,112 @@ void SendNetData() {
   }
 }
 
+void HitScanAttack(float damage, float xrot, float yrot) {
+  glm::vec3 targetdir = Camera->lookat - Camera->pos;
+
+  glm::vec3 right = glm::normalize(glm::cross(targetdir, glm::vec3(0, 0, 1))),
+            up = glm::normalize(glm::cross(right, targetdir));
+
+  targetdir = glm::angleAxis(glm::radians(xrot), up) * targetdir;
+
+  targetdir = glm::angleAxis(glm::radians(yrot), right) * targetdir;
+
+  glm::vec3 ray[2];
+  ray[0] = LocalPlayer->position;
+  ray[0].z += LocalPlayer->cameraoffset;
+  ray[1] = targetdir;
+  ray[1] *= 128.f;
+  ray[1] += LocalPlayer->position;
+  ray[1].z += LocalPlayer->cameraoffset;
+
+  uint32_t lightindex = LightMapEmptyIndex();
+  Lights[lightindex] = new TempLight(lightindex, 0.125f);
+  Lights[lightindex]->position = targetdir * 0.25f + LocalPlayer->position;
+  Lights[lightindex]->position.z += LocalPlayer->cameraoffset;
+  Lights[lightindex]->startspecularStrength = 0.125f;
+  Lights[lightindex]->startdiffusionStrength = 0.05f;
+  Lights[lightindex]->color[0] = 1;
+  Lights[lightindex]->color[1] = 0.9f;
+  Lights[lightindex]->color[2] = 0.5f;
+
+  movecollisionresult resultthing;
+
+  raycastcheck(ray, LocalPlayer->teamindex, resultthing);
+
+  if (resultthing.CollidedwithEntityAtAll) {
+    EntityDamageInfo infothing;
+    infothing.damage = damage;
+    infothing.FromPlayer = false;
+    infothing.SourceEntityIndex = 0;
+
+    for (int i = 0; i < 3; i++) infothing.pushdir[i] = targetdir[i];
+    if (resultthing.CollidedWithPlayer) {
+      infothing.TargetEntityIndex = resultthing.collidedID;
+      infothing.TargetIsPlayer = true;
+    } else {
+      infothing.TargetEntityIndex = resultthing.collidedID;
+      infothing.TargetIsPlayer = false;
+    }
+    DamageEntity(infothing, true);
+  }
+
+  if (resultthing.dist <= 0) {
+    resultthing.dist = 128.f;
+  }
+
+  glm::vec3 dir;
+
+  dir = targetdir;
+  dir *= resultthing.dist;
+  dir += LocalPlayer->position;
+  dir.z += LocalPlayer->cameraoffset;
+
+  ParticleSpawn(ParticleSpawnInfo{1,
+                                  {1 / 32.f, -1 / 112.f, 0},
+                                  {dir[0], dir[1], dir[2]},
+                                  true,
+                                  false,
+                                  0},
+                true);
+}
+
+void LocalClassUpdate() {
+  playerluastuff->lua["Keys"][SDL_SCANCODE_1] =
+      LocalInputs->Keys[SDL_SCANCODE_1];
+  playerluastuff->lua["Keys"][SDL_SCANCODE_2] =
+      LocalInputs->Keys[SDL_SCANCODE_2];
+  playerluastuff->lua["Keys"][SDL_SCANCODE_3] =
+      LocalInputs->Keys[SDL_SCANCODE_3];
+  playerluastuff->lua["Keys"][SDL_SCANCODE_R] =
+      LocalInputs->Keys[SDL_SCANCODE_R];
+  playerluastuff->lua["Leftclick"] = LocalInputs->leftclick;
+  playerluastuff->lua["autoreload"] = Settings->autoreload;
+
+  if (LocalPlayer->hp <= 0 ||
+      (LocalPlayerNetData != NULL &&
+       LocalPlayerNetData->isdead)) {  // class death reset code (make this
+                                       // online compatible!)
+    playerluastuff->LocalClassDeath();
+    if (LocalPlayerNetData != NULL) LocalPlayerNetData->isdead = false;
+  }
+  playerluastuff->lua["anim"] += updatedeltaTime * 24.f;
+
+  playerluastuff->LocalClassUpdate();
+
+  float anim = playerluastuff->lua["anim"];
+  float animend = playerluastuff->lua["animend"];
+
+  animend = (float)(ModelGroupMap["PlayerMain"]
+                        .anim[statetopose[GardnerState->State]][1] -
+                    ModelGroupMap["PlayerMain"]
+                        .anim[statetopose[GardnerState->State]][0]);
+  LocalPlayer->State = GardnerState->State;
+  if (LocalPlayerNetData != NULL) LocalPlayerNetData->frame = anim;
+
+  playerluastuff->lua["anim"] = anim;
+  playerluastuff->lua["animend"] = animend;
+}
+
 void fixedupdate() {
   SDL_Log("what");
   if (Global->IsOnline) {

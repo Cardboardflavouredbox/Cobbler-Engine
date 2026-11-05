@@ -1418,7 +1418,11 @@ bool init() {
 
   playerluastuff->lua.open_libraries(sol::lib::base);
 
-  playerluastuff->LocalClassUpdate = ;
+  playerluastuff->lua.script_file(Global->GameFolder.string() + "/class/" +
+                                  path + "/classmain.lua");
+
+  playerluastuff->LocalClassUpdate = playerluastuff->lua["Update"];
+  playerluastuff->LocalClassDeath = playerluastuff->lua["Death"];
 
   return true;
 }
