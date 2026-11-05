@@ -37,11 +37,13 @@ playerinputs Loadinputdata(const playerdatapacket& input);
 
 void inputtoentity(playerinputs input, Entity* entity);
 
+void HitScanAttack(float damage, float xrot, float yrot);
+
 LIB_API extern playerinputs* P1PlayerInputs;
 
 struct playerluastruct {
   sol::state lua;
-  sol::function LocalClassUpdate, LocalClassDeath;
+  sol::function LocalClassUpdate, LocalClassDeath, LocalClassStatetoPose;
 };
 
 LIB_API extern playerluastruct* playerluastuff;

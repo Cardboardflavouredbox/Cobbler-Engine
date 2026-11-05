@@ -1419,10 +1419,14 @@ bool init() {
   playerluastuff->lua.open_libraries(sol::lib::base);
 
   playerluastuff->lua.script_file(Global->GameFolder.string() + "/class/" +
-                                  path + "/classmain.lua");
+                                  Global->playerclass + "/classmain.lua");
 
   playerluastuff->LocalClassUpdate = playerluastuff->lua["Update"];
   playerluastuff->LocalClassDeath = playerluastuff->lua["Death"];
+  playerluastuff->LocalClassStatetoPose =
+      playerluastuff->lua["StatetoPosefunc"];
+
+  playerluastuff->lua["HitScanAttack"] = HitScanAttack;
 
   return true;
 }

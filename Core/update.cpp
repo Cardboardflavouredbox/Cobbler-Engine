@@ -576,26 +576,24 @@ void LocalClassUpdate() {
     playerluastuff->LocalClassDeath();
     if (LocalPlayerNetData != NULL) LocalPlayerNetData->isdead = false;
   }
-  playerluastuff->lua["anim"] += updatedeltaTime * 24.f;
+  float anim = playerluastuff->lua["anim"];
+
+  playerluastuff->lua["anim"] = anim + updatedeltaTime * 24.f;
 
   playerluastuff->LocalClassUpdate();
 
-  float anim = playerluastuff->lua["anim"];
-  float animend = playerluastuff->lua["animend"];
+  uint32_t animationthing =
+      getposeindex(playerluastuff->LocalClassStatetoPose());
 
-  animend = (float)(ModelGroupMap["PlayerMain"]
-                        .anim[statetopose[GardnerState->State]][1] -
-                    ModelGroupMap["PlayerMain"]
-                        .anim[statetopose[GardnerState->State]][0]);
-  LocalPlayer->State = GardnerState->State;
-  if (LocalPlayerNetData != NULL) LocalPlayerNetData->frame = anim;
-
-  playerluastuff->lua["anim"] = anim;
-  playerluastuff->lua["animend"] = animend;
+  playerluastuff->lua["animend"] =
+      (float)(ModelGroupMap["PlayerMain"].anim[animationthing][1] -
+              ModelGroupMap["PlayerMain"].anim[animationthing][0]);
+  LocalPlayer->State = playerluastuff->lua["state"];
+  if (LocalPlayerNetData != NULL)
+    LocalPlayerNetData->frame = playerluastuff->lua["anim"];
 }
 
 void fixedupdate() {
-  SDL_Log("what");
   if (Global->IsOnline) {
     RecieveNetData();
   }
@@ -604,7 +602,6 @@ void fixedupdate() {
     Global->pause = !Global->pause;
     SDL_SetWindowRelativeMouseMode(RendererGlobal->window, !Global->pause);
   }
-  SDL_Log("what2");
 
   if (!Global->pause || Global->IsOnline) {
     if (!Global->pause) processinputs();
@@ -631,7 +628,6 @@ void fixedupdate() {
       i.lifetime -= updatedeltaTime;
     }
   }
-  SDL_Log("what3");
 
   while (!LocalDamageLocations.empty() &&
          LocalDamageLocations.front().lifetime <= 0) {
@@ -672,7 +668,6 @@ void fixedupdate() {
   }
 
   if (Global->IsOnline) SendNetData();
-  SDL_Log("whatlast");
 }
 
 void update() {
