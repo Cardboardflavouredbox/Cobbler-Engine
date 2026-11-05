@@ -164,7 +164,7 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
       tempentity->SourceEntity = Entities[Entityinfo.SourceEntityIndex];
     }
   } else {
-    tempentity->SourceEntity = NULL;
+    tempentity->SourceEntity = nullptr;
   }
 
   Entities[temp] = tempentity;
@@ -329,7 +329,7 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
       tempparticle->SourceEntity = Entities[Particleinfo.SourceEntityIndex];
     }
   } else {
-    tempparticle->SourceEntity = NULL;
+    tempparticle->SourceEntity = nullptr;
   }
 
   tempparticle->ParticleCode = Particleinfo.ParticleCode;

@@ -82,7 +82,7 @@ void processinputs() {
 }
 
 void CameraUpdate() {
-  if (LocalPlayer != NULL) {
+  if (LocalPlayer != nullptr) {
     Camera->pos = LocalPlayer->position;
     Camera->pos.z += LocalPlayer->cameraoffset;
     Camera->lookat.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
@@ -97,9 +97,9 @@ void CameraUpdate() {
 void RemoveUser(uint64_t ID) {
   GlobalNetworkStuff->UserIDs.erase(ID);
 
-  if (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity != NULL) {
+  if (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity != nullptr) {
     delete (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity);
-    GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity = NULL;
+    GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity = nullptr;
   }
 
   GlobalNetworkStuff->PlayerNetStuff.erase(ID);
@@ -116,7 +116,7 @@ void RecieveNetData() {
   std::queue<uint64_t> deleteplayerqueue;
 
   std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
-  if (tempvector != NULL) {
+  if (tempvector != nullptr) {
     while (!tempvector->empty()) {
       CobblerNetData* tempdata = &tempvector->back();
       // SDL_Log("%s", tempdata->name.c_str());
@@ -452,7 +452,7 @@ void SendNetData() {
     }
   }
   std::vector<uint8_t> buffer{};
-  if (LocalPlayer != NULL) {
+  if (LocalPlayer != nullptr) {
     playerdatapacket temp;
     temp.teamindex = LocalPlayer->teamindex;
     temp.State = LocalPlayer->State;
@@ -570,11 +570,11 @@ void LocalClassUpdate() {
   playerluastuff->lua["autoreload"] = Settings->autoreload;
 
   if (LocalPlayer->hp <= 0 ||
-      (LocalPlayerNetData != NULL &&
+      (LocalPlayerNetData != nullptr &&
        LocalPlayerNetData->isdead)) {  // class death reset code (make this
                                        // online compatible!)
     playerluastuff->LocalClassDeath();
-    if (LocalPlayerNetData != NULL) LocalPlayerNetData->isdead = false;
+    if (LocalPlayerNetData != nullptr) LocalPlayerNetData->isdead = false;
   }
   float anim = playerluastuff->lua["anim"];
 
@@ -582,14 +582,24 @@ void LocalClassUpdate() {
 
   playerluastuff->LocalClassUpdate();
 
-  uint32_t animationthing =
-      getposeindex(playerluastuff->LocalClassStatetoPose());
+  auto result = playerluastuff->LocalClassStatetoPose();
+  uint32_t animationthing;
+
+  if (!result.valid()) {
+    sol::error err = result;
+    std::string msg = err.what();
+    SDL_Log("HUH??? %s", msg.c_str());
+    animationthing = 0;
+  } else {
+    animationthing = getposeindex(result);
+  }
 
   playerluastuff->lua["animend"] =
       (float)(ModelGroupMap["PlayerMain"].anim[animationthing][1] -
               ModelGroupMap["PlayerMain"].anim[animationthing][0]);
-  LocalPlayer->State = playerluastuff->lua["state"];
-  if (LocalPlayerNetData != NULL)
+  float state = playerluastuff->lua["state"];
+  LocalPlayer->State = state;
+  if (LocalPlayerNetData != nullptr)
     LocalPlayerNetData->frame = playerluastuff->lua["anim"];
 }
 
@@ -605,18 +615,18 @@ void fixedupdate() {
 
   if (!Global->pause || Global->IsOnline) {
     if (!Global->pause) processinputs();
-    if (LocalPlayer != NULL) inputtoentity(*P1PlayerInputs, LocalPlayer);
+    if (LocalPlayer != nullptr) inputtoentity(*P1PlayerInputs, LocalPlayer);
 
     if (Global->IsOnline && !IsServer) {
-      if (GlobalNetworkStuff->RecvEntity != NULL)
+      if (GlobalNetworkStuff->RecvEntity != nullptr)
         inputtoentity(*P1PlayerInputs, GlobalNetworkStuff->RecvEntity);
     }
 
     for (const auto& [ID, player] : GlobalNetworkStuff->PlayerNetStuff) {
-      if (player.PlayerEntity != NULL)
+      if (player.PlayerEntity != nullptr)
         inputtoentity(player.PlayerInput, player.PlayerEntity);
     }
-    if (LocalPlayer != NULL) LocalClassUpdate();
+    if (LocalPlayer != nullptr) LocalClassUpdate();
     componentsupdate();
     for (auto& [key, value] : UIGlobalStuff->UImap3D) {
       for (auto& i : value) {
@@ -644,7 +654,7 @@ void fixedupdate() {
   }
 
   if (Global->IsOnline && !IsServer) {
-    if (GlobalNetworkStuff->RecvEntity != NULL) {
+    if (GlobalNetworkStuff->RecvEntity != nullptr) {
       if (glm::distance(LocalPlayer->position,
                         GlobalNetworkStuff->RecvEntity->position) > 1.5f)
         LocalPlayer->position = GlobalNetworkStuff->RecvEntity->position;

@@ -43,7 +43,8 @@ LIB_API extern playerinputs* P1PlayerInputs;
 
 struct playerluastruct {
   sol::state lua;
-  sol::function LocalClassUpdate, LocalClassDeath, LocalClassStatetoPose;
+  sol::protected_function LocalClassUpdate, LocalClassDeath,
+      LocalClassStatetoPose;
 };
 
 LIB_API extern playerluastruct* playerluastuff;

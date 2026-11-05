@@ -39,14 +39,14 @@
 // Settings Save function
 void SaveSettings() {
   // get location of settings file
-  if (Global->pref_path == NULL) {
+  if (Global->pref_path == nullptr) {
     SDL_Log("pref_path not set!");
     return;
   }
   std::string location = std::string(Global->pref_path) + "/Settings.txt";
 
   FILE* file = fopen(location.c_str(), "w");
-  if (file == NULL) {
+  if (file == nullptr) {
     SDL_Log("Failed to save settings!");
     return;
   }
@@ -62,7 +62,7 @@ void SaveSettings() {
 
 // Settings Load function
 void LoadSettings() {
-  if (Global->pref_path == NULL) {
+  if (Global->pref_path == nullptr) {
     SDL_Log("pref_path not set!");
     return;
   }
@@ -70,7 +70,7 @@ void LoadSettings() {
   std::string location = std::string(Global->pref_path) + "/Settings.txt";
 
   FILE* file = fopen(location.c_str(), "r");
-  if (file == NULL) {
+  if (file == nullptr) {
     SDL_Log("Failed to load settings!");
     return;
   }
@@ -174,7 +174,7 @@ bool loadPNG(std::filesystem::path path) {
       for (int i = 0; i < 4; i++) tempstr.pop_back();
       glGenTextures(1, &(RendererGlobal->GLstuff->textures[tempstr]));
       surface = SDL_LoadPNG(path.string().c_str());
-      if (surface == NULL) return false;
+      if (surface == nullptr) return false;
       // that one magenta color as transparent color
       // SDL_SetSurfaceColorKey(surface, true,
       //                        SDL_MapSurfaceRGB(surface, 255, 0, 255));
@@ -213,7 +213,7 @@ bool loadPNG(std::filesystem::path path) {
     }
     case Software: {
       surface = SDL_LoadPNG(path.string().c_str());
-      if (surface == NULL) return false;
+      if (surface == nullptr) return false;
       surface = SDL_ConvertSurfaceAndColorspace(
           surface, SDL_PIXELFORMAT_INDEX8, RendererGlobal->SRstuff->palette,
           SDL_COLORSPACE_RGB_DEFAULT, 0);
@@ -242,7 +242,7 @@ bool loadCubemap(std::filesystem::path path) {
         SDL_Surface* surface;
         surface = SDL_LoadPNG((path.string() + "/" + faces[i]).c_str());
 
-        if (surface == NULL) return false;
+        if (surface == nullptr) return false;
 
         surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
 
@@ -296,7 +296,7 @@ GLuint LoadShaders(std::vector<std::filesystem::path> file_paths) {
     // Compile Vertex Shader
     SDL_Log("Compiling shader : %s", file_path.c_str());
     char const* SourcePointer = ShaderCode.c_str();
-    glShaderSource(ShaderID, 1, &SourcePointer, NULL);
+    glShaderSource(ShaderID, 1, &SourcePointer, nullptr);
     glCompileShader(ShaderID);
 
     // Check Vertex Shader
@@ -304,7 +304,8 @@ GLuint LoadShaders(std::vector<std::filesystem::path> file_paths) {
     glGetShaderiv(ShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
     if (InfoLogLength > 0) {
       std::vector<char> ShaderErrorMessage(InfoLogLength + 1);
-      glGetShaderInfoLog(ShaderID, InfoLogLength, NULL, &ShaderErrorMessage[0]);
+      glGetShaderInfoLog(ShaderID, InfoLogLength, nullptr,
+                         &ShaderErrorMessage[0]);
       SDL_Log("%s", &ShaderErrorMessage[0]);
     }
 
@@ -323,7 +324,7 @@ GLuint LoadShaders(std::vector<std::filesystem::path> file_paths) {
   glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
   if (InfoLogLength > 0) {
     std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
-    glGetProgramInfoLog(ProgramID, InfoLogLength, NULL,
+    glGetProgramInfoLog(ProgramID, InfoLogLength, nullptr,
                         &ProgramErrorMessage[0]);
     SDL_Log("%s", &ProgramErrorMessage[0]);
   }
@@ -415,10 +416,10 @@ bool setRenderer() {
           SDL_CreateWindow("Cobbler Engine", Settings->resolutionx,
                            Settings->resolutiony, SDL_WINDOW_RESIZABLE);
       RendererGlobal->SRstuff->renderer =
-          SDL_CreateRenderer(RendererGlobal->window, NULL);
+          SDL_CreateRenderer(RendererGlobal->window, nullptr);
       SDL_SetRenderVSync(RendererGlobal->SRstuff->renderer,
                          Settings->vsync ? 1 : SDL_RENDERER_VSYNC_DISABLED);
-      SDL_SetRenderTarget(RendererGlobal->SRstuff->renderer, NULL);
+      SDL_SetRenderTarget(RendererGlobal->SRstuff->renderer, nullptr);
       RendererGlobal->SRstuff->render_target = SDL_CreateSurface(
           Settings->resolutionx, Settings->resolutiony, SDL_PIXELFORMAT_INDEX8);
       SDL_SetSurfacePalette(RendererGlobal->SRstuff->render_target,
@@ -470,7 +471,7 @@ bool setRenderer() {
       glBindTexture(GL_TEXTURE_2D, RendererGlobal->GLstuff->FBTexture);
 
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Settings->resolutionx,
-                   Settings->resolutiony, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+                   Settings->resolutiony, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -777,7 +778,7 @@ bool initargs(std::vector<std::string> args) {
   // read the resources file of the game.
   FILE* file =
       fopen((Global->GameFolder.string() + "/resources.txt").c_str(), "r");
-  if (file == NULL) {
+  if (file == nullptr) {
     SDL_Log("Impossible to open the file: %s",
             (Global->GameFolder.string() + "/resources.txt").c_str());
     return false;
@@ -896,7 +897,7 @@ bool init() {
 
   // read map data.
   Mapdata tempmapdata;
-  FILE* file = NULL;
+  FILE* file = nullptr;
   for (const auto& entry : std::filesystem::directory_iterator(
            Global->GameFolder.string() + "/map/" +
            Global->LoadedStuff->startlevel + "/")) {
@@ -909,7 +910,7 @@ bool init() {
     }
   }
 
-  if (file == NULL) {
+  if (file == nullptr) {
     SDL_Log("Impossible to open the file!");
     return false;
   }
@@ -1010,7 +1011,7 @@ bool init() {
   }
   fclose(file);
 
-  file = NULL;
+  file = nullptr;
   for (const auto& entry : std::filesystem::directory_iterator(
            Global->GameFolder.string() + "/map/" +
            Global->LoadedStuff->startlevel + "/")) {
@@ -1020,7 +1021,7 @@ bool init() {
     }
   }
 
-  if (file == NULL) {
+  if (file == nullptr) {
     SDL_Log("Impossible to open the file!");
     return false;
   }
@@ -1176,7 +1177,7 @@ bool init() {
           namestr = tempstr;
           uint32_t poseindex = (uint32_t)-1;
           FILE* file = fopen(entry.path().string().c_str(), "r");
-          if (file == NULL) {
+          if (file == nullptr) {
             SDL_Log("Impossible to open the file !");
             return false;
           }
@@ -1428,6 +1429,8 @@ bool init() {
 
   playerluastuff->lua["HitScanAttack"] = HitScanAttack;
 
+  playerluastuff->lua.collect_garbage();
+
   return true;
 }
 
@@ -1491,9 +1494,9 @@ void quit() {
   // free PlayerNetStuff
   if (Global->IsOnline) {
     for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
-      if (i.second.PlayerEntity != NULL) delete (i.second.PlayerEntity);
+      if (i.second.PlayerEntity != nullptr) delete (i.second.PlayerEntity);
     }
-    if (GlobalNetworkStuff->RecvEntity != NULL)
+    if (GlobalNetworkStuff->RecvEntity != nullptr)
       delete (GlobalNetworkStuff->RecvEntity);
     delete LocalPlayerNetData;
   }

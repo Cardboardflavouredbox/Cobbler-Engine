@@ -67,7 +67,7 @@ float Entityraycheck(
     Entity* checkentity) {  // returns dist (-1 if not collided)
   glm::vec3 normal = glm::normalize(ray[1] - ray[0]);
   float result = -1;
-  if (checkentity->Modelthing != NULL) {
+  if (checkentity->Modelthing != nullptr) {
     for (auto& [index, bone] :
          ModelGroupMap[checkentity->Modelthing->name].Bonemap) {
       for (auto& face : bone.bonehitbox.faces) {
@@ -373,7 +373,7 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
                              float radius, int teamindex,
                              movecollisionresult& resultinfo,
                              Entity* movingentity) {
-  if (movingentity != NULL) {
+  if (movingentity != nullptr) {
     for (int i = 0; i < GlobalMapStuff->KillboxFaces.size(); i++) {
       float disttemp;
       glm::vec3 normal;

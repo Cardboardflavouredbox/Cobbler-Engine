@@ -309,7 +309,7 @@ struct RayParticle : Particle {
   }
   RayParticle(uint32_t Index) { setup(Index); }
   void update() {
-    if (SourceEntity != NULL) {
+    if (SourceEntity != nullptr) {
       glm::vec3 temp(0);
 
       if (LocalPlayer == SourceEntity) {
