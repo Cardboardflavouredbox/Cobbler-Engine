@@ -102,6 +102,7 @@ uint32_t EntityMapEmptyIndex() {
 }
 
 uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
+  SDL_Log("Spawned: %s", Entityinfo.name.c_str());
   if (Global->IsOnline && OnlineSend && !IsServer) {
     if (!Entityinfo.SourcePlayer && Entityinfo.SourceEntityIndex == 0) {
       Entityinfo.SourcePlayer = true;

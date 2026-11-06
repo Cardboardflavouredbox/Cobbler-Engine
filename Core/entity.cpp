@@ -60,8 +60,22 @@ void Entity::setup(uint32_t Index, std::string path) {
   float modeltranssize = 1.f;
   tempLua->lua["ModeltransSize"] = &modeltranssize;
 
-  tempLua->lua.script_file(Global->GameFolder.string() + "/class/" + path +
-                           "/entitymain.lua");
+  std::string scriptpath =
+      Global->GameFolder.string() + "/class/" + path + "/entitymain.lua";
+
+  std::filesystem::path entry = std::filesystem::path(scriptpath);
+  if (entry.has_extension() && entry.extension() == ".lua") {
+    tempLua->lua.script_file(scriptpath);
+  } else {
+    scriptpath =
+        Global->GameFolder.string() + "/entity/" + path + "/entitymain.lua";
+    entry = std::filesystem::path(scriptpath);
+    if (entry.has_extension() && entry.extension() == ".lua") {
+      tempLua->lua.script_file(scriptpath);
+    } else {
+      SDL_Log("No Entity named %s!", path.c_str());
+    }
+  }
 
   sol::table actionsthing = tempLua->lua["SetActions"];
 

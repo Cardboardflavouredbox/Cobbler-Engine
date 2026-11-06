@@ -580,7 +580,11 @@ void LocalClassUpdate() {
 
   playerluastuff->lua["anim"] = anim + updatedeltaTime * 24.f;
 
-  playerluastuff->LocalClassUpdate();
+  auto what = playerluastuff->LocalClassUpdate();
+  if (!what.valid()) {
+    sol::error err = what;
+    std::cout << "Lua Error: " << err.what() << std::endl;
+  }
 
   auto result = playerluastuff->LocalClassStatetoPose();
   uint32_t animationthing = getposeindex(result);
