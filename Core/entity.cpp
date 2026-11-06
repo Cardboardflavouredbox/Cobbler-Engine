@@ -64,13 +64,14 @@ void Entity::setup(uint32_t Index, std::string path) {
       Global->GameFolder.string() + "/class/" + path + "/entitymain.lua";
 
   std::filesystem::path entry = std::filesystem::path(scriptpath);
-  if (entry.has_extension() && entry.extension() == ".lua") {
+
+  if (std::filesystem::exists(entry)) {
     tempLua->lua.script_file(scriptpath);
   } else {
     scriptpath =
-        Global->GameFolder.string() + "/entity/" + path + "/entitymain.lua";
+        Global->GameFolder.string() + "/entities/" + path + "/entitymain.lua";
     entry = std::filesystem::path(scriptpath);
-    if (entry.has_extension() && entry.extension() == ".lua") {
+    if (std::filesystem::exists(entry)) {
       tempLua->lua.script_file(scriptpath);
     } else {
       SDL_Log("No Entity named %s!", path.c_str());
