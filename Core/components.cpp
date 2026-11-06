@@ -1,5 +1,7 @@
 #include "components.h"
 
+#include <SDL3/SDL_log.h>
+
 #include "entity.h"
 #include "lights.h"
 #include "map.h"
@@ -30,15 +32,6 @@ void componentsupdatelate() {
   // call npc entity late updates
   for (auto& [index, i] : EntityLuaMap) {
     i->lualateupdate();
-
-    i->entity->Modelthing->position = i->entity->position;
-    i->entity->Modelthing->lookdir = i->entity->dir;
-
-    // if (Modelthing->actions[1].pose.posecode.size() == 1)
-    //   Modelthing->actions[1].pose.lerpamount = 0;
-    // else
-    //   Modelthing->actions[1].pose.lerpamount = Modelthing->lookdir.y / 90.f +
-    //   1;
   }
   // call particle late updates
   for (auto& i : Particles) {

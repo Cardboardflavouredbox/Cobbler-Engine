@@ -6,6 +6,7 @@
 
 #include "deltaTime.h"
 #include "extern.h"
+#include "luathing.h"
 #include "model.h"
 #include "render.h"
 
@@ -44,21 +45,11 @@ void Entity::setup(uint32_t Index, std::string path) {
   EntityLuaStuff* tempLua = new EntityLuaStuff();
   tempLua->lua.open_libraries(sol::lib::base);
 
-  tempLua->lua.new_usertype<Entity>(
-      "Entity", sol::constructors<Entity()>(), "respawn", &Entity::respawn,
-      "movespeed", &Entity::movespeed, "jumpheight", &Entity::jumpheight,
-      "cameraoffset", &Entity::cameraoffset, "hitboxradius",
-      &Entity::hitboxradius, "hitboxlength", &Entity::hitboxlength, "teamindex",
-      &Entity::teamindex, "maxhp", &Entity::maxhp, "hp", &Entity::hp);
+  LuaSet(&tempLua->lua);
 
   tempLua->lua["entity"] = this;
 
   Modelthing = new Modeltransform();
-
-  tempLua->lua["ModeltransName"] = &Modelthing->name;
-
-  float modeltranssize = 1.f;
-  tempLua->lua["ModeltransSize"] = &modeltranssize;
 
   std::string scriptpath =
       Global->GameFolder.string() + "/class/" + path + "/entitymain.lua";
@@ -89,9 +80,9 @@ void Entity::setup(uint32_t Index, std::string path) {
   tempLua->luaupdate = tempLua->lua["luaupdate"];
   tempLua->lualateupdate = tempLua->lua["lualateupdate"];
 
-  Modelthing->size = glm::vec3(modeltranssize);
-
   tempLua->lua.collect_garbage();
+
+  tempLua->entity = this;
 
   EntityLuaMap[EntityLuaMapEmptyIndex()] = tempLua;
 }

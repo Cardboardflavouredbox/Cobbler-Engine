@@ -60,6 +60,7 @@ set(CORE_SOURCES
     Core/commandline.cpp
     Core/netconnect.cpp
     Core/particles.cpp
+    Core/luathing.cpp
     UI/g_ui_index.cpp
     UI/g_ui.cpp
 )
