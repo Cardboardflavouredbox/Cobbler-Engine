@@ -47,9 +47,18 @@ void Entity::setup(uint32_t Index, std::string path) {
 
   LuaSet(&tempLua->lua);
 
-  tempLua->lua["entity"] = this;
-
   Modelthing = new Modeltransform();
+
+  tempLua->lua["entity"] = this;
+  tempLua->lua["Modelthing"] = Modelthing;
+
+  tempLua->lua["Modelthingpos"] = &Modelthing->position;
+  tempLua->lua["Modelthingdir"] = &Modelthing->lookdir;
+  tempLua->lua["Modelthingsize"] = &Modelthing->size;
+  tempLua->lua["Modelthingrot"] = &Modelthing->rot;
+
+  tempLua->lua["entitypos"] = &position;
+  tempLua->lua["entitydir"] = &dir;
 
   std::string scriptpath =
       Global->GameFolder.string() + "/class/" + path + "/entitymain.lua";
@@ -79,8 +88,6 @@ void Entity::setup(uint32_t Index, std::string path) {
 
   tempLua->luaupdate = tempLua->lua["luaupdate"];
   tempLua->lualateupdate = tempLua->lua["lualateupdate"];
-
-  tempLua->lua.collect_garbage();
 
   tempLua->entity = this;
 

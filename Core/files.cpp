@@ -1431,6 +1431,8 @@ bool init() {
   LuaSet(&playerluastuff->lua);
 
   playerluastuff->lua["LocalPlayer"] = LocalPlayer;
+  playerluastuff->lua["LocalPlayerpos"] = &LocalPlayer->position;
+  playerluastuff->lua["LocalPlayerdir"] = &LocalPlayer->dir;
 
   playerluastuff->lua["EntitySpawn"] = EntitySpawn;
 

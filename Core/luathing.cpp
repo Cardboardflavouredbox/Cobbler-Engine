@@ -7,34 +7,68 @@ void LuaSet(sol::state* luathing) {
       "vec3", sol::constructors<glm::vec3()>(), "x", &glm::vec3::x, "y",
       &glm::vec3::y, "z", &glm::vec3::z,
 
-      sol::meta_function::index, [](const glm::vec3& v, int idx) -> float {
-        if (idx == 1) return v.x;
-        if (idx == 2) return v.y;
-        if (idx == 3) return v.z;
-        throw std::out_of_range("vec3 index out of range");
-      });
+      // This overload allows BOTH string properties and integer indexing to
+      // coexist safely
+      sol::meta_function::index,
+      sol::overload(
+          [](const glm::vec3& v, int idx) -> float {
+            if (idx == 1) return v.x;
+            if (idx == 2) return v.y;
+            if (idx == 3) return v.z;
+            throw std::out_of_range("vec3 index out of range");
+          },
+          [](sol::this_state s, const glm::vec3& v,
+             const std::string& key) -> sol::object {
+            sol::state_view lua(s);
+            if (key == "x") return sol::make_object(lua, v.x);
+            if (key == "y") return sol::make_object(lua, v.y);
+            if (key == "z") return sol::make_object(lua, v.z);
+            return sol::lua_nil;
+          }));
 
+  // 2. Fixed Vec2 registration
   luathing->new_usertype<glm::vec2>(
       "vec2", sol::constructors<glm::vec2()>(), "x", &glm::vec2::x, "y",
       &glm::vec2::y,
 
-      sol::meta_function::index, [](const glm::vec2& v, int idx) -> float {
-        if (idx == 1) return v.x;
-        if (idx == 2) return v.y;
-        throw std::out_of_range("vec2 index out of range");
-      });
+      sol::meta_function::index,
+      sol::overload(
+          [](const glm::vec2& v, int idx) -> float {
+            if (idx == 1) return v.x;
+            if (idx == 2) return v.y;
+            throw std::out_of_range("vec2 index out of range");
+          },
+          [](sol::this_state s, const glm::vec2& v,
+             const std::string& key) -> sol::object {
+            sol::state_view lua(s);
+            if (key == "x") return sol::make_object(lua, v.x);
+            if (key == "y") return sol::make_object(lua, v.y);
+            return sol::lua_nil;
+          }));
 
+  // 3. Fixed Quaternion registration
   luathing->new_usertype<glm::quat>(
-      "vec2", sol::constructors<glm::vec2()>(), "w", &glm::quat::w, "x",
+      "quat", sol::constructors<glm::quat()>(), "w", &glm::quat::w, "x",
       &glm::quat::x, "y", &glm::quat::y, "z", &glm::quat::z,
 
-      sol::meta_function::index, [](const glm::quat& v, int idx) -> float {
-        if (idx == 1) return v.x;
-        if (idx == 2) return v.y;
-        if (idx == 3) return v.z;
-        if (idx == 4) return v.w;
-        throw std::out_of_range("quat index out of range");
-      });
+      sol::meta_function::index,
+      sol::overload(
+          [](const glm::quat& v, int idx) -> float {
+            if (idx == 1) return v.x;
+            if (idx == 2) return v.y;
+            if (idx == 3) return v.z;
+            if (idx == 4) return v.w;
+            throw std::out_of_range("quat index out of range");
+          },
+          [](sol::this_state s, const glm::quat& v,
+             const std::string& key) -> sol::object {
+            sol::state_view lua(s);
+            if (key == "x") return sol::make_object(lua, v.x);
+            if (key == "y") return sol::make_object(lua, v.y);
+            if (key == "z") return sol::make_object(lua, v.z);
+            if (key == "w") return sol::make_object(lua, v.w);
+            return sol::lua_nil;
+          }));
 
   luathing->new_usertype<EntitySpawnInfo>(
       "EntitySpawnInfo", sol::constructors<EntitySpawnInfo()>(), "teamindex",
@@ -48,17 +82,17 @@ void LuaSet(sol::state* luathing) {
       &EntitySpawnInfo::SourceEntityIndex);
 
   luathing->new_usertype<Modeltransform>(
-      "Entity", sol::constructors<Modeltransform()>(), "visible",
+      "Modeltransform", sol::constructors<Modeltransform()>(), "visible",
       &Modeltransform::visible, "name", &Modeltransform::name, "position",
       &Modeltransform::position, "size", &Modeltransform::size, "lookdir",
       &Modeltransform::lookdir, "rot", &Modeltransform::rot);
 
   luathing->new_usertype<Entity>(
       "Entity", sol::constructors<Entity()>(), "respawn", &Entity::respawn,
+      "gravity", &Entity::gravity, "invincible", &Entity::invincible,
       "movespeed", &Entity::movespeed, "jumpheight", &Entity::jumpheight,
       "cameraoffset", &Entity::cameraoffset, "hitboxradius",
       &Entity::hitboxradius, "hitboxlength", &Entity::hitboxlength, "teamindex",
       &Entity::teamindex, "maxhp", &Entity::maxhp, "hp", &Entity::hp,
-      "position", &Entity::position, "dir", &Entity::dir, "Modelthing",
-      &Entity::Modelthing);
+      "position", &Entity::position, "dir", &Entity::dir);
 }
