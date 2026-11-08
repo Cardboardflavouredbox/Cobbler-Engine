@@ -7,8 +7,6 @@ void LuaSet(sol::state* luathing) {
       "vec3", sol::constructors<glm::vec3()>(), "x", &glm::vec3::x, "y",
       &glm::vec3::y, "z", &glm::vec3::z,
 
-      // This overload allows BOTH string properties and integer indexing to
-      // coexist safely
       sol::meta_function::index,
       sol::overload(
           [](const glm::vec3& v, int idx) -> float {
@@ -24,9 +22,40 @@ void LuaSet(sol::state* luathing) {
             if (key == "y") return sol::make_object(lua, v.y);
             if (key == "z") return sol::make_object(lua, v.z);
             return sol::lua_nil;
+          }),
+      sol::meta_function::new_index,
+      sol::overload(
+          [](glm::vec3& v, int idx, float value) {
+            if (idx == 1) {
+              v.x = value;
+              return;
+            }
+            if (idx == 2) {
+              v.y = value;
+              return;
+            }
+            if (idx == 3) {
+              v.z = value;
+              return;
+            }
+            throw std::out_of_range("vec3 index out of range");
+          },
+          [](glm::vec3& v, const std::string& key, float value) {
+            if (key == "x") {
+              v.x = value;
+              return;
+            }
+            if (key == "y") {
+              v.y = value;
+              return;
+            }
+            if (key == "z") {
+              v.z = value;
+              return;
+            }
+            throw std::invalid_argument("Invalid key for vec3");
           }));
 
-  // 2. Fixed Vec2 registration
   luathing->new_usertype<glm::vec2>(
       "vec2", sol::constructors<glm::vec2()>(), "x", &glm::vec2::x, "y",
       &glm::vec2::y,
@@ -44,6 +73,30 @@ void LuaSet(sol::state* luathing) {
             if (key == "x") return sol::make_object(lua, v.x);
             if (key == "y") return sol::make_object(lua, v.y);
             return sol::lua_nil;
+          }),
+      sol::meta_function::new_index,
+      sol::overload(
+          [](glm::vec2& v, int idx, float value) {
+            if (idx == 1) {
+              v.x = value;
+              return;
+            }
+            if (idx == 2) {
+              v.y = value;
+              return;
+            }
+            throw std::out_of_range("vec2 index out of range");
+          },
+          [](glm::vec2& v, const std::string& key, float value) {
+            if (key == "x") {
+              v.x = value;
+              return;
+            }
+            if (key == "y") {
+              v.y = value;
+              return;
+            }
+            throw std::invalid_argument("Invalid key for vec2");
           }));
 
   // 3. Fixed Quaternion registration
@@ -68,6 +121,46 @@ void LuaSet(sol::state* luathing) {
             if (key == "z") return sol::make_object(lua, v.z);
             if (key == "w") return sol::make_object(lua, v.w);
             return sol::lua_nil;
+          }),
+      sol::meta_function::new_index,
+      sol::overload(
+          [](glm::quat& v, int idx, float value) {
+            if (idx == 1) {
+              v.x = value;
+              return;
+            }
+            if (idx == 2) {
+              v.y = value;
+              return;
+            }
+            if (idx == 3) {
+              v.z = value;
+              return;
+            }
+            if (idx == 4) {
+              v.w = value;
+              return;
+            }
+            throw std::out_of_range("quat index out of range");
+          },
+          [](glm::quat& v, const std::string& key, float value) {
+            if (key == "x") {
+              v.x = value;
+              return;
+            }
+            if (key == "y") {
+              v.y = value;
+              return;
+            }
+            if (key == "z") {
+              v.z = value;
+              return;
+            }
+            if (key == "w") {
+              v.w = value;
+              return;
+            }
+            throw std::invalid_argument("Invalid key for quat");
           }));
 
   luathing->new_usertype<EntitySpawnInfo>(
@@ -89,10 +182,11 @@ void LuaSet(sol::state* luathing) {
 
   luathing->new_usertype<Entity>(
       "Entity", sol::constructors<Entity()>(), "respawn", &Entity::respawn,
-      "gravity", &Entity::gravity, "invincible", &Entity::invincible,
-      "movespeed", &Entity::movespeed, "jumpheight", &Entity::jumpheight,
-      "cameraoffset", &Entity::cameraoffset, "hitboxradius",
-      &Entity::hitboxradius, "hitboxlength", &Entity::hitboxlength, "teamindex",
-      &Entity::teamindex, "maxhp", &Entity::maxhp, "hp", &Entity::hp,
-      "position", &Entity::position, "dir", &Entity::dir);
+      "Collided", &Entity::Collided, "gravity", &Entity::gravity, "invincible",
+      &Entity::invincible, "movespeed", &Entity::movespeed, "jumpheight",
+      &Entity::jumpheight, "cameraoffset", &Entity::cameraoffset, "EntityIndex",
+      &Entity::EntityIndex, "hitboxradius", &Entity::hitboxradius,
+      "hitboxlength", &Entity::hitboxlength, "teamindex", &Entity::teamindex,
+      "maxhp", &Entity::maxhp, "hp", &Entity::hp, "position", &Entity::position,
+      "dir", &Entity::dir, "velocityvec3", &Entity::velocityvec3);
 }

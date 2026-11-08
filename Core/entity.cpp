@@ -6,8 +6,12 @@
 
 #include "deltaTime.h"
 #include "extern.h"
+#include "lights.h"
 #include "luathing.h"
 #include "model.h"
+#include "networkextern.h"
+#include "physics.h"
+#include "pi.h"
 #include "render.h"
 
 // Entities map. Contains all the npc Entities.
@@ -17,18 +21,83 @@ std::queue<uint32_t> EntitydeleteQueue;
 // Entities Pool.
 std::unordered_map<std::string, std::queue<Entity*>> EntityPool;
 
-std::map<uint32_t, EntityLuaStuff*> EntityLuaMap;
+void RadiusDamageEntity(glm::vec3 position, Entity* tempentity,
+                        uint64_t TargetEntityIndex, bool TargetIsPlayer,
+                        int teamindex, uint64_t EntityIndex, float radius = 7.f,
+                        float damage = 40.f, float pushback = 28.5f,
+                        Entity* SourceEntity = nullptr) {
+  raycheckresult temp = capsuleraycheck(
+      position, position,
+      glm::vec3(0, 0, tempentity->hitboxradius) + tempentity->position,
+      glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius) +
+          tempentity->position);
+  glm::vec3 normal = glm::normalize(temp.B - temp.A);
 
-uint32_t EntityLuaMapEmptyIndex() {
-  if (!EntityLuaMap.contains(0)) {
-    return 0;
+  if (temp.dist < radius + tempentity->hitboxradius &&
+      ((SourceEntity != nullptr && SourceEntity == tempentity) ||
+       tempentity->teamindex != teamindex)) {
+    normal.x *= 2;
+    normal.y *= 2;
+
+    float amount = (tempentity->hitboxradius + radius - temp.dist) /
+                   (tempentity->hitboxradius + radius);
+
+    if (amount > 0.75f) amount = 0.75f;
+    amount += 0.25f;
+
+    if (tempentity->velocityvec3.z < 0) tempentity->velocityvec3.z = 0;
+    tempentity->velocityvec3 += normal * amount * pushback / tempentity->weight;
+    EntityDamageInfo infothing;
+
+    infothing.damage = damage * amount;
+
+    if (SourceEntity != nullptr && SourceEntity == tempentity) {
+      infothing.damage *= 3.f / 5.f;
+    }
+
+    infothing.FromPlayer = false;
+    infothing.SourceEntityIndex = EntityIndex;
+    infothing.TargetEntityIndex = TargetEntityIndex;
+    infothing.TargetIsPlayer = TargetIsPlayer;
+    for (int i = 0; i < 3; i++) infothing.pushdir[i] = 0;
+    DamageEntity(infothing, false);
   }
-  uint32_t i = 1;
-  while (i != 0) {
-    if (!EntityLuaMap.contains(i)) return i;
-    i++;
+}
+
+void RadiusDamage(Entity* entity, glm::vec3 position, int teamindex,
+                  float radius = 7.f, float damage = 40.f,
+                  float pushback = 28.5f) {
+  uint32_t lightindex = LightMapEmptyIndex();
+  Lights[lightindex] = new TempLight(lightindex, 1.f);
+  Lights[lightindex]->position = position;
+  Lights[lightindex]->color[0] = 1;
+  Lights[lightindex]->color[1] = 0.9f;
+  Lights[lightindex]->color[2] = 0;
+  ParticleSpawn(ParticleSpawnInfo{0, {position[0], position[1], position[2]}},
+                true);
+  for (auto& i : Entities) {
+    RadiusDamageEntity(position, i.second, i.first, false, teamindex,
+                       entity->EntityIndex, radius, damage, pushback,
+                       entity->SourceEntity);
   }
-  return 0;
+  for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+    RadiusDamageEntity(position, i.second.PlayerEntity, i.first, true,
+                       teamindex, entity->EntityIndex, radius, damage, pushback,
+                       entity->SourceEntity);
+  }
+}
+
+glm::vec3 setvec3dir(glm::vec2 dir) {
+  float ps = std::sin(dir.x * PI / 180.f);
+  float pc = std::cos(dir.x * PI / 180.f);
+  float what = std::cos(dir.y * PI / 180.f);
+  return glm::normalize(
+      glm::vec3{-ps * what, pc * what, std::sin(dir.y * PI / 180.f)});
+}
+
+glm::quat setquatfromdir(glm::vec3 dir) {
+  return glm::quatLookAt(dir, glm::vec3(0, 0, 1)) *
+         glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, -1));
 }
 
 void Modeltransform::SetActions(const std::vector<int>& input) {
@@ -42,23 +111,26 @@ void Modeltransform::SetActions(const std::vector<int>& input) {
 void Entity::setup(uint32_t Index, std::string path) {
   EntityIndex = Index;
 
-  EntityLuaStuff* tempLua = new EntityLuaStuff();
-  tempLua->lua.open_libraries(sol::lib::base);
+  lua.open_libraries(sol::lib::base);
 
-  LuaSet(&tempLua->lua);
+  LuaSet(&lua);
 
   Modelthing = new Modeltransform();
 
-  tempLua->lua["entity"] = this;
-  tempLua->lua["Modelthing"] = Modelthing;
+  lua["entity"] = this;
+  lua["Modelthing"] = Modelthing;
 
-  tempLua->lua["Modelthingpos"] = &Modelthing->position;
-  tempLua->lua["Modelthingdir"] = &Modelthing->lookdir;
-  tempLua->lua["Modelthingsize"] = &Modelthing->size;
-  tempLua->lua["Modelthingrot"] = &Modelthing->rot;
+  lua["Modelthingpos"] = &Modelthing->position;
+  lua["Modelthingdir"] = &Modelthing->lookdir;
+  lua["Modelthingsize"] = &Modelthing->size;
+  lua["Modelthingrot"] = &Modelthing->rot;
 
-  tempLua->lua["entitypos"] = &position;
-  tempLua->lua["entitydir"] = &dir;
+  lua["entitypos"] = &position;
+  lua["entitydir"] = &dir;
+
+  lua["setvec3dir"] = setvec3dir;
+  lua["setquatfromdir"] = setquatfromdir;
+  lua["RadiusDamage"] = RadiusDamage;
 
   std::string scriptpath =
       Global->GameFolder.string() + "/class/" + path + "/entitymain.lua";
@@ -66,30 +138,26 @@ void Entity::setup(uint32_t Index, std::string path) {
   std::filesystem::path entry = std::filesystem::path(scriptpath);
 
   if (std::filesystem::exists(entry)) {
-    tempLua->lua.script_file(scriptpath);
+    lua.script_file(scriptpath);
   } else {
     scriptpath =
         Global->GameFolder.string() + "/entities/" + path + "/entitymain.lua";
     entry = std::filesystem::path(scriptpath);
     if (std::filesystem::exists(entry)) {
-      tempLua->lua.script_file(scriptpath);
+      lua.script_file(scriptpath);
     } else {
       SDL_Log("No Entity named %s!", path.c_str());
     }
   }
 
-  sol::table actionsthing = tempLua->lua["SetActions"];
+  sol::table actionsthing = lua["SetActions"];
 
   std::vector<int> tempvec = actionsthing.as<std::vector<int>>();
 
   Modelthing->SetActions(tempvec);
 
-  tempLua->lua["luasetup"]();
+  lua["luasetup"]();
 
-  tempLua->luaupdate = tempLua->lua["luaupdate"];
-  tempLua->lualateupdate = tempLua->lua["lualateupdate"];
-
-  tempLua->entity = this;
-
-  EntityLuaMap[EntityLuaMapEmptyIndex()] = tempLua;
+  luaupdate = lua["luaupdate"];
+  lualateupdate = lua["lualateupdate"];
 }

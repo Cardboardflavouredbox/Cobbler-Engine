@@ -53,6 +53,9 @@ struct S2CPlayerInfo {  // Server to Client player info
 };
 
 struct Entity {
+  sol::state lua;
+  sol::protected_function luaupdate, lualateupdate;
+
   uint32_t EntityIndex;
   std::string name;
 
@@ -83,14 +86,6 @@ struct Entity {
   }
 };
 LIB_API extern Entity* LocalPlayer;
-
-struct EntityLuaStuff {
-  Entity* entity;
-  sol::state lua;
-  sol::protected_function luaupdate, lualateupdate;
-};
-
-LIB_API extern std::map<uint32_t, EntityLuaStuff*> EntityLuaMap;
 
 struct LocalEntityNetData {
   float frame = 0.f;

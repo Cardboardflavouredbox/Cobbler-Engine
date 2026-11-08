@@ -1525,10 +1525,6 @@ void quit() {
     }
   }
 
-  for (auto& i : EntityLuaMap) {
-    delete (i.second);
-  }
-
   // free lights
   for (auto& i : Lights) {
     delete (i.second);

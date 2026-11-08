@@ -10,29 +10,16 @@
 #include "physics.h"
 #include "ui.h"
 
-void LuaMapCheck() {
-  std::queue<int> LuaMapdeletqueue;
-
-  for (auto& [index, i] : EntityLuaMap) {
-    if (i->entity == nullptr) {
-      LuaMapdeletqueue.push(index);
-      delete (i);
-    }
-  }
-
-  while (!LuaMapdeletqueue.empty()) {
-    EntityLuaMap.erase(LuaMapdeletqueue.front());
-    LuaMapdeletqueue.pop();
-  }
-}
-
 // components that are called after update but before render
 void componentsupdatelate() {
-  LuaMapCheck();
   // call npc entity late updates
-  for (auto& [index, i] : EntityLuaMap) {
-    i->lualateupdate();
+  for (auto& i : Entities) {
+    i.second->lualateupdate();
   }
+  for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+    i.second.PlayerEntity->lualateupdate();
+  }
+
   // call particle late updates
   for (auto& i : Particles) {
     i.second->lateupdate();
@@ -52,13 +39,11 @@ void componentsupdatelate() {
 
 // update components
 void componentsupdate() {
-  LuaMapCheck();
   // call npc entity updates and EntityMove
-  for (auto& i : EntityLuaMap) {
-    i.second->luaupdate();
-  }
 
   for (auto& i : Entities) {
+    i.second->luaupdate();
+
     if (std::isnan(i.second->position.x) || std::isnan(i.second->position.y) ||
         std::isnan(i.second->position.z))
       i.second->hp = 0;
@@ -79,6 +64,8 @@ void componentsupdate() {
   }
   // call player entity updates and EntityMove
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+    i.second.PlayerEntity->luaupdate();
+
     if (i.second.PlayerEntity->hp <= 0) {
       i.second.PlayerEntity->hp = i.second.PlayerEntity->maxhp;
       i.second.PlayerEntity->position =

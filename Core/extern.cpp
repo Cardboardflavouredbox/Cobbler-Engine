@@ -125,6 +125,7 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
   if (EntityPool[Entityinfo.name].empty()) {
     tempentity = new Entity();
     tempentity->EntityIndex = temp;
+    tempentity->setup(temp, Entityinfo.name);
   } else {
     tempentity = EntityPool[Entityinfo.name].front();
     EntityPool[Entityinfo.name].pop();
@@ -138,8 +139,9 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
     tempentity->velocityvec3 = glm::vec3({0, 0, 0});
     tempentity->gravity = 9.81f * 6.f;
     tempentity->Collided = false;
+    tempentity->lua["luasetup"]();
+    tempentity->EntityIndex = temp;
   }
-  tempentity->setup(temp, Entityinfo.name);
 
   if (Entityinfo.hp != -1) tempentity->hp = Entityinfo.hp;
   tempentity->name = Entityinfo.name;
