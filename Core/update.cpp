@@ -82,7 +82,7 @@ void processinputs() {
 }
 
 void CameraUpdate() {
-  if (LocalPlayer != nullptr) {
+  if (LocalPlayer != NULL) {
     Camera->pos = LocalPlayer->position;
     Camera->pos.z += LocalPlayer->cameraoffset;
     Camera->lookat.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
@@ -97,9 +97,9 @@ void CameraUpdate() {
 void RemoveUser(uint64_t ID) {
   GlobalNetworkStuff->UserIDs.erase(ID);
 
-  if (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity != nullptr) {
+  if (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity != NULL) {
     delete (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity);
-    GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity = nullptr;
+    GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity = NULL;
   }
 
   GlobalNetworkStuff->PlayerNetStuff.erase(ID);
@@ -116,7 +116,7 @@ void RecieveNetData() {
   std::queue<uint64_t> deleteplayerqueue;
 
   std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
-  if (tempvector != nullptr) {
+  if (tempvector != NULL) {
     while (!tempvector->empty()) {
       CobblerNetData* tempdata = &tempvector->back();
       // SDL_Log("%s", tempdata->name.c_str());
@@ -130,7 +130,7 @@ void RecieveNetData() {
         if (state.first == bitsery::ReaderError::NoError && state.second) {
           if (GlobalNetworkStuff->PlayerNetStuff.contains(temp.ID) &&
               GlobalNetworkStuff->PlayerNetStuff[temp.ID].PlayerEntity !=
-                  nullptr) {
+                  NULL) {
             GlobalNetworkClass::PlayerNetClass* tempplayerthing =
                 &GlobalNetworkStuff->PlayerNetStuff[temp.ID];
 
@@ -236,12 +236,14 @@ void RecieveNetData() {
         auto state = bitsery::quickDeserialization<
             bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
             {tempdata->buffer.begin(), tempdata->size}, tempinfo);
-        if (state.first == bitsery::ReaderError::NoError && state.second) {
+        if (state.first == bitsery::ReaderError::NoError && state.second &&
+            tempinfo.name.size() > 0) {
           uint32_t entityindex = 0;
           if (IsServer) {
             entityindex = EntitySpawn(tempinfo, false);
           } else {
-            if (Entities.contains(tempinfo.EntityIndex)) {
+            if (Entities.contains(
+                    tempinfo.EntityIndex)) {  // this causes client crash
               entityindex = tempinfo.EntityIndex;
               Entity* tempentity = Entities[tempinfo.EntityIndex];
               if (tempentity->name != tempinfo.name) {
@@ -250,7 +252,7 @@ void RecieveNetData() {
                 tempentity = new Entity();
                 tempentity->setup(tempinfo.EntityIndex, tempinfo.name);
               }
-              if (tempinfo.hp != -1) tempentity->hp = tempinfo.hp;
+              if (tempinfo.hp != -255) tempentity->hp = tempinfo.hp;
               tempentity->name = tempinfo.name;
 
               tempentity->EntityIndex = tempinfo.EntityIndex;
@@ -264,6 +266,7 @@ void RecieveNetData() {
                 tempentity->dir[i] = tempinfo.direction[i];
               }
             } else {
+              tempinfo.IndexSet = true;
               entityindex = EntitySpawn(tempinfo, false);
             }
           }
@@ -452,7 +455,7 @@ void SendNetData() {
     }
   }
   std::vector<uint8_t> buffer{};
-  if (LocalPlayer != nullptr) {
+  if (LocalPlayer != NULL) {
     playerdatapacket temp;
     temp.teamindex = LocalPlayer->teamindex;
     temp.State = LocalPlayer->State;
@@ -506,15 +509,15 @@ void HitScanAttack(float damage, float xrot, float yrot) {
   ray[1] += LocalPlayer->position;
   ray[1].z += LocalPlayer->cameraoffset;
 
-  uint32_t lightindex = LightMapEmptyIndex();
-  Lights[lightindex] = new TempLight(lightindex, 0.125f);
-  Lights[lightindex]->position = targetdir * 0.25f + LocalPlayer->position;
-  Lights[lightindex]->position.z += LocalPlayer->cameraoffset;
-  Lights[lightindex]->startspecularStrength = 0.125f;
-  Lights[lightindex]->startdiffusionStrength = 0.05f;
-  Lights[lightindex]->color[0] = 1;
-  Lights[lightindex]->color[1] = 0.9f;
-  Lights[lightindex]->color[2] = 0.5f;
+  // uint32_t lightindex = LightMapEmptyIndex();
+  // Lights[lightindex] = new TempLight(lightindex, 0.125f);
+  // Lights[lightindex]->position = targetdir * 0.25f + LocalPlayer->position;
+  // Lights[lightindex]->position.z += LocalPlayer->cameraoffset;
+  // Lights[lightindex]->startspecularStrength = 0.125f;
+  // Lights[lightindex]->startdiffusionStrength = 0.05f;
+  // Lights[lightindex]->color[0] = 1;
+  // Lights[lightindex]->color[1] = 0.9f;
+  // Lights[lightindex]->color[2] = 0.5f;
 
   movecollisionresult resultthing;
 
@@ -570,11 +573,11 @@ void LocalClassUpdate() {
   playerluastuff->lua["autoreload"] = Settings->autoreload;
 
   if (LocalPlayer->hp <= 0 ||
-      (LocalPlayerNetData != nullptr &&
+      (LocalPlayerNetData != NULL &&
        LocalPlayerNetData->isdead)) {  // class death reset code (make this
                                        // online compatible!)
     playerluastuff->LocalClassDeath();
-    if (LocalPlayerNetData != nullptr) LocalPlayerNetData->isdead = false;
+    if (LocalPlayerNetData != NULL) LocalPlayerNetData->isdead = false;
   }
   float anim = playerluastuff->lua["anim"];
 
@@ -594,7 +597,7 @@ void LocalClassUpdate() {
               ModelGroupMap["PlayerMain"].anim[animationthing][0]);
   float state = playerluastuff->lua["state"];
   LocalPlayer->State = state;
-  if (LocalPlayerNetData != nullptr)
+  if (LocalPlayerNetData != NULL)
     LocalPlayerNetData->frame = playerluastuff->lua["anim"];
 }
 
@@ -610,18 +613,18 @@ void fixedupdate() {
 
   if (!Global->pause || Global->IsOnline) {
     if (!Global->pause) processinputs();
-    if (LocalPlayer != nullptr) inputtoentity(*P1PlayerInputs, LocalPlayer);
+    if (LocalPlayer != NULL) inputtoentity(*P1PlayerInputs, LocalPlayer);
 
     if (Global->IsOnline && !IsServer) {
-      if (GlobalNetworkStuff->RecvEntity != nullptr)
+      if (GlobalNetworkStuff->RecvEntity != NULL)
         inputtoentity(*P1PlayerInputs, GlobalNetworkStuff->RecvEntity);
     }
 
     for (const auto& [ID, player] : GlobalNetworkStuff->PlayerNetStuff) {
-      if (player.PlayerEntity != nullptr)
+      if (player.PlayerEntity != NULL)
         inputtoentity(player.PlayerInput, player.PlayerEntity);
     }
-    if (LocalPlayer != nullptr) LocalClassUpdate();
+    if (LocalPlayer != NULL) LocalClassUpdate();
     componentsupdate();
     for (auto& [key, value] : UIGlobalStuff->UImap3D) {
       for (auto& i : value) {
@@ -649,7 +652,7 @@ void fixedupdate() {
   }
 
   if (Global->IsOnline && !IsServer) {
-    if (GlobalNetworkStuff->RecvEntity != nullptr) {
+    if (GlobalNetworkStuff->RecvEntity != NULL) {
       if (glm::distance(LocalPlayer->position,
                         GlobalNetworkStuff->RecvEntity->position) > 1.5f)
         LocalPlayer->position = GlobalNetworkStuff->RecvEntity->position;

@@ -16,7 +16,7 @@ struct NetworkStuffClass {
   struct Clientthing {
     uint16_t PORT;
     std::string Address;
-    NET_Address* RealAddress = nullptr;
+    NET_Address* RealAddress = NULL;
     uint64_t ID;
   };
   std::vector<Clientthing> Clients;
@@ -74,9 +74,9 @@ bool CobblerSetSocket(uint32_t port) {
   SDL_PropertiesID props = SDL_CreateProperties();
   SDL_SetBooleanProperty(props, NET_PROP_DATAGRAM_SOCKET_REUSEADDR_BOOLEAN,
                          true);
-  NetStuff->Socket = NET_CreateDatagramSocket(nullptr, port, 0);
+  NetStuff->Socket = NET_CreateDatagramSocket(NULL, port, 0);
   SDL_DestroyProperties(props);
-  if (NetStuff->Socket == nullptr) {
+  if (NetStuff->Socket == NULL) {
     SDL_Log("%s", SDL_GetError());
     return false;
   }
@@ -84,7 +84,7 @@ bool CobblerSetSocket(uint32_t port) {
 }
 
 bool CobblerInitNet() {
-  if (NetStuff == nullptr) {
+  if (NetStuff == NULL) {
     if (!NET_Init()) return false;
     NetStuff = new NetworkStuffClass();
   }
@@ -215,12 +215,12 @@ bool CobblerSendNet() {  // from: ID, to: ID
 }
 
 std::vector<CobblerNetData>* CobblerRecvNet() {
-  std::vector<CobblerNetData>* tempvec = nullptr;
-  NET_Datagram* dgram = nullptr;
-  while (NET_ReceiveDatagram(NetStuff->Socket, &dgram) && dgram != nullptr) {
+  std::vector<CobblerNetData>* tempvec = NULL;
+  NET_Datagram* dgram = NULL;
+  while (NET_ReceiveDatagram(NetStuff->Socket, &dgram) && dgram != NULL) {
     // SDL_Log("SERVER: got %d-byte datagram from %s:%d", (int)dgram->buflen,
     //         NET_GetAddressString(dgram->addr), (int)dgram->port);
-    if (tempvec == nullptr) tempvec = new std::vector<CobblerNetData>();
+    if (tempvec == NULL) tempvec = new std::vector<CobblerNetData>();
 
     std::deque<uint8_t> datavec(dgram->buf, dgram->buf + dgram->buflen);
 
@@ -407,7 +407,7 @@ void CobblerPlayerQuit() {
   while (deltatimething < 1.5f) {
     CobblerQueueData("PlayerQuit", buffer, 0);
     std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
-    if (tempvector != nullptr) {
+    if (tempvector != NULL) {
       if (!tempvector->empty()) {
         deltatimething = 0.f;
       }
@@ -421,26 +421,26 @@ void CobblerPlayerQuit() {
 }
 
 void CobblerQuitNet() {
-  if (NetStuff != nullptr) {
-    if (NetStuff->Socket != nullptr) {
+  if (NetStuff != NULL) {
+    if (NetStuff->Socket != NULL) {
       CobblerPlayerQuit();
 
       NET_DestroyDatagramSocket(NetStuff->Socket);
 
-      NetStuff->Socket = nullptr;
+      NetStuff->Socket = NULL;
     }
     packetbuffer.clear();
     ConfirmedSendMap.clear();
     for (auto& client : NetStuff->Clients) {
-      if (client.RealAddress != nullptr) {
+      if (client.RealAddress != NULL) {
         NET_UnrefAddress(client.RealAddress);
-        client.RealAddress = nullptr;
+        client.RealAddress = NULL;
       }
     }
     NetStuff->Clients.clear();
 
     delete (NetStuff);
-    NetStuff = nullptr;
+    NetStuff = NULL;
     NET_Quit();
   }
 }

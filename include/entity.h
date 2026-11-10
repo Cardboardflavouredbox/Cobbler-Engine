@@ -27,13 +27,14 @@ LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
 
 struct EntitySpawnInfo {
+  bool IndexSet = false;
   uint32_t EntityIndex;
   std::string name;
   int State;
   std::array<float, 3> position, velocityvec3;
   std::array<float, 2> direction;
   int teamindex;
-  float hp = -1;
+  float hp = -255;
 
   bool SourceExists;
   bool SourcePlayer;
@@ -82,7 +83,7 @@ struct Entity {
   LIB_API void setup(uint32_t Index, std::string path);
 
   virtual ~Entity() {
-    if (Modelthing != nullptr) delete (Modelthing);
+    if (Modelthing != NULL) delete (Modelthing);
   }
 };
 LIB_API extern Entity* LocalPlayer;

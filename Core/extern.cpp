@@ -121,6 +121,7 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
     Entityinfo.SourceEntityIndex = 0;
   }
   uint32_t temp = EntityMapEmptyIndex();
+  if (Entityinfo.IndexSet) temp = Entityinfo.EntityIndex;
   Entity* tempentity;
   if (EntityPool[Entityinfo.name].empty()) {
     tempentity = new Entity();
@@ -143,7 +144,7 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
     tempentity->EntityIndex = temp;
   }
 
-  if (Entityinfo.hp != -1) tempentity->hp = Entityinfo.hp;
+  if (Entityinfo.hp != -255) tempentity->hp = Entityinfo.hp;
   tempentity->name = Entityinfo.name;
 
   tempentity->EntityIndex = temp;
@@ -163,10 +164,11 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
           GlobalNetworkStuff->PlayerNetStuff[Entityinfo.SourceEntityIndex]
               .PlayerEntity;
     } else {
-      tempentity->SourceEntity = Entities[Entityinfo.SourceEntityIndex];
+      if (Entities.contains(Entityinfo.SourceEntityIndex))
+        tempentity->SourceEntity = Entities[Entityinfo.SourceEntityIndex];
     }
   } else {
-    tempentity->SourceEntity = nullptr;
+    tempentity->SourceEntity = NULL;
   }
 
   Entities[temp] = tempentity;
@@ -331,7 +333,7 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
       tempparticle->SourceEntity = Entities[Particleinfo.SourceEntityIndex];
     }
   } else {
-    tempparticle->SourceEntity = nullptr;
+    tempparticle->SourceEntity = NULL;
   }
 
   tempparticle->ParticleCode = Particleinfo.ParticleCode;

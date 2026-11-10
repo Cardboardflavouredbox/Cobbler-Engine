@@ -35,7 +35,7 @@ void ClientConnect(const std::string& ServerIP, uint32_t ServerPort) {
     events();
     CobblerQueueData("PlayerAdd", buffer, 0);
     std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
-    if (tempvector != nullptr) {
+    if (tempvector != NULL) {
       if (!tempvector->empty()) {
         CobblerNetData* tempdata = &tempvector->back();
         SDL_Log("%s", tempdata->name.c_str());
@@ -50,12 +50,14 @@ void ClientConnect(const std::string& ServerIP, uint32_t ServerPort) {
 }
 
 void NetDisconnect() {
-  for (const auto& ID : GlobalNetworkStuff->UserIDs) {
-    if (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity != nullptr) {
-      delete (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity);
-      GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity = nullptr;
-    }
-  }
+  SDL_Log("NetDisconnect");
+  // for (auto& [ID, NetStuff] : GlobalNetworkStuff->PlayerNetStuff) {
+  //   SDL_Log("%llu", ID);
+  //   if (NetStuff.PlayerEntity != NULL) {
+  //     SDL_Log("%s", NetStuff.PlayerEntity->name.c_str());
+  //     delete (NetStuff.PlayerEntity);
+  //   }
+  // }
   GlobalNetworkStuff->UserIDs.clear();
   GlobalNetworkStuff->PlayerNetStuff.clear();
   CobblerQuitNet();

@@ -139,7 +139,7 @@ void ModelGroupsethitboxes(Entity* entity) {
 
 void renderEntity() {
   for (const auto& [index, entity] : Entities) {
-    if (entity->Modelthing != nullptr) {
+    if (entity->Modelthing != NULL) {
       renderModelGroup(entity->Modelthing, entity->Modelthing->name, false,
                        entity->deltatimelocal + renderdeltaTime);
       ModelGroupsethitboxes(entity);
@@ -147,7 +147,7 @@ void renderEntity() {
   }
   for (const auto& i : GlobalNetworkStuff->PlayerNetStuff) {
     Entity* entity = i.second.PlayerEntity;
-    if (entity->Modelthing != nullptr) {
+    if (entity->Modelthing != NULL) {
       renderModelGroup(entity->Modelthing, entity->Modelthing->name, false,
                        entity->deltatimelocal + renderdeltaTime);
       ModelGroupsethitboxes(entity);
@@ -241,7 +241,7 @@ void softwarerender() {
   //     RendererGlobal->SRstuff->renderer,
   //     RendererGlobal->SRstuff->render_target);
   // SDL_SetTextureScaleMode(temptexture, SDL_SCALEMODE_PIXELART);
-  // SDL_RenderTexture(RendererGlobal->SRstuff->renderer, temptexture, nullptr,
+  // SDL_RenderTexture(RendererGlobal->SRstuff->renderer, temptexture, NULL,
   // &temprect); SDL_RenderPresent(RendererGlobal->SRstuff->renderer);
 }
 

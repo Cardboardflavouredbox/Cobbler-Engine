@@ -25,7 +25,7 @@ void RadiusDamageEntity(glm::vec3 position, Entity* tempentity,
                         uint64_t TargetEntityIndex, bool TargetIsPlayer,
                         int teamindex, uint64_t EntityIndex, float radius = 7.f,
                         float damage = 40.f, float pushback = 28.5f,
-                        Entity* SourceEntity = nullptr) {
+                        Entity* SourceEntity = NULL) {
   raycheckresult temp = capsuleraycheck(
       position, position,
       glm::vec3(0, 0, tempentity->hitboxradius) + tempentity->position,
@@ -34,7 +34,7 @@ void RadiusDamageEntity(glm::vec3 position, Entity* tempentity,
   glm::vec3 normal = glm::normalize(temp.B - temp.A);
 
   if (temp.dist < radius + tempentity->hitboxradius &&
-      ((SourceEntity != nullptr && SourceEntity == tempentity) ||
+      ((SourceEntity != NULL && SourceEntity == tempentity) ||
        tempentity->teamindex != teamindex)) {
     normal.x *= 2;
     normal.y *= 2;
@@ -51,7 +51,7 @@ void RadiusDamageEntity(glm::vec3 position, Entity* tempentity,
 
     infothing.damage = damage * amount;
 
-    if (SourceEntity != nullptr && SourceEntity == tempentity) {
+    if (SourceEntity != NULL && SourceEntity == tempentity) {
       infothing.damage *= 3.f / 5.f;
     }
 

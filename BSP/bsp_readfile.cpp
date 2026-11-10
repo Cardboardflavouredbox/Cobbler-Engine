@@ -220,14 +220,14 @@ void BSPcreate(std::vector<std::array<uint32_t, 3>> Faces, bool isA,
 
 bool readfile(std::filesystem::path path) {
   Mapdata tempmapdata;
-  FILE* file = nullptr;
+  FILE* file = NULL;
 
   // check if file is a .map file.
   if (path.extension() == ".map") {
     file = fopen(path.c_str(), "r");
   }
 
-  if (file == nullptr) {
+  if (file == NULL) {
     printf("Impossible to open the file!");
     return false;
   }
@@ -339,7 +339,7 @@ bool readfile(std::filesystem::path path) {
 
   file = fopen(paththing.c_str(), "w");
 
-  if (file == nullptr) {
+  if (file == NULL) {
     printf("Impossible to write the file!");
     return false;
   }

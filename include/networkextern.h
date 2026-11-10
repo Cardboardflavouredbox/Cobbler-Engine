@@ -22,7 +22,7 @@ struct GlobalNetworkClass {
 
   struct PlayerNetClass {
     float Timecounter, deltatimelocal;
-    Entity* PlayerEntity;
+    Entity* PlayerEntity = NULL;
     playerinputs PlayerInput;
   };
   std::map<uint64_t, PlayerNetClass> PlayerNetStuff;

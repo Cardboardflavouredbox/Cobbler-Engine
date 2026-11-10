@@ -41,25 +41,25 @@ void componentsupdatelate() {
 void componentsupdate() {
   // call npc entity updates and EntityMove
 
-  for (auto& i : Entities) {
-    i.second->luaupdate();
+  for (auto& [i, entity] : Entities) {
+    entity->luaupdate();
 
-    if (std::isnan(i.second->position.x) || std::isnan(i.second->position.y) ||
-        std::isnan(i.second->position.z))
-      i.second->hp = 0;
-    if (i.second->hp <= 0) {
-      if (i.second->respawn) {
-        i.second->hp = i.second->maxhp;
-        i.second->position = GetRespawnPoint(i.second->teamindex);
-        i.second->velocityvec3 = glm::vec3(0);
-        i.second->respawned = true;
+    if (std::isnan(entity->position.x) || std::isnan(entity->position.y) ||
+        std::isnan(entity->position.z))
+      entity->hp = 0;
+    if (entity->hp <= 0) {
+      if (entity->respawn) {
+        entity->hp = entity->maxhp;
+        entity->position = GetRespawnPoint(entity->teamindex);
+        entity->velocityvec3 = glm::vec3(0);
+        entity->respawned = true;
       } else {
-        EntitydeleteQueue.push(i.second->EntityIndex);
+        EntitydeleteQueue.push(entity->EntityIndex);
       }
     } else {
-      i.second->respawned = false;
-      EntityMove(i.second);
-      i.second->deltatimelocal = 0;
+      entity->respawned = false;
+      EntityMove(entity);
+      entity->deltatimelocal = 0;
     }
   }
   // call player entity updates and EntityMove
@@ -80,7 +80,7 @@ void componentsupdate() {
     }
   }
 
-  if (GlobalNetworkStuff->RecvEntity != nullptr) {
+  if (GlobalNetworkStuff->RecvEntity != NULL) {
     EntityMove(GlobalNetworkStuff->RecvEntity);
     GlobalNetworkStuff->RecvEntity->deltatimelocal = 0;
   }

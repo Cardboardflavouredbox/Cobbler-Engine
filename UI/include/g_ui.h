@@ -174,19 +174,19 @@ struct UI_API UITextInputBox : public UIthing {
 struct UI_API UIimage : public UIthing {  // turn stuff into shared pointers!!
   unsigned char color;
   glm::vec4 rgba;
-  UIImageUVIndexChanger* UVIndexChanger = nullptr;
+  UIImageUVIndexChanger* UVIndexChanger = NULL;
   glm::vec2 size;
   std::pair<glm::vec2, glm::vec2>* uvlist;
   std::string texturename;
   int uvindex = 0;
   void update() {
-    if (UVIndexChanger != nullptr) {
+    if (UVIndexChanger != NULL) {
       UVIndexChanger->update();
     }
   }
   void render();
   ~UIimage() {
-    if (UVIndexChanger != nullptr) delete (UVIndexChanger);
+    if (UVIndexChanger != NULL) delete (UVIndexChanger);
     delete (uvlist);
   }
 };
@@ -196,22 +196,22 @@ struct UI_API UItext : public UIthing {
   glm::vec4 rgba;
   float size = 1;
   bool stringstartfromright = false;
-  UITextChanger* TextChanger = nullptr;
+  UITextChanger* TextChanger = NULL;
   std::u32string string;
   void update() {
-    if (TextChanger != nullptr) {
+    if (TextChanger != NULL) {
       TextChanger->update();
     }
   }
   void render();
   UItext(UITextChanger* newTextChanger) {
     TextChanger = newTextChanger;
-    if (TextChanger != nullptr) {
+    if (TextChanger != NULL) {
       TextChanger->string = &string;
     }
   }
   ~UItext() {
-    if (TextChanger != nullptr) {
+    if (TextChanger != NULL) {
       delete (TextChanger);
     }
   }

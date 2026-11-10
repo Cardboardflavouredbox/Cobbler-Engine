@@ -309,7 +309,7 @@ struct RayParticle : Particle {
   }
   RayParticle(uint32_t Index) { setup(Index); }
   void update() {
-    if (SourceEntity != nullptr) {
+    if (SourceEntity != NULL) {
       glm::vec3 temp(0);
 
       if (LocalPlayer == SourceEntity) {
@@ -336,7 +336,7 @@ struct RayParticle : Particle {
     if (length < 0) {
       length = glm::distance(realposition, direction);
     }
-    t += 180.f * updatedeltaTime / length;
+    t += 90.f * updatedeltaTime / length;
     if (t >= 1) {
       ParticledeleteQueue.push(ParticleIndex);
 
