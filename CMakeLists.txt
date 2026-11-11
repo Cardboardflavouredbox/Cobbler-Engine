@@ -19,7 +19,15 @@ endif()
 
 include(FetchContent)
 
+if (APPLE)
+    execute_process(
+        COMMAND brew --prefix lua@5.4
+        OUTPUT_VARIABLE LUA54_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
 
+    list(APPEND CMAKE_PREFIX_PATH "${LUA54_PREFIX}")
+endif()
 find_package(Lua 5.4 EXACT REQUIRED)
 
 find_package (sol2 CONFIG REQUIRED)
