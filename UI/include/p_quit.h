@@ -4,16 +4,16 @@
 #include "ui.h"
 
 #ifdef _WIN32
-#ifdef UIEXPORT
-#define UI_API __declspec(dllexport)
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
 #else
-#define UI_API __declspec(dllimport)
+#define LIB_API __declspec(dllimport)
 #endif
 #else
-#define UI_API
+#define LIB_API
 #endif
 
-struct UI_API QuitYes : BasicSelectMenuOption {
+struct LIB_API QuitYes : BasicSelectMenuOption {
   void Interact() { IsRunning = false; }
   QuitYes(int i) {
     name = U"Yes";
@@ -24,7 +24,7 @@ struct UI_API QuitYes : BasicSelectMenuOption {
   ~QuitYes() {}
 };
 
-struct UI_API QuitNo : BasicSelectMenuOption {
+struct LIB_API QuitNo : BasicSelectMenuOption {
   void Interact() { setMenuMain(); }
   QuitNo(int i) {
     name = U"No";
@@ -35,7 +35,7 @@ struct UI_API QuitNo : BasicSelectMenuOption {
   ~QuitNo() {}
 };
 
-UI_API void setMenuQuit() {
+LIB_API void setMenuQuit() {
   menuindex = 1;
   clearMenuOptionsVector();
   UIGlobalStuff->UIlist.push_back("Menus");

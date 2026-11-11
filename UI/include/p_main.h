@@ -7,16 +7,16 @@
 #include "ui.h"
 
 #ifdef _WIN32
-#ifdef UIEXPORT
-#define UI_API __declspec(dllexport)
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
 #else
-#define UI_API __declspec(dllimport)
+#define LIB_API __declspec(dllimport)
 #endif
 #else
-#define UI_API
+#define LIB_API
 #endif
 
-struct UI_API ResumeMenuOption : BasicSelectMenuOption {
+struct LIB_API ResumeMenuOption : BasicSelectMenuOption {
   void Interact() {
     Global->pause = false;
     SDL_SetWindowRelativeMouseMode(RendererGlobal->window, !Global->pause);
@@ -29,7 +29,7 @@ struct UI_API ResumeMenuOption : BasicSelectMenuOption {
   ~ResumeMenuOption() {}
 };
 
-struct UI_API SettingsMenuOption : BasicSelectMenuOption {
+struct LIB_API SettingsMenuOption : BasicSelectMenuOption {
   void Interact() { setMenuSettings(); }
   SettingsMenuOption(int i) {
     name = U"Settings";
@@ -39,7 +39,7 @@ struct UI_API SettingsMenuOption : BasicSelectMenuOption {
   ~SettingsMenuOption() {}
 };
 
-struct UI_API QuitMenuOption : BasicSelectMenuOption {
+struct LIB_API QuitMenuOption : BasicSelectMenuOption {
   void Interact() { setMenuQuit(); }
   QuitMenuOption(int i) {
     name = U"Quit";
@@ -49,7 +49,7 @@ struct UI_API QuitMenuOption : BasicSelectMenuOption {
   ~QuitMenuOption() {}
 };
 
-UI_API void setMenuMain() {
+LIB_API void setMenuMain() {
   menuindex = 0;
   clearMenuOptionsVector();
   UIGlobalStuff->UIlist.push_back("Menus");

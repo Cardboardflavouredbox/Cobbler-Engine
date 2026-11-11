@@ -3,16 +3,16 @@
 #include "ui.h"
 
 #ifdef _WIN32
-#ifdef UIEXPORT
-#define UI_API __declspec(dllexport)
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
 #else
-#define UI_API __declspec(dllimport)
+#define LIB_API __declspec(dllimport)
 #endif
 #else
-#define UI_API
+#define LIB_API
 #endif
 
-struct UI_API BasicSelectMenuOption : MenuOptions {
+struct LIB_API BasicSelectMenuOption : MenuOptions {
   BasicSelectMenuOption() {
     MenuOptionTextChanger* temp = new MenuOptionTextChanger();
     temp->optionname = &name;
@@ -27,7 +27,7 @@ struct UI_API BasicSelectMenuOption : MenuOptions {
   }
 };
 
-struct UI_API CheckBoxMenuOption : MenuOptions {
+struct LIB_API CheckBoxMenuOption : MenuOptions {
   CheckBoxMenuOption(bool* enabledcheck) {
     MenuCheckboxTextChanger* temp = new MenuCheckboxTextChanger();
     temp->optionname = &name;
@@ -43,8 +43,8 @@ struct UI_API CheckBoxMenuOption : MenuOptions {
   }
 };
 
-UI_API void setMenuMain();
-UI_API void setMenuQuit();
-UI_API void setMenuSettings();
-UI_API void setMenuGameplaySettings();
-UI_API void setMenuDisplaySettings();
+LIB_API void setMenuMain();
+LIB_API void setMenuQuit();
+LIB_API void setMenuSettings();
+LIB_API void setMenuGameplaySettings();
+LIB_API void setMenuDisplaySettings();

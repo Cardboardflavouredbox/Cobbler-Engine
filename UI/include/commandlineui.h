@@ -4,16 +4,16 @@
 #include "g_ui.h"
 
 #ifdef _WIN32
-#ifdef UIEXPORT
-#define UI_API __declspec(dllexport)
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
 #else
-#define UI_API __declspec(dllimport)
+#define LIB_API __declspec(dllimport)
 #endif
 #else
-#define UI_API
+#define LIB_API
 #endif
 
-struct UI_API MenuCMDtextChanger : UITextChanger {
+struct LIB_API MenuCMDtextChanger : UITextChanger {
   void update() {
     std::string str = cmdlines.str();
     std::u32string s32(str.begin(), str.end());
@@ -23,7 +23,7 @@ struct UI_API MenuCMDtextChanger : UITextChanger {
   ~MenuCMDtextChanger() {}
 };
 
-struct UI_API MenuCMDInputtextChanger : UITextChanger {
+struct LIB_API MenuCMDInputtextChanger : UITextChanger {
   void update() {
     std::u32string s32(cmdcurrentinput.begin(), cmdcurrentinput.end());
     *string = s32;

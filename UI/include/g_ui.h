@@ -14,26 +14,26 @@
 #include "ui.h"
 
 #ifdef _WIN32
-#ifdef UIEXPORT
-#define UI_API __declspec(dllexport)
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
 #else
-#define UI_API __declspec(dllimport)
+#define LIB_API __declspec(dllimport)
 #endif
 #else
-#define UI_API
+#define LIB_API
 #endif
 
-UI_API glm::vec2 getrealpos(UIthing::anchorpos anchor, glm::vec2 pos,
+LIB_API glm::vec2 getrealpos(UIthing::anchorpos anchor, glm::vec2 pos,
                             glm::vec2 size);
 
 // UIcomponents
-struct UI_API UITextChanger {
+struct LIB_API UITextChanger {
   std::u32string* string;
   virtual void update() = 0;
   virtual ~UITextChanger() {}
 };
 
-struct UI_API TextandNumChangerInt : UITextChanger {
+struct LIB_API TextandNumChangerInt : UITextChanger {
   std::u32string text;
   int* num;
   void update() {
@@ -44,7 +44,7 @@ struct UI_API TextandNumChangerInt : UITextChanger {
   ~TextandNumChangerInt() {}
 };
 
-struct UI_API TextandNumChangerFloat : UITextChanger {
+struct LIB_API TextandNumChangerFloat : UITextChanger {
   std::u32string text;
   float* num;
   void update() {
@@ -55,7 +55,7 @@ struct UI_API TextandNumChangerFloat : UITextChanger {
   ~TextandNumChangerFloat() {}
 };
 
-struct UI_API HPTextChanger : UITextChanger {
+struct LIB_API HPTextChanger : UITextChanger {
   void update() {
     std::string s = std::to_string((int)std::ceilf(LocalPlayer->hp));
     std::u32string s32(s.begin(), s.end());
@@ -64,7 +64,7 @@ struct UI_API HPTextChanger : UITextChanger {
   ~HPTextChanger() {}
 };
 
-struct UI_API MenuOptionTextChanger : UITextChanger {
+struct LIB_API MenuOptionTextChanger : UITextChanger {
   int* index;
   std::u32string* optionname;
   void update() { *string = (*index == menuindex ? U">" : U" ") + *optionname; }
@@ -72,7 +72,7 @@ struct UI_API MenuOptionTextChanger : UITextChanger {
   ~MenuOptionTextChanger() {}
 };
 
-struct UI_API MenuCheckboxTextChanger : UITextChanger {
+struct LIB_API MenuCheckboxTextChanger : UITextChanger {
   int* index;
   bool* enabled;
   std::u32string* optionname;
@@ -84,7 +84,7 @@ struct UI_API MenuCheckboxTextChanger : UITextChanger {
   ~MenuCheckboxTextChanger() {}
 };
 
-struct UI_API AmmoTextChanger : UITextChanger {
+struct LIB_API AmmoTextChanger : UITextChanger {
   void update() {
     float temp = playerluastuff->lua["state"];
     int state = int(temp);
@@ -102,7 +102,7 @@ struct UI_API AmmoTextChanger : UITextChanger {
   ~AmmoTextChanger() {}
 };
 
-struct UI_API ReserveTextChanger : UITextChanger {
+struct LIB_API ReserveTextChanger : UITextChanger {
   void update() {
     float temp = playerluastuff->lua["state"];
     int state = int(temp);
@@ -120,13 +120,13 @@ struct UI_API ReserveTextChanger : UITextChanger {
   ~ReserveTextChanger() {}
 };
 
-struct UI_API UIImageUVIndexChanger {
+struct LIB_API UIImageUVIndexChanger {
   int* index;
   virtual void update() = 0;
   virtual ~UIImageUVIndexChanger() {}
 };
 
-struct UI_API ImagePistolChanger : UIImageUVIndexChanger {
+struct LIB_API ImagePistolChanger : UIImageUVIndexChanger {
   float animlen[3] = {0.f, 0.5f, 2.f}, animprogress = 0.f;
   unsigned char anim = 0;
   void update() {
@@ -152,7 +152,7 @@ struct UI_API ImagePistolChanger : UIImageUVIndexChanger {
 };
 
 // UIthings
-struct UI_API UIbox : public UIthing {
+struct LIB_API UIbox : public UIthing {
   unsigned char color;
   glm::vec4 rgba;
   glm::vec2 size;
@@ -161,7 +161,7 @@ struct UI_API UIbox : public UIthing {
   ~UIbox() {}
 };
 
-struct UI_API UITextInputBox : public UIthing {
+struct LIB_API UITextInputBox : public UIthing {
   bool ismousefocusedonthis = false;
   unsigned char color;
   glm::vec4 rgba;
@@ -171,7 +171,7 @@ struct UI_API UITextInputBox : public UIthing {
   ~UITextInputBox() {}
 };
 
-struct UI_API UIimage : public UIthing {  // turn stuff into shared pointers!!
+struct LIB_API UIimage : public UIthing {  // turn stuff into shared pointers!!
   unsigned char color;
   glm::vec4 rgba;
   UIImageUVIndexChanger* UVIndexChanger = NULL;
@@ -191,7 +191,7 @@ struct UI_API UIimage : public UIthing {  // turn stuff into shared pointers!!
   }
 };
 
-struct UI_API UItext : public UIthing {
+struct LIB_API UItext : public UIthing {
   unsigned char color;
   glm::vec4 rgba;
   float size = 1;
@@ -217,7 +217,7 @@ struct UI_API UItext : public UIthing {
   }
 };
 
-struct UI_API UIDamageIndicator : public UIthing {
+struct LIB_API UIDamageIndicator : public UIthing {
   UIDamageIndicator() { anchor = middlemiddle; }
   glm::vec2 size;
   std::string texturename;
@@ -226,7 +226,7 @@ struct UI_API UIDamageIndicator : public UIthing {
   ~UIDamageIndicator() {}
 };
 
-struct UI_API firstpersonUIthing : public UI3Dthing {
+struct LIB_API firstpersonUIthing : public UI3Dthing {
   int currentstate = 0;
   firstpersonUIthing() {
     Modeltransform* Arm = new Modeltransform();

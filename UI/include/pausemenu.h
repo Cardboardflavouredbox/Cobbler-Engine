@@ -5,16 +5,16 @@
 #include "ui.h"
 
 #ifdef _WIN32
-#ifdef UIEXPORT
-#define UI_API __declspec(dllexport)
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
 #else
-#define UI_API __declspec(dllimport)
+#define LIB_API __declspec(dllimport)
 #endif
 #else
-#define UI_API
+#define LIB_API
 #endif
 
-struct UI_API MenuOptions {
+struct LIB_API MenuOptions {
   UIthing* UIcomponent;
   std::u32string name;
   int index;
@@ -22,7 +22,7 @@ struct UI_API MenuOptions {
   virtual ~MenuOptions() {}
 };
 
-UI_API extern int menuindex;
-UI_API extern std::vector<std::unique_ptr<MenuOptions>> MenuOptionsVector;
+LIB_API extern int menuindex;
+LIB_API extern std::vector<std::unique_ptr<MenuOptions>> MenuOptionsVector;
 
-UI_API void clearMenuOptionsVector();
+LIB_API void clearMenuOptionsVector();

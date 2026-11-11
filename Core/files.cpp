@@ -903,7 +903,7 @@ bool init() {
            Global->LoadedStuff->startlevel + "/")) {
     // check if file is a .map file.
     if (entry.is_regular_file() && entry.path().extension() == ".map") {
-      file = fopen(entry.path().c_str(), "r");
+      file = fopen(entry.path().string().c_str(), "r");
     } else if (entry.is_regular_file() &&
                entry.path().extension() == ".png") {  // Load Textures.
       if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
@@ -1017,7 +1017,7 @@ bool init() {
            Global->LoadedStuff->startlevel + "/")) {
     // check if file is a .map file.
     if (entry.is_regular_file() && entry.path().extension() == ".bsp") {
-      file = fopen(entry.path().c_str(), "r");
+      file = fopen(entry.path().string().c_str(), "r");
     }
   }
 

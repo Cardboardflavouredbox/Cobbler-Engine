@@ -5,13 +5,13 @@
 #include "ui.h"
 
 #ifdef _WIN32
-#ifdef UIEXPORT
-#define UI_API __declspec(dllexport)
+#ifdef DLLEXPORT
+#define LIB_API __declspec(dllexport)
 #else
-#define UI_API __declspec(dllimport)
+#define LIB_API __declspec(dllimport)
 #endif
 #else
-#define UI_API
+#define LIB_API
 #endif
 
 int menuindex = 0;
@@ -31,7 +31,7 @@ void UIupdate() {
   }
 }
 
-UI_API void changeUIindex() {
+LIB_API void changeUIindex() {
   if (Global->pause) {
     if (MenuOptionsVector.empty() && !UIGlobalStuff->UImap.contains("Menus") &&
         UIGlobalStuff->UIlist.back() != "Menus") {

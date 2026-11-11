@@ -20,7 +20,7 @@ endif()
 include(FetchContent)
 
 
-find_package (Lua 5.1 REQUIRED)
+find_package(Lua 5.4 EXACT REQUIRED)
 
 find_package (sol2 CONFIG REQUIRED)
 
@@ -85,16 +85,18 @@ add_executable(CobblerBSP ${BSP_SOURCES})
 # src/e_update.cpp src/e_components.cpp)
 
 target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net)
-target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm Freetype::Freetype ${LUA_LIBRARIES} CobblerGLAD CobblerNet)
+target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm Freetype::Freetype sol2::sol2 ${LUA_LIBRARIES} CobblerGLAD CobblerNet)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
-target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
+target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype sol2::sol2 ${LUA_LIBRARIES} CobblerCore CobblerGLAD)
 target_link_libraries(CobblerBSP PRIVATE glm::glm)
 # target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD dylib)
  
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/UI/include)
+target_include_directories(CobblerCore PRIVATE ${LUA_INCLUDE_DIR})
 # target_include_directories(CobblerEditorUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(Cobbler-Engine PRIVATE ${LUA_INCLUDE_DIR})
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerBSP PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerBSP PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/BSP/include)

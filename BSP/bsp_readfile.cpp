@@ -224,7 +224,7 @@ bool readfile(std::filesystem::path path) {
 
   // check if file is a .map file.
   if (path.extension() == ".map") {
-    file = fopen(path.c_str(), "r");
+    file = fopen(path.string().c_str(), "r");
   }
 
   if (file == NULL) {
