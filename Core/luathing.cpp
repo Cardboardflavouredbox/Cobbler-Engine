@@ -174,11 +174,22 @@ void LuaSet(sol::state* luathing) {
       &EntitySpawnInfo::SourcePlayer, "SourceEntityIndex",
       &EntitySpawnInfo::SourceEntityIndex);
 
+  luathing->new_usertype<Modeltransform::action::actionpose>(
+      "actionpose", sol::constructors<Modeltransform::action::actionpose()>(),
+      "lerpamount", &Modeltransform::action::actionpose::lerpamount, "posecode",
+      &Modeltransform::action::actionpose::posecode);
+
+  luathing->new_usertype<Modeltransform::action>(
+      "action", sol::constructors<Modeltransform::action()>(), "pose",
+      &Modeltransform::action::pose, "frame", &Modeltransform::action::frame,
+      "speed", &Modeltransform::action::speed);
+
   luathing->new_usertype<Modeltransform>(
       "Modeltransform", sol::constructors<Modeltransform()>(), "visible",
       &Modeltransform::visible, "name", &Modeltransform::name, "position",
       &Modeltransform::position, "size", &Modeltransform::size, "lookdir",
-      &Modeltransform::lookdir, "rot", &Modeltransform::rot);
+      &Modeltransform::lookdir, "rot", &Modeltransform::rot, "actions",
+      &Modeltransform::actions);
 
   luathing->new_usertype<Entity>(
       "Entity", sol::constructors<Entity()>(), "respawn", &Entity::respawn,
@@ -188,5 +199,6 @@ void LuaSet(sol::state* luathing) {
       &Entity::EntityIndex, "hitboxradius", &Entity::hitboxradius,
       "hitboxlength", &Entity::hitboxlength, "teamindex", &Entity::teamindex,
       "maxhp", &Entity::maxhp, "hp", &Entity::hp, "position", &Entity::position,
-      "dir", &Entity::dir, "velocityvec3", &Entity::velocityvec3);
+      "dir", &Entity::dir, "velocityvec3", &Entity::velocityvec3, "State",
+      &Entity::State, "movevec2", &Entity::movevec2);
 }

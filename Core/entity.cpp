@@ -111,7 +111,7 @@ void Modeltransform::SetActions(const std::vector<int>& input) {
 void Entity::setup(uint32_t Index, std::string path) {
   EntityIndex = Index;
 
-  lua.open_libraries(sol::lib::base);
+  lua.open_libraries(sol::lib::base, sol::lib::math);
 
   LuaSet(&lua);
 
@@ -131,6 +131,8 @@ void Entity::setup(uint32_t Index, std::string path) {
   lua["setvec3dir"] = setvec3dir;
   lua["setquatfromdir"] = setquatfromdir;
   lua["RadiusDamage"] = RadiusDamage;
+
+  lua["getposeindex"] = getposeindex;
 
   std::string scriptpath =
       Global->GameFolder.string() + "/class/" + path + "/entitymain.lua";
