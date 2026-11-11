@@ -162,19 +162,20 @@ void cmdprocess() {
           }
           std::string arg2;
           if (!(cmdstream >> arg2)) {
-            cmdlines << ("Arguement doesn't exists!(IP)\n");
+            cmdlines << ("Arguement doesn't exist!(IP)\n");
             return;
           }
           int j = 0;
-          while (arg2[j] != ':') {
-            if (arg2[j] == '\0') {
-              cmdlines << ("Wrong Arguements!(IP)\n");
-              return;
-            }
+          while (arg2[j] != '\0') {
             ServerIP += arg2[j];
             j++;
           }
-          j++;
+          arg2.clear();
+          if (!(cmdstream >> arg2)) {
+            cmdlines << ("Arguement doesn't exist!(PORT)\n");
+            return;
+          }
+          j = 0;
           while (arg2[j] != '\0') {
             int temp = arg2[j] - '0';
             if (temp < 0 || temp > 9) {
