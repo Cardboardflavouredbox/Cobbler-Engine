@@ -182,7 +182,8 @@ void LuaSet(sol::state* luathing) {
   luathing->new_usertype<Modeltransform::action>(
       "action", sol::constructors<Modeltransform::action()>(), "pose",
       &Modeltransform::action::pose, "frame", &Modeltransform::action::frame,
-      "speed", &Modeltransform::action::speed);
+      "speed", &Modeltransform::action::speed, "actiondone",
+      &Modeltransform::action::actiondone);
 
   luathing->new_usertype<Modeltransform>(
       "Modeltransform", sol::constructors<Modeltransform()>(), "visible",
