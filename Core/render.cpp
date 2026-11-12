@@ -477,14 +477,9 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
           (float)modelgroup->anim[poseindex][1]) {
         modeltrans->actions[i].frame = (float)modelgroup->anim[poseindex][0];
       } else {
-        // while (modeltrans->actions[i].frame >=
-        //        (float)modelgroup->anim[poseindex][1])
-        //   modeltrans->actions[i].frame +=
-        //       ((float)modelgroup->anim[poseindex][0] -
-        //        (float)modelgroup->anim[poseindex][1]);
-        if (modeltrans->actions[i].frame <
-            (float)modelgroup->anim[poseindex][0])
-          modeltrans->actions[i].frame = (float)modelgroup->anim[poseindex][0];
+        modeltrans->actions[i].actiondone =
+            (modeltrans->actions[i].frame >=
+             (float)modelgroup->anim[poseindex][1]);
       }
     }
 

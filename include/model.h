@@ -75,6 +75,7 @@ struct Modeltransform {
     };
     actionpose pose;
     float frame, speed = 1.f;
+    bool actiondone = false;
   };
   std::vector<action> actions;
   glm::vec3 position, size = glm::vec3({1, 1, 1});
