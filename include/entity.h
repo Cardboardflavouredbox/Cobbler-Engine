@@ -8,6 +8,9 @@
 #include <map>
 #include <queue>
 #include <string>
+#include <vector>
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
 
 #ifdef _WIN32
 #ifdef DLLEXPORT
@@ -24,14 +27,18 @@ LIB_API int GetBillBoardIndex(float angle, int lastIndex);
 }
 
 struct EntitySpawnInfo {
+  bool IndexSet = false;
   uint32_t EntityIndex;
   std::string name;
-  uint32_t EntityCode;
   int State;
   std::array<float, 3> position, velocityvec3;
   std::array<float, 2> direction;
   int teamindex;
-  float hp = -1;
+  float hp = -255;
+
+  bool SourceExists;
+  bool SourcePlayer;
+  uint64_t SourceEntityIndex;
 };
 
 struct EntityDamageInfo {
@@ -47,13 +54,18 @@ struct S2CPlayerInfo {  // Server to Client player info
 };
 
 struct Entity {
+  sol::state lua;
+  sol::protected_function luaupdate, lualateupdate;
+
   uint32_t EntityIndex;
   std::string name;
-  uint32_t EntityCode;
+
+  Entity* SourceEntity;
 
   int State;
   // float Stateanimend = 0, Stateanim = 0;
 
+  bool respawn = false, respawned = false;
   bool invincible = false;
   float deltatimelocal = 0;
   float hp, maxhp;
@@ -64,30 +76,28 @@ struct Entity {
   glm::vec3 position, velocityvec3 = glm::vec3({0, 0, 0});
   int teamindex;
   float gravity = 9.81f * 6.f;
-  glm::vec3 hitbox[2];
+  float hitboxlength;
   float hitboxradius;
   bool IsGrounded, Collided = false;
   Modeltransform* Modelthing;
-  LIB_API void renderbillboard();
-  LIB_API void rendermodelgroup();
-  LIB_API virtual void setup(uint32_t Index) = 0;
-  LIB_API virtual void update() = 0;
-  LIB_API virtual void lateupdate() = 0;
+  LIB_API void setup(uint32_t Index, std::string path);
 
   virtual ~Entity() {
-    if (Modelthing != nullptr) delete (Modelthing);
+    if (Modelthing != NULL) delete (Modelthing);
   }
 };
 LIB_API extern Entity* LocalPlayer;
 
+struct LocalEntityNetData {
+  float frame = 0.f;
+  bool isdead = false;
+};
+
+LIB_API extern LocalEntityNetData* LocalPlayerNetData;
+
 LIB_API extern std::map<uint32_t, Entity*> Entities;
 LIB_API extern std::queue<uint32_t> EntitydeleteQueue;
-LIB_API extern std::unordered_map<std::string,
-                                  std::map<uint32_t, std::queue<Entity*>>>
-    EntityPool;
-
-LIB_API extern std::unordered_map<std::string, Entity* (*)(uint32_t, uint32_t)>
-    SpawnEntities;
+LIB_API extern std::unordered_map<std::string, std::queue<Entity*>> EntityPool;
 
 extern "C" {
 LIB_API uint32_t EntityMapEmptyIndex();

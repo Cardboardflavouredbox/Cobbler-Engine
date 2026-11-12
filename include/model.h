@@ -21,6 +21,15 @@
 struct ModelGroupClass {
   std::vector<std::string> Models;
   struct Bone {
+    struct Hitbox {
+      std::vector<glm::vec3> points, processedpoints;
+      std::vector<std::array<uint32_t, 3>> faces;
+    };
+    Hitbox bonehitbox;
+
+    float roll;
+
+    glm::vec3 xaxis, yaxis, zaxis;
     glm::vec3 head, tail;
     uint32_t parent;
     struct Pose {
@@ -28,7 +37,11 @@ struct ModelGroupClass {
       glm::quat rot;
     };
     Pose restpose;
-    std::unordered_map<uint32_t, std::map<uint32_t, Pose>> Poses;
+    struct PosesStruct {
+      std::unordered_map<uint32_t, std::map<uint32_t, glm::vec3>> pos, scale;
+      std::unordered_map<uint32_t, std::map<uint32_t, glm::quat>> rot;
+    };
+    PosesStruct Poses;
   };
   struct visibilitything {
     std::string name;
@@ -47,7 +60,7 @@ LIB_API extern std::unordered_map<std::string, uint32_t> PosetoInt;
 LIB_API extern uint32_t newposeindex;
 
 extern "C" {
-LIB_API uint32_t getposeindex(std::string name);
+LIB_API uint32_t getposeindex(const std::string& name);
 }
 
 LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
@@ -62,6 +75,7 @@ struct Modeltransform {
     };
     actionpose pose;
     float frame, speed = 1.f;
+    bool actiondone = false;
   };
   std::vector<action> actions;
   glm::vec3 position, size = glm::vec3({1, 1, 1});
@@ -70,6 +84,7 @@ struct Modeltransform {
 
   std::vector<uint32_t> Bonecodevec;
   std::unordered_map<std::string, bool> modelvisibilityresult;
+  void SetActions(const std::vector<int>& input);
 };
 
 struct BoneResult {

@@ -19,7 +19,9 @@ void serialize(S& s, ParticleSpawnInfo& o) {
   s.value4b(o.ParticleCode);
   s.container4b(o.position);
   s.container4b(o.direction);
-  s.text1b(o.name, 32);
+  s.value1b(o.SourceExists);
+  s.value1b(o.SourcePlayer);
+  s.value8b(o.SourceEntityIndex);
 }
 
 template <typename S>
@@ -45,12 +47,14 @@ void serialize(S& s, EntitySpawnInfo& o) {
   s.value4b(o.teamindex);
   s.value4b(o.hp);
   s.text1b(o.name, 32);
-  s.value4b(o.EntityCode);
   s.value4b(o.EntityIndex);
   s.container4b(o.direction);
   s.container4b(o.position);
   s.container4b(o.velocityvec3);
   s.value4b(o.State);
+  s.value1b(o.SourceExists);
+  s.value1b(o.SourcePlayer);
+  s.value8b(o.SourceEntityIndex);
 }
 
 template <typename S>
@@ -65,6 +69,8 @@ void serialize(S& s, playerdatapacket& o) {
   s.container4b(o.movevec2);
   s.container4b(o.position);
   s.value4b(o.State);
+  s.value1b(o.respawned);
+  s.value4b(o.StateFrame);
   s.container4b(o.velocityvec3);
 }
 

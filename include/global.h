@@ -35,7 +35,6 @@ struct GlobalClass {
   };
   LoadedData* LoadedStuff;
 
-  bool IsRunning;
   bool pause = false;
 
   struct Model {

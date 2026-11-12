@@ -13,6 +13,8 @@ struct playerinputs {
 
 struct playerdatapacket {
   int State, teamindex;
+  float StateFrame;
+  bool respawned;
   // float Stateanimend = 0, Stateanim = 0;
 
   uint64_t ID;
@@ -31,13 +33,18 @@ struct playerdatapacket {
   }
 };
 
-playerinputs Loadinputdata(playerdatapacket input);
-
-struct playerstate {
-  int State = 0;
-  float animend = 0, anim = 0;
-};
+playerinputs Loadinputdata(const playerdatapacket& input);
 
 void inputtoentity(playerinputs input, Entity* entity);
 
+void HitScanAttack(float damage, float xrot, float yrot);
+
 LIB_API extern playerinputs* P1PlayerInputs;
+
+struct playerluastruct {
+  sol::state lua;
+  sol::protected_function LocalClassUpdate, LocalClassDeath,
+      LocalClassStatetoPose;
+};
+
+LIB_API extern playerluastruct* playerluastuff;

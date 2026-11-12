@@ -17,6 +17,7 @@
 #include "global.h"
 #include "inputs.h"
 #include "lights.h"
+#include "netconnect.h"
 #include "network.h"
 #include "networkextern.h"
 #include "physics.h"
@@ -25,7 +26,7 @@
 #include "render.h"
 #include "settings.h"
 
-playerinputs Loadinputdata(playerdatapacket input) {
+playerinputs Loadinputdata(const playerdatapacket& input) {
   playerinputs temp;
   for (int i = 0; i < 2; i++) {
     temp.movevec2[i] = input.movevec2[i];
@@ -93,6 +94,17 @@ void CameraUpdate() {
   }
 }
 
+void RemoveUser(uint64_t ID) {
+  GlobalNetworkStuff->UserIDs.erase(ID);
+
+  if (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity != NULL) {
+    delete (GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity);
+    GlobalNetworkStuff->PlayerNetStuff[ID].PlayerEntity = NULL;
+  }
+
+  GlobalNetworkStuff->PlayerNetStuff.erase(ID);
+}
+
 // recieve net data
 void RecieveNetData() {
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
@@ -118,7 +130,7 @@ void RecieveNetData() {
         if (state.first == bitsery::ReaderError::NoError && state.second) {
           if (GlobalNetworkStuff->PlayerNetStuff.contains(temp.ID) &&
               GlobalNetworkStuff->PlayerNetStuff[temp.ID].PlayerEntity !=
-                  nullptr) {
+                  NULL) {
             GlobalNetworkClass::PlayerNetClass* tempplayerthing =
                 &GlobalNetworkStuff->PlayerNetStuff[temp.ID];
 
@@ -145,6 +157,8 @@ void RecieveNetData() {
             }
             tempplayerthing->PlayerEntity->teamindex = temp.teamindex;
             tempplayerthing->PlayerEntity->State = temp.State;
+            tempplayerthing->PlayerEntity->Modelthing->actions[1].frame =
+                temp.StateFrame;
             // EntityMove(tempplayerthing->PlayerEntity);
             // tempplayerthing->PlayerEntity->deltatimelocal = 0;
           } else if (temp.ID == UserID) {
@@ -165,6 +179,9 @@ void RecieveNetData() {
             GlobalNetworkStuff->RecvEntity->teamindex = temp.ID;
             LocalPlayer->teamindex = temp.ID;
 
+            LocalPlayerNetData->isdead =
+                LocalPlayerNetData->isdead || temp.respawned;
+
             // inputtoentity(Loadinputdata(temp),
             // GlobalNetworkStuff->RecvEntity);
             // GlobalNetworkStuff->RecvEntity->update();
@@ -184,8 +201,11 @@ void RecieveNetData() {
           GlobalNetworkStuff->UserIDs.insert(i);
           CobblerAddIP(tempdata->IP, tempdata->PORT, i);
 
-          GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity =
-              SpawnEntities["Gardner"](0, i);
+          GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity = new Entity();
+
+          GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity->setup(i,
+                                                                    "Gardner");
+
           GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity->position =
               GetRespawnPoint(GlobalNetworkStuff->PlayerNetStuff[i]
                                   .PlayerEntity->teamindex);
@@ -202,7 +222,9 @@ void RecieveNetData() {
                   GlobalNetworkStuff->UserIDs.end()) {
                 GlobalNetworkStuff->UserIDs.insert(key);
                 GlobalNetworkStuff->PlayerNetStuff[key].PlayerEntity =
-                    SpawnEntities["Gardner"](0, key);
+                    new Entity();
+                GlobalNetworkStuff->PlayerNetStuff[key].PlayerEntity->setup(
+                    key, "Gardner");
               } else {
                 GlobalNetworkStuff->PlayerNetStuff[key].Timecounter = 0;
               }
@@ -214,23 +236,24 @@ void RecieveNetData() {
         auto state = bitsery::quickDeserialization<
             bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
             {tempdata->buffer.begin(), tempdata->size}, tempinfo);
-        if (state.first == bitsery::ReaderError::NoError && state.second) {
+        if (state.first == bitsery::ReaderError::NoError && state.second &&
+            tempinfo.name.size() > 0) {
           uint32_t entityindex = 0;
           if (IsServer) {
             entityindex = EntitySpawn(tempinfo, false);
           } else {
-            if (Entities.contains(tempinfo.EntityIndex)) {
+            if (Entities.contains(
+                    tempinfo.EntityIndex)) {  // this causes client crash
               entityindex = tempinfo.EntityIndex;
               Entity* tempentity = Entities[tempinfo.EntityIndex];
-              if (tempentity->name != tempinfo.name ||
-                  tempentity->EntityCode != tempinfo.EntityCode) {
+              if (tempentity->name != tempinfo.name) {
                 delete (tempentity);
-                tempentity = SpawnEntities[tempinfo.name](tempinfo.EntityCode,
-                                                          tempinfo.EntityIndex);
+
+                tempentity = new Entity();
+                tempentity->setup(tempinfo.EntityIndex, tempinfo.name);
               }
-              if (tempinfo.hp != -1) tempentity->hp = tempinfo.hp;
+              if (tempinfo.hp != -255) tempentity->hp = tempinfo.hp;
               tempentity->name = tempinfo.name;
-              tempentity->EntityCode = tempinfo.EntityCode;
 
               tempentity->EntityIndex = tempinfo.EntityIndex;
               for (int i = 0; i < 3; i++) {
@@ -243,6 +266,7 @@ void RecieveNetData() {
                 tempentity->dir[i] = tempinfo.direction[i];
               }
             } else {
+              tempinfo.IndexSet = true;
               entityindex = EntitySpawn(tempinfo, false);
             }
           }
@@ -327,9 +351,14 @@ void RecieveNetData() {
           LocalDamageLocations.push_back(temp);
 
       } else if (tempdata->name == "PlayerQuit") {
-        if (GlobalNetworkStuff->UserIDs.contains(tempdata->ID)) {
+        if (tempdata->ID == 0) {
+          SDL_Log("server shutdown");
+          NetDisconnect();
+          SDL_Log("server shutdown done");
+          break;
+        } else if (GlobalNetworkStuff->UserIDs.contains(tempdata->ID)) {
           SDL_Log("player%llu client disconnect", tempdata->ID);
-          deleteplayerqueue.push(tempdata->ID);
+          RemoveUser(tempdata->ID);
         }
       }
       tempvector->pop_back();
@@ -339,22 +368,15 @@ void RecieveNetData() {
 
   for (auto i : GlobalNetworkStuff->PlayerNetStuff) {
     if (i.second.Timecounter > 5) {  // timeout player
-      SDL_Log("player%llu timed out", i.first);
-
-      deleteplayerqueue.push(i.first);
+      if (deleteplayerqueue.empty() || deleteplayerqueue.back() != i.first) {
+        SDL_Log("player%llu timed out", i.first);
+        deleteplayerqueue.push(i.first);
+      }
     }
   }
 
   while (!deleteplayerqueue.empty()) {
-    GlobalNetworkStuff->UserIDs.erase(deleteplayerqueue.front());
-
-    if (GlobalNetworkStuff->PlayerNetStuff[deleteplayerqueue.front()]
-            .PlayerEntity != NULL) {
-      delete (GlobalNetworkStuff->PlayerNetStuff[deleteplayerqueue.front()]
-                  .PlayerEntity);
-    }
-
-    GlobalNetworkStuff->PlayerNetStuff.erase(deleteplayerqueue.front());
+    RemoveUser(deleteplayerqueue.front());
     deleteplayerqueue.pop();
   }
 }
@@ -378,6 +400,8 @@ void SendNetData() {
         playerdatapacket temp;
         Entity* entity = player.PlayerEntity;
         temp.State = entity->State;
+        temp.StateFrame = entity->Modelthing->actions[1].frame;
+        temp.respawned = entity->respawned;
         temp.teamindex = ID;
         // temp.teamindex = entity->teamindex;
         temp.ID = ID;
@@ -415,7 +439,6 @@ void SendNetData() {
         EntitySpawnInfo temp;
         for (int i = 0; i < 2; i++) temp.direction[i] = entity->dir[i];
         temp.EntityIndex = entity->EntityIndex;
-        temp.EntityCode = entity->EntityCode;
         temp.hp = entity->hp;
         temp.name = entity->name;
         temp.State = entity->State;
@@ -436,6 +459,8 @@ void SendNetData() {
     playerdatapacket temp;
     temp.teamindex = LocalPlayer->teamindex;
     temp.State = LocalPlayer->State;
+    temp.StateFrame = LocalPlayerNetData->frame;
+    temp.respawned = LocalPlayer->respawned;
     temp.ID = UserID;
     temp.Set(P1PlayerInputs);
     temp.IsGrounded = LocalPlayer->IsGrounded;
@@ -466,6 +491,116 @@ void SendNetData() {
   }
 }
 
+void HitScanAttack(float damage, float xrot, float yrot) {
+  glm::vec3 targetdir = Camera->lookat - Camera->pos;
+
+  glm::vec3 right = glm::normalize(glm::cross(targetdir, glm::vec3(0, 0, 1))),
+            up = glm::normalize(glm::cross(right, targetdir));
+
+  targetdir = glm::angleAxis(glm::radians(xrot), up) * targetdir;
+
+  targetdir = glm::angleAxis(glm::radians(yrot), right) * targetdir;
+
+  glm::vec3 ray[2];
+  ray[0] = LocalPlayer->position;
+  ray[0].z += LocalPlayer->cameraoffset;
+  ray[1] = targetdir;
+  ray[1] *= 128.f;
+  ray[1] += LocalPlayer->position;
+  ray[1].z += LocalPlayer->cameraoffset;
+
+  // uint32_t lightindex = LightMapEmptyIndex();
+  // Lights[lightindex] = new TempLight(lightindex, 0.125f);
+  // Lights[lightindex]->position = targetdir * 0.25f + LocalPlayer->position;
+  // Lights[lightindex]->position.z += LocalPlayer->cameraoffset;
+  // Lights[lightindex]->startspecularStrength = 0.125f;
+  // Lights[lightindex]->startdiffusionStrength = 0.05f;
+  // Lights[lightindex]->color[0] = 1;
+  // Lights[lightindex]->color[1] = 0.9f;
+  // Lights[lightindex]->color[2] = 0.5f;
+
+  movecollisionresult resultthing;
+
+  raycastcheck(ray, LocalPlayer->teamindex, resultthing);
+
+  if (resultthing.CollidedwithEntityAtAll) {
+    EntityDamageInfo infothing;
+    infothing.damage = damage;
+    infothing.FromPlayer = false;
+    infothing.SourceEntityIndex = 0;
+
+    for (int i = 0; i < 3; i++) infothing.pushdir[i] = targetdir[i];
+    if (resultthing.CollidedWithPlayer) {
+      infothing.TargetEntityIndex = resultthing.collidedID;
+      infothing.TargetIsPlayer = true;
+    } else {
+      infothing.TargetEntityIndex = resultthing.collidedID;
+      infothing.TargetIsPlayer = false;
+    }
+    DamageEntity(infothing, true);
+  }
+
+  if (resultthing.dist <= 0) {
+    resultthing.dist = 128.f;
+  }
+
+  glm::vec3 dir;
+
+  dir = targetdir;
+  dir *= resultthing.dist;
+  dir += LocalPlayer->position;
+  dir.z += LocalPlayer->cameraoffset;
+
+  ParticleSpawn(ParticleSpawnInfo{1,
+                                  {1 / 32.f, -1 / 112.f, 0},
+                                  {dir[0], dir[1], dir[2]},
+                                  true,
+                                  false,
+                                  0},
+                true);
+}
+
+void LocalClassUpdate() {
+  playerluastuff->lua["Keys"][SDL_SCANCODE_1] =
+      LocalInputs->Keys[SDL_SCANCODE_1];
+  playerluastuff->lua["Keys"][SDL_SCANCODE_2] =
+      LocalInputs->Keys[SDL_SCANCODE_2];
+  playerluastuff->lua["Keys"][SDL_SCANCODE_3] =
+      LocalInputs->Keys[SDL_SCANCODE_3];
+  playerluastuff->lua["Keys"][SDL_SCANCODE_R] =
+      LocalInputs->Keys[SDL_SCANCODE_R];
+  playerluastuff->lua["Leftclick"] = LocalInputs->leftclick;
+  playerluastuff->lua["autoreload"] = Settings->autoreload;
+
+  if (LocalPlayer->hp <= 0 ||
+      (LocalPlayerNetData != NULL &&
+       LocalPlayerNetData->isdead)) {  // class death reset code (make this
+                                       // online compatible!)
+    playerluastuff->LocalClassDeath();
+    if (LocalPlayerNetData != NULL) LocalPlayerNetData->isdead = false;
+  }
+  float anim = playerluastuff->lua["anim"];
+
+  playerluastuff->lua["anim"] = anim + updatedeltaTime * 24.f;
+
+  auto what = playerluastuff->LocalClassUpdate();
+  if (!what.valid()) {
+    sol::error err = what;
+    std::cout << "Lua Error: " << err.what() << std::endl;
+  }
+
+  auto result = playerluastuff->LocalClassStatetoPose();
+  uint32_t animationthing = getposeindex(result);
+
+  playerluastuff->lua["animend"] =
+      (float)(ModelGroupMap["PlayerMain"].anim[animationthing][1] -
+              ModelGroupMap["PlayerMain"].anim[animationthing][0]);
+  float state = playerluastuff->lua["state"];
+  LocalPlayer->State = state;
+  if (LocalPlayerNetData != NULL)
+    LocalPlayerNetData->frame = playerluastuff->lua["anim"];
+}
+
 void fixedupdate() {
   if (Global->IsOnline) {
     RecieveNetData();
@@ -489,7 +624,7 @@ void fixedupdate() {
       if (player.PlayerEntity != NULL)
         inputtoentity(player.PlayerInput, player.PlayerEntity);
     }
-    if (LocalPlayer != NULL) PlayerClassUpdate[Global->playerclass]();
+    if (LocalPlayer != NULL) LocalClassUpdate();
     componentsupdate();
     for (auto& [key, value] : UIGlobalStuff->UImap3D) {
       for (auto& i : value) {
@@ -512,8 +647,7 @@ void fixedupdate() {
     EntitydeleteQueue.pop();
     Entity* entitything = Entities[index];
     EntityPool[entitything->name];
-    EntityPool[entitything->name][entitything->EntityCode];
-    EntityPool[entitything->name][entitything->EntityCode].push(entitything);
+    EntityPool[entitything->name].push(entitything);
     Entities.erase(index);
   }
 
@@ -550,12 +684,12 @@ void update() {
   while (!ParticledeleteQueue.empty()) {
     uint32_t index = ParticledeleteQueue.front();
     ParticledeleteQueue.pop();
-    Particle* particlething = Particles[index];
-    ParticlePool[particlething->name];
-    ParticlePool[particlething->name][particlething->ParticleCode];
-    ParticlePool[particlething->name][particlething->ParticleCode].push(
-        particlething);
-    Particles.erase(index);
+    if (Particles.contains(index)) {
+      Particle* particlething = Particles[index];
+      ParticlePool[particlething->ParticleCode];
+      ParticlePool[particlething->ParticleCode].push(particlething);
+      Particles.erase(index);
+    }
   }
 
   while (!LightdeleteQueue.empty()) {
@@ -572,38 +706,4 @@ void update() {
   //         Entities[1]->position[2]);
 
   // if (curlpostfield->hasdata && Global->LoggedIn) CobblerSendCurlData();
-}
-
-void PlayerQuit() {
-  std::vector<uint8_t> buffer{};
-
-  for (int i = 0; i < 30; i++) {
-    CobblerQueueData("PlayerQuit", buffer, 0);
-    std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
-    if (tempvector != NULL) {
-      bool check = false;
-      while (!tempvector->empty()) {
-        CobblerNetData* tempdata = &tempvector->back();
-        if (tempdata->name == "PlayerList") {
-          std::set<uint64_t> tempset;
-          auto state = bitsery::quickDeserialization<
-              bitsery::InputBufferAdapter<std::vector<uint8_t>>>(
-              {tempdata->buffer.begin(), tempdata->size}, tempset);
-          if (state.first == bitsery::ReaderError::NoError && state.second) {
-            if (tempset.find(UserID) == tempset.end()) {
-              check = true;
-              break;
-            }
-          }
-        }
-        tempvector->pop_back();
-        break;
-      }
-      delete tempvector;
-      if (check) break;
-    }
-
-    CobblerSendNet();
-    SDL_DelayNS(1000000000 / 30);
-  }
 }

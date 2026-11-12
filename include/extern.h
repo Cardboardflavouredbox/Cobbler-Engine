@@ -16,4 +16,4 @@
 #endif
 
 LIB_API extern std::unique_ptr<GlobalClass> Global;
-LIB_API extern std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
+LIB_API extern bool IsRunning;

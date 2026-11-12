@@ -19,6 +19,19 @@ endif()
 
 include(FetchContent)
 
+if (APPLE)
+    execute_process(
+        COMMAND brew --prefix lua@5.4
+        OUTPUT_VARIABLE LUA54_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    list(APPEND CMAKE_PREFIX_PATH "${LUA54_PREFIX}")
+endif()
+find_package(Lua 5.4 EXACT REQUIRED)
+
+find_package (sol2 CONFIG REQUIRED)
+
 find_package (SDL3 REQUIRED)
 find_package (SDL3_net REQUIRED)
 
@@ -38,14 +51,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
-
-FetchContent_Declare(
-    dylib
-    GIT_REPOSITORY "https://github.com/martin-olivier/dylib"
-    GIT_TAG        "v3.0.1"
-)
-FetchContent_MakeAvailable(dylib)
-
 set(CORE_SOURCES 
     Core/update.cpp
     Core/components.cpp 
@@ -60,20 +65,18 @@ set(CORE_SOURCES
     Core/font.cpp
     Core/player.cpp
     Core/map.cpp
+    Core/commandline.cpp
+    Core/netconnect.cpp
+    Core/particles.cpp
+    Core/luathing.cpp
+    UI/g_ui_index.cpp
+    UI/g_ui.cpp
 )
 
 add_library(CobblerGLAD SHARED glad/gl.c "include/glad/gl.h")
 add_library(CobblerCore SHARED Core/extern.cpp ${CORE_SOURCES})
-add_library(CobblerGameUI SHARED "$CACHE{GAME}/UI/g_ui.cpp" "$CACHE{GAME}/UI/g_ui_index.cpp" "include/ui.h")
 add_library(CobblerNet SHARED Net/net.cpp "include/network.h")
 # add_library(CobblerEditorUI SHARED "$CACHE{GAME}/UI/e_ui.cpp" "$CACHE{GAME}/UI/e_ui_index.cpp" "include/ui.h")
-
-set_target_properties(CobblerGameUI PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/bin"
-)
-set_target_properties(CobblerGameUI PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/bin"
-)
 
 add_executable(Cobbler-Engine 
 src/g_main.cpp src/g_render.cpp)
@@ -90,18 +93,18 @@ add_executable(CobblerBSP ${BSP_SOURCES})
 # src/e_update.cpp src/e_components.cpp)
 
 target_link_libraries(CobblerNet PRIVATE SDL3::SDL3 SDL3_net::SDL3_net)
-target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm Freetype::Freetype CobblerGLAD CobblerNet)
-target_link_libraries(CobblerGameUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
+target_link_libraries(CobblerCore PRIVATE SDL3::SDL3 bitsery glm::glm Freetype::Freetype sol2::sol2 ${LUA_LIBRARIES} CobblerGLAD CobblerNet)
 # target_link_libraries(CobblerEditorUI PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD)
-target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD dylib)
+target_link_libraries(Cobbler-Engine PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype sol2::sol2 ${LUA_LIBRARIES} CobblerCore CobblerGLAD)
 target_link_libraries(CobblerBSP PRIVATE glm::glm)
 # target_link_libraries(Cobbler-Engine-Editor PRIVATE SDL3::SDL3 glm::glm Freetype::Freetype CobblerCore CobblerGLAD dylib)
  
 target_include_directories(CobblerGLAD PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/UI/include)
-target_include_directories(CobblerGameUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(CobblerCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/UI/include)
+target_include_directories(CobblerCore PRIVATE ${LUA_INCLUDE_DIR})
 # target_include_directories(CobblerEditorUI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(Cobbler-Engine PRIVATE ${LUA_INCLUDE_DIR})
 target_include_directories(Cobbler-Engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerBSP PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(CobblerBSP PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/BSP/include)
@@ -110,7 +113,6 @@ target_include_directories(CobblerNet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includ
 
 target_compile_definitions(Cobbler-Engine PRIVATE DLLEXPORT=0)
 target_compile_definitions(CobblerGLAD PRIVATE DLLEXPORT=1)
-target_compile_definitions(CobblerGameUI PRIVATE DLLEXPORT=0 UIEXPORT=1)
 target_compile_definitions(CobblerCore PRIVATE DLLEXPORT=1)
 target_compile_definitions(CobblerNet PRIVATE DLLEXPORT=1)
 
@@ -121,59 +123,6 @@ FILE(COPY "$CACHE{GAME}/resources.txt" DESTINATION "${CMAKE_BINARY_DIR}/bin/$CAC
 FILE(COPY $CACHE{GAME}/map DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/models DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/res DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
+FILE(COPY $CACHE{GAME}/class DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
+FILE(COPY $CACHE{GAME}/entities DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
 FILE(COPY $CACHE{GAME}/textures DESTINATION "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}")
-
-file(GLOB ENTITIES LIST_DIRECTORIES true CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/entities/*")
-file(GLOB ENTITIES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/entities/*")
-foreach(ENTITYDIR ${ENTITIES})
-    cmake_path(GET ENTITYDIR FILENAME FOLDER_NAME)
-    if(IS_DIRECTORY "${ENTITYDIR}")
-        add_library(${FOLDER_NAME} SHARED "${ENTITYDIR}/entitymain.cpp")
-        set_target_properties(${FOLDER_NAME} PROPERTIES
-            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/entities/${FOLDER_NAME}"
-        )
-        set_target_properties(${FOLDER_NAME} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/entities/${FOLDER_NAME}"
-        )
-        target_link_libraries(${FOLDER_NAME} PRIVATE glm::glm CobblerCore CobblerGLAD)
-        target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    endif()
-endforeach()
-
-file(GLOB PARTICLES LIST_DIRECTORIES true CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/particles/*")
-file(GLOB PARTICLES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/particles/*")
-foreach(PARTICLEDIR ${PARTICLES})
-    cmake_path(GET PARTICLEDIR FILENAME FOLDER_NAME)
-    if(IS_DIRECTORY "${PARTICLEDIR}")
-        add_library(${FOLDER_NAME} SHARED "${PARTICLEDIR}/particlemain.cpp")
-        set_target_properties(${FOLDER_NAME} PROPERTIES
-            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/particles/${FOLDER_NAME}"
-        )
-        set_target_properties(${FOLDER_NAME} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/particles/${FOLDER_NAME}"
-        )
-        target_link_libraries(${FOLDER_NAME} PRIVATE SDL3::SDL3 glm::glm CobblerCore CobblerGLAD)
-        target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    endif()
-endforeach()
-
-
-file(GLOB CLASSES LIST_DIRECTORIES true CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/class/*")
-file(GLOB CLASSES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/class/*")
-foreach(CLASSDIR ${CLASSES})
-    cmake_path(GET CLASSDIR FILENAME FOLDER_NAME)
-    if(IS_DIRECTORY "${CLASSDIR}")
-        add_library(${FOLDER_NAME} SHARED "${CLASSDIR}/classmain.cpp" "${CLASSDIR}/ui.cpp" "${CLASSDIR}/entitymain.cpp")
-        target_compile_definitions(${FOLDER_NAME} PRIVATE DLLEXPORT=0 UIEXPORT=0 CLASS_API=1)
-        set_target_properties(${FOLDER_NAME} PROPERTIES
-            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/class/${FOLDER_NAME}"
-        )
-        set_target_properties(${FOLDER_NAME} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$CACHE{GAME}/class/${FOLDER_NAME}"
-        )
-        target_link_libraries(${FOLDER_NAME} PRIVATE glm::glm CobblerCore CobblerGameUI Freetype::Freetype CobblerGLAD)
-        target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-        target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/class/${FOLDER_NAME}/include)
-        target_include_directories(${FOLDER_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/$CACHE{GAME}/UI/include)
-    endif()
-endforeach()

@@ -1,22 +1,47 @@
+#include <SDL3/SDL_clipboard.h>
+#include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_log.h>
 #include <glad/gl.h>
 
+#include "SDL_scancode.h"
+#include "commandline.h"
+#include "deltaTime.h"
 #include "extern.h"
 #include "inputs.h"
 #include "render.h"
 #include "settings.h"
 #include "update.h"
 
+bool textinputlocalcheck = false;
+float backspacetime = 0;
+
 // process events
 void events() {
+  if (textinputing && !textinputlocalcheck) {
+    SDL_StartTextInput(RendererGlobal->window);
+    textinputlocalcheck = true;
+  } else if (!textinputing && textinputlocalcheck) {
+    SDL_StopTextInput(RendererGlobal->window);
+    textinputlocalcheck = false;
+  }
+
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
-      // Quit game
-      case SDL_EVENT_QUIT:
-        Global->IsRunning = false;
+      // Text input
+      case SDL_EVENT_TEXT_INPUT: {
+        if (textinputlocalcheck) {
+          cmdcurrentinput.append(event.text.text);
+        }
         break;
+      }
+      // Quit game
+      case SDL_EVENT_QUIT: {
+        IsRunning = false;
+        break;
+      }
       // Resize Window
-      case SDL_EVENT_WINDOW_RESIZED:
+      case SDL_EVENT_WINDOW_RESIZED: {
         // Get Window Size
         SDL_GetWindowSizeInPixels(RendererGlobal->window,
                                   &RendererGlobal->windowx,
@@ -74,33 +99,70 @@ void events() {
           }
         }
         break;
+      }
       // Mouse Click read
-      case SDL_EVENT_MOUSE_BUTTON_DOWN:
+      case SDL_EVENT_MOUSE_BUTTON_DOWN: {
         if (event.button.button == SDL_BUTTON_LEFT) {
           LocalInputs->leftclick = 2;
         } else if (event.button.button == SDL_BUTTON_RIGHT) {
           LocalInputs->rightclick = 2;
         }
         break;
+      }
       // Mouse Unclick read
-      case SDL_EVENT_MOUSE_BUTTON_UP:
+      case SDL_EVENT_MOUSE_BUTTON_UP: {
         if (event.button.button == SDL_BUTTON_LEFT) {
           LocalInputs->leftclick = 0;
         } else if (event.button.button == SDL_BUTTON_RIGHT) {
           LocalInputs->rightclick = 0;
         }
         break;
+      }
       // Mouse Wheel read
-      case SDL_EVENT_MOUSE_WHEEL:
+      case SDL_EVENT_MOUSE_WHEEL: {
         LocalInputs->MouseScroll.x = event.wheel.x;
         LocalInputs->MouseScroll.y = event.wheel.y;
         break;
-      case SDL_EVENT_KEY_DOWN:
+      }
+      case SDL_EVENT_KEY_DOWN: {
         LocalInputs->Keys[event.key.scancode] = event.key.repeat ? 1 : 2;
         break;
-      case SDL_EVENT_KEY_UP:
+      }
+      case SDL_EVENT_KEY_UP: {
         LocalInputs->Keys[event.key.scancode] = 0;
         break;
+      }
+    }
+  }
+  if (textinputlocalcheck) {
+    if (LocalInputs->Keys[SDL_SCANCODE_ESCAPE] > 1) {
+      textinputing = false;
+    } else {
+      if (LocalInputs->Keys[SDL_SCANCODE_V] > 1 &&
+          (LocalInputs->Keys[SDL_SCANCODE_LCTRL] > 0 ||
+           LocalInputs->Keys[SDL_SCANCODE_RCTRL] > 0)) {
+        char* temp = SDL_GetClipboardText();
+        cmdcurrentinput.append(temp);
+        SDL_free(temp);
+      }
+      if (LocalInputs->Keys[SDL_SCANCODE_BACKSPACE] > 0 &&
+          !cmdcurrentinput.empty()) {
+        if (LocalInputs->Keys[SDL_SCANCODE_BACKSPACE] == 2) {
+          cmdcurrentinput.pop_back();
+          backspacetime = 1 / 32.f;
+        } else if (backspacetime <= 0.f) {
+          cmdcurrentinput.pop_back();
+          backspacetime = 1 / 256.f;
+        }
+        backspacetime -= renderdeltaTime;
+      }
+      if (LocalInputs->Keys[SDL_SCANCODE_RETURN] > 1) {
+        pushcmd();
+        LocalInputs->Keys[SDL_SCANCODE_RETURN] = 1;
+      }
+    }
+    for (int i = 0; i < 512; i++) {
+      LocalInputs->Keys[i] = 0;
     }
   }
 }

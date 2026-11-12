@@ -2,8 +2,8 @@
     "version": 8,
     "configurePresets": [
         {
-            "name": "MacOS",
-            "displayName": "Clang",
+            "name": "MacOS_Release",
+            "displayName": "Clang_Release",
             "description": "컴파일러를 사용하는 중: C = /usr/bin/clang, CXX = /usr/bin/clang++",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "cacheVariables": {
@@ -14,91 +14,30 @@
             }
         },
         {
-            "name": "Linux amd64",
-            "displayName": "GCC",
-            "description": "Using compilers: C = /usr/bin/gcc-14, CXX = /usr/bin/g++-14",
+            "name": "MacOS_Debug",
+            "displayName": "Clang_Debug",
+            "description": "컴파일러를 사용하는 중: C = /usr/bin/clang, CXX = /usr/bin/clang++",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "/usr/bin/gcc",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_C_COMPILER": "/usr/bin/clang",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS": ""
             }
         },
         {
-            "name": "GCC 14.3.0 x86_64-linux-gnu",
-            "displayName": "GCC 14.3.0 x86_64-linux-gnu",
-            "description": "Using compilers: C = /usr/bin/gcc-14, CXX = /usr/bin/g++-14",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "/usr/bin/gcc-14",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++-14",
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "GCC 14.3.0 x86_64-linux-gnu",
-            "displayName": "GCC 14.3.0 x86_64-linux-gnu",
-            "description": "Using compilers: C = /usr/bin/gcc-14, CXX = /usr/bin/g++-14",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "/usr/bin/gcc-14",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++-14",
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "Visual Studio Community 2022 Release - x86_amd64",
-            "displayName": "Visual Studio Community 2022 Release - x86_amd64",
-            "description": "Using compilers for Visual Studio 17 2022 (x86_x64 architecture)",
-            "generator": "Visual Studio 17 2022",
-            "toolset": "host=x86",
-            "architecture": "x64",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "cl.exe",
-                "CMAKE_CXX_COMPILER": "cl.exe"
-            }
-        },
-        {
-            "name": "w64devkit",
-            "displayName": "GCC 16.2.0 x86_64-w64-mingw32",
-            "description": "Using compilers: C = c:\\w64devkit\\bin\\gcc.exe, CXX = c:\\w64devkit\\bin\\g++.exe",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "c:/w64devkit/bin/gcc.exe",
-                "CMAKE_CXX_COMPILER": "c:/w64devkit/bin/g++.exe",
-                "CMAKE_BUILD_TYPE": "Release"
-            }
-        },
-        {
-            "name": "GCC 16.2.0 x86_64-w64-mingw32",
-            "displayName": "GCC 16.2.0 x86_64-w64-mingw32",
-            "description": "Using compilers: C = d:\\w64devkit\\bin\\gcc.exe, CXX = d:\\w64devkit\\bin\\g++.exe",
+            "name": "Windows_Release",
+            "displayName": "Ucrt64_Release",
+            "description": "Using compilers: C = c:\\msys64\\ucrt64\\bin\\gcc.exe, CXX = c:\\msys64\\ucrt64\\bin\\g++.exe",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "generator": "Ninja",
-            "environment": {
-                "VCPKG_ROOT": "D:\\vcpkg"
-            },
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "d:/w64devkit/bin/gcc.exe",
-                "CMAKE_CXX_COMPILER": "d:/w64devkit/bin/g++.exe",
+                "CMAKE_C_COMPILER": "c:/msys64/ucrt64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "c:/msys64/ucrt64/bin/g++.exe",
                 "CMAKE_BUILD_TYPE": "Release"
             }
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "Visual Studio Community 2022 Release - x86_amd64-Release",
-            "displayName": "Visual Studio Community 2022 Release - x86_amd64 - Release",
-            "configurePreset": "Visual Studio Community 2022 Release - x86_amd64",
-            "configuration": "Release"
         }
     ]
 }

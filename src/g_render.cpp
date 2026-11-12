@@ -60,130 +60,12 @@ glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
   return result;
 }
 
-// software rendering stuff
-// void rendergame() {
-//   std::vector<Mapface> tempmapfacevector = GlobalMapStuff->mapfaces,
-//   addlaterfacevector; std::vector<MapPoint> temppointsvector =
-//   Global->Points;
-
-//   for (int i = 0; i < tempmapfacevector.size(); i++) {
-//     Mapface* tempmapface = &tempmapfacevector[i];
-//     float dist[3] = {};
-//     std::vector<int> invisiblevector, visiblevector;
-//     int invisiblecount = 0;
-//     for (int j = 0; j < 3; j++) {
-//       dist[j] =
-//       getdistancething(temppointsvector[tempmapface->points[j]].pos); if
-//       (dist[j] < 0.25f) {
-//         invisiblecount++;
-//         invisiblevector.push_back(j);
-//       } else
-//         visiblevector.push_back(j);
-//     }
-//     switch (invisiblecount) {
-//       case 3: {
-//         tempmapfacevector.erase(tempmapfacevector.begin() + i);
-//         i--;
-//         break;
-//       }
-//       case 2: {
-//         for (int j = 0; j < 2; j++) {
-//           glm::vec3 newvec3 = CutLinething(
-//               temppointsvector[tempmapface->points[invisiblevector[j]]].pos,
-//               temppointsvector[tempmapface->points[visiblevector[0]]].pos);
-//           temppointsvector.push_back(newvec3);
-
-//           float internal = getinternaldivisionthing(
-//               temppointsvector[tempmapface->points[invisiblevector[j]]],
-//               newvec3,
-//               temppointsvector[tempmapface->points[visiblevector[0]]]);
-
-//           tempmapface->UVs[invisiblevector[j]] =
-//               divisiontoVec2(tempmapface->UVs[invisiblevector[j]],
-//                              tempmapface->UVs[visiblevector[0]], internal);
-
-//           tempmapface->points[invisiblevector[j]] = temppointsvector.size() -
-//           1;
-//         }
-//         break;
-//       }
-//       case 1: {
-//         Mapface newface;
-//         newface.texture = tempmapface->texture;
-//         newface.xloop = tempmapface->xloop;
-//         newface.yloop = tempmapface->yloop;
-//         newface.doublesided = tempmapface->doublesided;
-//         newface.points.resize(3);
-//         newface.UVs.resize(3);
-//         newface.points[visiblevector[0]] =
-//             tempmapface->points[visiblevector[0]];
-//         newface.UVs[visiblevector[0]] = tempmapface->UVs[visiblevector[0]];
-//         glm::vec3 newvec3;
-//         newvec3 = CutLinething(
-//             temppointsvector[tempmapface->points[invisiblevector[0]]],
-//             temppointsvector[tempmapface->points[visiblevector[0]]]);
-
-//         float internal = getinternaldivisionthing(
-//             temppointsvector[tempmapface->points[invisiblevector[0]]],
-//             newvec3,
-//             temppointsvector[tempmapface->points[visiblevector[0]]]);
-
-//         newface.UVs[invisiblevector[0]] =
-//             divisiontoVec2(tempmapface->UVs[invisiblevector[0]],
-//                            tempmapface->UVs[visiblevector[0]], internal);
-
-//         temppointsvector.push_back(newvec3);
-
-//         newface.points[invisiblevector[0]] = temppointsvector.size() - 1;
-//         newvec3 = CutLinething(
-//             temppointsvector[tempmapface->points[invisiblevector[0]]],
-//             temppointsvector[tempmapface->points[visiblevector[1]]]);
-
-//         internal = getinternaldivisionthing(
-//             temppointsvector[tempmapface->points[invisiblevector[0]]],
-//             newvec3,
-//             temppointsvector[tempmapface->points[visiblevector[1]]]);
-
-//         newface.UVs[visiblevector[1]] =
-//             divisiontoVec2(tempmapface->UVs[invisiblevector[0]],
-//                            tempmapface->UVs[visiblevector[1]], internal);
-
-//         temppointsvector.push_back(newvec3);
-//         tempmapface->points[invisiblevector[0]] = temppointsvector.size() -
-//         1; tempmapface->UVs[invisiblevector[0]] =
-//         newface.UVs[visiblevector[1]]; newface.points[visiblevector[1]] =
-//         temppointsvector.size() - 1; newface.shade = tempmapface->shade;
-//         addlaterfacevector.push_back(newface);
-//         break;
-//       }
-//     }
-//   }
-
-//   tempmapfacevector.insert(tempmapfacevector.end(),
-//   addlaterfacevector.begin(),
-//                            addlaterfacevector.end());
-
-//   for (int k = 0; k < tempmapfacevector.size(); k++) {
-//     glm::vec3 temp[3] = {temppointsvector[tempmapfacevector[k].points[0]],
-//                          temppointsvector[tempmapfacevector[k].points[1]],
-//                          temppointsvector[tempmapfacevector[k].points[2]]};
-//     glm::vec2 temp2[3] = {tempmapfacevector[k].UVs[0],
-//                           tempmapfacevector[k].UVs[1],
-//                           tempmapfacevector[k].UVs[2]};
-//     DrawTri(tempmapfacevector[k].texture, temp, temp2,
-//             tempmapfacevector[k].xloop, tempmapfacevector[k].yloop);
-//   }
-// }
-
 void render3DUI() {
   for (int i = 0; i < UIGlobalStuff->UIlist.size(); i++) {
     int len = UIGlobalStuff->UImap3D[UIGlobalStuff->UIlist[i]].size();
     for (int j = 0; j < len; j++) {
       Modeltransform* model =
           UIGlobalStuff->UImap3D[UIGlobalStuff->UIlist[i]][j]->modeltrans;
-
-      // SDL_Log("%f %f %f", model->position.x, model->position.y,
-      //         model->position.z);
 
       renderModelGroup(model, model->name, true, renderdeltaTime);
     }
@@ -200,13 +82,76 @@ void render2DUI() {
   }
 }
 
+void ModelGroupsethitboxes(Entity* entity) {
+  Modeltransform* modeltrans = entity->Modelthing;
+  ModelGroupClass* modelgroup = &ModelGroupMap[modeltrans->name];
+  for (auto& [index, bone] : modelgroup->Bonemap) {
+    bone.bonehitbox.processedpoints.clear();
+    for (auto& point : bone.bonehitbox.points) {
+      glm::vec3 pos = point;
+      glm::vec3 checkpos = pos;
+
+      for (auto& boneresultmap : BoneResultmapVector) {
+        pos = checkpos;
+        BoneResult* boneresult = &boneresultmap[index];
+
+        pos *= bone.restpose.scale;
+        pos = bone.restpose.rot * pos;
+        pos += bone.restpose.pos;
+
+        pos -= bone.head;
+
+        pos *= boneresult->scale;
+
+        pos = boneresult->rot * pos;
+
+        pos += boneresult->head;
+        if (boneresult->check) {
+          break;
+        }
+      }
+
+      pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
+                           glm::vec3(0, 0, 1)) *
+            pos;
+
+      pos = modeltrans->rot * pos;
+      pos.x *= modeltrans->size.x;
+      pos.y *= modeltrans->size.y;
+      pos.z *= modeltrans->size.z;
+      pos += modeltrans->position;
+      bone.bonehitbox.processedpoints.push_back(pos);
+    }
+    if (Global->IsDebug && Settings->graphicsmode == OpenGL1 &&
+        entity != LocalPlayer) {
+      for (auto& face : bone.bonehitbox.faces) {
+        glBegin(GL_TRIANGLES);
+        for (int j = 2; j >= 0; j--) {
+          glm::vec3 pos = bone.bonehitbox.processedpoints[face[j]];
+          glColor4f((j + 1) / 3.f, 0, 0, 0.5f);
+          glVertex3f(pos.x, pos.y, pos.z);
+        }
+        glEnd();
+      }
+    }
+  }
+}
+
 void renderEntity() {
-  for (const auto& i : Entities) {
-    if (i.second->Modelthing != nullptr) i.second->rendermodelgroup();
+  for (const auto& [index, entity] : Entities) {
+    if (entity->Modelthing != NULL) {
+      renderModelGroup(entity->Modelthing, entity->Modelthing->name, false,
+                       entity->deltatimelocal + renderdeltaTime);
+      ModelGroupsethitboxes(entity);
+    }
   }
   for (const auto& i : GlobalNetworkStuff->PlayerNetStuff) {
-    if (i.second.PlayerEntity->Modelthing != nullptr)
-      i.second.PlayerEntity->rendermodelgroup();
+    Entity* entity = i.second.PlayerEntity;
+    if (entity->Modelthing != NULL) {
+      renderModelGroup(entity->Modelthing, entity->Modelthing->name, false,
+                       entity->deltatimelocal + renderdeltaTime);
+      ModelGroupsethitboxes(entity);
+    }
   }
 }
 
@@ -248,7 +193,7 @@ void renderbackground() {
 
 void softwarerender() {
   SDL_Log("Software renderer is not supported anymore.");
-  Global->IsRunning = false;
+  IsRunning = false;
   // SDL_LockSurface(RendererGlobal->SRstuff->render_target);
 
   // RendererGlobal->SRstuff->pixels =

@@ -78,8 +78,8 @@ struct RendererStuff {
 
   // struct VulkanRenderer {
   //   vk::raii::Context context;
-  //   vk::raii::Instance instance = nullptr;
-  //   vk::raii::PhysicalDevice physicalDevice = nullptr;
+  //   vk::raii::Instance instance = NULL;
+  //   vk::raii::PhysicalDevice physicalDevice = NULL;
   // };
   // VulkanRenderer* Vulkanstuff;
 };

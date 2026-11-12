@@ -37,5 +37,7 @@ LIB_API glm::vec3 movecollisioncheck(
     Entity* movingentity);  // returns the face normal
 LIB_API void raycastcheck(glm::vec3 hitbox[], int teamindex,
                           movecollisionresult& resultinfo);
+LIB_API float Entityraycheck(
+    glm::vec3 ray[], Entity* checkentity);  // returns dist (-1 if not collided)
 LIB_API void EntityMove(Entity* tempentity);
 }

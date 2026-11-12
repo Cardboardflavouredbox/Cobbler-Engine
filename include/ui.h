@@ -1,7 +1,7 @@
 #pragma once
 
-#include <memory>
 #include <glm/vec2.hpp>
+#include <memory>
 
 #include "model.h"
 
@@ -38,3 +38,9 @@ struct UIGlobalClass {
 };
 
 LIB_API extern std::unique_ptr<UIGlobalClass> UIGlobalStuff;
+
+extern "C" {
+LIB_API bool UIsetup();
+LIB_API void UIfree();
+LIB_API void changeUIindex();
+}

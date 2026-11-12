@@ -10,6 +10,7 @@
 #include "extern.h"
 #include "map.h"
 #include "mapdata.h"
+#include "model.h"
 #include "networkextern.h"
 #include "pi.h"
 
@@ -59,6 +60,28 @@ std::optional<glm::vec3> RayTriIntersect(glm::vec3 ray_origin,
   } else  // This means that there is a line intersection but not a ray
           // intersection.
     return {};
+}
+
+float Entityraycheck(
+    glm::vec3 ray[],
+    Entity* checkentity) {  // returns dist (-1 if not collided)
+  glm::vec3 normal = glm::normalize(ray[1] - ray[0]);
+  float result = -1;
+  if (checkentity->Modelthing != NULL) {
+    for (auto& [index, bone] :
+         ModelGroupMap[checkentity->Modelthing->name].Bonemap) {
+      for (auto& face : bone.bonehitbox.faces) {
+        const std::vector<glm::vec3>& points = bone.bonehitbox.processedpoints;
+        std::optional<glm::vec3> check = RayTriIntersect(
+            ray[0], normal, points[face[0]], points[face[1]], points[face[2]]);
+
+        if (check.has_value()) {
+          result = glm::distance(ray[0], check.value());
+        }
+      }
+    }
+  }
+  return result;
 }
 
 // checks if capsule and ray overlaps.
@@ -287,33 +310,60 @@ void recursiveBSPadd(int index, std::vector<std::array<uint32_t, 3>>& out) {
   recursiveBSPadd(GlobalMapBSP->BSPtree[index].B, out);
 }
 
-void BSPthing(glm::vec3 pos, float radius, int index,
-              std::vector<std::array<uint32_t, 3>>& out, bool& solid) {
-  solid = false;
-  if (index < 0) return;
+bool BSPthing(glm::vec3 pos, float radius, int index,
+              std::vector<std::array<uint32_t, 3>>& out) {
+  if (index < 0) return false;
   MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
 
   if (bspthing->type == MapBSP::BSPnode::LEAF_SOLID) {
-    solid = true;
-    return;
+    return true;
   } else if (bspthing->type == MapBSP::BSPnode::LEAF_EMPTY) {
-    solid = false;
-    return;
+    return false;
   }
 
   for (auto& i : GlobalMapBSP->BSPtree[index].Faces) out.push_back(i);
 
   float tempdist = pointSideCheck(pos, bspthing->plane);
   if (std::fabs(tempdist) <= radius * 2.25f) {
-    BSPthing(pos, radius, bspthing->A, out, solid);
-    BSPthing(pos, radius, bspthing->B, out, solid);
-    solid = false;
+    bool A = BSPthing(pos, radius, bspthing->A, out),
+         B = BSPthing(pos, radius, bspthing->B, out);
+    return (A || B);
   } else if (tempdist >= 0.f) {
-    BSPthing(pos, radius, bspthing->A, out, solid);
+    return BSPthing(pos, radius, bspthing->A, out);
   } else {
-    BSPthing(pos, radius, bspthing->B, out, solid);
+    return BSPthing(pos, radius, bspthing->B, out);
   }
-  return;
+  return true;
+}
+
+bool BSPraything(glm::vec3 start, glm::vec3 end, int index,
+                 std::vector<std::array<uint32_t, 3>>& out) {
+  if (index < 0) return false;
+  MapBSP::BSPnode* bspthing = &GlobalMapBSP->BSPtree[index];
+
+  if (bspthing->type == MapBSP::BSPnode::LEAF_SOLID) {
+    return true;
+  } else if (bspthing->type == MapBSP::BSPnode::LEAF_EMPTY) {
+    return false;
+  }
+
+  for (auto& i : GlobalMapBSP->BSPtree[index].Faces) out.push_back(i);
+
+  float dist1 = pointSideCheck(start, bspthing->plane);
+  float dist2 = pointSideCheck(end, bspthing->plane);
+
+  if (dist1 * dist2 < 0.0f) {
+    bool A = BSPraything(start, end, bspthing->A, out),
+         B = BSPraything(start, end, bspthing->B, out);
+    return (A || B);
+  } else {
+    if (dist1 >= 0.0f) {
+      return BSPraything(start, end, bspthing->A, out);
+    } else {
+      return BSPraything(start, end, bspthing->B, out);
+    }
+  }
+  return true;
 }
 
 // checks if you collided with triangle while you moved.
@@ -333,7 +383,7 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
               GlobalMapStuff->KillboxPoints[GlobalMapStuff->KillboxFaces[i][2]],
               hitbox[0] + checkposition, hitbox[1] + checkposition, radius,
               disttemp, normal)) {
-        movingentity->hp = -1;
+        movingentity->hp = -255;
       }
     }
   }
@@ -344,9 +394,8 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   glm::vec3 playerpos = checkposition + hitbox[0] / 2.f + hitbox[1] / 2.f;
 
   std::vector<std::array<uint32_t, 3>> Faces;
-  bool solid;
-  BSPthing(playerpos, radius + glm::distance(hitbox[1], hitbox[0]), 0, Faces,
-           solid);
+  bool solid = BSPthing(playerpos, radius + glm::distance(hitbox[1], hitbox[0]),
+                        0, Faces);
 
   if (solid) {
     Faces.clear();
@@ -371,10 +420,11 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   for (auto& i : Entities) {
     Entity* tempentity = i.second;
     if (tempentity->teamindex != teamindex) {
-      raycheckresult temp =
-          capsuleraycheck(hitbox[0] + checkposition, hitbox[1] + checkposition,
-                          tempentity->hitbox[0] + tempentity->position,
-                          tempentity->hitbox[1] + tempentity->position);
+      raycheckresult temp = capsuleraycheck(
+          hitbox[0] + checkposition, hitbox[1] + checkposition,
+          glm::vec3(0, 0, tempentity->hitboxradius) + tempentity->position,
+          glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius) +
+              tempentity->position);
       glm::vec3 normal = glm::normalize(temp.B - temp.A);
       if (temp.dist < radius + tempentity->hitboxradius &&
           (resultthing.dist == 0 ||
@@ -390,10 +440,11 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
     Entity* tempentity = i.second.PlayerEntity;
     if (tempentity->teamindex != teamindex) {
-      raycheckresult temp =
-          capsuleraycheck(hitbox[0] + checkposition, hitbox[1] + checkposition,
-                          tempentity->hitbox[0] + tempentity->position,
-                          tempentity->hitbox[1] + tempentity->position);
+      raycheckresult temp = capsuleraycheck(
+          hitbox[0] + checkposition, hitbox[1] + checkposition,
+          glm::vec3(0, 0, tempentity->hitboxradius) + tempentity->position,
+          glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius) +
+              tempentity->position);
       glm::vec3 normal = glm::normalize(temp.B - temp.A);
       if (temp.dist < radius + tempentity->hitboxradius &&
           (resultthing.dist == 0 ||
@@ -416,7 +467,7 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
   resultthing.dist = 0;
 
   std::vector<std::array<uint32_t, 3>> Faces;
-  recursiveBSPadd(0, Faces);
+  BSPraything(hitbox[0], hitbox[1], 0, Faces);
 
   // make sure to add ray bsp stuff later!
   for (auto& i : Faces) {
@@ -436,15 +487,10 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
   for (auto& i : Entities) {
     Entity* tempentity = i.second;
     if (tempentity->teamindex != teamindex) {
-      raycheckresult temp = capsuleraycheck(
-          hitbox[0], hitbox[1], tempentity->hitbox[0] + tempentity->position,
-          tempentity->hitbox[1] + tempentity->position);
+      float temp = Entityraycheck(hitbox, tempentity);
 
-      float disttemp = glm::distance(temp.A, hitbox[0]);
-
-      if (temp.dist < tempentity->hitboxradius &&
-          (resultthing.dist == 0 || resultthing.dist > disttemp)) {
-        resultthing.dist = disttemp;
+      if (temp >= 0.f && (resultthing.dist == 0 || resultthing.dist > temp)) {
+        resultthing.dist = temp;
         resultthing.CollidedWithPlayer = false;
         resultthing.CollidedwithEntityAtAll = true;
         resultthing.collidedID = i.first;
@@ -454,15 +500,10 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
   for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
     Entity* tempentity = i.second.PlayerEntity;
     if (tempentity->teamindex != teamindex) {
-      raycheckresult temp = capsuleraycheck(
-          hitbox[0], hitbox[1], tempentity->hitbox[0] + tempentity->position,
-          tempentity->hitbox[1] + tempentity->position);
+      float temp = Entityraycheck(hitbox, tempentity);
 
-      float disttemp = glm::distance(temp.A, hitbox[0]);
-
-      if (temp.dist < tempentity->hitboxradius &&
-          (resultthing.dist == 0 || resultthing.dist > disttemp)) {
-        resultthing.dist = disttemp;
+      if (temp >= 0.f && (resultthing.dist == 0 || resultthing.dist > temp)) {
+        resultthing.dist = temp;
         resultthing.CollidedWithPlayer = true;
         resultthing.CollidedwithEntityAtAll = true;
         resultthing.collidedID = i.first;
@@ -474,9 +515,14 @@ void raycastcheck(glm::vec3 hitbox[], int teamindex,
 
 glm::vec3 collisionloop(Entity* tempentity, glm::vec3 tempposition) {
   movecollisionresult resultthing;
-  glm::vec3 normal = movecollisioncheck(
-      tempentity->hitbox, tempposition, tempentity->hitboxradius,
-      tempentity->teamindex, resultthing, tempentity);
+
+  glm::vec3 hitbox[2] = {
+      glm::vec3(0, 0, tempentity->hitboxradius),
+      glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius)};
+
+  glm::vec3 normal =
+      movecollisioncheck(hitbox, tempposition, tempentity->hitboxradius,
+                         tempentity->teamindex, resultthing, tempentity);
 
   float dist = -resultthing.dist + tempentity->hitboxradius;
   // SDL_Log("%f", distfirst);
@@ -491,6 +537,9 @@ glm::vec3 collisionloop(Entity* tempentity, glm::vec3 tempposition) {
 // OPTIMIZE THIS LATER!! THIS IS HORRID.
 // Also add more comments! This looks like nonsense to most people.
 void EntityMove(Entity* tempentity) {
+  glm::vec3 hitbox[2] = {
+      glm::vec3(0, 0, tempentity->hitboxradius),
+      glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius)};
   // consider round trip time in deltatime.
   float dt = tempentity->deltatimelocal + updatedeltaTime;
   tempentity->velocityvec3.z -= tempentity->gravity * dt;
@@ -516,9 +565,9 @@ void EntityMove(Entity* tempentity) {
     tempposition.x += tempmove.x / (float)temp;
     tempposition.y += tempmove.y / (float)temp;
     movecollisionresult resultthing;
-    glm::vec3 normal = movecollisioncheck(
-        tempentity->hitbox, tempposition, tempentity->hitboxradius,
-        tempentity->teamindex, resultthing, tempentity);
+    glm::vec3 normal =
+        movecollisioncheck(hitbox, tempposition, tempentity->hitboxradius,
+                           tempentity->teamindex, resultthing, tempentity);
     float distfirst = resultthing.dist;
 
     // didn't collide with anything while moving on x and y axis.
@@ -531,8 +580,7 @@ void EntityMove(Entity* tempentity) {
         for (int j = 1; j <= 16; j++) {
           movecollisionresult resultthing;
           glm::vec3 tempnormal = movecollisioncheck(
-              tempentity->hitbox,
-              tempposition - glm::vec3(0, 0, j * dist / 16.f),
+              hitbox, tempposition - glm::vec3(0, 0, j * dist / 16.f),
               tempentity->hitboxradius, tempentity->teamindex, resultthing,
               tempentity);
           float disttemp = resultthing.dist;
@@ -555,8 +603,7 @@ void EntityMove(Entity* tempentity) {
         for (int j = 1; j <= 16; j++) {
           movecollisionresult resultthing;
           glm::vec3 tempnormal = movecollisioncheck(
-              tempentity->hitbox,
-              tempposition + glm::vec3(0, 0, j * dist / 16.f),
+              hitbox, tempposition + glm::vec3(0, 0, j * dist / 16.f),
               tempentity->hitboxradius, tempentity->teamindex, resultthing,
               tempentity);
           float disttemp = resultthing.dist;
@@ -604,9 +651,9 @@ void EntityMove(Entity* tempentity) {
   for (int i = 0; i < temp; i++) {
     tempposition.z += tempmove.z / (float)temp;
     movecollisionresult resultthing;
-    glm::vec3 tempnormal = movecollisioncheck(
-        tempentity->hitbox, tempposition, tempentity->hitboxradius,
-        tempentity->teamindex, resultthing, tempentity);
+    glm::vec3 tempnormal =
+        movecollisioncheck(hitbox, tempposition, tempentity->hitboxradius,
+                           tempentity->teamindex, resultthing, tempentity);
     float disttempbase = resultthing.dist;
     if (tempnormal == glm::vec3(0)) {
       tempentity->IsGrounded = false;
@@ -635,8 +682,7 @@ void EntityMove(Entity* tempentity) {
           tempposition.x += tempnormal.x * dist * j / 16.f;
           tempposition.y += tempnormal.y * dist * j / 16.f;
           movecollisionresult resultthing;
-          if (movecollisioncheck(tempentity->hitbox, tempposition,
-                                 tempentity->hitboxradius,
+          if (movecollisioncheck(hitbox, tempposition, tempentity->hitboxradius,
                                  tempentity->teamindex, resultthing,
                                  tempentity) == glm::vec3(0)) {
             distthing = resultthing.dist;

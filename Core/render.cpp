@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtx/projection.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <utility>
 
@@ -202,10 +203,94 @@ void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[]) {
   }
 }
 
-BoneResult applybonessingleaction(uint32_t bonecode,
-                                  ModelGroupClass::Bone& inputbone,
-                                  uint32_t actioncode,
+struct posesresult {
+  glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
+  glm::quat rot = glm::quat(1, 0, 0, 0);
+};
+
+posesresult posesmapprocess(ModelGroupClass::Bone* bone, uint32_t actioncode,
+                            float frame) {
+  posesresult result;
+
+  auto& posespos = bone->Poses.pos[actioncode];
+  auto& posesscale = bone->Poses.scale[actioncode];
+  auto& posesrot = bone->Poses.rot[actioncode];
+
+  if (!posespos.empty()) {
+    auto it = posespos.lower_bound((uint32_t)std::ceilf(frame));
+
+    if (it == posespos.end()) {
+      result.pos = posespos.rbegin()->second;
+    } else if (it->first == frame || it == posespos.begin()) {
+      result.pos = it->second;
+    } else {
+      auto prev_it = std::prev(it);
+
+      float next_frame = it->first;
+      float prev_frame = prev_it->first;
+
+      float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+      result.pos = glm::mix(prev_it->second, it->second, a);
+    }
+  }
+
+  if (!posesscale.empty()) {
+    auto it = posesscale.lower_bound((uint32_t)std::ceilf(frame));
+
+    if (it == posesscale.end()) {
+      result.scale = posesscale.rbegin()->second;
+    } else if (it->first == frame || it == posesscale.begin()) {
+      result.scale = it->second;
+    } else {
+      auto prev_it = std::prev(it);
+
+      float next_frame = it->first;
+      float prev_frame = prev_it->first;
+
+      float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+      result.scale = glm::mix(prev_it->second, it->second, a);
+    }
+  }
+
+  if (!posesrot.empty()) {
+    auto it = posesrot.lower_bound((uint32_t)std::ceilf(frame));
+
+    if (it == posesrot.end()) {
+      result.rot = posesrot.rbegin()->second;
+    } else if (it->first == frame || it == posesrot.begin()) {
+      result.rot = it->second;
+    } else {
+      auto prev_it = std::prev(it);
+
+      float next_frame = it->first;
+      float prev_frame = prev_it->first;
+
+      float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+      glm::quat tempquat1 = (prev_it->second), tempquat2 = (it->second);
+
+      if (glm::dot(tempquat1, tempquat2) < 0.0f) {
+        tempquat2 = -tempquat2;
+      }
+      tempquat1 = (tempquat1);
+      tempquat2 = (tempquat2);
+
+      glm::quat tempresult = glm::mix(tempquat1, tempquat2, a);
+
+      result.rot = tempresult;
+    }
+  }
+
+  return result;
+}
+
+BoneResult applybonessingleaction(const uint32_t& bonecode,
+                                  const ModelGroupClass::Bone& inputbone,
+                                  const uint32_t& actioncode,
                                   ModelGroupClass* modelgroup, float frame) {
+  if (Settings->crunchyanimations) frame = std::floorf(frame);
   uint32_t boneindex = bonecode;
   BoneResult boneresult;
   boneresult.head = inputbone.head;
@@ -215,78 +300,50 @@ BoneResult applybonessingleaction(uint32_t bonecode,
   while (boneindex != uint32_t(-1)) {
     ModelGroupClass::Bone* bone = &modelgroup->Bonemap[boneindex];
 
-    auto& poses = bone->Poses[actioncode];
-
-    glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
-    glm::quat rot = glm::quat(1, 0, 0, 0);
-    if (poses.empty()) {
-      // SDL_Log("no poses lol");
-    } else {
-      pos = poses.begin()->second.pos;
-      scale = poses.begin()->second.scale;
-      rot = poses.begin()->second.rot;
-      uint32_t framebefore = modelgroup->anim[actioncode][0];
-
-      for (auto const& [key, val] : poses) {
-        if (frame == key) {
-          pos = val.pos;
-          rot = val.rot;
-          scale = val.scale;
-          break;
-        } else if (frame > key) {
-          pos = val.pos;
-          rot = val.rot;
-          scale = val.scale;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
-          // lerp values.
-          rot = glm::mix(rot, val.rot, a);
-          pos = glm::mix(pos, val.pos, a);
-          scale = glm::mix(scale, val.scale, a);
-          break;
-        }
-      }
-    }
+    posesresult poseresultthing = posesmapprocess(bone, actioncode, frame);
 
     // the axis translation code of fear and despair...
-    float angle = glm::angle(rot);
+    float angle = glm::angle(poseresultthing.rot);
+
+    glm::vec3 baseaxis = glm::axis(poseresultthing.rot);
 
     glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
 
-    glm::vec3 axis =
-        glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * glm::axis(rot);
+    glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis);
 
-    axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
-                                         : glm::vec3(0, 1, 0);
+    glm::vec3 axis = axisquat * baseaxis;
 
-    glm::quat final_quat = glm::angleAxis(angle, axis);
+    glm::quat final_quat;
 
-    if (boneindex == bonecode &&
-        (pos != glm::vec3(0) || scale != glm::vec3(1) ||
-         final_quat != glm::quat(1, 0, 0, 0)))
-      boneresult.check = true;
+    final_quat = glm::normalize(glm::angleAxis(angle, axis));
+
+    if (boneindex == bonecode) {
+      if (poseresultthing.pos != glm::vec3(0) ||
+          poseresultthing.scale != glm::vec3(1) ||
+          final_quat != glm::quat(1, 0, 0, 0))
+        boneresult.check = true;
+    }
 
     boneresult.rot = final_quat * boneresult.rot;
 
-    boneresult.scale *= scale;
+    boneresult.scale *= poseresultthing.scale;
 
     boneresult.head = (final_quat) * (boneresult.head - bone->head);
-    boneresult.head *= scale;
+    boneresult.head *= poseresultthing.scale;
     boneresult.head += bone->head;
     boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
-                       (pos * bone->restpose.scale);
+                       (poseresultthing.pos * bone->restpose.scale);
     boneindex = bone->parent;
   }
   return boneresult;
 }
 
-BoneResult applybonesmultipleactions(uint32_t bonecode,
-                                     ModelGroupClass::Bone& inputbone,
+BoneResult applybonesmultipleactions(const uint32_t& bonecode,
+                                     const ModelGroupClass::Bone& inputbone,
                                      uint32_t actioncode[],
                                      ModelGroupClass* modelgroup, float frame,
                                      float lerpamount) {
+  if (Settings->crunchyanimations) frame = std::floorf(frame);
   uint32_t boneindex = bonecode;
   BoneResult boneresult;
   boneresult.head = inputbone.head;
@@ -296,107 +353,65 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
   while (boneindex != uint32_t(-1)) {
     ModelGroupClass::Bone* bone = &modelgroup->Bonemap[boneindex];
 
-    auto& poses = bone->Poses[actioncode[0]];
+    posesresult poseresultthing = posesmapprocess(bone, actioncode[0], frame),
+                poseresultthing2 = posesmapprocess(bone, actioncode[1], frame);
 
-    glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
-    glm::quat rot = glm::quat(1, 0, 0, 0);
-    if (!poses.empty()) {
-      pos = poses.begin()->second.pos;
-      scale = poses.begin()->second.scale;
-      rot = poses.begin()->second.rot;
-      uint32_t framebefore = modelgroup->anim[actioncode[0]][0];
+    auto& posespos = bone->Poses.pos[actioncode[0]];
+    auto& posesscale = bone->Poses.scale[actioncode[0]];
+    auto& posesrot = bone->Poses.rot[actioncode[0]];
 
-      for (auto const& [key, val] : poses) {
-        if (frame == key) {
-          pos = val.pos;
-          rot = val.rot;
-          scale = val.scale;
-          break;
-        } else if (frame > key) {
-          pos = val.pos;
-          rot = val.rot;
-          scale = val.scale;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
-          // lerp values.
-          rot = glm::mix(rot, val.rot, a);
-          pos = glm::mix(pos, val.pos, a);
-          scale = glm::mix(scale, val.scale, a);
-          break;
-        }
-      }
+    if (posespos.empty()) {
+      poseresultthing.pos = poseresultthing2.pos;
+    } else {
+      poseresultthing.pos =
+          glm::mix(poseresultthing.pos, poseresultthing2.pos, lerpamount);
     }
 
-    auto& poses2 = bone->Poses[actioncode[1]];
+    if (posesscale.empty()) {
+      poseresultthing.scale = poseresultthing2.scale;
+    } else {
+      poseresultthing.scale =
+          glm::mix(poseresultthing.scale, poseresultthing2.scale, lerpamount);
+    }
 
-    if (!poses2.empty()) {
-      glm::vec3 pos2 = poses2.begin()->second.pos,
-                scale2 = poses2.begin()->second.scale;
-      glm::quat rot2 = poses2.begin()->second.rot;
-      uint32_t framebefore = modelgroup->anim[actioncode[1]][0];
-
-      for (auto const& [key, val] : poses2) {
-        if (frame == key) {
-          pos2 = val.pos;
-          rot2 = val.rot;
-          scale2 = val.scale;
-          break;
-        } else if (frame > key) {
-          pos2 = val.pos;
-          rot2 = val.rot;
-          scale2 = val.scale;
-          framebefore = key;
-        } else {
-          float a = ((float)frame - (float)framebefore) /
-                    ((float)key - (float)framebefore);
-          // lerp values.
-          rot2 = glm::mix(rot2, val.rot, a);
-          pos2 = glm::mix(pos2, val.pos, a);
-          scale2 = glm::mix(scale2, val.scale, a);
-          break;
-        }
-      }
-
-      if (poses.empty()) {
-        pos = pos2;
-        scale = scale2;
-        rot = rot2;
-      } else {
-        pos = glm::mix(pos, pos2, lerpamount);
-        scale = glm::mix(scale, scale2, lerpamount);
-        rot = glm::mix(rot, rot2, lerpamount);
-      }
+    if (posesrot.empty()) {
+      poseresultthing.rot = poseresultthing2.rot;
+    } else {
+      poseresultthing.rot =
+          glm::mix(poseresultthing.rot, poseresultthing2.rot, lerpamount);
     }
 
     // the axis translation code of fear and despair...
-    float angle = glm::angle(rot);
+    float angle = glm::angle(poseresultthing.rot);
+
+    glm::vec3 baseaxis = glm::axis(poseresultthing.rot);
 
     glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
 
-    glm::vec3 axis =
-        glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) * glm::axis(rot);
+    glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis);
 
-    axis = (glm::length(axis) > 0.0001f) ? glm::normalize(axis)
-                                         : glm::vec3(0, 1, 0);
+    glm::vec3 axis = axisquat * baseaxis;
 
-    glm::quat final_quat = glm::angleAxis(angle, axis);
+    glm::quat final_quat;
 
-    if (boneindex == bonecode &&
-        (pos != glm::vec3(0) || scale != glm::vec3(1) ||
-         final_quat != glm::quat(1, 0, 0, 0)))
-      boneresult.check = true;
+    final_quat = glm::normalize(glm::angleAxis(angle, axis));
+
+    if (boneindex == bonecode) {
+      if (poseresultthing.pos != glm::vec3(0) ||
+          poseresultthing.scale != glm::vec3(1) ||
+          final_quat != glm::quat(1, 0, 0, 0))
+        boneresult.check = true;
+    }
 
     boneresult.rot = final_quat * boneresult.rot;
 
-    boneresult.scale *= scale;
+    boneresult.scale *= poseresultthing.scale;
 
     boneresult.head = (final_quat) * (boneresult.head - bone->head);
-    boneresult.head *= scale;
+    boneresult.head *= poseresultthing.scale;
     boneresult.head += bone->head;
     boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
-                       (pos * bone->restpose.scale);
+                       (poseresultthing.pos * bone->restpose.scale);
     boneindex = bone->parent;
   }
   return boneresult;
@@ -404,7 +419,7 @@ BoneResult applybonesmultipleactions(uint32_t bonecode,
 
 // apply animations of bones.
 void modelapplybones(Modeltransform* modeltrans,
-                     Modeltransform::action::actionpose actionposething,
+                     const Modeltransform::action::actionpose& actionposething,
                      ModelGroupClass* modelgroup, float frame) {
   std::unordered_map<uint32_t, BoneResult> LocalBoneResultMap;
   for (auto& [code, bone] : modelgroup->Bonemap) {
@@ -435,7 +450,8 @@ void modelapplybones(Modeltransform* modeltrans,
   BoneResultmapVector.push_back(LocalBoneResultMap);
 }
 
-glm::mat4 transtomatrix(glm::vec3 pos, glm::vec3 scale, glm::quat rot) {
+glm::mat4 transtomatrix(const glm::vec3& pos, const glm::vec3& scale,
+                        const glm::quat& rot) {
   glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), pos);
 
   glm::mat4 rotationMatrix = glm::toMat4(rot);
@@ -461,14 +477,9 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
           (float)modelgroup->anim[poseindex][1]) {
         modeltrans->actions[i].frame = (float)modelgroup->anim[poseindex][0];
       } else {
-        while (modeltrans->actions[i].frame >=
-               (float)modelgroup->anim[poseindex][1])
-          modeltrans->actions[i].frame +=
-              ((float)modelgroup->anim[poseindex][0] -
-               (float)modelgroup->anim[poseindex][1]);
-        if (modeltrans->actions[i].frame <
-            (float)modelgroup->anim[poseindex][0])
-          modeltrans->actions[i].frame = (float)modelgroup->anim[poseindex][0];
+        modeltrans->actions[i].actiondone =
+            (modeltrans->actions[i].frame >=
+             (float)modelgroup->anim[poseindex][1]);
       }
     }
 

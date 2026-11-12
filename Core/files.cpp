@@ -4,7 +4,6 @@
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
-#include <SDL3/SDL_timer.h>
 #include <ft2build.h>
 #include <glad/gl.h>
 #include <stdio.h>
@@ -21,13 +20,16 @@
 #include FT_FREETYPE_H
 
 #include "camera.h"
+#include "commandline.h"
 #include "extern.h"
 #include "font.h"
 #include "global.h"
 #include "inputs.h"
 #include "lights.h"
+#include "luathing.h"
 #include "mapdata.h"
 #include "model.h"
+#include "netconnect.h"
 #include "network.h"
 #include "networkextern.h"
 #include "render.h"
@@ -35,15 +37,14 @@
 #include "ui.h"
 #include "update.h"
 
-// IPv4 ServerIP string.
-std::string ServerIP;
-// Server Port uint32_t.
-uint32_t ServerPort;
-
 // Settings Save function
 void SaveSettings() {
   // get location of settings file
-  std::string location = strcat(Global->pref_path, "/Settings.txt");
+  if (Global->pref_path == NULL) {
+    SDL_Log("pref_path not set!");
+    return;
+  }
+  std::string location = std::string(Global->pref_path) + "/Settings.txt";
 
   FILE* file = fopen(location.c_str(), "w");
   if (file == NULL) {
@@ -62,8 +63,12 @@ void SaveSettings() {
 
 // Settings Load function
 void LoadSettings() {
+  if (Global->pref_path == NULL) {
+    SDL_Log("pref_path not set!");
+    return;
+  }
   // get location of settings file
-  std::string location = strcat(Global->pref_path, "/Settings.txt");
+  std::string location = std::string(Global->pref_path) + "/Settings.txt";
 
   FILE* file = fopen(location.c_str(), "r");
   if (file == NULL) {
@@ -234,8 +239,8 @@ bool loadCubemap(std::filesystem::path path) {
 
       std::array<std::string, 6> faces{"right.png",  "left.png",  "top.png",
                                        "bottom.png", "front.png", "back.png"};
-      SDL_Surface* surface;
       for (unsigned int i = 0; i < 6; i++) {
+        SDL_Surface* surface;
         surface = SDL_LoadPNG((path.string() + "/" + faces[i]).c_str());
 
         if (surface == NULL) return false;
@@ -260,132 +265,6 @@ bool loadCubemap(std::filesystem::path path) {
 
   return true;
 }
-
-// bool VulkanInstancething() {
-//   auto vkGetInstanceProcAddr =
-//       (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
-
-//   auto const vulkanVersion{
-//       RendererGlobal->Vulkanstuff->context.enumerateInstanceVersion()};
-//   SDL_Log("Vulkan version %d.%d", VK_API_VERSION_MAJOR(vulkanVersion),
-//           VK_API_VERSION_MINOR(vulkanVersion));
-
-//   uint32_t extensioncnt = 0;
-//   const char* const* instance_extensions =
-//       SDL_Vulkan_GetInstanceExtensions(&extensioncnt);
-
-//   if (instance_extensions == NULL) return false;
-
-//   uint32_t count_extensions = extensioncnt + 1;
-//   const char** extensions =
-//       (const char**)(SDL_malloc(count_extensions * sizeof(const char*)));
-//   extensions[0] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-//   SDL_memcpy(&extensions[1], instance_extensions,
-//              extensioncnt * sizeof(const char*));
-
-//   constexpr vk::ApplicationInfo appInfo{
-//       .pApplicationName = "Hello Triangle",
-//       .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
-//       .pEngineName = "No Engine",
-//       .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-//       .apiVersion = vk::ApiVersion14};
-
-//   vk::InstanceCreateInfo createInfo{.pApplicationInfo = &appInfo,
-//                                     .enabledExtensionCount =
-//                                     count_extensions,
-//                                     .ppEnabledExtensionNames = extensions};
-
-//   RendererGlobal->Vulkanstuff->instance =
-//       vk::raii::Instance(RendererGlobal->Vulkanstuff->context, createInfo);
-
-//   SDL_free(extensions);
-//   return true;
-// }
-
-// std::vector<const char*> requiredDeviceExtension = {
-//     vk::KHRSwapchainExtensionName};
-
-// //
-// https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/03_Physical_devices_and_queue_families.html
-// bool isDeviceSuitable(vk::raii::PhysicalDevice const& physicalDevice) {
-//   // Check if the physicalDevice supports the Vulkan 1.3 API version
-//   bool supportsVulkan1_3 =
-//       physicalDevice.getProperties().apiVersion >= vk::ApiVersion13;
-
-//   // Check if any of the queue families support graphics operations
-//   auto queueFamilies = physicalDevice.getQueueFamilyProperties();
-//   bool supportsGraphics =
-//       std::ranges::any_of(queueFamilies, [](auto const& qfp) {
-//         return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
-//       });
-
-//   // Check if all required physicalDevice extensions are available
-//   auto availableDeviceExtensions =
-//       physicalDevice.enumerateDeviceExtensionProperties();
-//   bool supportsAllRequiredExtensions = std::ranges::all_of(
-//       requiredDeviceExtension,
-//       [&availableDeviceExtensions](auto const& requiredDeviceExtension) {
-//         return std::ranges::any_of(
-//             availableDeviceExtensions,
-//             [requiredDeviceExtension](auto const& availableDeviceExtension) {
-//               return strcmp(availableDeviceExtension.extensionName,
-//                             requiredDeviceExtension) == 0;
-//             });
-//       });
-
-//   // Check if the physicalDevice supports the required features (shader draw
-//   // parameters, dynamic rendering and extended dynamic state)
-//   auto features = physicalDevice.template getFeatures2<
-//       vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features,
-//       vk::PhysicalDeviceVulkan13Features,
-//       vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
-//   bool supportsRequiredFeatures =
-//       features.template get<vk::PhysicalDeviceVulkan11Features>()
-//           .shaderDrawParameters &&
-//       features.template get<vk::PhysicalDeviceVulkan13Features>()
-//           .dynamicRendering &&
-//       features.template
-//       get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>()
-//           .extendedDynamicState;
-
-//   // Return true if the physicalDevice meets all the criteria
-//   return supportsVulkan1_3 && supportsGraphics &&
-//          supportsAllRequiredExtensions && supportsRequiredFeatures;
-// }
-
-// bool VulkanPhysicalDevice() {
-//   auto physicalDevices =
-//       RendererGlobal->Vulkanstuff->instance.enumeratePhysicalDevices();
-//   if (physicalDevices.empty()) return false;
-
-//   for (auto const& physicalDevice : physicalDevices) {
-//     if (isDeviceSuitable(physicalDevice)) {
-//       RendererGlobal->Vulkanstuff->physicalDevice = physicalDevice;
-//       return true;
-//     }
-//   }
-
-//   return false;
-// }
-
-// bool VulkanLogicalDevice() {
-//   std::vector<vk::QueueFamilyProperties> queueFamilyProperties =
-//       RendererGlobal->Vulkanstuff->physicalDevice.getQueueFamilyProperties();
-//   auto graphicsQueueFamilyProperty =
-//       std::ranges::find_if(queueFamilyProperties, [](auto const& qfp) {
-//         return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) !=
-//                static_cast<vk::QueueFlags>(0);
-//       });
-//   auto graphicsIndex = static_cast<uint32_t>(std::distance(
-//       queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
-//   float queuePriority = 0.5f;
-//   vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
-//       .queueFamilyIndex = graphicsIndex,
-//       .queueCount = 1,
-//       .pQueuePriorities = &queuePriority};
-
-//   return false;
-// }
 
 // https://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/
 GLuint LoadShaders(std::vector<std::filesystem::path> file_paths) {
@@ -468,7 +347,7 @@ bool setRenderer() {
     //   // ADD VALIDATION LAYERS IF YOU EVER LEARN HOW TO USE THEM
     //   RendererGlobal->Vulkanstuff = new RendererStuff::VulkanRenderer();
 
-    //   if (!SDL_Vulkan_LoadLibrary(nullptr)) {
+    //   if (!SDL_Vulkan_LoadLibrary(NULL)) {
     //     return false;
     //   }
 
@@ -752,8 +631,8 @@ void OpenGLCreateObjects() {
                           (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 1, GL_UNSIGNED_INT, GL_FALSE, 9 * sizeof(float),
-                          (void*)(5 * sizeof(GLfloat)));
+    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, 9 * sizeof(float),
+                           (void*)(5 * sizeof(GLfloat)));
     glEnableVertexAttribArray(2);
 
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
@@ -866,50 +745,26 @@ void OpenGLCreateObjects() {
   glBindVertexArray(0);
 }
 
-// function that checks if string is a number.
-// for checking arguements.
-bool is_number(const std::string s) {
-  for (int i = 0; i < s.size(); i++) {
-    if (!std::isdigit(s[i])) return false;
-  }
-  return true;
-}
-
-// enums for arguements.
-enum argenums {
-  SetRendererAsVulkan,    // Sets Renderer to Vulkan.
-  SetRendererAsOpenGL,    // Sets Renderer to OpenGL.
-  SetRendererAsSoftware,  // THIS WILL BE REMOVED EVENTUALLY.
-  SetFPS,                 // Sets Frame rate.
-  SetFOV,                 // Sets field of view.
-  SetVsync,               // Sets Vsync
-  // SetLogin,               // Login for website. Work In Progress.
-  // SetWebsite,             // The actual IP of the website.
-  SetServerIP,  // Set the IP of the server as a client.
-  SetIsServer,  // Set if you are the server or not.
-  SetIsDebug    // Sets Debug.
-};
-
 // arguements processing.
 bool initargs(std::vector<std::string> args) {
   // Create Global, Settings, LocalInputs, and P1PlayerInputs so that the
   // arguements can change them.
   Global = std::make_unique<GlobalClass>();
-  if (Global == nullptr) return false;
+  if (Global == NULL) return false;
   Settings = std::make_unique<SettingsClass>();
-  if (Settings == nullptr) return false;
+  if (Settings == NULL) return false;
   LocalInputs = new Inputs();
-  if (LocalInputs == nullptr) return false;
+  if (LocalInputs == NULL) return false;
   P1PlayerInputs = new playerinputs();
-  if (P1PlayerInputs == nullptr) return false;
+  if (P1PlayerInputs == NULL) return false;
   GlobalMapStuff = std::make_unique<GlobalMapClass>();
-  if (GlobalMapStuff == nullptr) return false;
+  if (GlobalMapStuff == NULL) return false;
   RendererGlobal = std::make_unique<RendererStuff>();
-  if (RendererGlobal == nullptr) return false;
+  if (RendererGlobal == NULL) return false;
   UIGlobalStuff = std::make_unique<UIGlobalClass>();
-  if (UIGlobalStuff == nullptr) return false;
+  if (UIGlobalStuff == NULL) return false;
   GlobalNetworkStuff = std::make_unique<GlobalNetworkClass>();
-  if (GlobalNetworkStuff == nullptr) return false;
+  if (GlobalNetworkStuff == NULL) return false;
 
   if (args.size() < 2) {
     SDL_Log("You need to enter the game's directory!");
@@ -961,217 +816,28 @@ bool initargs(std::vector<std::string> args) {
 
   // Create curlpostfield for website.
   // curlpostfield = new PostField();
-  // if (curlpostfield == nullptr) return false;
+  // if (curlpostfield == NULL) return false;
 
   // Load Settings automatically.
   LoadSettings();
 
   SDL_Log("Classes initialized");
 
-  // a map with strings as keys and argenums as values.
-  // translates arguement strings to enums.
-  std::unordered_map<std::string, argenums> stringtoenums = {
-      {"-OpenGL", SetRendererAsOpenGL},
-      {"-openGL", SetRendererAsOpenGL},
-      {"-GL", SetRendererAsOpenGL},
-      {"-gl", SetRendererAsOpenGL},
-      {"-vk", SetRendererAsVulkan},
-      {"-Vk", SetRendererAsVulkan},
-      {"-VK", SetRendererAsVulkan},
-      {"-vulkan", SetRendererAsVulkan},
-      {"-Vulkan", SetRendererAsVulkan},
-      {"-Software", SetRendererAsSoftware},
-      {"-software", SetRendererAsSoftware},
-      {"-fps", SetFPS},
-      {"-fov", SetFOV},
-      {"-vsync", SetVsync},
-      // {"-login", SetLogin},
-      // {"-website", SetWebsite},
-      {"-IP", SetServerIP},
-      {"-ip", SetServerIP},
-      {"-ServerIP", SetServerIP},
-      {"-Server", SetIsServer},
-      {"-server", SetIsServer},
-      {"-d", SetIsDebug},
-      {"-debug", SetIsDebug}};
-
   for (int i = 2; i < args.size(); i++) {
-    if (stringtoenums.contains(args[i])) {
-      argenums temp = stringtoenums[args[i]];
-      switch (temp) {
-        case SetIsDebug:
-          Global->IsDebug = true;
-          break;
-        case SetRendererAsVulkan:
-          Settings->graphicsmode = Vulkan;
-          break;
-        case SetRendererAsOpenGL:
-          // move to next arguement
-          i++;
-          // checks if next arguement exists and is a number.
-          if (i >= args.size() || !is_number(args[i])) {
-            SDL_Log("Wrong Arguements!(OpenGL version)");
-            return false;
-          }
-          switch (std::stoi(args[i])) {
-            case 1:
-              Settings->graphicsmode = OpenGL1;
-              break;
-            case 3:
-              Settings->graphicsmode = OpenGL3;
-              break;
-            case 4:
-              Settings->graphicsmode = OpenGL4;
-              break;
-            default: {
-              SDL_Log("Unsupported OpenGL version!");
-              return false;
-            }
-          }
-          break;
-        case SetRendererAsSoftware:
-          Settings->graphicsmode = Software;
-          break;
-        case SetVsync:
-          // move to next arguement
-          i++;
-          // checks if next arguement exists and is a number.
-          if (i >= args.size() || !is_number(args[i])) {
-            SDL_Log("Wrong Arguements!(Vsync)");
-            return false;
-          }
-          Settings->vsync = std::stoi(args[i]);
-          break;
-        case SetFPS:
-          // move to next arguement
-          i++;
-          // checks if next arguement exists and is a number.
-          if (i >= args.size() || !is_number(args[i])) {
-            SDL_Log("Wrong Arguements!(FPS)");
-            return false;
-          }
-          Settings->fps = std::stoi(args[i]);
-          break;
-        case SetFOV:
-          // move to next arguement
-          i++;
-          // checks if next arguement exists and is a number.
-          if (i >= args.size() || !is_number(args[i])) {
-            SDL_Log("Wrong Arguements!(FOV)");
-            return false;
-          }
-          Settings->fov = std::stoi(args[i]);
-          break;
-        // case SetLogin: {
-        //   std::string password;
-        //   // move to next arguement
-        //   i++;
-        //   // checks if next arguement exists.
-        //   if (i >= args.size()) {
-        //     SDL_Log("Wrong Arguements!(username)");
-        //     return false;
-        //   }
-        //   // sets username for the website.
-        //   curlpostfield->username = args[i];
-        //   // move to next arguement
-        //   i++;
-        //   // checks if next arguement exists.
-        //   if (i >= args.size()) {
-        //     SDL_Log("Wrong Arguements!(password)");
-        //     return false;
-        //   }
-        //   // sets password for the website.
-        //   password = args[i];
-
-        //   // set string that you will send as post field for website.
-        //   curlloginstring = "IsGame=True&username=" +
-        //   curlpostfield->username
-        //   +
-        //                     "&password=" + password;
-        //   break;
-        // }
-        // case SetWebsite:
-        //   // you probably know what this does at this point.
-        //   i++;
-        //   if (i >= args.size()) {
-        //     SDL_Log("Wrong Arguements!(Website)");
-        //     return false;
-        //   }
-        //   curlpostfield->websiteaddr = args[i];
-        //   break;
-        case SetServerIP: {
-          // If you are a server return false
-          if (IsServer) {
-            SDL_Log(
-                "Wrong Arguements!(Cannot be Server and have IP input at the "
-                "same time)");
-            return false;
-          }
-          i++;
-          if (i >= args.size()) {
-            SDL_Log("Wrong Arguements!(IP)");
-            return false;
-          }
-          int j = 0;
-          while (args[i][j] != ':') {
-            if (args[i][j] == '\0') {
-              SDL_Log("Wrong Arguements!(IP)");
-              return false;
-            }
-            ServerIP += args[i][j];
-            j++;
-          }
-          j++;
-          while (args[i][j] != '\0') {
-            int temp = args[i][j] - '0';
-            if (temp < 0 || temp > 9) {
-              SDL_Log("Wrong Arguements!(PORT)");
-              return false;
-            }
-            ServerPort *= 10;
-            ServerPort += temp;
-            j++;
-          }
-          break;
-        }
-        case SetIsServer:
-          // Add Server(0) user.
-          GlobalNetworkStuff->UserIDs.insert(0);
-          // If ServerIP is set then you can't be server.
-          if (ServerIP != "") {
-            SDL_Log(
-                "Wrong Arguements!(Cannot be Server and have IP input at the "
-                "same time)");
-            return false;
-          }
-          i++;
-          if (i >= args.size()) {
-            SDL_Log("Wrong Arguements!(ServerPort)");
-            return false;
-          }
-          int j = 0;
-          while (args[i][j] != '\0') {
-            int temp = args[i][j] - '0';
-            if (temp < 0 || temp > 9) {
-              SDL_Log("Wrong Arguements!(ServerPort)");
-              return false;
-            }
-            ServerPort *= 10;
-            ServerPort += temp;
-            j++;
-          }
-          Global->IsOnline = true;
-          IsServer = true;
-          break;
-      }
+    auto& arg = args[i];
+    if (arg[0] == '-') {
+      arg.erase(0, 1);
     }
+    cmdcurrentinput.append(arg + " ");
   }
+  pushcmd();
+
   SDL_Log("args done");
   return true;
 }
 
 // bone name to index
-uint32_t getboneindex(std::string name) {
+uint32_t getboneindex(const std::string& name) {
   if (name == "null") return uint32_t(-1);
   if (!BonetoInt.contains(name)) {
     BonetoInt[name] = newboneindex;
@@ -1181,7 +847,7 @@ uint32_t getboneindex(std::string name) {
 }
 
 // pose name to index
-uint32_t getposeindex(std::string name) {
+uint32_t getposeindex(const std::string& name) {
   if (!PosetoInt.contains(name)) {
     PosetoInt[name] = newposeindex;
     newposeindex++;
@@ -1191,9 +857,6 @@ uint32_t getposeindex(std::string name) {
 
 // overall initialization function.
 bool init() {
-  // Your Global is running? You better go catch it.
-  Global->IsRunning = true;
-
   // initialize SDL
   if (!SDL_SetAppMetadata(Global->LoadedStuff->GameName.c_str(), "0.1",
                           "com.example.myapp") ||
@@ -1201,11 +864,6 @@ bool init() {
     return false;
   SDL_Log("SDL initialized");
 
-  // Initialize Network stuff
-  if (!CobblerInitNet()) {
-    return false;
-  }
-  SDL_Log("Net Loaded");
   // if (curlloginstring != "") {
   //   // try to log in.
   //   if (!CobblerCurlLogin()) {
@@ -1217,45 +875,7 @@ bool init() {
   //   }
   // }
 
-  // Server Setup.
-  if (IsServer) {
-    if (!CobblerSetSocket(ServerPort)) {
-      SDL_Log("Server Setup failed");
-    }
-  }
-
-  // Client Setup.
-  if (ServerIP != "") {
-    if (!CobblerSetSocket(0)) {
-      SDL_Log("Server connection failed");
-    }
-    CobblerAddIP(ServerIP, ServerPort, 0);
-    Global->IsOnline = true;
-    std::vector<uint8_t> buffer{};
-    bool check = false;
-
-    // check if the server acknowledged you
-    while (Global->IsRunning && !check) {
-      events();
-      CobblerQueueData("PlayerAdd", buffer, 0);
-      std::vector<CobblerNetData>* tempvector = CobblerRecvNet();
-      if (tempvector != NULL) {
-        while (!tempvector->empty()) {
-          CobblerNetData* tempdata = &tempvector->back();
-          SDL_Log("%s", tempdata->name.c_str());
-          check = true;
-          tempvector->pop_back();
-          break;
-        }
-        delete tempvector;
-      }
-      CobblerSendNet();
-      SDL_DelayNS(1000000000 / 30);
-    }
-    // SDL_Log("What");
-  }
-
-  if (!Global->IsRunning) return false;
+  if (!IsRunning) return false;
 
   // Set the Renderer.
   if (!setRenderer()) return false;
@@ -1283,7 +903,7 @@ bool init() {
            Global->LoadedStuff->startlevel + "/")) {
     // check if file is a .map file.
     if (entry.is_regular_file() && entry.path().extension() == ".map") {
-      file = fopen(entry.path().c_str(), "r");
+      file = fopen(entry.path().string().c_str(), "r");
     } else if (entry.is_regular_file() &&
                entry.path().extension() == ".png") {  // Load Textures.
       if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
@@ -1397,7 +1017,7 @@ bool init() {
            Global->LoadedStuff->startlevel + "/")) {
     // check if file is a .map file.
     if (entry.is_regular_file() && entry.path().extension() == ".bsp") {
-      file = fopen(entry.path().c_str(), "r");
+      file = fopen(entry.path().string().c_str(), "r");
     }
   }
 
@@ -1496,13 +1116,21 @@ bool init() {
       Settings->graphicsmode == OpenGL4)
     LoadMapGL(Settings->graphicsmode == OpenGL1, Global->IsDebug);
 
-  LocalPlayer = SpawnEntities[Global->playerclass](0, 0);
+  LocalPlayer = new Entity();
+  LocalPlayer->setup(0, Global->playerclass);
+
   LocalPlayer->position = GetRespawnPoint(0);
   LocalPlayer->Modelthing->visible = false;
   LocalPlayer->teamindex = 0;
   LocalPlayer->EntityIndex = 0;
 
-  GlobalNetworkStuff->RecvEntity = SpawnEntities[Global->playerclass](0, 0);
+  if (Global->IsOnline) {
+    LocalPlayerNetData = new LocalEntityNetData();
+  }
+
+  GlobalNetworkStuff->RecvEntity = new Entity();
+  GlobalNetworkStuff->RecvEntity->setup(0, Global->playerclass);
+
   GlobalNetworkStuff->RecvEntity->position = GetRespawnPoint(0);
   GlobalNetworkStuff->RecvEntity->Modelthing->visible = false;
   GlobalNetworkStuff->RecvEntity->teamindex = 0;
@@ -1515,12 +1143,10 @@ bool init() {
 
   // Spawns all the npcs in the map.
   for (int i = 0; i < tempmapdata.Entities.size(); i++) {
-    // SDL_Log("spawned: %s", tempmapdata.Entities[i].name.c_str());
-    if (SpawnEntities.contains(tempmapdata.Entities[i].name)) {
-      uint32_t index = EntityMapEmptyIndex();
-      Entities[index] = SpawnEntities[tempmapdata.Entities[i].name](0, index);
-      Entities[index]->position = tempmapdata.Entities[i].pos;
-    }
+    uint32_t index = EntityMapEmptyIndex();
+    Entities[index] = new Entity();
+    Entities[index]->setup(index, tempmapdata.Entities[i].name);
+    Entities[index]->position = tempmapdata.Entities[i].pos;
   }
 
   Lights[0] = new StaticLight(0);
@@ -1546,6 +1172,7 @@ bool init() {
           GlobalClass::Model model;
 
           std::string tempstr = entry.path().filename().string();
+          uint32_t hitboxboneindex = (uint32_t)-1;
           for (int i = 0; i < 4; i++) tempstr.pop_back();
           namestr = tempstr;
           uint32_t poseindex = (uint32_t)-1;
@@ -1570,12 +1197,18 @@ bool init() {
               poseindex = indexthing;
             } else if (strcmp(lineHeader, "SB") == 0) {  // Static(?) Bone.
               char name[64], parent[64];
+              float roll;
+              glm::vec3 xaxis, yaxis, zaxis;
               glm::vec3 head, tail;
               ModelGroupClass::Bone::Pose temppose;
 
               int what = fscanf(
-                  file, "%s %f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f %f %s",
-                  name, &head.x, &head.y, &head.z, &tail.x, &tail.y, &tail.z,
+                  file,
+                  "%s %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f "
+                  "%f/%f %f %f/%f %f %f %f %s",
+                  name, &roll, &xaxis[0], &xaxis[1], &xaxis[2], &yaxis[0],
+                  &yaxis[1], &yaxis[2], &zaxis[0], &zaxis[1], &zaxis[2],
+                  &head[0], &head[1], &head[2], &tail[0], &tail[1], &tail[2],
                   &temppose.pos[0], &temppose.pos[1], &temppose.pos[2],
                   &temppose.scale[0], &temppose.scale[1], &temppose.scale[2],
                   &temppose.rot[3], &temppose.rot[0], &temppose.rot[1],
@@ -1583,9 +1216,13 @@ bool init() {
               uint32_t boneindex = getboneindex(name);
 
               modelgroup.Bonemap[boneindex].parent = getboneindex(parent);
+              modelgroup.Bonemap[boneindex].xaxis = xaxis;
+              modelgroup.Bonemap[boneindex].yaxis = yaxis;
+              modelgroup.Bonemap[boneindex].zaxis = zaxis;
               modelgroup.Bonemap[boneindex].head = head;
               modelgroup.Bonemap[boneindex].tail = tail;
               modelgroup.Bonemap[boneindex].restpose = temppose;
+              modelgroup.Bonemap[boneindex].roll = roll;
 
             } else if (strcmp(lineHeader, "FCV") == 0) {  // object visibility
               char name[64];
@@ -1616,11 +1253,11 @@ bool init() {
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
-                  modelgroup.Bonemap[boneindex].Poses[poseindex].try_emplace(
-                      index2);
                   modelgroup.Bonemap[boneindex]
-                      .Poses[poseindex][index2]
-                      .pos[index] = temp;
+                      .Poses.pos[poseindex]
+                      .try_emplace(index2);
+                  modelgroup.Bonemap[boneindex]
+                      .Poses.pos[poseindex][index2][index] = temp;
                 }
               } else if (strcmp(thing, "rotation_quaternion") == 0) {
                 while (newlinecheck != '\n') {
@@ -1628,22 +1265,22 @@ bool init() {
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
 
-                  modelgroup.Bonemap[boneindex].Poses[poseindex].try_emplace(
-                      index2);
                   modelgroup.Bonemap[boneindex]
-                      .Poses[poseindex][index2]
-                      .rot[(index + 3) % 4] = temp;
+                      .Poses.rot[poseindex]
+                      .try_emplace(index2);
+                  modelgroup.Bonemap[boneindex]
+                      .Poses.rot[poseindex][index2][(index + 3) % 4] = temp;
                 }
               } else if (strcmp(thing, "scale") == 0) {
                 while (newlinecheck != '\n') {
                   uint32_t index2;
                   float temp;
                   fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-                  modelgroup.Bonemap[boneindex].Poses[poseindex].try_emplace(
-                      index2);
                   modelgroup.Bonemap[boneindex]
-                      .Poses[poseindex][index2]
-                      .scale[index] = temp;
+                      .Poses.scale[poseindex]
+                      .try_emplace(index2);
+                  modelgroup.Bonemap[boneindex]
+                      .Poses.scale[poseindex][index2][index] = temp;
                 }
               }
             }  // Object from other file.
@@ -1691,6 +1328,23 @@ bool init() {
                 return false;
               }
               model.faces.push_back(face);
+            } else if (strcmp(lineHeader, "H") == 0) {  // Hitbox.
+              char bonename[128];
+              fscanf(file, "%s", bonename);
+              hitboxboneindex = getboneindex(bonename);
+            } else if (strcmp(lineHeader, "HP") == 0) {  // Points.
+              glm::vec3 point;
+              fscanf(file, "%f %f %f\n", &point.x, &point.y, &point.z);
+
+              modelgroup.Bonemap[hitboxboneindex].bonehitbox.points.push_back(
+                  point);
+            } else if (strcmp(lineHeader, "HF") == 0) {  // Faces.
+              std::array<uint32_t, 3> face;
+
+              fscanf(file, "%u %u %u\n", &face[0], &face[1], &face[2]);
+
+              modelgroup.Bonemap[hitboxboneindex].bonehitbox.faces.push_back(
+                  face);
             } else if (strcmp(lineHeader, "T") == 0) {  // Textures.
               char temp[256] = {};
               fscanf(file, "%s\n", temp);
@@ -1761,6 +1415,32 @@ bool init() {
   RendererGlobal->viewportdata[2] = std::roundf(rtw);
   RendererGlobal->viewportdata[3] = std::roundf(rth);
 
+  playerluastuff = new playerluastruct();
+
+  playerluastuff->lua.open_libraries(sol::lib::base);
+
+  playerluastuff->lua.script_file(Global->GameFolder.string() + "/class/" +
+                                  Global->playerclass + "/classmain.lua");
+
+  playerluastuff->LocalClassUpdate = playerluastuff->lua["Update"];
+  playerluastuff->LocalClassDeath = playerluastuff->lua["Death"];
+  playerluastuff->LocalClassStatetoPose =
+      playerluastuff->lua["StatetoPosefunc"];
+
+  LuaSet(&playerluastuff->lua);
+
+  playerluastuff->lua["LocalPlayer"] = LocalPlayer;
+  playerluastuff->lua["LocalPlayerpos"] = &LocalPlayer->position;
+  playerluastuff->lua["LocalPlayerdir"] = &LocalPlayer->dir;
+
+  playerluastuff->lua["EntitySpawn"] = EntitySpawn;
+
+  playerluastuff->lua["HitScanAttack"] = HitScanAttack;
+
+  playerluastuff->lua.collect_garbage();
+
+  UIsetup();
+
   return true;
 }
 
@@ -1770,6 +1450,8 @@ void quit() {
   // free renderer.
   freeRenderer();
   SDL_Log("freed renderer");
+
+  UIfree();
 
   // free inputs.
   delete (LocalInputs);
@@ -1815,11 +1497,9 @@ void quit() {
     delete (i.second);
   }
   for (auto& i : EntityPool) {
-    for (auto& j : i.second) {
-      while (!j.second.empty()) {
-        delete (j.second.front());
-        j.second.pop();
-      }
+    while (!i.second.empty()) {
+      delete (i.second.front());
+      i.second.pop();
     }
   }
 
@@ -1830,18 +1510,17 @@ void quit() {
     }
     if (GlobalNetworkStuff->RecvEntity != NULL)
       delete (GlobalNetworkStuff->RecvEntity);
+    delete LocalPlayerNetData;
   }
 
   // free particles
   for (auto& i : Particles) {
     delete (i.second);
   }
-  for (auto& i : ParticlePool) {
-    for (auto& j : i.second) {
-      while (!j.second.empty()) {
-        delete (j.second.front());
-        j.second.pop();
-      }
+  for (auto& j : ParticlePool) {
+    while (!j.second.empty()) {
+      delete (j.second.front());
+      j.second.pop();
     }
   }
 
@@ -1859,11 +1538,13 @@ void quit() {
   delete (GlobalMapBSP);
 
   // free network stuff.
-  CobblerQuitNet();
+  NetDisconnect();
   SDL_Log("Netfreed");
 
+  delete (playerluastuff);
+
   // well it's not running anymore I suppose.
-  Global->IsRunning = false;
+  IsRunning = false;
   SDL_Quit();
   SDL_Log("SDL_Quit");
 }

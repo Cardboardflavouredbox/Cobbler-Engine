@@ -5,6 +5,7 @@
 
 #include "bitserytemplates.h"
 #include "camera.h"
+#include "commandline.h"
 #include "damageindicator.h"
 #include "deltaTime.h"
 #include "entity.h"
@@ -27,6 +28,8 @@ float updatedeltaTime;
 float renderdeltaTime;
 // pointer to Global variables.
 std::unique_ptr<GlobalClass> Global;
+bool IsRunning;
+
 // pointer to Settings variables.
 std::unique_ptr<SettingsClass> Settings;
 // pointer to Inputs of local inputs. As in, the actual keyboard inputs.
@@ -36,13 +39,7 @@ Inputs* LocalInputs;
 playerinputs* P1PlayerInputs;
 // LocalPlayer Entity pointer.
 Entity* LocalPlayer;
-// Entity Spawn function map. Loaded from dynamic libraries.
-std::unordered_map<std::string, Entity* (*)(uint32_t, uint32_t)> SpawnEntities;
-// Particle Spawn function map. Loaded from dynamic libraries.
-std::unordered_map<std::string, Particle* (*)(uint32_t, uint32_t)>
-    SpawnParticles;
-// Player Class Update function map. Loaded from dynamic libraries.
-std::unordered_map<std::string, void (*)()> PlayerClassUpdate;
+LocalEntityNetData* LocalPlayerNetData;
 // pointer to Freetype variables. (y'know for the fonts)
 FreetypeClass* Freetypething;
 // Map of ModelGroups. Refer to the ModelGroupClass class to see what that is.
@@ -50,21 +47,12 @@ std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 // pointer to Camera.
 CameraClass* Camera;
 
-// Entities map. Contains all the npc Entities.
-std::map<uint32_t, Entity*> Entities;
-// Queue that contains all the Entities to delete this frame.
-std::queue<uint32_t> EntitydeleteQueue;
-// Entities Pool.
-std::unordered_map<std::string, std::map<uint32_t, std::queue<Entity*>>>
-    EntityPool;
-
 // Particles map. Contains all the Particles.
 std::map<uint32_t, Particle*> Particles;
 // Queue that contains all the Particles to delete this frame.
 std::queue<uint32_t> ParticledeleteQueue;
 // Particle Pooling map.
-std::unordered_map<std::string, std::map<uint32_t, std::queue<Particle*>>>
-    ParticlePool;
+std::map<uint32_t, std::queue<Particle*>> ParticlePool;
 
 // Lights map. Contains all the Lights.
 std::map<uint32_t, Light*> Lights;
@@ -94,6 +82,13 @@ std::deque<DamageLocation> LocalDamageLocations;
 
 std::vector<std::unordered_map<uint32_t, BoneResult>> BoneResultmapVector;
 
+bool textinputing;
+
+std::stringstream cmdlines;
+std::string cmdcurrentinput;
+
+playerluastruct* playerluastuff;
+
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {
     return 0;
@@ -108,6 +103,10 @@ uint32_t EntityMapEmptyIndex() {
 
 uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
   if (Global->IsOnline && OnlineSend && !IsServer) {
+    if (!Entityinfo.SourcePlayer && Entityinfo.SourceEntityIndex == 0) {
+      Entityinfo.SourcePlayer = true;
+      Entityinfo.SourceEntityIndex = UserID;
+    }
     std::vector<uint8_t> buffer{};
 
     auto writtenSize = bitsery::quickSerialization<
@@ -117,13 +116,20 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
     CobblerQueueConfirmedData(0, "LocalEntity", buffer, writtenSize);
     return 0;
   }
+  if (Entityinfo.SourcePlayer && Entityinfo.SourceEntityIndex == UserID) {
+    Entityinfo.SourcePlayer = false;
+    Entityinfo.SourceEntityIndex = 0;
+  }
   uint32_t temp = EntityMapEmptyIndex();
+  if (Entityinfo.IndexSet) temp = Entityinfo.EntityIndex;
   Entity* tempentity;
-  if (EntityPool[Entityinfo.name][Entityinfo.EntityCode].empty()) {
-    tempentity = SpawnEntities[Entityinfo.name](Entityinfo.EntityCode, temp);
+  if (EntityPool[Entityinfo.name].empty()) {
+    tempentity = new Entity();
+    tempentity->EntityIndex = temp;
+    tempentity->setup(temp, Entityinfo.name);
   } else {
-    tempentity = EntityPool[Entityinfo.name][Entityinfo.EntityCode].front();
-    EntityPool[Entityinfo.name][Entityinfo.EntityCode].pop();
+    tempentity = EntityPool[Entityinfo.name].front();
+    EntityPool[Entityinfo.name].pop();
 
     tempentity->invincible = false;
     tempentity->weight = 1.f;
@@ -134,12 +140,12 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
     tempentity->velocityvec3 = glm::vec3({0, 0, 0});
     tempentity->gravity = 9.81f * 6.f;
     tempentity->Collided = false;
-
-    tempentity->setup(temp);
+    tempentity->lua["luasetup"]();
+    tempentity->EntityIndex = temp;
   }
-  if (Entityinfo.hp != -1) tempentity->hp = Entityinfo.hp;
+
+  if (Entityinfo.hp != -255) tempentity->hp = Entityinfo.hp;
   tempentity->name = Entityinfo.name;
-  tempentity->EntityCode = Entityinfo.EntityCode;
 
   tempentity->EntityIndex = temp;
   for (int i = 0; i < 3; i++) {
@@ -151,6 +157,20 @@ uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend) {
   for (int i = 0; i < 2; i++) {
     tempentity->dir[i] = Entityinfo.direction[i];
   }
+
+  if (Entityinfo.SourceExists) {
+    if (Entityinfo.SourcePlayer) {
+      tempentity->SourceEntity =
+          GlobalNetworkStuff->PlayerNetStuff[Entityinfo.SourceEntityIndex]
+              .PlayerEntity;
+    } else {
+      if (Entities.contains(Entityinfo.SourceEntityIndex))
+        tempentity->SourceEntity = Entities[Entityinfo.SourceEntityIndex];
+    }
+  } else {
+    tempentity->SourceEntity = NULL;
+  }
+
   Entities[temp] = tempentity;
   return temp;
 }
@@ -276,6 +296,10 @@ glm::vec3 GetRespawnPoint(int teamindex) {
 
 void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
   if (Global->IsOnline && OnlineSend) {  // online code stuff
+    if (!Particleinfo.SourcePlayer && Particleinfo.SourceEntityIndex == 0) {
+      Particleinfo.SourcePlayer = true;
+      Particleinfo.SourceEntityIndex = UserID;
+    }
     std::vector<uint8_t> buffer{};
 
     auto writtenSize = bitsery::quickSerialization<
@@ -284,19 +308,34 @@ void ParticleSpawn(ParticleSpawnInfo Particleinfo, bool OnlineSend) {
 
     CobblerQueueData("ParticleSpawn", buffer, writtenSize);
   }
+
+  if (Particleinfo.SourcePlayer && Particleinfo.SourceEntityIndex == UserID) {
+    Particleinfo.SourcePlayer = false;
+    Particleinfo.SourceEntityIndex = 0;
+  }
+
   uint32_t temp = ParticleMapEmptyIndex();
   Particle* tempparticle;
-  if (ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].empty()) {
-    tempparticle =
-        SpawnParticles[Particleinfo.name](Particleinfo.ParticleCode, temp);
+  if (ParticlePool[Particleinfo.ParticleCode].empty()) {
+    tempparticle = NewParticle(Particleinfo.ParticleCode, temp);
   } else {
-    tempparticle =
-        ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].front();
-    ParticlePool[Particleinfo.name][Particleinfo.ParticleCode].pop();
+    tempparticle = ParticlePool[Particleinfo.ParticleCode].front();
+    ParticlePool[Particleinfo.ParticleCode].pop();
     tempparticle->setup(temp);
   }
 
-  tempparticle->name = Particleinfo.name;
+  if (Particleinfo.SourceExists) {
+    if (Particleinfo.SourcePlayer) {
+      tempparticle->SourceEntity =
+          GlobalNetworkStuff->PlayerNetStuff[Particleinfo.SourceEntityIndex]
+              .PlayerEntity;
+    } else {
+      tempparticle->SourceEntity = Entities[Particleinfo.SourceEntityIndex];
+    }
+  } else {
+    tempparticle->SourceEntity = NULL;
+  }
+
   tempparticle->ParticleCode = Particleinfo.ParticleCode;
   for (int i = 0; i < 3; i++) {
     tempparticle->position[i] = Particleinfo.position[i];
