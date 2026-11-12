@@ -59,7 +59,7 @@ void main() {
 
   vec3 NormalResult = aNormal;
 
-  if (actioncount > 0) {
+  if (actioncount > 0 && actionsize > 0) {
     int index = getboneindexreal();
     for (int i = 0; i < 8; i++) {
       result = vec4(aPos, 1.0);
@@ -102,4 +102,5 @@ void main() {
     FragPos = result.xyz;
   }
   gl_Position = model * result;
+  vertexColor = vec4(1.0);
 }
