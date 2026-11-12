@@ -631,8 +631,8 @@ void OpenGLCreateObjects() {
                           (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 1, GL_UNSIGNED_INT, GL_FALSE, 9 * sizeof(float),
-                          (void*)(5 * sizeof(GLfloat)));
+    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, 9 * sizeof(float),
+                           (void*)(5 * sizeof(GLfloat)));
     glEnableVertexAttribArray(2);
 
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
