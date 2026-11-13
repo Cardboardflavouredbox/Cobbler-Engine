@@ -45,8 +45,8 @@ struct GlobalClass {
     };
     std::vector<Vertex> points;
     struct Face {
-      std::array<uint32_t, 3> point;
-      std::array<glm::vec2, 3> uv;
+      std::vector<uint32_t> point;
+      std::vector<glm::vec2> uv;
       glm::vec3 normal;
     };
     std::vector<Face> faces;

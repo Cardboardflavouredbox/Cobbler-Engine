@@ -211,10 +211,16 @@ def write_some_data(context, filepath):
                         for face in obj.data.polygons:
                             # Convert local coordinate to world coordinate
                             vertices = list(face.vertices)
+                            vertsize = len(vertices)
                             normal = face.normal
+                            
+                            f.write(f"F {vertsize}")
+                            
+                            for vert in vertices:
+                                f.write(f" {vert}")
                         
                             # Format and save data: Index, X, Y, Z
-                            f.write(f"F {vertices[0]} {vertices[1]} {vertices[2]}/{normal[0]:f} {normal[1]:f} {normal[2]:f}")
+                            f.write(f"/{normal[0]:f} {normal[1]:f} {normal[2]:f}")
                             
                             for loop_idx in face.loop_indices:
                                 uv_loop = active_uv_layer[loop_idx]

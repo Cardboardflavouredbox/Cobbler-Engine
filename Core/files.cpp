@@ -582,6 +582,7 @@ void OpenGLCreateObjects() {
   shadertemp = LoadShaders(std::vector<std::filesystem::path>(
       {"objectshader.vert", "lighting.frag"}));
 
+  SDL_Log("WHAT");
   RendererGlobal->GLstuff->shaders["Object"] = (shadertemp);
   for (auto& [name, model] : Global->Modelmap) {
     RendererStuff::OpenGLRenderer::GLObject globjectthing;
@@ -593,12 +594,7 @@ void OpenGLCreateObjects() {
     std::vector<float> vertices;
 
     for (auto& face : model.faces) {
-      glm::vec3 tri[3];
-      for (int j = 2; j >= 0; j--) {
-        tri[j] = model.points[face.point[j]].pos;
-      }
-      glm::vec3 normal =
-          glm::normalize(glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
+      glm::vec3 normal = face.normal;
       for (int j = 2; j >= 0; j--) {
         for (int a = 0; a < 3; a++) {
           vertices.push_back(model.points[face.point[j]].pos[a]);
@@ -612,6 +608,24 @@ void OpenGLCreateObjects() {
           vertices.push_back(normal[a]);
         }
         globjectthing.size++;
+      }
+      if (face.point.size() == 4) {
+        const int quadwind[3] = {3, 2, 0};
+        for (int i = 0; i < 3; i++) {
+          int j = quadwind[i];
+          for (int a = 0; a < 3; a++) {
+            vertices.push_back(model.points[face.point[j]].pos[a]);
+          }
+          for (int a = 0; a < 2; a++) {
+            vertices.push_back(face.uv[j][a]);
+          }
+          vertices.push_back(
+              std::bit_cast<float>(model.points[face.point[j]].bone));
+          for (int a = 0; a < 3; a++) {
+            vertices.push_back(normal[a]);
+          }
+          globjectthing.size++;
+        }
       }
     }
 
@@ -1317,16 +1331,25 @@ bool init() {
               model.points.push_back(vertex);
             } else if (strcmp(lineHeader, "F") == 0) {  // Faces.
               GlobalClass::Model::Face face;
-              int matches =
-                  fscanf(file, "%u %u %u/%f %f %f/%f %f/%f %f/%f %f\n",
-                         &face.point[0], &face.point[1], &face.point[2],
-                         &face.normal[0], &face.normal[1], &face.normal[2],
-                         &face.uv[0].x, &face.uv[0].y, &face.uv[1].x,
-                         &face.uv[1].y, &face.uv[2].x, &face.uv[2].y);
-              if (matches < 12) {
-                SDL_Log("failed to read cbm file face. Matches: %d", matches);
-                return false;
+
+              uint32_t facesize;
+              fscanf(file, "%u", &facesize);
+
+              for (uint32_t i = 0; i < facesize; i++) {
+                uint32_t point;
+                fscanf(file, " %u", &point);
+                face.point.push_back(point);
               }
+              fscanf(file, "/%f %f %f", &face.normal[0], &face.normal[1],
+                     &face.normal[2]);
+
+              for (uint32_t i = 0; i < facesize; i++) {
+                glm::vec2 uv;
+                fscanf(file, "/%f %f", &uv.x, &uv.y);
+                face.uv.push_back(uv);
+              }
+              fscanf(file, "\n");
+
               model.faces.push_back(face);
             } else if (strcmp(lineHeader, "H") == 0) {  // Hitbox.
               char bonename[128];
