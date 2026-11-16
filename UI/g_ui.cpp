@@ -577,22 +577,22 @@ void UIDamageIndicator::render() {
   }
 }
 
-void firstpersonUIthing::update() {
-  float temp = playerluastuff->lua["state"];
-  int state = int(temp);
+// void firstpersonUIthing::update() {
+//   float temp = playerluastuff->lua["state"];
+//   int state = int(temp);
 
-  auto result = playerluastuff->LocalClassStatetoPose();
-  uint32_t animationthing = getposeindex(result);
+//   auto result = playerluastuff->LocalClassStatetoPose();
+//   uint32_t animationthing = getposeindex(result);
 
-  float anim = playerluastuff->lua["anim"];
+//   float anim = playerluastuff->lua["anim"];
 
-  modeltrans->actions[0].frame =
-      anim + ModelGroupMap["PlayerMain"].anim[animationthing][0];
-  if (currentstate != state) {
-    modeltrans->actions[0].pose.posecode.front() = animationthing;
-    currentstate = state;
-  }
-}
+//   modeltrans->actions[0].frame =
+//       anim + ModelGroupMap["PlayerMain"].anim[animationthing][0];
+//   if (currentstate != state) {
+//     modeltrans->actions[0].pose.posecode.front() = animationthing;
+//     currentstate = state;
+//   }
+// }
 
 glm::vec2 getrealpos(UIthing::anchorpos anchor, glm::vec2 pos, glm::vec2 size) {
   glm::vec2 realpos;
@@ -715,21 +715,21 @@ bool UIsetup() {
   UIGlobalStuff->UImap["CobblerGameBaseUI"].push_back(DIndicator);
 
   // GardnerStuff
-  UIGlobalStuff->UImap["Gardner/AmmoCnt"];
+  UIGlobalStuff->UImap["Arthur/AmmoCnt"];
 
   UIbox* ammobox = new UIbox();
   ammobox->anchor = UIthing::rightbottom;
   ammobox->size = glm::vec2({80, 48});
   ammobox->rgba = glm::vec4(0, 0, 0, 0.75f);
   ammobox->pos = glm::vec2(-92, -60);
-  UIGlobalStuff->UImap["Gardner/AmmoCnt"].push_back(ammobox);
+  UIGlobalStuff->UImap["Arthur/AmmoCnt"].push_back(ammobox);
 
   UIbox* ammobox2 = new UIbox();
   ammobox2->anchor = UIthing::rightbottom;
   ammobox2->size = glm::vec2({64, 24});
   ammobox2->rgba = glm::vec4(0, 0, 0, 0.75f);
   ammobox2->pos = glm::vec2(-76, -84);
-  UIGlobalStuff->UImap["Gardner/AmmoCnt"].push_back(ammobox2);
+  UIGlobalStuff->UImap["Arthur/AmmoCnt"].push_back(ammobox2);
 
   AmmoTextChanger* ammotextnum = new AmmoTextChanger();
   UItext* ammotext = new UItext(ammotextnum);
@@ -738,7 +738,7 @@ bool UIsetup() {
   ammotext->anchor = UIthing::rightbottom;
   ammotext->rgba = glm::vec4(1, 1, 1, 1);
   ammotext->pos = glm::vec2(-16, -52);
-  UIGlobalStuff->UImap["Gardner/AmmoCnt"].push_back(ammotext);
+  UIGlobalStuff->UImap["Arthur/AmmoCnt"].push_back(ammotext);
 
   ReserveTextChanger* reservetextnum = new ReserveTextChanger();
   UItext* reservetext = new UItext(reservetextnum);
@@ -747,10 +747,10 @@ bool UIsetup() {
   reservetext->anchor = UIthing::rightbottom;
   reservetext->rgba = glm::vec4(1, 1, 1, 1);
   reservetext->pos = glm::vec2(-16, -80);
-  UIGlobalStuff->UImap["Gardner/AmmoCnt"].push_back(reservetext);
+  UIGlobalStuff->UImap["Arthur/AmmoCnt"].push_back(reservetext);
 
-  UIGlobalStuff->UImap["Gardner/Weapon0"];
-  UIGlobalStuff->UImap3D["Gardner/Weapon0"];
+  UIGlobalStuff->UImap["Arthur/Weapon0"];
+  UIGlobalStuff->UImap3D["Arthur/Weapon0"];
 
   UIbox* crosshair = new UIbox();
   crosshair->anchor = UIthing::middlemiddle;
@@ -759,11 +759,11 @@ bool UIsetup() {
   crosshair->size = glm::vec2({2, 2});
   crosshair->pos = glm::vec2({0, 0});
 
-  UIGlobalStuff->UImap["Gardner/Weapon0"].push_back(crosshair);
+  UIGlobalStuff->UImap["Arthur/Weapon0"].push_back(crosshair);
 
-  UI3Dthing* ArmUI = new firstpersonUIthing();
+  // UI3Dthing* ArmUI = new firstpersonUIthing();
 
-  UIGlobalStuff->UImap3D["Gardner/Weapon0"].push_back(ArmUI);
+  // UIGlobalStuff->UImap3D["Arthur/Weapon0"].push_back(ArmUI);
 
   return true;
 }

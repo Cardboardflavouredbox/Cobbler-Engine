@@ -1134,7 +1134,7 @@ bool init() {
   LocalPlayer->setup(0, Global->playerclass);
 
   LocalPlayer->position = GetRespawnPoint(0);
-  LocalPlayer->Modelthing->visible = false;
+  LocalPlayer->Modelthing->visible = true;
   LocalPlayer->teamindex = 0;
   LocalPlayer->EntityIndex = 0;
 
@@ -1447,8 +1447,6 @@ bool init() {
 
   playerluastuff->LocalClassUpdate = playerluastuff->lua["Update"];
   playerluastuff->LocalClassDeath = playerluastuff->lua["Death"];
-  playerluastuff->LocalClassStatetoPose =
-      playerluastuff->lua["StatetoPosefunc"];
 
   LuaSet(&playerluastuff->lua);
 

@@ -55,9 +55,9 @@ LIB_API void changeUIindex() {
     if (UIGlobalStuff->UIlist.front() != "CobblerGameBaseUI") {
       UIGlobalStuff->UIlist.clear();
       UIGlobalStuff->UIlist.push_back("CobblerGameBaseUI");
-      UIGlobalStuff->UIlist.push_back("Gardner/AmmoCnt");
-      UIGlobalStuff->UIlist.push_back("Gardner/Weapon0");
+      UIGlobalStuff->UIlist.push_back("Arthur/AmmoCnt");
+      UIGlobalStuff->UIlist.push_back("Arthur/Weapon0");
     }
-    UIGlobalStuff->UIlist.back() = "Gardner/Weapon0";
+    UIGlobalStuff->UIlist.back() = "Arthur/Weapon0";
   }
 }

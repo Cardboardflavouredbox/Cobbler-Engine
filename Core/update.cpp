@@ -85,11 +85,24 @@ void CameraUpdate() {
   if (LocalPlayer != NULL) {
     Camera->pos = LocalPlayer->position;
     Camera->pos.z += LocalPlayer->cameraoffset;
+
     Camera->lookat.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
                        std::cos(glm::radians(LocalPlayer->dir.y));
     Camera->lookat.z = std::sin(glm::radians(LocalPlayer->dir.y));
     Camera->lookat.y = std::sin(glm::radians(LocalPlayer->dir.x + 90.f)) *
                        std::cos(glm::radians(LocalPlayer->dir.y));
+
+    glm::vec3 temp;
+
+    temp.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
+             std::cos(glm::radians(LocalPlayer->dir.y + 90.f));
+    temp.z = std::sin(glm::radians(LocalPlayer->dir.y + 90.f));
+    temp.y = std::sin(glm::radians(LocalPlayer->dir.x + 90.f)) *
+             std::cos(glm::radians(LocalPlayer->dir.y + 90.f));
+
+    temp = Camera->lookat * glm::angleAxis(glm::radians(90.f), temp);
+
+    Camera->pos -= Camera->lookat * 2.f - temp / 2.f;
     Camera->lookat += Camera->pos;
   }
 }
@@ -204,7 +217,7 @@ void RecieveNetData() {
           GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity = new Entity();
 
           GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity->setup(i,
-                                                                    "Gardner");
+                                                                    "Arthur");
 
           GlobalNetworkStuff->PlayerNetStuff[i].PlayerEntity->position =
               GetRespawnPoint(GlobalNetworkStuff->PlayerNetStuff[i]
@@ -224,7 +237,7 @@ void RecieveNetData() {
                 GlobalNetworkStuff->PlayerNetStuff[key].PlayerEntity =
                     new Entity();
                 GlobalNetworkStuff->PlayerNetStuff[key].PlayerEntity->setup(
-                    key, "Gardner");
+                    key, "Arthur");
               } else {
                 GlobalNetworkStuff->PlayerNetStuff[key].Timecounter = 0;
               }
@@ -589,12 +602,6 @@ void LocalClassUpdate() {
     std::cout << "Lua Error: " << err.what() << std::endl;
   }
 
-  auto result = playerluastuff->LocalClassStatetoPose();
-  uint32_t animationthing = getposeindex(result);
-
-  playerluastuff->lua["animend"] =
-      (float)(ModelGroupMap["PlayerMain"].anim[animationthing][1] -
-              ModelGroupMap["PlayerMain"].anim[animationthing][0]);
   float state = playerluastuff->lua["state"];
   LocalPlayer->State = state;
   if (LocalPlayerNetData != NULL)

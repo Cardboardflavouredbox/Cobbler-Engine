@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 
   SDL_Log("UI loaded");
 
-  Global->playerclass = "Gardner";
+  Global->playerclass = "Arthur";
 
   if (!init()) {
     SDL_Log("%s", SDL_GetError());

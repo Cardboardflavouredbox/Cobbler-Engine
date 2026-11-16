@@ -24,7 +24,7 @@
 #endif
 
 LIB_API glm::vec2 getrealpos(UIthing::anchorpos anchor, glm::vec2 pos,
-                            glm::vec2 size);
+                             glm::vec2 size);
 
 // UIcomponents
 struct LIB_API UITextChanger {
@@ -226,21 +226,21 @@ struct LIB_API UIDamageIndicator : public UIthing {
   ~UIDamageIndicator() {}
 };
 
-struct LIB_API firstpersonUIthing : public UI3Dthing {
-  int currentstate = 0;
-  firstpersonUIthing() {
-    Modeltransform* Arm = new Modeltransform();
-    Arm->position = glm::vec3(0, 0, -3.375f);
+// struct LIB_API firstpersonUIthing : public UI3Dthing {
+//   int currentstate = 0;
+//   firstpersonUIthing() {
+//     Modeltransform* Arm = new Modeltransform();
+//     Arm->position = glm::vec3(0, 0, -3.375f);
 
-    Arm->name = "PlayerMain";
+//     Arm->name = "PlayerMain";
 
-    Modeltransform::action actionthing;
+//     Modeltransform::action actionthing;
 
-    actionthing.pose.posecode.push_back(getposeindex("1stpersonPistol"));
+//     actionthing.pose.posecode.push_back(getposeindex("1stpersonPistol"));
 
-    Arm->actions.push_back(actionthing);
-    modeltrans = Arm;
-  }
+//     Arm->actions.push_back(actionthing);
+//     modeltrans = Arm;
+//   }
 
-  void update();
-};
+//   void update();
+// };
