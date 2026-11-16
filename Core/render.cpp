@@ -286,11 +286,15 @@ posesresult posesmapprocess(ModelGroupClass::Bone* bone, uint32_t actioncode,
   return result;
 }
 
-BoneResult applybonessingleaction(const uint32_t& bonecode,
-                                  const ModelGroupClass::Bone& inputbone,
-                                  const uint32_t& actioncode,
-                                  ModelGroupClass* modelgroup, float frame) {
-  if (Settings->crunchyanimations) frame = std::floorf(frame);
+struct actionapplystruct {
+  std::array<uint32_t, 2> actioncode;
+  float lerpamount = 0.f, frame = 0.f;
+};
+
+BoneResult applyboneactions(const uint32_t& bonecode,
+                            const ModelGroupClass::Bone& inputbone,
+                            std::vector<actionapplystruct> actions,
+                            ModelGroupClass* modelgroup) {
   uint32_t boneindex = bonecode;
   BoneResult boneresult;
   boneresult.head = inputbone.head;
@@ -300,85 +304,27 @@ BoneResult applybonessingleaction(const uint32_t& bonecode,
   while (boneindex != uint32_t(-1)) {
     ModelGroupClass::Bone* bone = &modelgroup->Bonemap[boneindex];
 
-    posesresult poseresultthing = posesmapprocess(bone, actioncode, frame);
+    posesresult poseresultthing;
 
-    // the axis translation code of fear and despair...
-    float angle = glm::angle(poseresultthing.rot);
+    for (auto& action : actions) {
+      float frame = action.frame;
 
-    glm::vec3 baseaxis = glm::axis(poseresultthing.rot);
+      if (Settings->crunchyanimations) frame = std::floorf(frame);
 
-    glm::vec3 boneaxis = glm::normalize(bone->tail - bone->head);
+      posesresult poseresultthing2 =
+                      posesmapprocess(bone, action.actioncode[0], frame),
+                  poseresultthing3 =
+                      posesmapprocess(bone, action.actioncode[1], frame);
 
-    glm::quat axisquat = glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis);
+      poseresultthing.pos += glm::mix(poseresultthing2.pos,
+                                      poseresultthing3.pos, action.lerpamount);
 
-    glm::vec3 axis = axisquat * baseaxis;
+      poseresultthing.scale *= glm::mix(
+          poseresultthing2.scale, poseresultthing3.scale, action.lerpamount);
 
-    glm::quat final_quat;
-
-    final_quat = glm::normalize(glm::angleAxis(angle, axis));
-
-    if (boneindex == bonecode) {
-      if (poseresultthing.pos != glm::vec3(0) ||
-          poseresultthing.scale != glm::vec3(1) ||
-          final_quat != glm::quat(1, 0, 0, 0))
-        boneresult.check = true;
-    }
-
-    boneresult.rot = final_quat * boneresult.rot;
-
-    boneresult.scale *= poseresultthing.scale;
-
-    boneresult.head = (final_quat) * (boneresult.head - bone->head);
-    boneresult.head *= poseresultthing.scale;
-    boneresult.head += bone->head;
-    boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
-                       (poseresultthing.pos * bone->restpose.scale);
-    boneindex = bone->parent;
-  }
-  return boneresult;
-}
-
-BoneResult applybonesmultipleactions(const uint32_t& bonecode,
-                                     const ModelGroupClass::Bone& inputbone,
-                                     uint32_t actioncode[],
-                                     ModelGroupClass* modelgroup, float frame,
-                                     float lerpamount) {
-  if (Settings->crunchyanimations) frame = std::floorf(frame);
-  uint32_t boneindex = bonecode;
-  BoneResult boneresult;
-  boneresult.head = inputbone.head;
-  boneresult.rot = glm::quat(1, 0, 0, 0);
-  boneresult.scale = glm::vec3(1);
-  // apply bones
-  while (boneindex != uint32_t(-1)) {
-    ModelGroupClass::Bone* bone = &modelgroup->Bonemap[boneindex];
-
-    posesresult poseresultthing = posesmapprocess(bone, actioncode[0], frame),
-                poseresultthing2 = posesmapprocess(bone, actioncode[1], frame);
-
-    auto& posespos = bone->Poses.pos[actioncode[0]];
-    auto& posesscale = bone->Poses.scale[actioncode[0]];
-    auto& posesrot = bone->Poses.rot[actioncode[0]];
-
-    if (posespos.empty()) {
-      poseresultthing.pos = poseresultthing2.pos;
-    } else {
-      poseresultthing.pos =
-          glm::mix(poseresultthing.pos, poseresultthing2.pos, lerpamount);
-    }
-
-    if (posesscale.empty()) {
-      poseresultthing.scale = poseresultthing2.scale;
-    } else {
-      poseresultthing.scale =
-          glm::mix(poseresultthing.scale, poseresultthing2.scale, lerpamount);
-    }
-
-    if (posesrot.empty()) {
-      poseresultthing.rot = poseresultthing2.rot;
-    } else {
-      poseresultthing.rot =
-          glm::mix(poseresultthing.rot, poseresultthing2.rot, lerpamount);
+      poseresultthing.rot = poseresultthing.rot * glm::mix(poseresultthing2.rot,
+                                                           poseresultthing3.rot,
+                                                           action.lerpamount);
     }
 
     // the axis translation code of fear and despair...
@@ -418,9 +364,7 @@ BoneResult applybonesmultipleactions(const uint32_t& bonecode,
 }
 
 // apply animations of bones.
-void modelapplybones(Modeltransform* modeltrans,
-                     const Modeltransform::action::actionpose& actionposething,
-                     ModelGroupClass* modelgroup, float frame) {
+void modelapplybones(Modeltransform* modeltrans, ModelGroupClass* modelgroup) {
   std::unordered_map<uint32_t, BoneResult> LocalBoneResultMap;
   for (auto& [code, bone] : modelgroup->Bonemap) {
     BoneResult* boneresult = &LocalBoneResultMap[code];
@@ -429,22 +373,34 @@ void modelapplybones(Modeltransform* modeltrans,
     boneresult->scale = glm::vec3(1);
   }
 
-  if (actionposething.lerpamount == std::floorf(actionposething.lerpamount)) {
-    for (auto& [code, bone] : modelgroup->Bonemap) {
-      LocalBoneResultMap[code] = applybonessingleaction(
-          code, bone, actionposething.posecode[actionposething.lerpamount],
-          modelgroup, frame);
+  std::vector<actionapplystruct> actions;
+
+  for (auto& action : modeltrans->actions) {
+    auto& actionposething = action.pose;
+
+    actionapplystruct actionresult;
+
+    if (actionposething.lerpamount == std::floorf(actionposething.lerpamount)) {
+      actionresult.actioncode[0] =
+          actionposething.posecode[int(actionposething.lerpamount)];
+      actionresult.actioncode[1] = actionresult.actioncode[0];
+    } else {
+      actionresult.actioncode[0] =
+          actionposething.posecode[int(actionposething.lerpamount)];
+      actionresult.actioncode[1] =
+          actionposething.posecode[int(actionposething.lerpamount) + 1];
+      actionresult.lerpamount =
+          actionposething.lerpamount - std::floorf(actionposething.lerpamount);
     }
-  } else {
-    uint32_t poseindexarray[2] = {
-        actionposething.posecode[int(actionposething.lerpamount)],
-        actionposething.posecode[int(actionposething.lerpamount) + 1]};
-    float t =
-        actionposething.lerpamount - std::floorf(actionposething.lerpamount);
-    for (auto& [code, bone] : modelgroup->Bonemap) {
-      LocalBoneResultMap[code] = applybonesmultipleactions(
-          code, bone, poseindexarray, modelgroup, frame, t);
-    }
+
+    actionresult.frame = action.frame;
+
+    actions.push_back(actionresult);
+  }
+
+  for (auto& [code, bone] : modelgroup->Bonemap) {
+    LocalBoneResultMap[code] =
+        applyboneactions(code, bone, actions, modelgroup);
   }
 
   BoneResultmapVector.push_back(LocalBoneResultMap);
@@ -512,8 +468,7 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
     //     }
     //   }
     // }
-    for (auto& action : modeltrans->actions)
-      modelapplybones(modeltrans, action.pose, modelgroup, action.frame);
+    modelapplybones(modeltrans, modelgroup);
 
     switch (Settings->graphicsmode) {
       case OpenGL4:

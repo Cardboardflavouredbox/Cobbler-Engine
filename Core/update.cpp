@@ -109,8 +109,8 @@ void CameraUpdate() {
 
     Camera->pos = temppos + offset;
 
-    for (int i = 1; i <= 32; i++) {
-      glm::vec3 checkpos = temppos + offset * (i / 32.f);
+    for (int i = 1; i <= 64; i++) {
+      glm::vec3 checkpos = temppos + offset * (i / 64.f);
       std::vector<std::array<uint32_t, 3>> Faces;
       bool solid = BSPthing(checkpos, radius, 0, Faces);
 
@@ -133,7 +133,7 @@ void CameraUpdate() {
         }
       }
       if (collided) {
-        Camera->pos = temppos + offset * ((i - 1) / 32.f);
+        Camera->pos = temppos + offset * ((i - 1) / 64.f);
         break;
       }
     }
