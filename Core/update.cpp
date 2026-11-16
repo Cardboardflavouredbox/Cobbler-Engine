@@ -17,6 +17,7 @@
 #include "global.h"
 #include "inputs.h"
 #include "lights.h"
+#include "mapdata.h"
 #include "netconnect.h"
 #include "network.h"
 #include "networkextern.h"
@@ -83,8 +84,8 @@ void processinputs() {
 
 void CameraUpdate() {
   if (LocalPlayer != NULL) {
-    Camera->pos = LocalPlayer->position;
-    Camera->pos.z += LocalPlayer->cameraoffset;
+    glm::vec3 temppos = LocalPlayer->position;
+    temppos.z += LocalPlayer->cameraoffset;
 
     Camera->lookat.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
                        std::cos(glm::radians(LocalPlayer->dir.y));
@@ -102,7 +103,41 @@ void CameraUpdate() {
 
     temp = Camera->lookat * glm::angleAxis(glm::radians(90.f), temp);
 
-    Camera->pos -= Camera->lookat * 2.f - temp / 2.f;
+    glm::vec3 offset = Camera->lookat * -2.f + temp / 2.f;
+
+    const float radius = 0.125f;
+
+    Camera->pos = temppos + offset;
+
+    for (int i = 1; i <= 32; i++) {
+      glm::vec3 checkpos = temppos + offset * (i / 32.f);
+      std::vector<std::array<uint32_t, 3>> Faces;
+      bool solid = BSPthing(checkpos, radius, 0, Faces);
+
+      bool collided = false;
+      float dist = 0.f;
+
+      if (solid) {
+        Faces.clear();
+        recursiveBSPadd(0, Faces);
+      }
+
+      for (auto& face : Faces) {
+        glm::vec3 result;
+        result = closestPointTriangle(checkpos, GlobalMapBSP->Points[face[0]],
+                                      GlobalMapBSP->Points[face[1]],
+                                      GlobalMapBSP->Points[face[2]]);
+        if (glm::distance(result, checkpos) < radius) {
+          collided = true;
+          break;
+        }
+      }
+      if (collided) {
+        Camera->pos = temppos + offset * ((i - 1) / 32.f);
+        break;
+      }
+    }
+
     Camera->lookat += Camera->pos;
   }
 }

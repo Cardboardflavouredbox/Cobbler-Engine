@@ -40,4 +40,10 @@ LIB_API void raycastcheck(glm::vec3 hitbox[], int teamindex,
 LIB_API float Entityraycheck(
     glm::vec3 ray[], Entity* checkentity);  // returns dist (-1 if not collided)
 LIB_API void EntityMove(Entity* tempentity);
+LIB_API glm::vec3 closestPointTriangle(glm::vec3 p, glm::vec3 a, glm::vec3 b,
+                                       glm::vec3 c);
+LIB_API bool BSPthing(glm::vec3 pos, float radius, int index,
+                      std::vector<std::array<uint32_t, 3>>& out);
+LIB_API void recursiveBSPadd(int index,
+                             std::vector<std::array<uint32_t, 3>>& out);
 }
