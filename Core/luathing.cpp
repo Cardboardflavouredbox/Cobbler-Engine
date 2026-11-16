@@ -201,5 +201,6 @@ void LuaSet(sol::state* luathing) {
       "hitboxlength", &Entity::hitboxlength, "teamindex", &Entity::teamindex,
       "maxhp", &Entity::maxhp, "hp", &Entity::hp, "position", &Entity::position,
       "dir", &Entity::dir, "velocityvec3", &Entity::velocityvec3, "State",
-      &Entity::State, "movevec2", &Entity::movevec2);
+      &Entity::State, "movevec2", &Entity::movevec2, "IsGrounded",
+      &Entity::IsGrounded);
 }
