@@ -85,7 +85,7 @@ void processinputs() {
 void CameraUpdate() {
   if (LocalPlayer != NULL) {
     glm::vec3 temppos = LocalPlayer->position;
-    temppos.z += LocalPlayer->cameraoffset;
+    temppos.z += LocalPlayer->camerabaseoffset;
 
     Camera->lookat.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
                        std::cos(glm::radians(LocalPlayer->dir.y));
@@ -93,17 +93,19 @@ void CameraUpdate() {
     Camera->lookat.y = std::sin(glm::radians(LocalPlayer->dir.x + 90.f)) *
                        std::cos(glm::radians(LocalPlayer->dir.y));
 
-    glm::vec3 temp;
+    glm::vec3 right, up;
 
-    temp.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
-             std::cos(glm::radians(LocalPlayer->dir.y + 90.f));
-    temp.z = std::sin(glm::radians(LocalPlayer->dir.y + 90.f));
-    temp.y = std::sin(glm::radians(LocalPlayer->dir.x + 90.f)) *
-             std::cos(glm::radians(LocalPlayer->dir.y + 90.f));
+    right.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
+              std::cos(glm::radians(LocalPlayer->dir.y + 90.f));
+    right.z = std::sin(glm::radians(LocalPlayer->dir.y + 90.f));
+    right.y = std::sin(glm::radians(LocalPlayer->dir.x + 90.f)) *
+              std::cos(glm::radians(LocalPlayer->dir.y + 90.f));
 
-    temp = Camera->lookat * glm::angleAxis(glm::radians(90.f), temp);
+    right = Camera->lookat * glm::angleAxis(glm::radians(90.f), right);
+    up = right * glm::angleAxis(glm::radians(90.f), Camera->lookat);
 
-    glm::vec3 offset = Camera->lookat * -2.f + temp / 2.f;
+    glm::vec3 offset = Camera->lookat * -2.f + right / 2.f +
+                       up * LocalPlayer->cameraheadoffset;
 
     const float radius = 0.125f;
 
@@ -551,11 +553,10 @@ void HitScanAttack(float damage, float xrot, float yrot) {
 
   glm::vec3 ray[2];
   ray[0] = LocalPlayer->position;
-  ray[0].z += LocalPlayer->cameraoffset;
+  ray[0].z += LocalPlayer->camerabaseoffset;
   ray[1] = targetdir;
   ray[1] *= 128.f;
-  ray[1] += LocalPlayer->position;
-  ray[1].z += LocalPlayer->cameraoffset;
+  ray[1] += Camera->pos;
 
   // uint32_t lightindex = LightMapEmptyIndex();
   // Lights[lightindex] = new TempLight(lightindex, 0.125f);
@@ -596,8 +597,7 @@ void HitScanAttack(float damage, float xrot, float yrot) {
 
   dir = targetdir;
   dir *= resultthing.dist;
-  dir += LocalPlayer->position;
-  dir.z += LocalPlayer->cameraoffset;
+  dir += Camera->pos;
 
   ParticleSpawn(ParticleSpawnInfo{1,
                                   {1 / 32.f, -1 / 112.f, 0},

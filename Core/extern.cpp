@@ -193,14 +193,14 @@ void DamageIndicatorPush(EntityDamageInfo damageinfo) {
     }
     damageloc.position[2] +=
         GlobalNetworkStuff->PlayerNetStuff[damageinfo.SourceEntityIndex]
-            .PlayerEntity->cameraoffset;
+            .PlayerEntity->camerabaseoffset;
   } else {
     for (int i = 0; i < 3; i++) {
       damageloc.position[i] =
           Entities[damageinfo.SourceEntityIndex]->position[i];
     }
     damageloc.position[2] +=
-        Entities[damageinfo.SourceEntityIndex]->cameraoffset;
+        Entities[damageinfo.SourceEntityIndex]->camerabaseoffset;
   }
 
   if (damageinfo.TargetEntityIndex == 0 && !damageinfo.TargetIsPlayer) {

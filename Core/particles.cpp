@@ -329,7 +329,7 @@ struct RayParticle : Particle {
       temp = rotthing * temp;
 
       temp += SourceEntity->position;
-      temp.z += SourceEntity->cameraoffset;
+      temp.z += SourceEntity->camerabaseoffset;
       realposition = temp;
     }
 
