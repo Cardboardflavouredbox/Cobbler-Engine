@@ -16,4 +16,5 @@
 #include <glm/vec3.hpp>
 #include <sol/sol.hpp>
 
+void LuaVec3Set(sol::state* luathing);
 void LuaSet(sol::state* luathing);

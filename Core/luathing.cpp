@@ -2,7 +2,7 @@
 
 #include "entity.h"
 
-void LuaSet(sol::state* luathing) {
+void LuaVec3Set(sol::state* luathing) {
   luathing->new_usertype<glm::vec3>(
       "vec3", sol::constructors<glm::vec3()>(), "x", &glm::vec3::x, "y",
       &glm::vec3::y, "z", &glm::vec3::z,
@@ -55,6 +55,10 @@ void LuaSet(sol::state* luathing) {
             }
             throw std::invalid_argument("Invalid key for vec3");
           }));
+}
+
+void LuaSet(sol::state* luathing) {
+  LuaVec3Set(luathing);
 
   luathing->new_usertype<glm::vec2>(
       "vec2", sol::constructors<glm::vec2()>(), "x", &glm::vec2::x, "y",

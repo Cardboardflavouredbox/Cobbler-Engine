@@ -909,6 +909,16 @@ bool init() {
 
   Camera = new CameraClass();
 
+  Camera->lua.open_libraries(sol::lib::base);
+
+  Camera->lua.script_file(Global->GameFolder.string() + "/scripts/Camera.lua");
+
+  Camera->luaupdate = Camera->lua["Update"];
+
+  LuaVec3Set(&Camera->lua);
+
+  Camera->lua.collect_garbage();
+
   // read map data.
   Mapdata tempmapdata;
   FILE* file = NULL;

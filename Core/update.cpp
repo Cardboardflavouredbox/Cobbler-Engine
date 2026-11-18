@@ -84,6 +84,10 @@ void processinputs() {
 
 void CameraUpdate() {
   if (LocalPlayer != NULL) {
+    Camera->lua["Rightclick"] = LocalInputs->rightclick;
+
+    glm::vec3 luaoffset = Camera->luaupdate();
+
     glm::vec3 temppos = LocalPlayer->position;
     temppos.z += LocalPlayer->cameraoffset;
 
@@ -104,17 +108,11 @@ void CameraUpdate() {
     right = Camera->lookat * glm::angleAxis(glm::radians(90.f), right);
     up = right * glm::angleAxis(glm::radians(90.f), Camera->lookat);
 
-    float zoom = 1.f;
-    if (LocalInputs->rightclick > 0) {
-      zoom /= 3.f;
-    }
+    // Camera->zoom =
+    //     std::lerp(Camera->zoom, zoom, 1 - std::pow(0.001f, updatedeltaTime));
 
-    Camera->zoom =
-        std::lerp(Camera->zoom, zoom, 1 - std::pow(0.001f, updatedeltaTime));
-
-    glm::vec3 offset = Camera->lookat * -2.5f + right * 2.f / 3.f;
-
-    offset *= Camera->zoom;
+    glm::vec3 offset =
+        Camera->lookat * luaoffset.y + right * luaoffset.x + up * luaoffset.z;
 
     const float radius = 0.125f;
 
