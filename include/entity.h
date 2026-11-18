@@ -69,7 +69,7 @@ struct Entity {
   bool invincible = false;
   float deltatimelocal = 0;
   float hp, maxhp;
-  float camerabaseoffset, cameraheadoffset;
+  float cameraoffset;
   float movespeed = 12.5f, jumpheight = 16.f;
   float weight = 1.f;
   glm::vec2 dir, movevec2 = glm::vec3(0);

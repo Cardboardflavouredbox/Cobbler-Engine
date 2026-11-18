@@ -14,6 +14,7 @@
 
 struct CameraClass {
   glm::vec3 pos, lookat;
+  float zoom = 1.f;
 };
 
 LIB_API extern CameraClass* Camera;

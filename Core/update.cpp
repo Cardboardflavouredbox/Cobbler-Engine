@@ -85,7 +85,7 @@ void processinputs() {
 void CameraUpdate() {
   if (LocalPlayer != NULL) {
     glm::vec3 temppos = LocalPlayer->position;
-    temppos.z += LocalPlayer->camerabaseoffset;
+    temppos.z += LocalPlayer->cameraoffset;
 
     Camera->lookat.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
                        std::cos(glm::radians(LocalPlayer->dir.y));
@@ -104,8 +104,17 @@ void CameraUpdate() {
     right = Camera->lookat * glm::angleAxis(glm::radians(90.f), right);
     up = right * glm::angleAxis(glm::radians(90.f), Camera->lookat);
 
-    glm::vec3 offset = Camera->lookat * -2.f + right / 2.f +
-                       up * LocalPlayer->cameraheadoffset;
+    float zoom = 1.f;
+    if (LocalInputs->rightclick > 0) {
+      zoom /= 3.f;
+    }
+
+    Camera->zoom =
+        std::lerp(Camera->zoom, zoom, 1 - std::pow(0.001f, updatedeltaTime));
+
+    glm::vec3 offset = Camera->lookat * -2.5f + right * 2.f / 3.f;
+
+    offset *= Camera->zoom;
 
     const float radius = 0.125f;
 
@@ -553,7 +562,7 @@ void HitScanAttack(float damage, float xrot, float yrot) {
 
   glm::vec3 ray[2];
   ray[0] = LocalPlayer->position;
-  ray[0].z += LocalPlayer->camerabaseoffset;
+  ray[0].z += LocalPlayer->cameraoffset;
   ray[1] = targetdir;
   ray[1] *= 128.f;
   ray[1] += Camera->pos;
