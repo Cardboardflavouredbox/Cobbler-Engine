@@ -354,7 +354,7 @@ BoneResult applyboneactions(const uint32_t& bonecode,
     boneresult.scale *= poseresultthing.scale;
 
     boneresult.head = (final_quat) * (boneresult.head - bone->head);
-    boneresult.head *= poseresultthing.scale;
+    boneresult.head *= boneresult.scale;
     boneresult.head += bone->head;
     boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
                        (poseresultthing.pos * bone->restpose.scale);

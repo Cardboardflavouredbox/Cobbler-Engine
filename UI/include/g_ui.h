@@ -86,36 +86,36 @@ struct LIB_API MenuCheckboxTextChanger : UITextChanger {
 
 struct LIB_API AmmoTextChanger : UITextChanger {
   void update() {
-    float temp = playerluastuff->lua["state"];
-    int state = int(temp);
+    // float temp = playerluastuff->lua["state"];
+    // int state = int(temp);
 
-    temp = playerluastuff->lua["enumsize"];
-    int enumsize = int(temp);
+    // temp = playerluastuff->lua["enumsize"];
+    // int enumsize = int(temp);
 
-    int weaponclipammo =
-        playerluastuff->lua["weaponclipammo"][(state / enumsize) + 1];
+    // int weaponclipammo =
+    //     playerluastuff->lua["weaponclipammo"][(state / enumsize) + 1];
 
-    std::string s = std::to_string(weaponclipammo);
-    std::u32string s32(s.begin(), s.end());
-    *string = s32;
+    // std::string s = std::to_string(weaponclipammo);
+    // std::u32string s32(s.begin(), s.end());
+    *string = U"ermmm";
   }
   ~AmmoTextChanger() {}
 };
 
 struct LIB_API ReserveTextChanger : UITextChanger {
   void update() {
-    float temp = playerluastuff->lua["state"];
-    int state = int(temp);
+    // float temp = playerluastuff->lua["state"];
+    // int state = int(temp);
 
-    temp = playerluastuff->lua["enumsize"];
-    int enumsize = int(temp);
+    // temp = playerluastuff->lua["enumsize"];
+    // int enumsize = int(temp);
 
-    int weaponreserveammo =
-        playerluastuff->lua["weaponreserveammo"][(state / enumsize) + 1];
+    // int weaponreserveammo =
+    //     playerluastuff->lua["weaponreserveammo"][(state / enumsize) + 1];
 
-    std::string s = std::to_string(int(weaponreserveammo));
-    std::u32string s32(s.begin(), s.end());
-    *string = s32;
+    // std::string s = std::to_string(int(weaponreserveammo));
+    // std::u32string s32(s.begin(), s.end());
+    *string = U"ermmmmmmm";
   }
   ~ReserveTextChanger() {}
 };

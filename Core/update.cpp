@@ -616,6 +616,7 @@ void HitScanAttack(float damage, float xrot, float yrot) {
 }
 
 void LocalClassUpdate() {
+  playerluastuff->lua["state"] = (float)LocalPlayer->State;
   playerluastuff->lua["Keys"][SDL_SCANCODE_1] =
       LocalInputs->Keys[SDL_SCANCODE_1];
   playerluastuff->lua["Keys"][SDL_SCANCODE_2] =
@@ -634,9 +635,6 @@ void LocalClassUpdate() {
     playerluastuff->LocalClassDeath();
     if (LocalPlayerNetData != NULL) LocalPlayerNetData->isdead = false;
   }
-  float anim = playerluastuff->lua["anim"];
-
-  playerluastuff->lua["anim"] = anim + updatedeltaTime * 24.f;
 
   auto what = playerluastuff->LocalClassUpdate();
   if (!what.valid()) {
@@ -646,8 +644,6 @@ void LocalClassUpdate() {
 
   float state = playerluastuff->lua["state"];
   LocalPlayer->State = state;
-  if (LocalPlayerNetData != NULL)
-    LocalPlayerNetData->frame = playerluastuff->lua["anim"];
 }
 
 void fixedupdate() {
