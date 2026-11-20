@@ -22,3 +22,5 @@ struct CameraClass {
 };
 
 LIB_API extern CameraClass* Camera;
+
+LIB_API glm::vec3 LookdirToVec3(const glm::vec2& lookdir);

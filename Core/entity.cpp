@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "camera.h"
 #include "deltaTime.h"
 #include "extern.h"
 #include "lights.h"
@@ -133,6 +134,8 @@ void Entity::setup(uint32_t Index, std::string path) {
   lua["RadiusDamage"] = RadiusDamage;
 
   lua["getposeindex"] = getposeindex;
+
+  lua["LookdirToVec3"] = LookdirToVec3;
 
   std::string scriptpath =
       Global->GameFolder.string() + "/class/" + path + "/entitymain.lua";

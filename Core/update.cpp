@@ -39,6 +39,16 @@ playerinputs Loadinputdata(const playerdatapacket& input) {
   return temp;
 }
 
+glm::vec3 LookdirToVec3(const glm::vec2& lookdir) {
+  glm::vec3 result;
+  result.x = std::cos(glm::radians(lookdir.x + 90.f)) *
+             std::cos(glm::radians(lookdir.y));
+  result.y = std::sin(glm::radians(lookdir.x + 90.f)) *
+             std::cos(glm::radians(lookdir.y));
+  result.z = std::sin(glm::radians(lookdir.y));
+  return result;
+}
+
 void processinputs() {
   P1PlayerInputs->lookdir.x += -0.5f * Settings->mousesensitivity.x *
                                LocalInputs->MouseDelta.x *
@@ -91,11 +101,7 @@ void CameraUpdate() {
     glm::vec3 temppos = LocalPlayer->position;
     temppos.z += LocalPlayer->cameraoffset;
 
-    Camera->lookat.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
-                       std::cos(glm::radians(LocalPlayer->dir.y));
-    Camera->lookat.z = std::sin(glm::radians(LocalPlayer->dir.y));
-    Camera->lookat.y = std::sin(glm::radians(LocalPlayer->dir.x + 90.f)) *
-                       std::cos(glm::radians(LocalPlayer->dir.y));
+    Camera->lookat = LookdirToVec3(LocalPlayer->dir);
 
     glm::vec3 right, up;
 
@@ -617,14 +623,8 @@ void HitScanAttack(float damage, float xrot, float yrot) {
 
 void LocalClassUpdate() {
   playerluastuff->lua["state"] = (float)LocalPlayer->State;
-  playerluastuff->lua["Keys"][SDL_SCANCODE_1] =
-      LocalInputs->Keys[SDL_SCANCODE_1];
-  playerluastuff->lua["Keys"][SDL_SCANCODE_2] =
-      LocalInputs->Keys[SDL_SCANCODE_2];
-  playerluastuff->lua["Keys"][SDL_SCANCODE_3] =
-      LocalInputs->Keys[SDL_SCANCODE_3];
-  playerluastuff->lua["Keys"][SDL_SCANCODE_R] =
-      LocalInputs->Keys[SDL_SCANCODE_R];
+  playerluastuff->lua["Keys"][SDL_SCANCODE_LSHIFT] =
+      LocalInputs->Keys[SDL_SCANCODE_LSHIFT];
   playerluastuff->lua["Leftclick"] = LocalInputs->leftclick;
   playerluastuff->lua["autoreload"] = Settings->autoreload;
 
