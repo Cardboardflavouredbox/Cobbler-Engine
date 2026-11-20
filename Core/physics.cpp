@@ -718,7 +718,7 @@ void EntityMove(Entity* tempentity) {
   if (glm::length(tempvec) < 0.0001f)
     tempvec = glm::vec2(0);
   else
-    tempvec *= std::pow(tempentity->IsGrounded ? 0.001f : 0.125f, dt);
+    tempvec *= std::pow(tempentity->IsGrounded ? 0.001f : 0.5f, dt);
 
   tempentity->velocityvec3.x = tempvec.x;
   tempentity->velocityvec3.y = tempvec.y;

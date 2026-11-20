@@ -36,173 +36,6 @@ ScreenPoint ToScreenSpace(glm::vec3 P) {
   return screenpos;
 }
 
-// function for drawing line in software renderer.
-void DrawLine(unsigned char color, glm::vec3 rawvectors[]) {
-  ScreenPoint vectors[2] = {ToScreenSpace(rawvectors[0]),
-                            ToScreenSpace(rawvectors[1])};
-  if (!vectors[0].isbehindLocalPlayer || !vectors[1].isbehindLocalPlayer) {
-    int x = vectors[0].p.x, x2 = vectors[1].p.x;
-
-    int y = vectors[0].p.y, y2 = vectors[1].p.y;
-
-    if (std::abs(y2 - y) < std::abs(x2 - x)) {
-      if (x > x2) {
-        x = vectors[1].p.x;
-        x2 = vectors[0].p.x;
-        y = vectors[1].p.y;
-        y2 = vectors[0].p.y;
-      }
-      for (int i = x; i <= x2; i++) {
-        int tempy = y + ((i - x) * (y2 - y) / (x2 - x));
-        if (i >= 0 && tempy >= 0 && i < Settings->resolutionx &&
-            tempy < Settings->resolutiony) {
-          if (RendererGlobal->SRstuff
-                  ->pixelsdepth[i + tempy * RendererGlobal->SRstuff->pitch] >=
-              8) {
-            RendererGlobal->SRstuff
-                ->pixelsdepth[i + tempy * RendererGlobal->SRstuff->pitch] = 8;
-            RendererGlobal->SRstuff
-                ->pixels[i + tempy * RendererGlobal->SRstuff->pitch] = color;
-          }
-        }
-      }
-    } else {
-      if (y > y2) {
-        x = vectors[1].p.x;
-        x2 = vectors[0].p.x;
-        y = vectors[1].p.y;
-        y2 = vectors[0].p.y;
-      }
-      for (int i = y; i <= y2; i++) {
-        int tempx = x + ((i - y) * (x2 - x) / (y2 - y));
-        if (tempx >= 0 && i >= 0 && tempx < Settings->resolutionx &&
-            i < Settings->resolutiony) {
-          if (RendererGlobal->SRstuff
-                  ->pixelsdepth[tempx + i * RendererGlobal->SRstuff->pitch] >=
-              8) {
-            RendererGlobal->SRstuff
-                ->pixelsdepth[tempx + i * RendererGlobal->SRstuff->pitch] = 8;
-            RendererGlobal->SRstuff
-                ->pixels[tempx + i * RendererGlobal->SRstuff->pitch] = color;
-          }
-        }
-      }
-    }
-  }
-}
-
-// this actually draws squares. will change later.
-void DrawCircle(unsigned char color, glm::vec3 rawpoint, int radius) {
-  ScreenPoint point = ToScreenSpace(rawpoint);
-  if (!point.isbehindLocalPlayer)
-    for (int i = point.p.x - radius; i <= point.p.x + radius; i++) {
-      for (int j = point.p.y - radius; j < point.p.y + radius; j++) {
-        if (i > -1 && i < Settings->resolutionx && j > -1 &&
-            j < Settings->resolutiony) {
-          if (RendererGlobal->SRstuff
-                  ->pixelsdepth[i + j * RendererGlobal->SRstuff->pitch] >= 7) {
-            RendererGlobal->SRstuff
-                ->pixelsdepth[i + j * RendererGlobal->SRstuff->pitch] = 7;
-            RendererGlobal->SRstuff
-                ->pixels[i + j * RendererGlobal->SRstuff->pitch] = color;
-          }
-        }
-      }
-    }
-}
-
-// triangle drawing function for software renderer.
-void DrawTri(std::string texture, glm::vec3 rawvectors[], glm::vec2 UVs[]) {
-  ScreenPoint vectors[3] = {ToScreenSpace(rawvectors[0]),
-                            ToScreenSpace(rawvectors[1]),
-                            ToScreenSpace(rawvectors[2])};
-  if (!vectors[0].isbehindLocalPlayer || !vectors[1].isbehindLocalPlayer ||
-      !vectors[2].isbehindLocalPlayer) {
-    int x = vectors[0].p.x, x2 = vectors[0].p.x, y = vectors[0].p.y,
-        y2 = vectors[0].p.y;
-    for (int i = 1; i < 3; i++) {
-      if (vectors[i].p.x < x) x = vectors[i].p.x;
-      if (vectors[i].p.x > x2) x2 = vectors[i].p.x;
-      if (vectors[i].p.y < y) y = vectors[i].p.y;
-      if (vectors[i].p.y > y2) y2 = vectors[i].p.y;
-    }
-    if (x < 0) x = 0;
-    if (x >= Settings->resolutionx - 1) x = Settings->resolutionx - 1;
-    if (x2 < 0) x2 = 0;
-    if (x2 >= Settings->resolutionx - 1) x2 = Settings->resolutionx - 1;
-    if (y < 0) y = 0;
-    if (y >= Settings->resolutiony - 1) y = Settings->resolutiony - 1;
-    if (y2 < 0) y2 = 0;
-    if (y2 >= Settings->resolutiony - 1) y2 = Settings->resolutiony - 1;
-
-    float det = Areathing(vectors[0].p, vectors[1].p, vectors[2].p);
-    glm::vec3 A = {(vectors[2].p.x - vectors[1].p.x),
-                   (vectors[0].p.x - vectors[2].p.x),
-                   (vectors[1].p.x - vectors[0].p.x)},
-              B = {(vectors[1].p.y - vectors[2].p.y),
-                   (vectors[2].p.y - vectors[0].p.y),
-                   (vectors[0].p.y - vectors[1].p.y)};
-    A /= -det;
-    B /= -det;
-    glm::vec3 uvwrow =
-        GetUV(glm::vec2(x, y), vectors[0].p, vectors[1].p, vectors[2].p);
-    for (int i = x; i <= x2; i++) {
-      glm::vec3 uvw = uvwrow;
-      for (int j = y; j <= y2; j++) {
-        glm::vec2 temp;
-        temp.x = i;
-        temp.y = j;
-        if (temp.x >= 0 && temp.y >= 0 && temp.x < Settings->resolutionx &&
-            temp.y < Settings->resolutiony) {
-          if (Vec2inTri(temp, vectors[0].p, vectors[1].p, vectors[2].p)) {
-            glm::vec2 uvresult = ((((UVs[0] * uvw.x) * vectors[0].dist) +
-                                   ((UVs[1] * uvw.y) * vectors[1].dist)) +
-                                  ((UVs[2] * uvw.z) * vectors[2].dist));
-            uvresult = (uvresult * (1 / (uvw.x * vectors[0].dist +
-                                         uvw.y * vectors[1].dist +
-                                         uvw.z * vectors[2].dist)));
-            int texturew = RendererGlobal->SRstuff->textures[texture]->w,
-                textureh = RendererGlobal->SRstuff->textures[texture]->h;
-            int uvxthing = (int(texturew * (uvresult.x))) % texturew;
-            int uvything = (int(textureh * (uvresult.y))) % textureh;
-            uint8_t color = static_cast<uint8_t*>(
-                RendererGlobal->SRstuff->textures[texture]
-                    ->pixels)[uvxthing + uvything * texturew];
-
-            if (color > 0) {
-              glm::vec3 tempvec3;
-              tempvec3.x = rawvectors[0].x * uvw.x + rawvectors[1].x * uvw.y +
-                           rawvectors[2].x * uvw.z;
-              tempvec3.y = rawvectors[0].y * uvw.x + rawvectors[1].y * uvw.y +
-                           rawvectors[2].y * uvw.z;
-              tempvec3.z = rawvectors[0].z * uvw.x + rawvectors[1].z * uvw.y +
-                           rawvectors[2].z * uvw.z;
-              tempvec3.x -= LocalPlayer->position.x;
-              tempvec3.y -= LocalPlayer->position.y;
-              tempvec3.z -= LocalPlayer->position.z;
-              float dist =
-                  std::sqrt(tempvec3.x * tempvec3.x + tempvec3.y * tempvec3.y +
-                            tempvec3.z * tempvec3.z);
-              if (RendererGlobal->SRstuff
-                      ->pixelsdepth[i + j * RendererGlobal->SRstuff->pitch] >
-                  dist * 3) {
-                RendererGlobal->SRstuff
-                    ->pixels[i + j * RendererGlobal->SRstuff->pitch] = color;
-                if (dist < 0) dist = 0;
-                RendererGlobal->SRstuff
-                    ->pixelsdepth[i + j * RendererGlobal->SRstuff->pitch] =
-                    (unsigned char)dist * 4;
-              }
-            }
-          }
-          uvw += A;
-        }
-      }
-      uvwrow += B;
-    }
-  }
-}
-
 struct posesresult {
   glm::vec3 pos = glm::vec3(0), scale = glm::vec3(1);
   glm::quat rot = glm::quat(1, 0, 0, 0);
@@ -351,13 +184,18 @@ BoneResult applyboneactions(const uint32_t& bonecode,
 
     boneresult.rot = final_quat * boneresult.rot;
 
+    poseresultthing.scale =
+        glm::vec3(1.0f) +
+        (axisquat * glm::vec3(1, 0, 0)) * (poseresultthing.scale.x - 1.0f) +
+        (axisquat * glm::vec3(0, 1, 0)) * (poseresultthing.scale.y - 1.0f) +
+        (axisquat * glm::vec3(0, 0, 1)) * (poseresultthing.scale.z - 1.0f);
+
     boneresult.scale *= poseresultthing.scale;
 
-    boneresult.head = (final_quat) * (boneresult.head - bone->head);
-    boneresult.head *= boneresult.scale;
+    boneresult.head =
+        (final_quat) * (poseresultthing.scale * (boneresult.head - bone->head));
     boneresult.head += bone->head;
-    boneresult.head += glm::quatLookAt(glm::vec3(0, 1, 0), boneaxis) *
-                       (poseresultthing.pos * bone->restpose.scale);
+    boneresult.head += axisquat * (poseresultthing.pos * bone->restpose.scale);
     boneindex = bone->parent;
   }
   return boneresult;
@@ -658,9 +496,9 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
 
                   pos -= bone->head;
 
-                  pos *= boneresult->scale;
-
                   pos = boneresult->rot * pos;
+
+                  pos *= boneresult->scale;
 
                   pos += boneresult->head;
                   if (boneresult->check) {
@@ -672,10 +510,9 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                                      glm::vec3(0, 0, 1)) *
                       pos;
 
+                pos *= modeltrans->size;
                 pos = modeltrans->rot * pos;
-                pos.x *= modeltrans->size.x;
-                pos.y *= modeltrans->size.y;
-                pos.z *= modeltrans->size.z;
+
                 // if (isUI) {
                 //   pos.y *= -1;
                 // }

@@ -869,6 +869,202 @@ uint32_t getposeindex(const std::string& name) {
   return PosetoInt[name];
 }
 
+bool loadCBM(const std::filesystem::directory_entry& entry) {
+  ModelGroupClass modelgroup;
+  GlobalClass::Model model;
+
+  std::string tempstr = entry.path().filename().string();
+  uint32_t hitboxboneindex = (uint32_t)-1;
+  for (int i = 0; i < 4; i++) tempstr.pop_back();
+  std::string namestr = tempstr;
+  uint32_t poseindex = (uint32_t)-1;
+  FILE* file = fopen(entry.path().string().c_str(), "r");
+  if (file == NULL) {
+    SDL_Log("Impossible to open the file !");
+    return false;
+  }
+  // time to read the contents of the file.
+  while (true) {
+    char lineHeader[128];
+    // read the first word of the line
+    if (fscanf(file, "%s", lineHeader) == EOF) break;
+
+    if (strcmp(lineHeader, "A") == 0) {  // Animation.
+      char name[64];
+      uint32_t animend, animstart;
+      fscanf(file, "%s %u %u\n", name, &animstart, &animend);
+      uint32_t indexthing = getposeindex(name);
+      modelgroup.anim[indexthing][0] = animstart;
+      modelgroup.anim[indexthing][1] = animend;
+      poseindex = indexthing;
+    } else if (strcmp(lineHeader, "SB") == 0) {  // Static(?) Bone.
+      char name[64], parent[64];
+      float roll;
+      glm::vec3 xaxis, yaxis, zaxis;
+      glm::vec3 head, tail;
+      ModelGroupClass::Bone::Pose temppose;
+
+      int what = fscanf(
+          file,
+          "%s %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f "
+          "%f/%f %f %f/%f %f %f %f %s",
+          name, &roll, &xaxis[0], &xaxis[1], &xaxis[2], &yaxis[0], &yaxis[1],
+          &yaxis[2], &zaxis[0], &zaxis[1], &zaxis[2], &head[0], &head[1],
+          &head[2], &tail[0], &tail[1], &tail[2], &temppose.pos[0],
+          &temppose.pos[1], &temppose.pos[2], &temppose.scale[0],
+          &temppose.scale[1], &temppose.scale[2], &temppose.rot[3],
+          &temppose.rot[0], &temppose.rot[1], &temppose.rot[2], parent);
+      uint32_t boneindex = getboneindex(name);
+
+      modelgroup.Bonemap[boneindex].parent = getboneindex(parent);
+      modelgroup.Bonemap[boneindex].xaxis = xaxis;
+      modelgroup.Bonemap[boneindex].yaxis = yaxis;
+      modelgroup.Bonemap[boneindex].zaxis = zaxis;
+      modelgroup.Bonemap[boneindex].head = head;
+      modelgroup.Bonemap[boneindex].tail = tail;
+      modelgroup.Bonemap[boneindex].restpose = temppose;
+      modelgroup.Bonemap[boneindex].roll = roll;
+
+    } else if (strcmp(lineHeader, "FCV") == 0) {  // object visibility
+      char name[64];
+      char newlinecheck = 'w';
+      fscanf(file, "%s\n", name);
+      modelgroup.modelvisibility.try_emplace(poseindex);
+      while (newlinecheck != '\n') {
+        uint32_t index2;
+        float temp;
+        fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+
+        ModelGroupClass::visibilitything tempvisibility;
+        tempvisibility.name = name;
+        tempvisibility.value[index2] = (temp < 0.5f);
+        modelgroup.modelvisibility[poseindex].push_back(tempvisibility);
+      }
+    } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
+      char name[64], thing[64];
+      int index;
+      char newlinecheck = 'w';
+      fscanf(file, "%*48[^\"]\"%48[^\"]\"].%s %d\n ", name, thing, &index);
+      uint32_t boneindex = getboneindex(name);
+      modelgroup.Bonemap.try_emplace(boneindex);
+      if (strcmp(thing, "location") == 0) {
+        while (newlinecheck != '\n') {
+          uint32_t index2;
+          float temp;
+          fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+
+          modelgroup.Bonemap[boneindex].Poses.pos[poseindex].try_emplace(
+              index2);
+          modelgroup.Bonemap[boneindex].Poses.pos[poseindex][index2][index] =
+              temp;
+        }
+      } else if (strcmp(thing, "rotation_quaternion") == 0) {
+        while (newlinecheck != '\n') {
+          uint32_t index2;
+          float temp;
+          fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+
+          modelgroup.Bonemap[boneindex].Poses.rot[poseindex].try_emplace(
+              index2);
+          modelgroup.Bonemap[boneindex]
+              .Poses.rot[poseindex][index2][(index + 3) % 4] = temp;
+        }
+      } else if (strcmp(thing, "scale") == 0) {
+        while (newlinecheck != '\n') {
+          uint32_t index2;
+          float temp;
+          fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+          modelgroup.Bonemap[boneindex].Poses.scale[poseindex].try_emplace(
+              index2);
+          modelgroup.Bonemap[boneindex].Poses.scale[poseindex][index2][index] =
+              temp;
+        }
+      }
+    }  // Object from other file.
+    else if (strcmp(lineHeader, "L") == 0) {
+      char objname[128];
+      fscanf(file, "%s", objname);
+      modelgroup.Models.push_back(objname);
+      SDL_Log("%s", objname);
+    } else if (strcmp(lineHeader, "O") == 0) {  // Object.
+      if (namestr != tempstr) {
+        Global->Modelmap[namestr] = model;
+
+        modelgroup.Models.push_back(namestr);
+        SDL_Log("%s", namestr.c_str());
+      }
+      char objname[128];
+      fscanf(file, "%s", objname);
+      namestr = objname;
+      namestr = tempstr + "/" + namestr;
+      model.faces.clear();
+      model.points.clear();
+      model.texture = "";
+    } else if (strcmp(lineHeader, "P") == 0) {  // Points.
+      GlobalClass::Model::Vertex vertex;
+      char newlinecheck;
+      fscanf(file, "%f %f %f%c", &vertex.pos.x, &vertex.pos.y, &vertex.pos.z,
+             &newlinecheck);
+      while (newlinecheck != '\n') {
+        char name[64];
+        float temp;
+        fscanf(file, "%s %f%c", name, &temp, &newlinecheck);
+        vertex.bone = getboneindex(name);
+      }
+      model.points.push_back(vertex);
+    } else if (strcmp(lineHeader, "F") == 0) {  // Faces.
+      GlobalClass::Model::Face face;
+
+      uint32_t facesize;
+      fscanf(file, "%u", &facesize);
+
+      for (uint32_t i = 0; i < facesize; i++) {
+        uint32_t point;
+        fscanf(file, " %u", &point);
+        face.point.push_back(point);
+      }
+      fscanf(file, "/%f %f %f", &face.normal[0], &face.normal[1],
+             &face.normal[2]);
+
+      for (uint32_t i = 0; i < facesize; i++) {
+        glm::vec2 uv;
+        fscanf(file, "/%f %f", &uv.x, &uv.y);
+        face.uv.push_back(uv);
+      }
+      fscanf(file, "\n");
+
+      model.faces.push_back(face);
+    } else if (strcmp(lineHeader, "H") == 0) {  // Hitbox.
+      char bonename[128];
+      fscanf(file, "%s", bonename);
+      hitboxboneindex = getboneindex(bonename);
+    } else if (strcmp(lineHeader, "HP") == 0) {  // Points.
+      glm::vec3 point;
+      fscanf(file, "%f %f %f\n", &point.x, &point.y, &point.z);
+
+      modelgroup.Bonemap[hitboxboneindex].bonehitbox.points.push_back(point);
+    } else if (strcmp(lineHeader, "HF") == 0) {  // Faces.
+      std::array<uint32_t, 3> face;
+
+      fscanf(file, "%u %u %u\n", &face[0], &face[1], &face[2]);
+
+      modelgroup.Bonemap[hitboxboneindex].bonehitbox.faces.push_back(face);
+    } else if (strcmp(lineHeader, "T") == 0) {  // Textures.
+      char temp[256] = {};
+      fscanf(file, "%s\n", temp);
+      std::string tempstr2(temp);
+      model.texture = tempstr2;
+    }
+  }
+  fclose(file);
+  Global->Modelmap[namestr] = model;
+  SDL_Log("%s", namestr.c_str());
+  modelgroup.Models.push_back(namestr);
+  ModelGroupMap[tempstr] = modelgroup;
+  SDL_Log("%s", namestr.c_str());
+  return true;
+}
+
 // overall initialization function.
 bool init() {
   // initialize SDL
@@ -1181,7 +1377,6 @@ bool init() {
 
   // set the props.
   Global->Models = tempmapdata.props;
-  std::string namestr;
 
   // get all the files in the models folder.
   for (const auto& dir : std::filesystem::directory_iterator(
@@ -1192,205 +1387,9 @@ bool init() {
                dir.path().filename().string() + "/")) {
         // check if file is a .cbm file.
         if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
-          ModelGroupClass modelgroup;
-          GlobalClass::Model model;
-
-          std::string tempstr = entry.path().filename().string();
-          uint32_t hitboxboneindex = (uint32_t)-1;
-          for (int i = 0; i < 4; i++) tempstr.pop_back();
-          namestr = tempstr;
-          uint32_t poseindex = (uint32_t)-1;
-          FILE* file = fopen(entry.path().string().c_str(), "r");
-          if (file == NULL) {
-            SDL_Log("Impossible to open the file !");
+          if (!loadCBM(entry)) {
             return false;
           }
-          // time to read the contents of the file.
-          while (true) {
-            char lineHeader[128];
-            // read the first word of the line
-            if (fscanf(file, "%s", lineHeader) == EOF) break;
-
-            if (strcmp(lineHeader, "A") == 0) {  // Animation.
-              char name[64];
-              uint32_t animend, animstart;
-              fscanf(file, "%s %u %u\n", name, &animstart, &animend);
-              uint32_t indexthing = getposeindex(name);
-              modelgroup.anim[indexthing][0] = animstart;
-              modelgroup.anim[indexthing][1] = animend;
-              poseindex = indexthing;
-            } else if (strcmp(lineHeader, "SB") == 0) {  // Static(?) Bone.
-              char name[64], parent[64];
-              float roll;
-              glm::vec3 xaxis, yaxis, zaxis;
-              glm::vec3 head, tail;
-              ModelGroupClass::Bone::Pose temppose;
-
-              int what = fscanf(
-                  file,
-                  "%s %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f "
-                  "%f/%f %f %f/%f %f %f %f %s",
-                  name, &roll, &xaxis[0], &xaxis[1], &xaxis[2], &yaxis[0],
-                  &yaxis[1], &yaxis[2], &zaxis[0], &zaxis[1], &zaxis[2],
-                  &head[0], &head[1], &head[2], &tail[0], &tail[1], &tail[2],
-                  &temppose.pos[0], &temppose.pos[1], &temppose.pos[2],
-                  &temppose.scale[0], &temppose.scale[1], &temppose.scale[2],
-                  &temppose.rot[3], &temppose.rot[0], &temppose.rot[1],
-                  &temppose.rot[2], parent);
-              uint32_t boneindex = getboneindex(name);
-
-              modelgroup.Bonemap[boneindex].parent = getboneindex(parent);
-              modelgroup.Bonemap[boneindex].xaxis = xaxis;
-              modelgroup.Bonemap[boneindex].yaxis = yaxis;
-              modelgroup.Bonemap[boneindex].zaxis = zaxis;
-              modelgroup.Bonemap[boneindex].head = head;
-              modelgroup.Bonemap[boneindex].tail = tail;
-              modelgroup.Bonemap[boneindex].restpose = temppose;
-              modelgroup.Bonemap[boneindex].roll = roll;
-
-            } else if (strcmp(lineHeader, "FCV") == 0) {  // object visibility
-              char name[64];
-              char newlinecheck = 'w';
-              fscanf(file, "%s\n", name);
-              modelgroup.modelvisibility.try_emplace(poseindex);
-              while (newlinecheck != '\n') {
-                uint32_t index2;
-                float temp;
-                fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-
-                ModelGroupClass::visibilitything tempvisibility;
-                tempvisibility.name = name;
-                tempvisibility.value[index2] = (temp < 0.5f);
-                modelgroup.modelvisibility[poseindex].push_back(tempvisibility);
-              }
-            } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
-              char name[64], thing[64];
-              int index;
-              char newlinecheck = 'w';
-              fscanf(file, "%*48[^\"]\"%48[^\"]\"].%s %d\n ", name, thing,
-                     &index);
-              uint32_t boneindex = getboneindex(name);
-              modelgroup.Bonemap.try_emplace(boneindex);
-              if (strcmp(thing, "location") == 0) {
-                while (newlinecheck != '\n') {
-                  uint32_t index2;
-                  float temp;
-                  fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-
-                  modelgroup.Bonemap[boneindex]
-                      .Poses.pos[poseindex]
-                      .try_emplace(index2);
-                  modelgroup.Bonemap[boneindex]
-                      .Poses.pos[poseindex][index2][index] = temp;
-                }
-              } else if (strcmp(thing, "rotation_quaternion") == 0) {
-                while (newlinecheck != '\n') {
-                  uint32_t index2;
-                  float temp;
-                  fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-
-                  modelgroup.Bonemap[boneindex]
-                      .Poses.rot[poseindex]
-                      .try_emplace(index2);
-                  modelgroup.Bonemap[boneindex]
-                      .Poses.rot[poseindex][index2][(index + 3) % 4] = temp;
-                }
-              } else if (strcmp(thing, "scale") == 0) {
-                while (newlinecheck != '\n') {
-                  uint32_t index2;
-                  float temp;
-                  fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-                  modelgroup.Bonemap[boneindex]
-                      .Poses.scale[poseindex]
-                      .try_emplace(index2);
-                  modelgroup.Bonemap[boneindex]
-                      .Poses.scale[poseindex][index2][index] = temp;
-                }
-              }
-            }  // Object from other file.
-            else if (strcmp(lineHeader, "L") == 0) {
-              char objname[128];
-              fscanf(file, "%s", objname);
-              modelgroup.Models.push_back(objname);
-              SDL_Log("%s", objname);
-            } else if (strcmp(lineHeader, "O") == 0) {  // Object.
-              if (namestr != tempstr) {
-                Global->Modelmap[namestr] = model;
-
-                modelgroup.Models.push_back(namestr);
-                SDL_Log("%s", namestr.c_str());
-              }
-              char objname[128];
-              fscanf(file, "%s", objname);
-              namestr = objname;
-              namestr = tempstr + "/" + namestr;
-              model.faces.clear();
-              model.points.clear();
-              model.texture = "";
-            } else if (strcmp(lineHeader, "P") == 0) {  // Points.
-              GlobalClass::Model::Vertex vertex;
-              char newlinecheck;
-              fscanf(file, "%f %f %f%c", &vertex.pos.x, &vertex.pos.y,
-                     &vertex.pos.z, &newlinecheck);
-              while (newlinecheck != '\n') {
-                char name[64];
-                float temp;
-                fscanf(file, "%s %f%c", name, &temp, &newlinecheck);
-                vertex.bone = getboneindex(name);
-              }
-              model.points.push_back(vertex);
-            } else if (strcmp(lineHeader, "F") == 0) {  // Faces.
-              GlobalClass::Model::Face face;
-
-              uint32_t facesize;
-              fscanf(file, "%u", &facesize);
-
-              for (uint32_t i = 0; i < facesize; i++) {
-                uint32_t point;
-                fscanf(file, " %u", &point);
-                face.point.push_back(point);
-              }
-              fscanf(file, "/%f %f %f", &face.normal[0], &face.normal[1],
-                     &face.normal[2]);
-
-              for (uint32_t i = 0; i < facesize; i++) {
-                glm::vec2 uv;
-                fscanf(file, "/%f %f", &uv.x, &uv.y);
-                face.uv.push_back(uv);
-              }
-              fscanf(file, "\n");
-
-              model.faces.push_back(face);
-            } else if (strcmp(lineHeader, "H") == 0) {  // Hitbox.
-              char bonename[128];
-              fscanf(file, "%s", bonename);
-              hitboxboneindex = getboneindex(bonename);
-            } else if (strcmp(lineHeader, "HP") == 0) {  // Points.
-              glm::vec3 point;
-              fscanf(file, "%f %f %f\n", &point.x, &point.y, &point.z);
-
-              modelgroup.Bonemap[hitboxboneindex].bonehitbox.points.push_back(
-                  point);
-            } else if (strcmp(lineHeader, "HF") == 0) {  // Faces.
-              std::array<uint32_t, 3> face;
-
-              fscanf(file, "%u %u %u\n", &face[0], &face[1], &face[2]);
-
-              modelgroup.Bonemap[hitboxboneindex].bonehitbox.faces.push_back(
-                  face);
-            } else if (strcmp(lineHeader, "T") == 0) {  // Textures.
-              char temp[256] = {};
-              fscanf(file, "%s\n", temp);
-              std::string tempstr2(temp);
-              model.texture = tempstr2;
-            }
-          }
-          fclose(file);
-          Global->Modelmap[namestr] = model;
-          SDL_Log("%s", namestr.c_str());
-          modelgroup.Models.push_back(namestr);
-          ModelGroupMap[tempstr] = modelgroup;
-          SDL_Log("%s", namestr.c_str());
         } else if (entry.is_regular_file() &&
                    entry.path().extension() == ".png") {  // Load Textures.
           if (!loadPNG(entry.path())) SDL_Log("Texture load fail!");
