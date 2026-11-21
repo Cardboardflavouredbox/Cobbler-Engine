@@ -10,9 +10,12 @@ uniform mat4 model;
 uniform mat4 UIreversemodel;
 
 uniform uint bonelist[64];
+uniform uint parentlist[64];
 uniform mat4 restmat[64];
 uniform vec3 bonehead[64];
-uniform mat4 resultbonemat[64];
+uniform vec3 resultbonepos[64];
+uniform vec4 resultbonequat[64];
+uniform vec3 resultbonescale[64];
 uniform int resultbonecheck[64];
 uniform mat4 transformmat;
 
@@ -31,6 +34,14 @@ int getboneindexreal() {
       return i;
   }
   return 0;
+}
+
+int getparentindexreal(int bone) {
+  for (int i = 0; i < 64; i++) {
+    if (parentlist[bone] == bonelist[i])
+      return i;
+  }
+  return -1;
 }
 
 vec3 qtransform(vec4 q, vec3 v) {
@@ -61,25 +72,51 @@ void main() {
 
   if (actioncount > 0 && actionsize > 0) {
     int index = getboneindexreal();
-    for (int i = 0; i < 8; i++) {
-      result = vec4(aPos, 1.0);
-      vec4 resultcheck = result;
-
-      NormalResult = aNormal;
-
-      result = restmat[index + i * actionsize] * result;
-
-      result -= vec4(bonehead[index + i * actionsize], 0.0);
-
-      result = resultbonemat[index + i * actionsize] * result;
-
-      NormalResult = mat3(restmat[index + i * actionsize]) * NormalResult;
-      NormalResult = mat3(resultbonemat[index + i * actionsize]) * NormalResult;
-
+    int i = 0;
+    for (i = 0; i < 8; i++) {
       if (resultbonecheck[index + i * actionsize] != 0 ||
           i >= actioncount - 1) {
         break;
       }
+    }
+    result = vec4(aPos, 1.0);
+    vec4 resultcheck = result;
+
+    NormalResult = aNormal;
+
+    result = restmat[index + i * actionsize] * result;
+
+    result -= vec4(bonehead[index + i * actionsize], 0.0);
+
+    // result = resultbonescale[index + i * actionsize] * result;
+
+    result = vec4(
+        qtransform(resultbonequat[index + i * actionsize], result.xyz), 1.0);
+
+    vec3 postemp = resultbonepos[index + i * actionsize];
+    result.x += postemp.x;
+    result.y += postemp.y;
+    result.z += postemp.z;
+
+    NormalResult = mat3(restmat[index + i * actionsize]) * NormalResult;
+    NormalResult =
+        qtransform(resultbonequat[index + i * actionsize], NormalResult.xyz);
+
+    int parentindex = index;
+    for (int j = 0; j < 8; j++) {
+      result -= vec4(bonehead[parentindex + i * actionsize], 0.0);
+
+      vec3 scaletemp = resultbonescale[parentindex + i * actionsize];
+
+      result.x *= scaletemp.x;
+      result.y *= scaletemp.y;
+      result.z *= scaletemp.z;
+
+      result += vec4(bonehead[parentindex + i * actionsize], 0.0);
+
+      parentindex = getparentindexreal(parentindex);
+      if (parentindex == -1)
+        break;
     }
   }
 

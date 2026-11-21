@@ -180,17 +180,21 @@ BoneResult applyboneactions(const uint32_t& bonecode,
           poseresultthing.scale != glm::vec3(1) ||
           final_quat != glm::quat(1, 0, 0, 0))
         boneresult.check = true;
+
+      glm::quat scalething = glm::rotation(glm::vec3(0, 0, 1), axis);
+
+      poseresultthing.scale = glm::vec3(1.0f) +
+                              glm::abs(scalething * glm::vec3(1, 0, 0)) *
+                                  (poseresultthing.scale.x - 1.0f) +
+                              glm::abs(scalething * glm::vec3(0, 1, 0)) *
+                                  (poseresultthing.scale.y - 1.0f) +
+                              glm::abs(scalething * glm::vec3(0, 0, 1)) *
+                                  (poseresultthing.scale.z - 1.0f);
+
+      boneresult.scale = poseresultthing.scale;
     }
 
     boneresult.rot = final_quat * boneresult.rot;
-
-    poseresultthing.scale =
-        glm::vec3(1.0f) +
-        (axisquat * glm::vec3(1, 0, 0)) * (poseresultthing.scale.x - 1.0f) +
-        (axisquat * glm::vec3(0, 1, 0)) * (poseresultthing.scale.y - 1.0f) +
-        (axisquat * glm::vec3(0, 0, 1)) * (poseresultthing.scale.z - 1.0f);
-
-    boneresult.scale *= poseresultthing.scale;
 
     boneresult.head =
         (final_quat) * (poseresultthing.scale * (boneresult.head - bone->head));
@@ -399,9 +403,6 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
             BoneResult* boneresult =
                 &BoneResultmapVector[j][modeltrans->Bonecodevec[i]];
 
-            glm::mat4 resultbonemat = transtomatrix(
-                boneresult->head, boneresult->scale, boneresult->rot);
-
             int index = j * actionsize + i;
 
             glUniform1ui(
@@ -409,6 +410,12 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                     shadertemp,
                     ("bonelist[" + std::to_string(index) + "]").c_str()),
                 modeltrans->Bonecodevec[i]);
+
+            glUniform1ui(
+                glGetUniformLocation(
+                    shadertemp,
+                    ("parentlist[" + std::to_string(index) + "]").c_str()),
+                bone->parent);
 
             glUniform1i(
                 glGetUniformLocation(
@@ -428,11 +435,24 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
                     ("bonehead[" + std::to_string(index) + "]").c_str()),
                 bone->head.x, bone->head.y, bone->head.z);
 
-            glUniformMatrix4fv(
+            glUniform3f(
                 glGetUniformLocation(
                     shadertemp,
-                    ("resultbonemat[" + std::to_string(index) + "]").c_str()),
-                1, GL_FALSE, glm::value_ptr(resultbonemat));
+                    ("resultbonepos[" + std::to_string(index) + "]").c_str()),
+                boneresult->head.x, boneresult->head.y, boneresult->head.z);
+
+            glUniform3f(
+                glGetUniformLocation(
+                    shadertemp,
+                    ("resultbonescale[" + std::to_string(index) + "]").c_str()),
+                boneresult->scale.x, boneresult->scale.y, boneresult->scale.z);
+
+            glUniform4f(
+                glGetUniformLocation(
+                    shadertemp,
+                    ("resultbonequat[" + std::to_string(index) + "]").c_str()),
+                boneresult->rot.x, boneresult->rot.y, boneresult->rot.z,
+                boneresult->rot.w);
           }
         }
 
@@ -483,12 +503,15 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
 
                 for (auto& boneresultmap : BoneResultmapVector) {
                   pos = checkpos;
-                  BoneResult* boneresult =
-                      &boneresultmap[model->points[model->faces[j].point[k]]
-                                         .bone];
-                  ModelGroupClass::Bone* bone =
-                      &modelgroup->Bonemap
-                           [model->points[model->faces[j].point[k]].bone];
+
+                  uint32_t bonecode =
+                      model->points[model->faces[j].point[k]].bone;
+
+                  bonecode = model->points[model->faces[j].point[k]].bone;
+
+                  BoneResult* boneresult = &boneresultmap[bonecode];
+
+                  ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
 
                   pos *= bone->restpose.scale;
                   pos = bone->restpose.rot * pos;
@@ -498,9 +521,22 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
 
                   pos = boneresult->rot * pos;
 
-                  pos *= boneresult->scale;
-
                   pos += boneresult->head;
+
+                  while (bonecode != uint32_t(-1)) {
+                    ModelGroupClass::Bone* bone =
+                        &modelgroup->Bonemap[bonecode];
+                    BoneResult* boneresult = &boneresultmap[bonecode];
+                    pos -= bone->head;
+
+                    pos *= boneresult->scale;
+
+                    pos += bone->head;
+
+                    bonecode = bone->parent;
+                    bone = &modelgroup->Bonemap[bonecode];
+                  }
+
                   if (boneresult->check) {
                     break;
                   }
