@@ -495,9 +495,15 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
               glEnable(GL_TEXTURE_2D);
               glBindTexture(GL_TEXTURE_2D,
                             RendererGlobal->GLstuff->textures[model->texture]);
-              glBegin(GL_TRIANGLES);
-              glm::vec3 tri[3];
-              for (int k = 2; k >= 0; k--) {
+              int facesize = model->faces[j].point.size();
+              if (facesize == 4) {
+                glBegin(GL_QUADS);
+              } else {
+                glBegin(GL_TRIANGLES);
+              }
+              glm::vec3 tri[4];
+
+              for (int k = facesize - 1; k >= 0; k--) {
                 glm::vec3 pos = model->points[model->faces[j].point[k]].pos;
                 glm::vec3 checkpos = pos;
 
@@ -562,7 +568,7 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
               float angle = (glm::dot(normal, lookdir) + 1.f) / 3.f + 0.25f;
               glColor3f(angle, angle, angle);
 
-              for (int k = 2; k >= 0; k--) {
+              for (int k = facesize - 1; k >= 0; k--) {
                 glTexCoord2f(model->faces[j].uv[k].x,
                              1 - model->faces[j].uv[k].y);
                 glVertex3f(tri[k].x, tri[k].y, tri[k].z);
