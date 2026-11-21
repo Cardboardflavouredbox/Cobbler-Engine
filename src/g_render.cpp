@@ -101,11 +101,23 @@ void ModelGroupsethitboxes(Entity* entity) {
 
         pos -= bone.head;
 
-        pos *= boneresult->scale;
-
         pos = boneresult->rot * pos;
 
         pos += boneresult->head;
+
+        uint32_t bonecode = index;
+        while (bonecode != uint32_t(-1)) {
+          ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
+          BoneResult* boneresult = &boneresultmap[bonecode];
+          pos -= bone->head;
+
+          pos *= boneresult->scale;
+
+          pos += bone->head;
+
+          bonecode = bone->parent;
+          bone = &modelgroup->Bonemap[bonecode];
+        }
         if (boneresult->check) {
           break;
         }
@@ -122,8 +134,7 @@ void ModelGroupsethitboxes(Entity* entity) {
       pos += modeltrans->position;
       bone.bonehitbox.processedpoints.push_back(pos);
     }
-    if (Global->IsDebug && Settings->graphicsmode == OpenGL1 &&
-        entity != LocalPlayer) {
+    if (Global->IsDebug && Settings->graphicsmode == OpenGL1) {
       for (auto& face : bone.bonehitbox.faces) {
         glBegin(GL_TRIANGLES);
         for (int j = 2; j >= 0; j--) {
