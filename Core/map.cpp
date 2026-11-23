@@ -21,7 +21,7 @@ void LoadMapGL(bool IsOldGL, bool DebugSeeHitboxes) {
         glBegin(GL_TRIANGLES);
         for (int j = 2; j >= 0; j--) {
           glm::vec3 pos = GlobalMapBSP->Points[face[j]];
-          glColor3f(0, 0, (j + 1) / 3.f);
+          glColor3f(j / 2, j % 2, j == 0 ? 1 : 0);
           glVertex3f(pos.x, pos.y, pos.z);
         }
         glEnd();

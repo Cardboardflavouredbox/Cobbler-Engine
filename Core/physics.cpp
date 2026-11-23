@@ -324,7 +324,7 @@ bool BSPthing(glm::vec3 pos, float radius, int index,
   for (auto& i : GlobalMapBSP->BSPtree[index].Faces) out.push_back(i);
 
   float tempdist = pointSideCheck(pos, bspthing->plane);
-  if (std::fabs(tempdist) <= radius * 2.25f) {
+  if (std::fabs(tempdist) <= radius * 1.75f) {
     bool A = BSPthing(pos, radius, bspthing->A, out),
          B = BSPthing(pos, radius, bspthing->B, out);
     return (A || B);
@@ -394,8 +394,8 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
   glm::vec3 playerpos = checkposition + hitbox[0] / 2.f + hitbox[1] / 2.f;
 
   std::vector<std::array<uint32_t, 3>> Faces;
-  bool solid = BSPthing(playerpos, radius + glm::distance(hitbox[1], hitbox[0]),
-                        0, Faces);
+  bool solid = BSPthing(
+      playerpos, 2.f * radius + glm::distance(hitbox[1], hitbox[0]), 0, Faces);
 
   if (solid) {
     Faces.clear();
@@ -623,12 +623,10 @@ void EntityMove(Entity* tempentity) {
       if (anglething < 0) anglething *= -1;
       if (anglething > 135) {
         tempentity->IsGrounded = true;
-        tempentity->velocityvec3.z = -0.1f;
         break;
       } else if (anglething < 45) {
         tempentity->IsGrounded = false;
         tempentity->Collided = true;
-        tempentity->velocityvec3.z = -0.1f;
         break;
       } else {
         tempnormal.z = 0;
@@ -654,7 +652,6 @@ void EntityMove(Entity* tempentity) {
         }
         if (result == 0) {
           tempentity->IsGrounded = true;
-          tempentity->velocityvec3.z = -0.1f;
           tempposition.z -= tempentity->hitboxradius - disttempbase;
           break;
         } else {
@@ -683,5 +680,13 @@ void EntityMove(Entity* tempentity) {
   tempentity->velocityvec3.x = tempvec.x;
   tempentity->velocityvec3.y = tempvec.y;
 
-  if (tempentity->IsGrounded) tempentity->Collided = true;
+  if (tempentity->IsGrounded) {
+    if (tempentity->IsGroundedTimer >= 0.25f)
+      tempentity->velocityvec3.z = -0.1f;
+    else
+      tempentity->IsGroundedTimer += dt;
+    tempentity->Collided = true;
+  } else {
+    tempentity->IsGroundedTimer = 0;
+  }
 }

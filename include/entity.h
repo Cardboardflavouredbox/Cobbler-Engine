@@ -79,6 +79,9 @@ struct Entity {
   float hitboxlength;
   float hitboxradius;
   bool IsGrounded, Collided = false;
+
+  float IsGroundedTimer = 0.f;
+
   Modeltransform* Modelthing;
   LIB_API void setup(uint32_t Index, std::string path);
 
