@@ -417,46 +417,6 @@ glm::vec3 movecollisioncheck(glm::vec3 hitbox[], glm::vec3 checkposition,
       }
     }
   }
-  for (auto& i : Entities) {
-    Entity* tempentity = i.second;
-    if (tempentity->teamindex != teamindex) {
-      raycheckresult temp = capsuleraycheck(
-          hitbox[0] + checkposition, hitbox[1] + checkposition,
-          glm::vec3(0, 0, tempentity->hitboxradius) + tempentity->position,
-          glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius) +
-              tempentity->position);
-      glm::vec3 normal = glm::normalize(temp.B - temp.A);
-      if (temp.dist < radius + tempentity->hitboxradius &&
-          (resultthing.dist == 0 ||
-           resultthing.dist > -temp.dist + tempentity->hitboxradius)) {
-        result = normal;
-        resultthing.dist = -temp.dist + tempentity->hitboxradius;
-        resultthing.CollidedWithPlayer = false;
-        resultthing.CollidedwithEntityAtAll = true;
-        resultthing.collidedID = i.first;
-      }
-    }
-  }
-  for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
-    Entity* tempentity = i.second.PlayerEntity;
-    if (tempentity->teamindex != teamindex) {
-      raycheckresult temp = capsuleraycheck(
-          hitbox[0] + checkposition, hitbox[1] + checkposition,
-          glm::vec3(0, 0, tempentity->hitboxradius) + tempentity->position,
-          glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius) +
-              tempentity->position);
-      glm::vec3 normal = glm::normalize(temp.B - temp.A);
-      if (temp.dist < radius + tempentity->hitboxradius &&
-          (resultthing.dist == 0 ||
-           resultthing.dist > -temp.dist + tempentity->hitboxradius)) {
-        result = normal;
-        resultthing.dist = -temp.dist + tempentity->hitboxradius;
-        resultthing.CollidedWithPlayer = true;
-        resultthing.CollidedwithEntityAtAll = true;
-        resultthing.collidedID = i.first;
-      }
-    }
-  }
   resultinfo = resultthing;
   return result;
 }

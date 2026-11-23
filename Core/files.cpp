@@ -1468,18 +1468,17 @@ bool init() {
 
   playerluastuff->lua["EntitySpawn"] = EntitySpawn;
 
-  playerluastuff->lua["HitScanAttack"] = HitScanAttack;
-
   playerluastuff->lua.collect_garbage();
 
   UIsetup();
 
-  EntitySpawnInfo tempinfo;
+  // EntitySpawnInfo tempinfo;
 
-  tempinfo.name = "Arthur";
-  tempinfo.position[2] = 15;
+  // tempinfo.name = "Arthur";
+  // tempinfo.position[2] = 15;
+  // tempinfo.teamindex = 1;
 
-  EntitySpawn(tempinfo, false);
+  // EntitySpawn(tempinfo, false);
 
   return true;
 }

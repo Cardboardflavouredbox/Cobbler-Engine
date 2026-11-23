@@ -621,6 +621,85 @@ void HitScanAttack(float damage, float xrot, float yrot) {
                 true);
 }
 
+// add checks for walls later!
+void MeleeAttack(Entity* entity, float damage, float range, float degrees) {
+  glm::vec3 dir = LookdirToVec3(entity->dir);
+
+  EntityDamageInfo infothing;
+  infothing.damage = damage;
+  infothing.push = 16.f;
+  infothing.FromPlayer = false;
+  infothing.SourceEntityIndex = entity->EntityIndex;
+
+  std::queue<Entity*> tempque;
+  for (auto& i : Entities) tempque.push(i.second);
+  for (auto& i : GlobalNetworkStuff->PlayerNetStuff)
+    tempque.push(i.second.PlayerEntity);
+
+  while (!tempque.empty()) {
+    Entity* tempentity = tempque.front();
+    tempque.pop();
+
+    if (tempentity->teamindex != entity->teamindex &&
+        glm::distance(tempentity->position, entity->position) <= range) {
+      glm::vec3 entitydir =
+          glm::normalize(tempentity->position - entity->position);
+
+      float dot = glm::dot(dir, entitydir);
+      dot = glm::clamp(dot, -1.0f, 1.0f);
+
+      if (glm::degrees(glm::acos(dot)) < degrees / 2) {
+        for (int i = 0; i < 3; i++) infothing.pushdir[i] = entitydir[i];
+        infothing.TargetEntityIndex = tempentity->EntityIndex;
+
+        if (Entities.contains(tempentity->EntityIndex) &&
+            tempentity == Entities[tempentity->EntityIndex])
+          infothing.TargetIsPlayer = false;
+        else
+          infothing.TargetIsPlayer = true;
+        DamageEntity(infothing, true);
+      }
+    }
+  }
+}
+
+void Entitypushaway(Entity* entity) {
+  for (auto& i : Entities) {
+    Entity* tempentity = i.second;
+    if (tempentity != entity) {
+      raycheckresult temp = capsuleraycheck(
+          glm::vec3(0, 0, entity->hitboxradius) + entity->position,
+          glm::vec3(0, 0, entity->hitboxlength - entity->hitboxradius) +
+              entity->position,
+          glm::vec3(0, 0, tempentity->hitboxradius) + tempentity->position,
+          glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius) +
+              tempentity->position);
+      glm::vec3 normal = glm::normalize(temp.A - temp.B);
+      if (temp.dist < entity->hitboxradius + tempentity->hitboxradius) {
+        entity->velocityvec3 += normal * 0.75f;
+        tempentity->velocityvec3 -= normal * 0.75f;
+      }
+    }
+  }
+  for (auto& i : GlobalNetworkStuff->PlayerNetStuff) {
+    Entity* tempentity = i.second.PlayerEntity;
+    if (tempentity != entity) {
+      raycheckresult temp = capsuleraycheck(
+          glm::vec3(0, 0, entity->hitboxradius) + entity->position,
+          glm::vec3(0, 0, entity->hitboxlength - entity->hitboxradius) +
+              entity->position,
+          glm::vec3(0, 0, tempentity->hitboxradius) + tempentity->position,
+          glm::vec3(0, 0, tempentity->hitboxlength - tempentity->hitboxradius) +
+              tempentity->position);
+      glm::vec3 normal = glm::normalize(temp.A - temp.B);
+      if (temp.dist < entity->hitboxradius + tempentity->hitboxradius) {
+        entity->velocityvec3 += normal * 0.75f;
+        tempentity->velocityvec3 -= normal * 0.75f;
+      }
+    }
+  }
+}
+
 void LocalClassUpdate() {
   playerluastuff->lua["state"] = (float)LocalPlayer->State;
   playerluastuff->lua["Keys"][SDL_SCANCODE_LSHIFT] =
@@ -680,6 +759,10 @@ void fixedupdate() {
     for (auto& i : LocalDamageLocations) {
       i.lifetime -= updatedeltaTime;
     }
+
+    for (auto& i : Entities) Entitypushaway(i.second);
+    for (auto& i : GlobalNetworkStuff->PlayerNetStuff)
+      Entitypushaway(i.second.PlayerEntity);
   }
 
   while (!LocalDamageLocations.empty() &&

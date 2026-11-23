@@ -100,6 +100,9 @@ LIB_API extern std::queue<uint32_t> EntitydeleteQueue;
 LIB_API extern std::unordered_map<std::string, std::queue<Entity*>> EntityPool;
 
 extern "C" {
+LIB_API void HitScanAttack(float damage, float xrot, float yrot);
+LIB_API void MeleeAttack(Entity* entity, float damage, float range,
+                         float degrees);
 LIB_API uint32_t EntityMapEmptyIndex();
 LIB_API uint32_t EntitySpawn(EntitySpawnInfo Entityinfo, bool OnlineSend);
 LIB_API void DamageEntity(EntityDamageInfo damageinfo, bool FromLocalPlayer);

@@ -137,6 +137,9 @@ void Entity::setup(uint32_t Index, std::string path) {
 
   lua["LookdirToVec3"] = LookdirToVec3;
 
+  lua["HitScanAttack"] = HitScanAttack;
+  lua["MeleeAttack"] = MeleeAttack;
+
   std::string scriptpath =
       Global->GameFolder.string() + "/class/" + path + "/entitymain.lua";
 
