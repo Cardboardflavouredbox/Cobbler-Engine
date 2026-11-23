@@ -789,12 +789,20 @@ void fixedupdate() {
           GlobalNetworkStuff->RecvEntity->velocityvec3.z < 0.125f) {
         GlobalNetworkStuff->RecvEntity->velocityvec3.z =
             LocalPlayer->velocityvec3.z;
-        LocalPlayer->velocityvec3 =
-            GlobalNetworkStuff->RecvEntity->velocityvec3;
-      } else {
-        LocalPlayer->velocityvec3 =
-            GlobalNetworkStuff->RecvEntity->velocityvec3;
       }
+      LocalPlayer->velocityvec3.z =
+          GlobalNetworkStuff->RecvEntity->velocityvec3.z;
+
+      glm::vec2 localvec2 = {LocalPlayer->velocityvec3.x,
+                             LocalPlayer->velocityvec3.y},
+                recvvec2 = {GlobalNetworkStuff->RecvEntity->velocityvec3.x,
+                            GlobalNetworkStuff->RecvEntity->velocityvec3.y};
+      if (glm::length(localvec2) > 7.5f && glm::length(recvvec2) < 1.5f) {
+        recvvec2 = localvec2;
+      }
+
+      LocalPlayer->velocityvec3.x = recvvec2.x;
+      LocalPlayer->velocityvec3.y = recvvec2.y;
     }
   }
 
