@@ -44,6 +44,8 @@ LocalEntityNetData* LocalPlayerNetData;
 FreetypeClass* Freetypething;
 // Map of ModelGroups. Refer to the ModelGroupClass class to see what that is.
 std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
+// Map of Animations.
+std::unordered_map<uint32_t, ModelAnim> AnimMap;
 // pointer to Camera.
 CameraClass* Camera;
 

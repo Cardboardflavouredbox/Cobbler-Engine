@@ -869,6 +869,65 @@ uint32_t getposeindex(const std::string& name) {
   return PosetoInt[name];
 }
 
+void loadAnim(const std::filesystem::directory_entry& entry) {
+  ModelGroupClass modelgroup;
+  GlobalClass::Model model;
+
+  uint32_t poseindex = (uint32_t)-1;
+  FILE* file = fopen(entry.path().string().c_str(), "r");
+  while (true) {
+    char lineHeader[128];
+    // read the first word of the line
+    if (fscanf(file, "%s", lineHeader) == EOF) break;
+    if (strcmp(lineHeader, "A") == 0) {  // Animation.
+      char name[64];
+      uint32_t animend, animstart;
+      fscanf(file, "%s %u %u\n", name, &animstart, &animend);
+      uint32_t indexthing = getposeindex(name);
+      AnimMap[indexthing].animstartend[0] = animstart;
+      AnimMap[indexthing].animstartend[1] = animend;
+      poseindex = indexthing;
+    } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
+      char name[64], thing[64];
+      int index;
+      char newlinecheck = 'w';
+      fscanf(file, "%*48[^\"]\"%48[^\"]\"].%s %d\n ", name, thing, &index);
+      uint32_t boneindex = getboneindex(name);
+      modelgroup.Bonemap.try_emplace(boneindex);
+      if (strcmp(thing, "location") == 0) {
+        while (newlinecheck != '\n') {
+          uint32_t index2;
+          float temp;
+          fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+
+          AnimMap[poseindex].Poses[boneindex].pos.try_emplace(index2);
+          AnimMap[poseindex].Poses[boneindex].pos[index2][index] = temp;
+        }
+      } else if (strcmp(thing, "rotation_quaternion") == 0) {
+        while (newlinecheck != '\n') {
+          uint32_t index2;
+          float temp;
+          fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+
+          AnimMap[poseindex].Poses[boneindex].rot.try_emplace(index2);
+          AnimMap[poseindex].Poses[boneindex].rot[index2][(index + 3) % 4] =
+              temp;
+        }
+      } else if (strcmp(thing, "scale") == 0) {
+        while (newlinecheck != '\n') {
+          uint32_t index2;
+          float temp;
+          fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
+
+          AnimMap[poseindex].Poses[boneindex].scale.try_emplace(index2);
+          AnimMap[poseindex].Poses[boneindex].scale[index2][index] = temp;
+        }
+      }
+    }
+  }
+  fclose(file);
+}
+
 bool loadCBM(const std::filesystem::directory_entry& entry) {
   ModelGroupClass modelgroup;
   GlobalClass::Model model;
@@ -889,15 +948,7 @@ bool loadCBM(const std::filesystem::directory_entry& entry) {
     // read the first word of the line
     if (fscanf(file, "%s", lineHeader) == EOF) break;
 
-    if (strcmp(lineHeader, "A") == 0) {  // Animation.
-      char name[64];
-      uint32_t animend, animstart;
-      fscanf(file, "%s %u %u\n", name, &animstart, &animend);
-      uint32_t indexthing = getposeindex(name);
-      modelgroup.anim[indexthing][0] = animstart;
-      modelgroup.anim[indexthing][1] = animend;
-      poseindex = indexthing;
-    } else if (strcmp(lineHeader, "SB") == 0) {  // Static(?) Bone.
+    if (strcmp(lineHeader, "SB") == 0) {  // Static(?) Bone.
       char name[64], parent[64];
       float roll;
       glm::vec3 xaxis, yaxis, zaxis;
@@ -925,61 +976,6 @@ bool loadCBM(const std::filesystem::directory_entry& entry) {
       modelgroup.Bonemap[boneindex].restpose = temppose;
       modelgroup.Bonemap[boneindex].roll = roll;
 
-    } else if (strcmp(lineHeader, "FCV") == 0) {  // object visibility
-      char name[64];
-      char newlinecheck = 'w';
-      fscanf(file, "%s\n", name);
-      modelgroup.modelvisibility.try_emplace(poseindex);
-      while (newlinecheck != '\n') {
-        uint32_t index2;
-        float temp;
-        fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-
-        ModelGroupClass::visibilitything tempvisibility;
-        tempvisibility.name = name;
-        tempvisibility.value[index2] = (temp < 0.5f);
-        modelgroup.modelvisibility[poseindex].push_back(tempvisibility);
-      }
-    } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
-      char name[64], thing[64];
-      int index;
-      char newlinecheck = 'w';
-      fscanf(file, "%*48[^\"]\"%48[^\"]\"].%s %d\n ", name, thing, &index);
-      uint32_t boneindex = getboneindex(name);
-      modelgroup.Bonemap.try_emplace(boneindex);
-      if (strcmp(thing, "location") == 0) {
-        while (newlinecheck != '\n') {
-          uint32_t index2;
-          float temp;
-          fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-
-          modelgroup.Bonemap[boneindex].Poses.pos[poseindex].try_emplace(
-              index2);
-          modelgroup.Bonemap[boneindex].Poses.pos[poseindex][index2][index] =
-              temp;
-        }
-      } else if (strcmp(thing, "rotation_quaternion") == 0) {
-        while (newlinecheck != '\n') {
-          uint32_t index2;
-          float temp;
-          fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-
-          modelgroup.Bonemap[boneindex].Poses.rot[poseindex].try_emplace(
-              index2);
-          modelgroup.Bonemap[boneindex]
-              .Poses.rot[poseindex][index2][(index + 3) % 4] = temp;
-        }
-      } else if (strcmp(thing, "scale") == 0) {
-        while (newlinecheck != '\n') {
-          uint32_t index2;
-          float temp;
-          fscanf(file, "%u/%f%c", &index2, &temp, &newlinecheck);
-          modelgroup.Bonemap[boneindex].Poses.scale[poseindex].try_emplace(
-              index2);
-          modelgroup.Bonemap[boneindex].Poses.scale[poseindex][index2][index] =
-              temp;
-        }
-      }
     }  // Object from other file.
     else if (strcmp(lineHeader, "L") == 0) {
       char objname[128];
@@ -1382,11 +1378,18 @@ bool init() {
   for (const auto& dir : std::filesystem::directory_iterator(
            Global->GameFolder.string() + "/models/")) {
     if (dir.is_directory()) {
-      for (const auto& entry : std::filesystem::directory_iterator(
-               Global->GameFolder.string() + "/models/" +
-               dir.path().filename().string() + "/")) {
-        // check if file is a .cbm file.
-        if (entry.is_regular_file() && entry.path().extension() == ".cbm") {
+      for (const auto& entry :
+           std::filesystem::directory_iterator(dir.path().string())) {
+        if (entry.is_directory()) {
+          for (const auto& subentry :
+               std::filesystem::directory_iterator(entry.path().string())) {
+            if (subentry.is_regular_file() &&
+                subentry.path().extension() == ".anim")
+              loadAnim(subentry);
+          }
+        } else if (entry.is_regular_file() &&
+                   entry.path().extension() ==
+                       ".cbm") {  // check if file is a .cbm file.
           if (!loadCBM(entry)) {
             return false;
           }

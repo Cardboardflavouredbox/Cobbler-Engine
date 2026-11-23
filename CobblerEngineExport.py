@@ -1,70 +1,36 @@
 import bpy
 
+
 def actionset(action):
     for ob in bpy.data.objects:
-        if not ob.animation_data: continue
+        if not ob.animation_data:
+            continue
 
         # Set the active action
         ob.animation_data.action = action
 
-def actionthing(action, f):
-    if action and action.layers:
-        actionset(action)
-        first_layer = action.layers[0]
-        first_strip = first_layer.strips[0]
-        
-        
-        start_frame = action.frame_range[0]
-        end_frame = action.frame_range[1]
-        
-        f.write(f"A {action.name} {start_frame:.0f} {end_frame:.0f}\n")
-
-        # Extract keyframe points for each F-Curve (e.g., location, rotation, scale channels)
-        
-        for slot in action.slots:
-            # Retrieve the specific channel bag for the slot
-            channel_bag = first_strip.channelbag(slot)
-            
-            if channel_bag and channel_bag.fcurves:
-                for fcurve in channel_bag.fcurves:
-                    if fcurve.data_path == 'hide_viewport':
-                        templist = slot.users()
-                        
-                        for i in templist:
-                            f.write(f"FCV {bpy.path.display_name_from_filepath(i.override_library.reference.library.filepath)}/{i.override_library.reference.name}\n")
-                    else:
-                        f.write(f"FC {fcurve.data_path} {fcurve.array_index}\n")
-                    for keyframe in fcurve.keyframe_points:
-                        frame_number = keyframe.co[0]
-                        curve_value = keyframe.co[1]
-                        f.write(f" {frame_number:.0f}/{curve_value:f}")
-                    f.write(f"\n")
 
 def write_some_data(context, filepath):
     print("running write_some_data...")
-    f = open(filepath, "w", encoding='utf-8')
-    
+    f = open(filepath, "w", encoding="utf-8")
+
     scene = bpy.context.scene
     selected_objects = bpy.data.objects
-                
-    for action in bpy.data.actions:
-        if action.library is None:
-            actionthing(action, f)
-            
+
     for obj in selected_objects:
-        if obj and obj.type == 'ARMATURE':
+        if obj and obj.type == "ARMATURE":
             for bone in obj.pose.bones:
                 bone.location = (0.0, 0.0, 0.0)
                 bone.rotation_quaternion = (1.0, 0.0, 0.0, 0.0)
                 bone.rotation_axis_angle = (0.0, 0.0, 1.0, 0.0)
                 bone.rotation_euler = (0.0, 0.0, 0.0)
                 bone.scale = (1.0, 1.0, 1.0)
-                obj.data.pose_position = 'REST'
-            
+                obj.data.pose_position = "REST"
+
     for obj in selected_objects:
         if obj and obj.library is None:
             if obj.override_library:
-                if obj.type == 'ARMATURE':
+                if obj.type == "ARMATURE":
                     bones = obj.data.bones
                     matrix_world = obj.matrix_world
                     for bone in bones:
@@ -72,62 +38,70 @@ def write_some_data(context, filepath):
                         head = matrix_world @ bone.head_local
                         tail = matrix_world @ bone.tail_local
                         parentname = "null"
-                        if bone.parent: 
+                        if bone.parent:
                             parentname = bone.parent.name
-                        elif obj.parent and obj.parent_type == 'BONE':
+                        elif obj.parent and obj.parent_type == "BONE":
                             parentname = obj.parent_bone
                         elif p_bone and p_bone.constraints:
                             for constraint in p_bone.constraints:
                                 parentname = constraint.subtarget
-                        
+
                         z_axis = bone.z_axis
 
                         global_quat = matrix_world.to_quaternion()
-                        
+
                         pos = matrix_world.to_translation()
-                        
-                        axis, roll_radians = p_bone.bone.AxisRollFromMatrix(p_bone.matrix.to_3x3())
-                        
+
+                        axis, roll_radians = p_bone.bone.AxisRollFromMatrix(
+                            p_bone.matrix.to_3x3()
+                        )
+
                         rot_mat = p_bone.bone.matrix_local.to_3x3()
 
                         x_axis = rot_mat[0]
                         y_axis = rot_mat[1]
                         z_axis = rot_mat[2]
-                        
+
                         scale = obj.scale.copy()
-                        
+
                         if obj.parent:
                             for i in range(3):
                                 scale[i] *= obj.parent.scale[i]
-                            
-                        f.write(f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
-                elif obj.type == 'MESH':
-                    if(obj.get('IsHitbox')):
+
+                        f.write(
+                            f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n"
+                        )
+                elif obj.type == "MESH":
+                    if obj.get("IsHitbox"):
                         matrix_world = obj.matrix_world
-                
+
                         active_uv_layer = obj.data.uv_layers.active.data
-                        
+
                         vgroup_names = {g.index: g.name for g in obj.vertex_groups}
                         f.write(f"H ")
-                        
+
                         if obj.constraints:
                             for constraint in obj.constraints:
                                 parentname = constraint.subtarget
                                 f.write(f"{parentname}\n")
-                                
+
                         for vert in obj.data.vertices:
                             world_coord = matrix_world @ vert.co
-                            f.write(f"HP {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
+                            f.write(
+                                f"HP {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}"
+                            )
                             f.write(f"\n")
                         for face in obj.data.polygons:
                             vertices = list(face.vertices)
                             normal = face.normal
-                        
+
                             f.write(f"HF {vertices[0]} {vertices[1]} {vertices[2]}\n")
                     else:
-                        f.write(f"L {bpy.path.display_name_from_filepath(obj.override_library.reference.library.filepath)}/{obj.override_library.reference.name}\n")
+                        f.write(
+                            f"L {bpy.path.display_name_from_filepath(obj.override_library.reference.library.filepath)}/{obj.override_library.reference.name}\n"
+                        )
             else:
-                if obj.type == 'ARMATURE':
+                if obj.type == "ARMATURE":
                     bones = obj.data.bones
                     matrix_world = obj.matrix_world
                     for bone in bones:
@@ -135,102 +109,109 @@ def write_some_data(context, filepath):
                         head = matrix_world @ bone.head_local
                         tail = matrix_world @ bone.tail_local
                         parentname = "null"
-                        if bone.parent: 
+                        if bone.parent:
                             parentname = bone.parent.name
-                        elif obj.parent and obj.parent_type == 'BONE':
+                        elif obj.parent and obj.parent_type == "BONE":
                             parentname = obj.parent_bone
                         elif p_bone and p_bone.constraints:
                             for constraint in p_bone.constraints:
                                 parentname = constraint.subtarget
-                        
+
                         z_axis = bone.z_axis
-                        
+
                         global_quat = matrix_world.to_quaternion()
-                        
+
                         pos = matrix_world.to_translation()
-                        
-                        axis, roll_radians = p_bone.bone.AxisRollFromMatrix(p_bone.matrix.to_3x3())
-                            
+
+                        axis, roll_radians = p_bone.bone.AxisRollFromMatrix(
+                            p_bone.matrix.to_3x3()
+                        )
+
                         rot_mat = p_bone.bone.matrix_local.to_3x3()
 
                         x_axis = rot_mat[0]
                         y_axis = rot_mat[1]
                         z_axis = rot_mat[2]
-                            
+
                         scale = obj.scale.copy()
-                        
+
                         if obj.parent:
                             for i in range(3):
                                 scale[i] *= obj.parent.scale[i]
-                            
-                        f.write(f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n")
-                elif obj.type == 'MESH':
+
+                        f.write(
+                            f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n"
+                        )
+                elif obj.type == "MESH":
                     # Get the global transformation matrix
                     matrix_world = obj.matrix_world
-                
+
                     active_uv_layer = obj.data.uv_layers.active.data
-                    
+
                     vgroup_names = {g.index: g.name for g in obj.vertex_groups}
-                    
-                    if(obj.get('IsHitbox')):
+
+                    if obj.get("IsHitbox"):
                         f.write(f"H ")
-                        
+
                         if obj.constraints:
                             for constraint in obj.constraints:
                                 parentname = constraint.subtarget
                                 f.write(f"{parentname}\n")
-                                
+
                         for vert in obj.data.vertices:
                             world_coord = matrix_world @ vert.co
-                            f.write(f"HP {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
+                            f.write(
+                                f"HP {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}"
+                            )
                             f.write(f"\n")
                         for face in obj.data.polygons:
                             vertices = list(face.vertices)
                             normal = face.normal
-                        
+
                             f.write(f"HF {vertices[0]} {vertices[1]} {vertices[2]}\n")
                     else:
                         f.write(f"O {obj.name}\n")
-                    
+
                         for s in obj.material_slots:
                             if s.material and s.material.use_nodes:
                                 for n in s.material.node_tree.nodes:
-                                    if n.type == 'TEX_IMAGE':
+                                    if n.type == "TEX_IMAGE":
                                         f.write(f"T {n.image.name}\n")
-                            
+
                         for vert in obj.data.vertices:
                             # Convert local coordinate to world coordinate
                             world_coord = matrix_world @ vert.co
-                    
+
                             # Format and save data: Index, X, Y, Z
-                            f.write(f"P {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}")
+                            f.write(
+                                f"P {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}"
+                            )
                             for g in vert.groups:
                                 group_name = vgroup_names.get(g.group, "Unknown Group")
-                                if g.weight > 0: f.write(f" {group_name} {g.weight:.4f}")
+                                if g.weight > 0:
+                                    f.write(f" {group_name} {g.weight:.4f}")
                             f.write(f"\n")
                         for face in obj.data.polygons:
                             # Convert local coordinate to world coordinate
                             vertices = list(face.vertices)
                             vertsize = len(vertices)
                             normal = face.normal
-                            
+
                             f.write(f"F {vertsize}")
-                            
+
                             for vert in vertices:
                                 f.write(f" {vert}")
-                        
+
                             # Format and save data: Index, X, Y, Z
                             f.write(f"/{normal[0]:f} {normal[1]:f} {normal[2]:f}")
-                            
+
                             for loop_idx in face.loop_indices:
                                 uv_loop = active_uv_layer[loop_idx]
                                 f.write(f"/{uv_loop.uv[0]:f} {uv_loop.uv[1]:f}")
                             f.write(f"\n")
     f.close()
-    
 
-
-    return {'FINISHED'}
+    return {"FINISHED"}
 
 
 # ExportHelper is a helper class, defines filename and
@@ -242,6 +223,7 @@ from bpy.types import Operator
 
 class ExportSomeData(Operator, ExportHelper):
     """Cobbler Engine thing"""
+
     bl_idname = "export_test.some_data"  # important since its how bpy.ops.import_test.some_data is constructed
     bl_label = "Export Some Data"
 
@@ -250,7 +232,7 @@ class ExportSomeData(Operator, ExportHelper):
 
     filter_glob: StringProperty(
         default="*.txt",
-        options={'HIDDEN'},
+        options={"HIDDEN"},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
@@ -266,10 +248,10 @@ class ExportSomeData(Operator, ExportHelper):
         name="Example Enum",
         description="Choose between two items",
         items=(
-            ('OPT_A', "First Option", "Description one"),
-            ('OPT_B', "Second Option", "Description two"),
+            ("OPT_A", "First Option", "Description one"),
+            ("OPT_B", "Second Option", "Description two"),
         ),
-        default='OPT_A',
+        default="OPT_A",
     )
 
     def execute(self, context):
@@ -296,4 +278,4 @@ if __name__ == "__main__":
     register()
 
     # test call
-    bpy.ops.export_test.some_data('INVOKE_DEFAULT')
+    bpy.ops.export_test.some_data("INVOKE_DEFAULT")

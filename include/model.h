@@ -37,11 +37,6 @@ struct ModelGroupClass {
       glm::quat rot;
     };
     Pose restpose;
-    struct PosesStruct {
-      std::unordered_map<uint32_t, std::map<uint32_t, glm::vec3>> pos, scale;
-      std::unordered_map<uint32_t, std::map<uint32_t, glm::quat>> rot;
-    };
-    PosesStruct Poses;
   };
   struct visibilitything {
     std::string name;
@@ -50,8 +45,20 @@ struct ModelGroupClass {
   std::unordered_map<uint32_t, std::vector<visibilitything>> modelvisibility;
 
   std::unordered_map<uint32_t, Bone> Bonemap;
-  std::unordered_map<uint32_t, std::array<uint32_t, 2>> anim;
 };
+
+struct ModelAnim {
+  struct PosesStruct {
+    std::map<uint32_t, glm::vec3> pos, scale;
+    std::map<uint32_t, glm::quat> rot;
+  };
+  // bonecode
+  std::unordered_map<uint32_t, PosesStruct> Poses;
+  std::array<uint32_t, 2> animstartend;
+};
+
+// animcode
+LIB_API extern std::unordered_map<uint32_t, ModelAnim> AnimMap;
 
 LIB_API extern std::unordered_map<std::string, uint32_t> BonetoInt;
 LIB_API extern uint32_t newboneindex;

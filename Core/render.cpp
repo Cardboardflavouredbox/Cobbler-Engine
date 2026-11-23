@@ -41,81 +41,82 @@ struct posesresult {
   glm::quat rot = glm::quat(1, 0, 0, 0);
 };
 
-posesresult posesmapprocess(ModelGroupClass::Bone* bone, uint32_t actioncode,
+posesresult posesmapprocess(uint32_t bonecode, uint32_t actioncode,
                             float frame) {
   posesresult result;
 
-  auto& posespos = bone->Poses.pos[actioncode];
-  auto& posesscale = bone->Poses.scale[actioncode];
-  auto& posesrot = bone->Poses.rot[actioncode];
+  if (AnimMap[actioncode].Poses.contains(bonecode)) {
+    auto& posespos = AnimMap[actioncode].Poses[bonecode].pos;
+    auto& posesscale = AnimMap[actioncode].Poses[bonecode].scale;
+    auto& posesrot = AnimMap[actioncode].Poses[bonecode].rot;
 
-  if (!posespos.empty()) {
-    auto it = posespos.lower_bound((uint32_t)std::ceilf(frame));
+    if (!posespos.empty()) {
+      auto it = posespos.lower_bound((uint32_t)std::ceilf(frame));
 
-    if (it == posespos.end()) {
-      result.pos = posespos.rbegin()->second;
-    } else if (it->first == frame || it == posespos.begin()) {
-      result.pos = it->second;
-    } else {
-      auto prev_it = std::prev(it);
+      if (it == posespos.end()) {
+        result.pos = posespos.rbegin()->second;
+      } else if (it->first == frame || it == posespos.begin()) {
+        result.pos = it->second;
+      } else {
+        auto prev_it = std::prev(it);
 
-      float next_frame = it->first;
-      float prev_frame = prev_it->first;
+        float next_frame = it->first;
+        float prev_frame = prev_it->first;
 
-      float a = (frame - prev_frame) / (next_frame - prev_frame);
+        float a = (frame - prev_frame) / (next_frame - prev_frame);
 
-      result.pos = glm::mix(prev_it->second, it->second, a);
-    }
-  }
-
-  if (!posesscale.empty()) {
-    auto it = posesscale.lower_bound((uint32_t)std::ceilf(frame));
-
-    if (it == posesscale.end()) {
-      result.scale = posesscale.rbegin()->second;
-    } else if (it->first == frame || it == posesscale.begin()) {
-      result.scale = it->second;
-    } else {
-      auto prev_it = std::prev(it);
-
-      float next_frame = it->first;
-      float prev_frame = prev_it->first;
-
-      float a = (frame - prev_frame) / (next_frame - prev_frame);
-
-      result.scale = glm::mix(prev_it->second, it->second, a);
-    }
-  }
-
-  if (!posesrot.empty()) {
-    auto it = posesrot.lower_bound((uint32_t)std::ceilf(frame));
-
-    if (it == posesrot.end()) {
-      result.rot = posesrot.rbegin()->second;
-    } else if (it->first == frame || it == posesrot.begin()) {
-      result.rot = it->second;
-    } else {
-      auto prev_it = std::prev(it);
-
-      float next_frame = it->first;
-      float prev_frame = prev_it->first;
-
-      float a = (frame - prev_frame) / (next_frame - prev_frame);
-
-      glm::quat tempquat1 = (prev_it->second), tempquat2 = (it->second);
-
-      if (glm::dot(tempquat1, tempquat2) < 0.0f) {
-        tempquat2 = -tempquat2;
+        result.pos = glm::mix(prev_it->second, it->second, a);
       }
-      tempquat1 = (tempquat1);
-      tempquat2 = (tempquat2);
+    }
 
-      glm::quat tempresult = glm::mix(tempquat1, tempquat2, a);
+    if (!posesscale.empty()) {
+      auto it = posesscale.lower_bound((uint32_t)std::ceilf(frame));
 
-      result.rot = tempresult;
+      if (it == posesscale.end()) {
+        result.scale = posesscale.rbegin()->second;
+      } else if (it->first == frame || it == posesscale.begin()) {
+        result.scale = it->second;
+      } else {
+        auto prev_it = std::prev(it);
+
+        float next_frame = it->first;
+        float prev_frame = prev_it->first;
+
+        float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+        result.scale = glm::mix(prev_it->second, it->second, a);
+      }
+    }
+
+    if (!posesrot.empty()) {
+      auto it = posesrot.lower_bound((uint32_t)std::ceilf(frame));
+
+      if (it == posesrot.end()) {
+        result.rot = posesrot.rbegin()->second;
+      } else if (it->first == frame || it == posesrot.begin()) {
+        result.rot = it->second;
+      } else {
+        auto prev_it = std::prev(it);
+
+        float next_frame = it->first;
+        float prev_frame = prev_it->first;
+
+        float a = (frame - prev_frame) / (next_frame - prev_frame);
+
+        glm::quat tempquat1 = (prev_it->second), tempquat2 = (it->second);
+
+        if (glm::dot(tempquat1, tempquat2) < 0.0f) {
+          tempquat2 = -tempquat2;
+        }
+        tempquat1 = (tempquat1);
+        tempquat2 = (tempquat2);
+
+        glm::quat tempresult = glm::mix(tempquat1, tempquat2, a);
+
+        result.rot = tempresult;
+      }
     }
   }
-
   return result;
 }
 
@@ -145,9 +146,9 @@ BoneResult applyboneactions(const uint32_t& bonecode,
       if (Settings->crunchyanimations) frame = std::floorf(frame);
 
       posesresult poseresultthing2 =
-                      posesmapprocess(bone, action.actioncode[0], frame),
+                      posesmapprocess(boneindex, action.actioncode[0], frame),
                   poseresultthing3 =
-                      posesmapprocess(bone, action.actioncode[1], frame);
+                      posesmapprocess(boneindex, action.actioncode[1], frame);
 
       poseresultthing.pos += glm::mix(poseresultthing2.pos,
                                       poseresultthing3.pos, action.lerpamount);
@@ -271,13 +272,14 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
 
       modeltrans->actions[i].frame +=
           deltatime * 24 * modeltrans->actions[i].speed;
-      if ((float)modelgroup->anim[poseindex][0] ==
-          (float)modelgroup->anim[poseindex][1]) {
-        modeltrans->actions[i].frame = (float)modelgroup->anim[poseindex][0];
+      if ((float)AnimMap[poseindex].animstartend[0] ==
+          (float)AnimMap[poseindex].animstartend[1]) {
+        modeltrans->actions[i].frame =
+            (float)AnimMap[poseindex].animstartend[0];
       } else {
         modeltrans->actions[i].actiondone =
             (modeltrans->actions[i].frame >=
-             (float)modelgroup->anim[poseindex][1]);
+             (float)AnimMap[poseindex].animstartend[1]);
       }
     }
 
