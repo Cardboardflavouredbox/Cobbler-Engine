@@ -82,7 +82,7 @@ uint32_t newposeindex = 0;
 
 std::deque<DamageLocation> LocalDamageLocations;
 
-std::vector<std::unordered_map<uint32_t, BoneResult>> BoneResultmapVector;
+std::unordered_map<uint32_t, BoneResult> BoneResultmapVector;
 
 bool textinputing;
 

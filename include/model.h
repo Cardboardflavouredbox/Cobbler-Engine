@@ -99,5 +99,4 @@ struct BoneResult {
   glm::quat rot = glm::quat(1, 0, 0, 0);
   bool check = false;
 };
-LIB_API extern std::vector<std::unordered_map<uint32_t, BoneResult>>
-    BoneResultmapVector;
+LIB_API extern std::unordered_map<uint32_t, BoneResult> BoneResultmapVector;

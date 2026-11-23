@@ -91,36 +91,31 @@ void ModelGroupsethitboxes(Entity* entity) {
       glm::vec3 pos = point;
       glm::vec3 checkpos = pos;
 
-      for (auto& boneresultmap : BoneResultmapVector) {
-        pos = checkpos;
-        BoneResult* boneresult = &boneresultmap[index];
+      pos = checkpos;
+      BoneResult* boneresult = &BoneResultmapVector[index];
 
-        pos *= bone.restpose.scale;
-        pos = bone.restpose.rot * pos;
-        pos += bone.restpose.pos;
+      pos *= bone.restpose.scale;
+      pos = bone.restpose.rot * pos;
+      pos += bone.restpose.pos;
 
-        pos -= bone.head;
+      pos -= bone.head;
 
-        pos = boneresult->rot * pos;
+      pos = boneresult->rot * pos;
 
-        pos += boneresult->head;
+      pos += boneresult->head;
 
-        uint32_t bonecode = index;
-        while (bonecode != uint32_t(-1)) {
-          ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
-          BoneResult* boneresult = &boneresultmap[bonecode];
-          pos -= bone->head;
+      uint32_t bonecode = index;
+      while (bonecode != uint32_t(-1)) {
+        ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
+        BoneResult* boneresult = &BoneResultmapVector[bonecode];
+        pos -= bone->head;
 
-          pos *= boneresult->scale;
+        pos *= boneresult->scale;
 
-          pos += bone->head;
+        pos += bone->head;
 
-          bonecode = bone->parent;
-          bone = &modelgroup->Bonemap[bonecode];
-        }
-        if (boneresult->check) {
-          break;
-        }
+        bonecode = bone->parent;
+        bone = &modelgroup->Bonemap[bonecode];
       }
 
       pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),

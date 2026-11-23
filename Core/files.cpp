@@ -1474,6 +1474,13 @@ bool init() {
 
   UIsetup();
 
+  EntitySpawnInfo tempinfo;
+
+  tempinfo.name = "Arthur";
+  tempinfo.position[2] = 15;
+
+  EntitySpawn(tempinfo, false);
+
   return true;
 }
 

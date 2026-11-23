@@ -208,9 +208,8 @@ BoneResult applyboneactions(const uint32_t& bonecode,
 
 // apply animations of bones.
 void modelapplybones(Modeltransform* modeltrans, ModelGroupClass* modelgroup) {
-  std::unordered_map<uint32_t, BoneResult> LocalBoneResultMap;
   for (auto& [code, bone] : modelgroup->Bonemap) {
-    BoneResult* boneresult = &LocalBoneResultMap[code];
+    BoneResult* boneresult = &BoneResultmapVector[code];
     boneresult->head = bone.head;
     boneresult->rot = glm::quat(1, 0, 0, 0);
     boneresult->scale = glm::vec3(1);
@@ -242,11 +241,9 @@ void modelapplybones(Modeltransform* modeltrans, ModelGroupClass* modelgroup) {
   }
 
   for (auto& [code, bone] : modelgroup->Bonemap) {
-    LocalBoneResultMap[code] =
+    BoneResultmapVector[code] =
         applyboneactions(code, bone, actions, modelgroup);
   }
-
-  BoneResultmapVector.push_back(LocalBoneResultMap);
 }
 
 glm::mat4 transtomatrix(const glm::vec3& pos, const glm::vec3& scale,
@@ -386,14 +383,10 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
           }
         }
 
-        int sizething = BoneResultmapVector.size(),
-            actionsize = modeltrans->Bonecodevec.size();
-
-        glUniform1i(glGetUniformLocation(shadertemp, "actioncount"), sizething);
+        int actionsize = modeltrans->Bonecodevec.size();
 
         glUniform1i(glGetUniformLocation(shadertemp, "actionsize"), actionsize);
 
-        // SDL_Log("sizething: %d %d", sizething, glad_glGetError());
         for (int i = 0; i < actionsize; i++) {
           ModelGroupClass::Bone* bone =
               &modelgroup->Bonemap[modeltrans->Bonecodevec[i]];
@@ -401,61 +394,57 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
           glm::mat4 restmat = transtomatrix(
               bone->restpose.pos, bone->restpose.scale, bone->restpose.rot);
 
-          for (int j = 0; j < sizething; j++) {
-            BoneResult* boneresult =
-                &BoneResultmapVector[j][modeltrans->Bonecodevec[i]];
+          BoneResult* boneresult =
+              &BoneResultmapVector[modeltrans->Bonecodevec[i]];
 
-            int index = j * actionsize + i;
+          int index = i;
 
-            glUniform1ui(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("bonelist[" + std::to_string(index) + "]").c_str()),
-                modeltrans->Bonecodevec[i]);
+          glUniform1ui(glGetUniformLocation(
+                           shadertemp,
+                           ("bonelist[" + std::to_string(index) + "]").c_str()),
+                       modeltrans->Bonecodevec[i]);
 
-            glUniform1ui(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("parentlist[" + std::to_string(index) + "]").c_str()),
-                bone->parent);
+          glUniform1ui(
+              glGetUniformLocation(
+                  shadertemp,
+                  ("parentlist[" + std::to_string(index) + "]").c_str()),
+              bone->parent);
 
-            glUniform1i(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("resultbonecheck[" + std::to_string(index) + "]").c_str()),
-                (boneresult->check) ? 1 : 0);
+          glUniform1i(
+              glGetUniformLocation(
+                  shadertemp,
+                  ("resultbonecheck[" + std::to_string(index) + "]").c_str()),
+              (boneresult->check) ? 1 : 0);
 
-            glUniformMatrix4fv(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("restmat[" + std::to_string(index) + "]").c_str()),
-                1, GL_FALSE, glm::value_ptr(restmat));
+          glUniformMatrix4fv(
+              glGetUniformLocation(
+                  shadertemp,
+                  ("restmat[" + std::to_string(index) + "]").c_str()),
+              1, GL_FALSE, glm::value_ptr(restmat));
 
-            glUniform3f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("bonehead[" + std::to_string(index) + "]").c_str()),
-                bone->head.x, bone->head.y, bone->head.z);
+          glUniform3f(glGetUniformLocation(
+                          shadertemp,
+                          ("bonehead[" + std::to_string(index) + "]").c_str()),
+                      bone->head.x, bone->head.y, bone->head.z);
 
-            glUniform3f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("resultbonepos[" + std::to_string(index) + "]").c_str()),
-                boneresult->head.x, boneresult->head.y, boneresult->head.z);
+          glUniform3f(
+              glGetUniformLocation(
+                  shadertemp,
+                  ("resultbonepos[" + std::to_string(index) + "]").c_str()),
+              boneresult->head.x, boneresult->head.y, boneresult->head.z);
 
-            glUniform3f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("resultbonescale[" + std::to_string(index) + "]").c_str()),
-                boneresult->scale.x, boneresult->scale.y, boneresult->scale.z);
+          glUniform3f(
+              glGetUniformLocation(
+                  shadertemp,
+                  ("resultbonescale[" + std::to_string(index) + "]").c_str()),
+              boneresult->scale.x, boneresult->scale.y, boneresult->scale.z);
 
-            glUniform4f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("resultbonequat[" + std::to_string(index) + "]").c_str()),
-                boneresult->rot.x, boneresult->rot.y, boneresult->rot.z,
-                boneresult->rot.w);
-          }
+          glUniform4f(
+              glGetUniformLocation(
+                  shadertemp,
+                  ("resultbonequat[" + std::to_string(index) + "]").c_str()),
+              boneresult->rot.x, boneresult->rot.y, boneresult->rot.z,
+              boneresult->rot.w);
         }
 
         for (const auto& modelname : modelgroup->Models) {
@@ -507,47 +496,37 @@ void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
 
               for (int k = facesize - 1; k >= 0; k--) {
                 glm::vec3 pos = model->points[model->faces[j].point[k]].pos;
-                glm::vec3 checkpos = pos;
 
-                for (auto& boneresultmap : BoneResultmapVector) {
-                  pos = checkpos;
+                uint32_t bonecode =
+                    model->points[model->faces[j].point[k]].bone;
 
-                  uint32_t bonecode =
-                      model->points[model->faces[j].point[k]].bone;
+                bonecode = model->points[model->faces[j].point[k]].bone;
 
-                  bonecode = model->points[model->faces[j].point[k]].bone;
+                BoneResult* boneresult = &BoneResultmapVector[bonecode];
 
-                  BoneResult* boneresult = &boneresultmap[bonecode];
+                ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
 
+                pos *= bone->restpose.scale;
+                pos = bone->restpose.rot * pos;
+                pos += bone->restpose.pos;
+
+                pos -= bone->head;
+
+                pos = boneresult->rot * pos;
+
+                pos += boneresult->head;
+
+                while (bonecode != uint32_t(-1)) {
                   ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
-
-                  pos *= bone->restpose.scale;
-                  pos = bone->restpose.rot * pos;
-                  pos += bone->restpose.pos;
-
+                  BoneResult* boneresult = &BoneResultmapVector[bonecode];
                   pos -= bone->head;
 
-                  pos = boneresult->rot * pos;
+                  pos *= boneresult->scale;
 
-                  pos += boneresult->head;
+                  pos += bone->head;
 
-                  while (bonecode != uint32_t(-1)) {
-                    ModelGroupClass::Bone* bone =
-                        &modelgroup->Bonemap[bonecode];
-                    BoneResult* boneresult = &boneresultmap[bonecode];
-                    pos -= bone->head;
-
-                    pos *= boneresult->scale;
-
-                    pos += bone->head;
-
-                    bonecode = bone->parent;
-                    bone = &modelgroup->Bonemap[bonecode];
-                  }
-
-                  if (boneresult->check) {
-                    break;
-                  }
+                  bonecode = bone->parent;
+                  bone = &modelgroup->Bonemap[bonecode];
                 }
 
                 pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
