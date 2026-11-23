@@ -168,4 +168,5 @@ void Entity::setup(uint32_t Index, std::string path) {
 
   luaupdate = lua["luaupdate"];
   lualateupdate = lua["lualateupdate"];
+  luainput = lua["luainput"];
 }

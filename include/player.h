@@ -8,7 +8,7 @@
 
 struct playerinputs {
   glm::vec2 lookdir, movevec2;
-  unsigned char jump, attack, altattack;
+  unsigned char jump, attack, altattack, dash;
 };
 
 struct playerdatapacket {
@@ -20,7 +20,7 @@ struct playerdatapacket {
   uint64_t ID;
   std::array<float, 3> position, velocityvec3;
   std::array<float, 2> movevec2, lookdir;
-  unsigned char jump, attack, altattack;
+  unsigned char jump, attack, altattack, dash;
   bool IsGrounded;
   void Set(const playerinputs* input) {
     for (int i = 0; i < 2; i++) {
@@ -30,6 +30,7 @@ struct playerdatapacket {
     jump = input->jump;
     attack = input->attack;
     altattack = input->altattack;
+    dash = input->dash;
   }
 };
 
@@ -38,10 +39,3 @@ playerinputs Loadinputdata(const playerdatapacket& input);
 void inputtoentity(playerinputs input, Entity* entity);
 
 LIB_API extern playerinputs* P1PlayerInputs;
-
-struct playerluastruct {
-  sol::state lua;
-  sol::protected_function LocalClassUpdate, LocalClassDeath;
-};
-
-LIB_API extern playerluastruct* playerluastuff;

@@ -89,8 +89,6 @@ bool textinputing;
 std::stringstream cmdlines;
 std::string cmdcurrentinput;
 
-playerluastruct* playerluastuff;
-
 uint32_t EntityMapEmptyIndex() {
   if (!Entities.contains(0)) {
     return 0;

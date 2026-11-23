@@ -1450,26 +1450,6 @@ bool init() {
   RendererGlobal->viewportdata[2] = std::roundf(rtw);
   RendererGlobal->viewportdata[3] = std::roundf(rth);
 
-  playerluastuff = new playerluastruct();
-
-  playerluastuff->lua.open_libraries(sol::lib::base);
-
-  playerluastuff->lua.script_file(Global->GameFolder.string() + "/class/" +
-                                  Global->playerclass + "/classmain.lua");
-
-  playerluastuff->LocalClassUpdate = playerluastuff->lua["Update"];
-  playerluastuff->LocalClassDeath = playerluastuff->lua["Death"];
-
-  LuaSet(&playerluastuff->lua);
-
-  playerluastuff->lua["LocalPlayer"] = LocalPlayer;
-  playerluastuff->lua["LocalPlayerpos"] = &LocalPlayer->position;
-  playerluastuff->lua["LocalPlayerdir"] = &LocalPlayer->dir;
-
-  playerluastuff->lua["EntitySpawn"] = EntitySpawn;
-
-  playerluastuff->lua.collect_garbage();
-
   UIsetup();
 
   // EntitySpawnInfo tempinfo;
@@ -1579,8 +1559,6 @@ void quit() {
   // free network stuff.
   NetDisconnect();
   SDL_Log("Netfreed");
-
-  delete (playerluastuff);
 
   // well it's not running anymore I suppose.
   IsRunning = false;

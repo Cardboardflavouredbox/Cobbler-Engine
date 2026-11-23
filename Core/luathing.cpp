@@ -1,6 +1,7 @@
 #include "luathing.h"
 
 #include "entity.h"
+#include "player.h"
 
 void LuaVec3Set(sol::state* luathing) {
   luathing->new_usertype<glm::vec3>(
@@ -207,4 +208,10 @@ void LuaSet(sol::state* luathing) {
       "dir", &Entity::dir, "velocityvec3", &Entity::velocityvec3, "State",
       &Entity::State, "movevec2", &Entity::movevec2, "IsGrounded",
       &Entity::IsGrounded);
+
+  luathing->new_usertype<playerinputs>(
+      "playerinputs", sol::constructors<playerinputs()>(), "lookdir",
+      &playerinputs::lookdir, "movevec2", &playerinputs::movevec2, "jump",
+      &playerinputs::jump, "attack", &playerinputs::attack, "altattack",
+      &playerinputs::altattack, "dash", &playerinputs::dash);
 }

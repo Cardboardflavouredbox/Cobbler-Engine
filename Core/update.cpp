@@ -36,6 +36,7 @@ playerinputs Loadinputdata(const playerdatapacket& input) {
   temp.jump = input.jump;
   temp.attack = input.attack;
   temp.altattack = input.altattack;
+  temp.dash = input.dash;
   return temp;
 }
 
@@ -90,6 +91,9 @@ void processinputs() {
   if (tempmove != glm::vec2(0)) tempmove = glm::normalize(tempmove);
   P1PlayerInputs->movevec2 = tempmove;
   P1PlayerInputs->jump = LocalInputs->Keys[SDL_SCANCODE_SPACE];
+  P1PlayerInputs->attack = LocalInputs->leftclick;
+  P1PlayerInputs->altattack = LocalInputs->rightclick;
+  P1PlayerInputs->dash = LocalInputs->Keys[SDL_SCANCODE_LSHIFT];
 }
 
 void CameraUpdate() {
@@ -175,6 +179,7 @@ void RecieveNetData() {
     i.second.PlayerInput.jump = 0;
     i.second.PlayerInput.altattack = 0;
     i.second.PlayerInput.attack = 0;
+    i.second.PlayerInput.dash = 0;
   }
   std::queue<uint64_t> deleteplayerqueue;
 
@@ -199,7 +204,8 @@ void RecieveNetData() {
 
             unsigned char jump = tempplayerthing->PlayerInput.jump,
                           attack = tempplayerthing->PlayerInput.attack,
-                          altattack = tempplayerthing->PlayerInput.altattack;
+                          altattack = tempplayerthing->PlayerInput.altattack,
+                          dash = tempplayerthing->PlayerInput.dash;
 
             tempplayerthing->PlayerInput = Loadinputdata(temp);
 
@@ -209,6 +215,8 @@ void RecieveNetData() {
               tempplayerthing->PlayerInput.attack = 2;
             if (altattack > tempplayerthing->PlayerInput.altattack)
               tempplayerthing->PlayerInput.altattack = 2;
+            if (dash > tempplayerthing->PlayerInput.dash)
+              tempplayerthing->PlayerInput.dash = 2;
 
             if (!IsServer) {
               for (int i = 0; i < 3; i++) {
@@ -623,41 +631,44 @@ void HitScanAttack(float damage, float xrot, float yrot) {
 
 // add checks for walls later!
 void MeleeAttack(Entity* entity, float damage, float range, float degrees) {
-  glm::vec3 dir = LookdirToVec3(entity->dir);
+  if (Entities.contains(entity->EntityIndex) &&
+      Entities[entity->EntityIndex] == entity) {
+    glm::vec3 dir = LookdirToVec3(entity->dir);
 
-  EntityDamageInfo infothing;
-  infothing.damage = damage;
-  infothing.push = 16.f;
-  infothing.FromPlayer = false;
-  infothing.SourceEntityIndex = entity->EntityIndex;
+    EntityDamageInfo infothing;
+    infothing.damage = damage;
+    infothing.push = 16.f;
+    infothing.FromPlayer = false;
+    infothing.SourceEntityIndex = entity->EntityIndex;
 
-  std::queue<Entity*> tempque;
-  for (auto& i : Entities) tempque.push(i.second);
-  for (auto& i : GlobalNetworkStuff->PlayerNetStuff)
-    tempque.push(i.second.PlayerEntity);
+    std::queue<Entity*> tempque;
+    for (auto& i : Entities) tempque.push(i.second);
+    for (auto& i : GlobalNetworkStuff->PlayerNetStuff)
+      tempque.push(i.second.PlayerEntity);
 
-  while (!tempque.empty()) {
-    Entity* tempentity = tempque.front();
-    tempque.pop();
+    while (!tempque.empty()) {
+      Entity* tempentity = tempque.front();
+      tempque.pop();
 
-    if (tempentity->teamindex != entity->teamindex &&
-        glm::distance(tempentity->position, entity->position) <= range) {
-      glm::vec3 entitydir =
-          glm::normalize(tempentity->position - entity->position);
+      if (tempentity->teamindex != entity->teamindex &&
+          glm::distance(tempentity->position, entity->position) <= range) {
+        glm::vec3 entitydir =
+            glm::normalize(tempentity->position - entity->position);
 
-      float dot = glm::dot(dir, entitydir);
-      dot = glm::clamp(dot, -1.0f, 1.0f);
+        float dot = glm::dot(dir, entitydir);
+        dot = glm::clamp(dot, -1.0f, 1.0f);
 
-      if (glm::degrees(glm::acos(dot)) < degrees / 2) {
-        for (int i = 0; i < 3; i++) infothing.pushdir[i] = entitydir[i];
-        infothing.TargetEntityIndex = tempentity->EntityIndex;
+        if (glm::degrees(glm::acos(dot)) < degrees / 2) {
+          for (int i = 0; i < 3; i++) infothing.pushdir[i] = entitydir[i];
+          infothing.TargetEntityIndex = tempentity->EntityIndex;
 
-        if (Entities.contains(tempentity->EntityIndex) &&
-            tempentity == Entities[tempentity->EntityIndex])
-          infothing.TargetIsPlayer = false;
-        else
-          infothing.TargetIsPlayer = true;
-        DamageEntity(infothing, true);
+          if (Entities.contains(tempentity->EntityIndex) &&
+              tempentity == Entities[tempentity->EntityIndex])
+            infothing.TargetIsPlayer = false;
+          else
+            infothing.TargetIsPlayer = true;
+          DamageEntity(infothing, true);
+        }
       }
     }
   }
@@ -701,28 +712,12 @@ void Entitypushaway(Entity* entity) {
 }
 
 void LocalClassUpdate() {
-  playerluastuff->lua["state"] = (float)LocalPlayer->State;
-  playerluastuff->lua["Keys"][SDL_SCANCODE_LSHIFT] =
-      LocalInputs->Keys[SDL_SCANCODE_LSHIFT];
-  playerluastuff->lua["Leftclick"] = LocalInputs->leftclick;
-  playerluastuff->lua["autoreload"] = Settings->autoreload;
-
   if (LocalPlayer->hp <= 0 ||
       (LocalPlayerNetData != NULL &&
        LocalPlayerNetData->isdead)) {  // class death reset code (make this
                                        // online compatible!)
-    playerluastuff->LocalClassDeath();
     if (LocalPlayerNetData != NULL) LocalPlayerNetData->isdead = false;
   }
-
-  auto what = playerluastuff->LocalClassUpdate();
-  if (!what.valid()) {
-    sol::error err = what;
-    std::cout << "Lua Error: " << err.what() << std::endl;
-  }
-
-  float state = playerluastuff->lua["state"];
-  LocalPlayer->State = state;
 }
 
 void fixedupdate() {

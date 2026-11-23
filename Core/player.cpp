@@ -21,7 +21,5 @@ void inputtoentity(playerinputs input, Entity* entity) {
   if (glm::length(entity->movevec2) > entity->movespeed) {
     entity->movevec2 = glm::normalize(entity->movevec2) * entity->movespeed;
   }
-
-  if (input.jump == 2 && (entity->IsGrounded || Global->IsDebug))
-    entity->velocityvec3.z = entity->jumpheight;
+  entity->luainput(input);
 }

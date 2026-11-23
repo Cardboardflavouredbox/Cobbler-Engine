@@ -61,6 +61,7 @@ template <typename S>
 void serialize(S& s, playerdatapacket& o) {
   s.value1b(o.altattack);
   s.value1b(o.attack);
+  s.value1b(o.dash);
   s.value8b(o.ID);
   s.value4b(o.teamindex);
   s.value1b(o.IsGrounded);

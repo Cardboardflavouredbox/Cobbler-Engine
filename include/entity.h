@@ -55,7 +55,7 @@ struct S2CPlayerInfo {  // Server to Client player info
 
 struct Entity {
   sol::state lua;
-  sol::protected_function luaupdate, lualateupdate;
+  sol::protected_function luaupdate, lualateupdate, luainput;
 
   uint32_t EntityIndex;
   std::string name;
