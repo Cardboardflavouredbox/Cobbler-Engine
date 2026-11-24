@@ -68,15 +68,18 @@ float Entityraycheck(
   glm::vec3 normal = glm::normalize(ray[1] - ray[0]);
   float result = -1;
   if (checkentity->Modelthing != NULL) {
-    for (auto& [index, bone] :
-         ModelGroupMap[checkentity->Modelthing->name].Bonemap) {
-      for (auto& face : bone.bonehitbox.faces) {
-        const std::vector<glm::vec3>& points = bone.bonehitbox.processedpoints;
-        std::optional<glm::vec3> check = RayTriIntersect(
-            ray[0], normal, points[face[0]], points[face[1]], points[face[2]]);
+    for (const auto& bonename : checkentity->Modelthing->name) {
+      for (const auto& [index, bone] : ModelGroupMap[bonename].Bonemap) {
+        for (const auto& face : bone.bonehitbox.faces) {
+          const std::vector<glm::vec3>& points =
+              bone.bonehitbox.processedpoints;
+          std::optional<glm::vec3> check =
+              RayTriIntersect(ray[0], normal, points[face[0]], points[face[1]],
+                              points[face[2]]);
 
-        if (check.has_value()) {
-          result = glm::distance(ray[0], check.value());
+          if (check.has_value()) {
+            result = glm::distance(ray[0], check.value());
+          }
         }
       }
     }
@@ -607,7 +610,7 @@ void EntityMove(Entity* tempentity) {
   }
 
   tempposition = moveresult + tempentity->position;
-  temp = (std::abs(tempmove.z) / tempentity->hitboxradius) * 4 + 1;
+  temp = (std::fabs(tempmove.z) / tempentity->hitboxradius) * 16 + 1;
   for (int i = 0; i < temp; i++) {
     tempposition.z += tempmove.z / (float)temp;
     movecollisionresult resultthing;
@@ -623,7 +626,6 @@ void EntityMove(Entity* tempentity) {
       if (anglething < 0) anglething *= -1;
       if (anglething > 135) {
         tempentity->IsGrounded = true;
-        moveresult.z += tempmove.z / (float)temp;
         break;
       } else if (anglething < 45) {
         tempentity->IsGrounded = false;
@@ -682,7 +684,7 @@ void EntityMove(Entity* tempentity) {
   tempentity->velocityvec3.y = tempvec.y;
 
   if (tempentity->IsGrounded) {
-    tempentity->velocityvec3.z = -0.1f;
+    tempentity->velocityvec3.z = 0.0f;
     tempentity->Collided = true;
   }
 }

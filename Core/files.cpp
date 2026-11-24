@@ -884,6 +884,12 @@ void loadAnim(const std::filesystem::directory_entry& entry) {
       uint32_t animend, animstart;
       fscanf(file, "%s %u %u\n", name, &animstart, &animend);
       uint32_t indexthing = getposeindex(name);
+
+      if (AnimMap.contains(indexthing)) {
+        SDL_Log("Animation of the same name \"%s\" already exists!", name);
+        break;
+      }
+
       AnimMap[indexthing].animstartend[0] = animstart;
       AnimMap[indexthing].animstartend[1] = animend;
       poseindex = indexthing;
@@ -1374,22 +1380,22 @@ bool init() {
   // set the props.
   Global->Models = tempmapdata.props;
 
+  // read animations.
+  for (const auto& entry : std::filesystem::directory_iterator(
+           Global->GameFolder.string() + "/animations/")) {
+    if (entry.is_regular_file() && entry.path().extension() == ".anim")
+      loadAnim(entry);
+  }
+
   // get all the files in the models folder.
   for (const auto& dir : std::filesystem::directory_iterator(
            Global->GameFolder.string() + "/models/")) {
     if (dir.is_directory()) {
       for (const auto& entry :
            std::filesystem::directory_iterator(dir.path().string())) {
-        if (entry.is_directory()) {
-          for (const auto& subentry :
-               std::filesystem::directory_iterator(entry.path().string())) {
-            if (subentry.is_regular_file() &&
-                subentry.path().extension() == ".anim")
-              loadAnim(subentry);
-          }
-        } else if (entry.is_regular_file() &&
-                   entry.path().extension() ==
-                       ".cbm") {  // check if file is a .cbm file.
+        if (entry.is_regular_file() &&
+            entry.path().extension() ==
+                ".cbm") {  // check if file is a .cbm file.
           if (!loadCBM(entry)) {
             return false;
           }

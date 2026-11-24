@@ -74,7 +74,7 @@ LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 
 struct Modeltransform {
   bool visible = true;
-  std::string name;
+  std::vector<std::string> name;
   struct action {
     struct actionpose {
       float lerpamount = 0.f;

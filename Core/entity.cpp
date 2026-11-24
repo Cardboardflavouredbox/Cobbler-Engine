@@ -141,21 +141,14 @@ void Entity::setup(uint32_t Index, std::string path) {
   lua["MeleeAttack"] = MeleeAttack;
 
   std::string scriptpath =
-      Global->GameFolder.string() + "/class/" + path + "/entitymain.lua";
+      Global->GameFolder.string() + "/entities/" + path + "/entitymain.lua";
 
   std::filesystem::path entry = std::filesystem::path(scriptpath);
 
   if (std::filesystem::exists(entry)) {
     lua.script_file(scriptpath);
   } else {
-    scriptpath =
-        Global->GameFolder.string() + "/entities/" + path + "/entitymain.lua";
-    entry = std::filesystem::path(scriptpath);
-    if (std::filesystem::exists(entry)) {
-      lua.script_file(scriptpath);
-    } else {
-      SDL_Log("No Entity named %s!", path.c_str());
-    }
+    SDL_Log("No Entity named %s!", path.c_str());
   }
 
   sol::table actionsthing = lua["SetActions"];
@@ -163,6 +156,13 @@ void Entity::setup(uint32_t Index, std::string path) {
   std::vector<int> tempvec = actionsthing.as<std::vector<int>>();
 
   Modelthing->SetActions(tempvec);
+
+  sol::table modelnamesthing = lua["SetModelnames"];
+
+  std::vector<std::string> tempvec2 =
+      modelnamesthing.as<std::vector<std::string>>();
+
+  Modelthing->name = tempvec2;
 
   lua["luasetup"]();
 
