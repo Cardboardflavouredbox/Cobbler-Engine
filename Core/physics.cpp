@@ -623,6 +623,7 @@ void EntityMove(Entity* tempentity) {
       if (anglething < 0) anglething *= -1;
       if (anglething > 135) {
         tempentity->IsGrounded = true;
+        moveresult.z += tempmove.z / (float)temp;
         break;
       } else if (anglething < 45) {
         tempentity->IsGrounded = false;
@@ -681,12 +682,7 @@ void EntityMove(Entity* tempentity) {
   tempentity->velocityvec3.y = tempvec.y;
 
   if (tempentity->IsGrounded) {
-    if (tempentity->IsGroundedTimer >= 0.25f)
-      tempentity->velocityvec3.z = -0.1f;
-    else
-      tempentity->IsGroundedTimer += dt;
+    tempentity->velocityvec3.z = -0.1f;
     tempentity->Collided = true;
-  } else {
-    tempentity->IsGroundedTimer = 0;
   }
 }
