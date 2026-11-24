@@ -107,22 +107,22 @@ void CameraUpdate() {
 
     Camera->lookat = LookdirToVec3(LocalPlayer->dir);
 
-    glm::vec3 right, up;
+    Camera->right.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
+                      std::cos(glm::radians(LocalPlayer->dir.y + 90.f));
+    Camera->right.z = std::sin(glm::radians(LocalPlayer->dir.y + 90.f));
+    Camera->right.y = std::sin(glm::radians(LocalPlayer->dir.x + 90.f)) *
+                      std::cos(glm::radians(LocalPlayer->dir.y + 90.f));
 
-    right.x = std::cos(glm::radians(LocalPlayer->dir.x + 90.f)) *
-              std::cos(glm::radians(LocalPlayer->dir.y + 90.f));
-    right.z = std::sin(glm::radians(LocalPlayer->dir.y + 90.f));
-    right.y = std::sin(glm::radians(LocalPlayer->dir.x + 90.f)) *
-              std::cos(glm::radians(LocalPlayer->dir.y + 90.f));
-
-    right = Camera->lookat * glm::angleAxis(glm::radians(90.f), right);
-    up = right * glm::angleAxis(glm::radians(90.f), Camera->lookat);
+    Camera->right =
+        Camera->lookat * glm::angleAxis(glm::radians(90.f), Camera->right);
+    Camera->up =
+        Camera->right * glm::angleAxis(glm::radians(90.f), Camera->lookat);
 
     // Camera->zoom =
     //     std::lerp(Camera->zoom, zoom, 1 - std::pow(0.001f, updatedeltaTime));
 
-    glm::vec3 offset =
-        Camera->lookat * luaoffset.y + right * luaoffset.x + up * luaoffset.z;
+    glm::vec3 offset = Camera->lookat * luaoffset.y +
+                       Camera->right * luaoffset.x + Camera->up * luaoffset.z;
 
     const float radius = 0.125f;
 

@@ -22,6 +22,7 @@ enum cmdenums {
   HostServer,             // Set if you are the server or not.
   DisconnectClient,       // Disconnects Client.
   SetIsDebug,             // Sets Debug.
+  SpawnEntityCommand,     // Spawns Entity
   CMDQuit                 // Quits game
 };
 
@@ -32,7 +33,7 @@ bool is_number(const std::string& s) {
   return true;
 }
 
-std::unordered_map<std::string, cmdenums> stringtoenums = {
+const std::unordered_map<std::string, cmdenums> stringtoenums = {
     {"OpenGL", SetRendererAsOpenGL},
     {"openGL", SetRendererAsOpenGL},
     {"GL", SetRendererAsOpenGL},
@@ -56,6 +57,8 @@ std::unordered_map<std::string, cmdenums> stringtoenums = {
     {"disconnect", DisconnectClient},
     {"d", SetIsDebug},
     {"debug", SetIsDebug},
+    {"Spawn", SpawnEntityCommand},
+    {"spawn", SpawnEntityCommand},
     {"quit", CMDQuit},
     {"Quit", CMDQuit}};
 
@@ -66,7 +69,7 @@ void cmdprocess() {
   while (cmdstream >> arg) {
     SDL_Log("arg: %s", arg.c_str());
     if (stringtoenums.contains(arg)) {
-      cmdenums cmd = stringtoenums[arg];
+      cmdenums cmd = stringtoenums.at(arg);
       switch (cmd) {
         case CMDQuit: {
           IsRunning = false;
@@ -230,6 +233,25 @@ void cmdprocess() {
         }
         case DisconnectClient: {
           NetDisconnect();
+          break;
+        }
+        case SpawnEntityCommand: {
+          if (Global->IsOnline && !IsServer) {
+            cmdlines << ("Cannot spawn Entities when you're not the server!\n");
+            return;
+          }
+          std::string arg2;
+          if (!(cmdstream >> arg2)) {
+            cmdlines << ("Wrong Arguements!(Spawn)\n");
+            return;
+          }
+          EntitySpawnInfo tempinfo;
+
+          tempinfo.name = arg2;
+          for (int i = 0; i < 3; i++)
+            tempinfo.position[i] = LocalPlayer->position[i];
+
+          EntitySpawn(tempinfo, false);
           break;
         }
       }

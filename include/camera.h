@@ -18,7 +18,7 @@
 struct CameraClass {
   sol::state lua;
   sol::protected_function luaupdate;
-  glm::vec3 pos, lookat;
+  glm::vec3 pos, lookat, right, up;
 };
 
 LIB_API extern CameraClass* Camera;

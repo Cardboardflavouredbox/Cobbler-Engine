@@ -60,6 +60,40 @@ glm::vec3 CutLinething(glm::vec3 invisible, glm::vec3 visible) {
   return result;
 }
 
+glm::vec4 normalizePlane(const glm::vec4& plane) {
+  float length = glm::length(glm::vec3(plane));
+  return plane / length;
+}
+
+float pointSideCheck(glm::vec3 point, glm::vec4 plane) {
+  return glm::dot(point, glm::vec3(plane)) + plane.w;
+}
+
+void SetRendererfrustum() {
+  glm::mat4 base = Global->perspectivematrix;
+
+  glm::mat4 view = glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
+
+  glm::mat4 vp = glm::transpose(base * view);
+
+  RendererGlobal->CameraFrustum.leftFace = normalizePlane(vp[3] + vp[0]);
+  RendererGlobal->CameraFrustum.rightFace = normalizePlane(vp[3] - vp[0]);
+  RendererGlobal->CameraFrustum.bottomFace = normalizePlane(vp[3] + vp[1]);
+  RendererGlobal->CameraFrustum.topFace = normalizePlane(vp[3] - vp[1]);
+  RendererGlobal->CameraFrustum.nearFace = normalizePlane(vp[3] + vp[2]);
+  RendererGlobal->CameraFrustum.farFace = normalizePlane(vp[3] - vp[2]);
+}
+
+bool frustumcheck(const glm::vec3& pos, float radius) {
+  return (
+      pointSideCheck(pos, RendererGlobal->CameraFrustum.leftFace) >= -radius &&
+      pointSideCheck(pos, RendererGlobal->CameraFrustum.rightFace) >= -radius &&
+      pointSideCheck(pos, RendererGlobal->CameraFrustum.farFace) >= -radius &&
+      pointSideCheck(pos, RendererGlobal->CameraFrustum.nearFace) >= -radius &&
+      pointSideCheck(pos, RendererGlobal->CameraFrustum.topFace) >= -radius &&
+      pointSideCheck(pos, RendererGlobal->CameraFrustum.bottomFace) >= -radius);
+}
+
 void render3DUI() {
   for (int i = 0; i < UIGlobalStuff->UIlist.size(); i++) {
     int len = UIGlobalStuff->UImap3D[UIGlobalStuff->UIlist[i]].size();
@@ -146,16 +180,26 @@ void ModelGroupsethitboxes(Entity* entity) {
 void renderEntity() {
   for (const auto& [index, entity] : Entities) {
     if (entity->Modelthing != NULL) {
-      renderModelGroup(entity->Modelthing, entity->Modelthing->name, false,
-                       entity->deltatimelocal + renderdeltaTime);
+      float radius = entity->hitboxradius + entity->hitboxlength / 2.f;
+      glm::vec3 pos = entity->position;
+      pos.z += radius;
+      if (frustumcheck(pos, radius * 2.f)) {
+        renderModelGroup(entity->Modelthing, entity->Modelthing->name, false,
+                         entity->deltatimelocal + renderdeltaTime);
+      }
       ModelGroupsethitboxes(entity);
     }
   }
   for (const auto& i : GlobalNetworkStuff->PlayerNetStuff) {
     Entity* entity = i.second.PlayerEntity;
     if (entity->Modelthing != NULL) {
-      renderModelGroup(entity->Modelthing, entity->Modelthing->name, false,
-                       entity->deltatimelocal + renderdeltaTime);
+      float radius = entity->hitboxradius + entity->hitboxlength / 2.f;
+      glm::vec3 pos = entity->position;
+      pos.z += radius;
+      if (frustumcheck(pos, radius * 2.f)) {
+        renderModelGroup(entity->Modelthing, entity->Modelthing->name, false,
+                         entity->deltatimelocal + renderdeltaTime);
+      }
       ModelGroupsethitboxes(entity);
     }
   }
@@ -437,6 +481,7 @@ void openglrender() {
 }
 
 void render() {
+  SetRendererfrustum();
   switch (Settings->graphicsmode) {
     case OpenGL1:
     case OpenGL3:

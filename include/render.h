@@ -82,6 +82,18 @@ struct RendererStuff {
   //   vk::raii::PhysicalDevice physicalDevice = NULL;
   // };
   // VulkanRenderer* Vulkanstuff;
+
+  struct Frustum {
+    glm::vec4 topFace;
+    glm::vec4 bottomFace;
+
+    glm::vec4 rightFace;
+    glm::vec4 leftFace;
+
+    glm::vec4 farFace;
+    glm::vec4 nearFace;
+  };
+  Frustum CameraFrustum;
 };
 
 LIB_API extern std::unique_ptr<RendererStuff> RendererGlobal;
