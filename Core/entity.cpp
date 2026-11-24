@@ -112,7 +112,12 @@ void Modeltransform::SetActions(const std::vector<int>& input) {
 void Entity::setup(uint32_t Index, std::string path) {
   EntityIndex = Index;
 
-  lua.open_libraries(sol::lib::base, sol::lib::math);
+  lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::package);
+
+  std::string package_path = lua["package"]["path"];
+  lua["package"]["path"] =
+      "./" + Global->GameFolder.string() + "/weapons/?.lua";
+  package_path = lua["package"]["path"];
 
   LuaSet(&lua);
 
@@ -141,7 +146,7 @@ void Entity::setup(uint32_t Index, std::string path) {
   lua["MeleeAttack"] = MeleeAttack;
 
   std::string scriptpath =
-      Global->GameFolder.string() + "/entities/" + path + "/entitymain.lua";
+      Global->GameFolder.string() + "/entities/" + path + ".lua";
 
   std::filesystem::path entry = std::filesystem::path(scriptpath);
 
