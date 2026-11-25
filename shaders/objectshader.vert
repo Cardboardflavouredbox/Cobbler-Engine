@@ -10,7 +10,6 @@ uniform mat4 model;
 uniform mat4 UIreversemodel;
 
 uniform uint bonelist[64];
-uniform uint parentlist[64];
 uniform mat4 restmat[64];
 uniform vec3 bonehead[64];
 uniform vec3 resultbonepos[64];
@@ -31,16 +30,6 @@ int getboneindexreal() {
     if (i > actionsize - 1)
       return -1;
     if (bonelist[i] == boneindex)
-      return i;
-  }
-  return -1;
-}
-
-int getparentindexreal(int bone) {
-  for (int i = 0; i < 64; i++) {
-    if (i > actionsize - 1)
-      return -1;
-    if (parentlist[bone] == bonelist[i])
       return i;
   }
   return -1;
@@ -88,6 +77,12 @@ void main() {
 
     result = vec4(qtransform(resultbonequat[boneindexresult], result.xyz), 1.0);
 
+    vec3 scaletemp = resultbonescale[boneindexresult];
+
+    result.x *= scaletemp.x;
+    result.y *= scaletemp.y;
+    result.z *= scaletemp.z;
+
     vec3 postemp = resultbonepos[boneindexresult];
     result.x += postemp.x;
     result.y += postemp.y;
@@ -96,23 +91,6 @@ void main() {
     NormalResult = mat3(restmat[boneindexresult]) * NormalResult;
     NormalResult =
         qtransform(resultbonequat[boneindexresult], NormalResult.xyz);
-
-    int parentindex = index;
-    for (int j = 0; j < 16; j++) {
-      result -= vec4(bonehead[parentindex], 0.0);
-
-      vec3 scaletemp = resultbonescale[parentindex];
-
-      result.x *= scaletemp.x;
-      result.y *= scaletemp.y;
-      result.z *= scaletemp.z;
-
-      result += vec4(bonehead[parentindex], 0.0);
-
-      parentindex = getparentindexreal(parentindex);
-      if (parentindex == -1)
-        break;
-    }
   }
 
   vec4 angleaxisresult =

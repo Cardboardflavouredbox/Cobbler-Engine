@@ -101,9 +101,7 @@ void render3DUI() {
       Modeltransform* model =
           UIGlobalStuff->UImap3D[UIGlobalStuff->UIlist[i]][j]->modeltrans;
 
-      for (auto& modelname : model->name) {
-        renderModelGroup(model, modelname, true, renderdeltaTime);
-      }
+      renderModelGroup(model, model->names, true, renderdeltaTime);
     }
   }
 }
@@ -120,61 +118,63 @@ void render2DUI() {
 
 void ModelGroupsethitboxes(Entity* entity) {
   Modeltransform* modeltrans = entity->Modelthing;
-  for (auto& modelname : modeltrans->name) {
-    ModelGroupClass* modelgroup = &ModelGroupMap[modelname];
-    for (auto& [index, bone] : modelgroup->Bonemap) {
-      bone.bonehitbox.processedpoints.clear();
-      for (auto& point : bone.bonehitbox.points) {
-        glm::vec3 pos = point;
-        glm::vec3 checkpos = pos;
+  for (auto& modelname : modeltrans->names) {
+    if (ModelGroupMap.contains(modelname)) {
+      ModelGroupClass* modelgroup = &ModelGroupMap[modelname];
+      for (auto& [index, bone] : modelgroup->Bonemap) {
+        bone.bonehitbox.processedpoints.clear();
+        for (auto& point : bone.bonehitbox.points) {
+          glm::vec3 pos = point;
+          glm::vec3 checkpos = pos;
 
-        pos = checkpos;
-        BoneResult* boneresult = &BoneResultmapVector[index];
+          pos = checkpos;
+          BoneResult* boneresult = &BoneResultmapVector[index];
 
-        pos *= bone.restpose.scale;
-        pos = bone.restpose.rot * pos;
-        pos += bone.restpose.pos;
+          pos *= bone.restpose.scale;
+          pos = bone.restpose.rot * pos;
+          pos += bone.restpose.pos;
 
-        pos -= bone.head;
+          pos -= bone.head;
 
-        pos = boneresult->rot * pos;
+          pos = boneresult->rot * pos;
 
-        pos += boneresult->head;
+          pos += boneresult->head;
 
-        uint32_t bonecode = index;
-        while (bonecode != uint32_t(-1)) {
-          ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
-          BoneResult* boneresult = &BoneResultmapVector[bonecode];
-          pos -= bone->head;
+          uint32_t bonecode = index;
+          while (bonecode != uint32_t(-1)) {
+            ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
+            BoneResult* boneresult = &BoneResultmapVector[bonecode];
+            pos -= bone->head;
 
-          pos *= boneresult->scale;
+            pos *= boneresult->scale;
 
-          pos += bone->head;
+            pos += bone->head;
 
-          bonecode = bone->parent;
-          bone = &modelgroup->Bonemap[bonecode];
-        }
-
-        pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
-                             glm::vec3(0, 0, 1)) *
-              pos;
-
-        pos = modeltrans->rot * pos;
-        pos.x *= modeltrans->size.x;
-        pos.y *= modeltrans->size.y;
-        pos.z *= modeltrans->size.z;
-        pos += modeltrans->position;
-        bone.bonehitbox.processedpoints.push_back(pos);
-      }
-      if (Global->IsDebug && Settings->graphicsmode == OpenGL1) {
-        for (auto& face : bone.bonehitbox.faces) {
-          glBegin(GL_TRIANGLES);
-          for (int j = 2; j >= 0; j--) {
-            glm::vec3 pos = bone.bonehitbox.processedpoints[face[j]];
-            glColor4f((j + 1) / 3.f, 0, 0, 0.5f);
-            glVertex3f(pos.x, pos.y, pos.z);
+            bonecode = bone->parent;
+            bone = &modelgroup->Bonemap[bonecode];
           }
-          glEnd();
+
+          pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
+                               glm::vec3(0, 0, 1)) *
+                pos;
+
+          pos = modeltrans->rot * pos;
+          pos.x *= modeltrans->size.x;
+          pos.y *= modeltrans->size.y;
+          pos.z *= modeltrans->size.z;
+          pos += modeltrans->position;
+          bone.bonehitbox.processedpoints.push_back(pos);
+        }
+        if (Global->IsDebug && Settings->graphicsmode == OpenGL1) {
+          for (auto& face : bone.bonehitbox.faces) {
+            glBegin(GL_TRIANGLES);
+            for (int j = 2; j >= 0; j--) {
+              glm::vec3 pos = bone.bonehitbox.processedpoints[face[j]];
+              glColor4f((j + 1) / 3.f, 0, 0, 0.5f);
+              glVertex3f(pos.x, pos.y, pos.z);
+            }
+            glEnd();
+          }
         }
       }
     }
@@ -201,10 +201,8 @@ void renderEntity() {
     glm::vec3 pos = entity->position;
     pos.z += radius;
     if (frustumcheck(pos, radius * 2.f)) {
-      for (auto& modelname : entity->Modelthing->name) {
-        renderModelGroup(entity->Modelthing, modelname, false,
-                         entity->deltatimelocal + renderdeltaTime);
-      }
+      renderModelGroup(entity->Modelthing, entity->Modelthing->names, false,
+                       entity->deltatimelocal + renderdeltaTime);
     }
     ModelGroupsethitboxes(entity);
   }
@@ -214,9 +212,7 @@ void renderProps() {
   for (int i = 0; i < Global->Models.size(); i++) {
     Modeltransform* model = &Global->Models[i];
 
-    for (auto& modelname : model->name) {
-      renderModelGroup(model, modelname, false, renderdeltaTime);
-    }
+    renderModelGroup(model, model->names, false, renderdeltaTime);
   }
 }
 

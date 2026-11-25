@@ -37,6 +37,7 @@ playerinputs Loadinputdata(const playerdatapacket& input) {
   temp.attack = input.attack;
   temp.altattack = input.altattack;
   temp.dash = input.dash;
+  temp.currentweapon = input.currentweapon;
   return temp;
 }
 
@@ -94,6 +95,12 @@ void processinputs() {
   P1PlayerInputs->attack = LocalInputs->leftclick;
   P1PlayerInputs->altattack = LocalInputs->rightclick;
   P1PlayerInputs->dash = LocalInputs->Keys[SDL_SCANCODE_LSHIFT];
+
+  for (int i = 0; i < 10; i++) {
+    if (LocalInputs->Keys[SDL_SCANCODE_1 + i] > 1) {
+      P1PlayerInputs->currentweapon = i;
+    }
+  }
 }
 
 void CameraUpdate() {

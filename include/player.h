@@ -8,6 +8,7 @@
 
 struct playerinputs {
   glm::vec2 lookdir, movevec2;
+  unsigned char currentweapon = 0;
   unsigned char jump, attack, altattack, dash;
 };
 
@@ -20,6 +21,7 @@ struct playerdatapacket {
   uint64_t ID;
   std::array<float, 3> position, velocityvec3;
   std::array<float, 2> movevec2, lookdir;
+  unsigned char currentweapon = 0;
   unsigned char jump, attack, altattack, dash;
   bool IsGrounded;
   void Set(const playerinputs* input) {
@@ -27,6 +29,7 @@ struct playerdatapacket {
       movevec2[i] = input->movevec2[i];
       lookdir[i] = input->lookdir[i];
     }
+    currentweapon = input->currentweapon;
     jump = input->jump;
     attack = input->attack;
     altattack = input->altattack;

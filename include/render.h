@@ -100,8 +100,8 @@ LIB_API extern std::unique_ptr<RendererStuff> RendererGlobal;
 
 extern "C" {
 LIB_API void renderModelGroup(Modeltransform* modeltrans,
-                              std::string modelgroupname, bool isUI,
-                              float deltatime);
+                              const std::vector<std::string>& modelgroupname,
+                              bool isUI, float deltatime);
 
 LIB_API void DrawLine(unsigned char color, glm::vec3 rawvectors[]);
 

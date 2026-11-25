@@ -68,17 +68,19 @@ float Entityraycheck(
   glm::vec3 normal = glm::normalize(ray[1] - ray[0]);
   float result = -1;
   if (checkentity->Modelthing != NULL) {
-    for (const auto& bonename : checkentity->Modelthing->name) {
-      for (const auto& [index, bone] : ModelGroupMap[bonename].Bonemap) {
-        for (const auto& face : bone.bonehitbox.faces) {
-          const std::vector<glm::vec3>& points =
-              bone.bonehitbox.processedpoints;
-          std::optional<glm::vec3> check =
-              RayTriIntersect(ray[0], normal, points[face[0]], points[face[1]],
-                              points[face[2]]);
+    for (const auto& bonename : checkentity->Modelthing->names) {
+      if (ModelGroupMap.contains(bonename)) {
+        for (const auto& [index, bone] : ModelGroupMap[bonename].Bonemap) {
+          for (const auto& face : bone.bonehitbox.faces) {
+            const std::vector<glm::vec3>& points =
+                bone.bonehitbox.processedpoints;
+            std::optional<glm::vec3> check =
+                RayTriIntersect(ray[0], normal, points[face[0]],
+                                points[face[1]], points[face[2]]);
 
-          if (check.has_value()) {
-            result = glm::distance(ray[0], check.value());
+            if (check.has_value()) {
+              result = glm::distance(ray[0], check.value());
+            }
           }
         }
       }

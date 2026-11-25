@@ -192,7 +192,7 @@ void LuaSet(sol::state* luathing) {
 
   luathing->new_usertype<Modeltransform>(
       "Modeltransform", sol::constructors<Modeltransform()>(), "visible",
-      &Modeltransform::visible, "name", &Modeltransform::name, "position",
+      &Modeltransform::visible, "names", &Modeltransform::names, "position",
       &Modeltransform::position, "size", &Modeltransform::size, "lookdir",
       &Modeltransform::lookdir, "rot", &Modeltransform::rot, "actions",
       &Modeltransform::actions);
@@ -213,5 +213,6 @@ void LuaSet(sol::state* luathing) {
       "playerinputs", sol::constructors<playerinputs()>(), "lookdir",
       &playerinputs::lookdir, "movevec2", &playerinputs::movevec2, "jump",
       &playerinputs::jump, "attack", &playerinputs::attack, "altattack",
-      &playerinputs::altattack, "dash", &playerinputs::dash);
+      &playerinputs::altattack, "dash", &playerinputs::dash, "currentweapon",
+      &playerinputs::currentweapon);
 }

@@ -167,9 +167,11 @@ void Entity::setup(uint32_t Index, std::string path) {
   std::vector<std::string> tempvec2 =
       modelnamesthing.as<std::vector<std::string>>();
 
-  Modelthing->name = tempvec2;
+  Modelthing->names = tempvec2;
 
   lua["luasetup"]();
+
+  WeaponCount = (unsigned char)(lua["WeaponCount"]);
 
   luaupdate = lua["luaupdate"];
   lualateupdate = lua["lualateupdate"];

@@ -74,7 +74,7 @@ LIB_API extern std::unordered_map<std::string, ModelGroupClass> ModelGroupMap;
 
 struct Modeltransform {
   bool visible = true;
-  std::vector<std::string> name;
+  std::vector<std::string> names;
   struct action {
     struct actionpose {
       float lerpamount = 0.f;
@@ -89,8 +89,6 @@ struct Modeltransform {
   glm::vec2 lookdir;
   glm::quat rot;
 
-  std::vector<uint32_t> Bonecodevec;
-  std::unordered_map<std::string, bool> modelvisibilityresult;
   void SetActions(const std::vector<int>& input);
 };
 

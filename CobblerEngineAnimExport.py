@@ -21,9 +21,8 @@ def actionthing(action, filepath):
         start_frame = action.frame_range[0]
         end_frame = action.frame_range[1]
 
-        os.makedirs(dir + "/anims", exist_ok=True)
 
-        f = open(dir + "/anims/" + action.name + ".anim", "w", encoding="utf-8")
+        f = open(dir+ "/" + action.name + ".anim", "w", encoding="utf-8")
 
         f.write(f"A {action.name} {start_frame:.0f} {end_frame:.0f}\n")
 

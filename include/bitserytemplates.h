@@ -65,6 +65,7 @@ void serialize(S& s, playerdatapacket& o) {
   s.value8b(o.ID);
   s.value4b(o.teamindex);
   s.value1b(o.IsGrounded);
+  s.value1b(o.currentweapon);
   s.value1b(o.jump);
   s.container4b(o.lookdir);
   s.container4b(o.movevec2);

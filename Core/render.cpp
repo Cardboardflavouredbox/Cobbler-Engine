@@ -176,30 +176,29 @@ BoneResult applyboneactions(const uint32_t& bonecode,
 
     final_quat = glm::normalize(glm::angleAxis(angle, axis));
 
+    glm::quat scalething = glm::rotation(glm::vec3(0, 1, 0), axis);
+
+    poseresultthing.scale = glm::vec3(1.0f) +
+                            glm::abs(axisquat * glm::vec3(1, 0, 0)) *
+                                (poseresultthing.scale.x - 1.0f) +
+                            glm::abs(axisquat * glm::vec3(0, 1, 0)) *
+                                (poseresultthing.scale.y - 1.0f) +
+                            glm::abs(axisquat * glm::vec3(0, 0, 1)) *
+                                (poseresultthing.scale.z - 1.0f);
+
     if (boneindex == bonecode) {
       if (poseresultthing.pos != glm::vec3(0) ||
           poseresultthing.scale != glm::vec3(1) ||
           final_quat != glm::quat(1, 0, 0, 0))
         boneresult.check = true;
-
-      glm::quat scalething = glm::rotation(glm::vec3(0, 0, 1), axis);
-
-      poseresultthing.scale = glm::vec3(1.0f) +
-                              glm::abs(scalething * glm::vec3(1, 0, 0)) *
-                                  (poseresultthing.scale.x - 1.0f) +
-                              glm::abs(scalething * glm::vec3(0, 1, 0)) *
-                                  (poseresultthing.scale.y - 1.0f) +
-                              glm::abs(scalething * glm::vec3(0, 0, 1)) *
-                                  (poseresultthing.scale.z - 1.0f);
-
       boneresult.scale = poseresultthing.scale;
     }
 
     boneresult.rot = final_quat * boneresult.rot;
 
-    boneresult.head =
-        (final_quat) * (poseresultthing.scale * (boneresult.head - bone->head));
-    boneresult.head += bone->head;
+    boneresult.head = (final_quat) * ((boneresult.head - bone->head));
+    boneresult.head += poseresultthing.scale * (bone->tail - bone->head) -
+                       bone->tail + bone->head * 2.f;
     boneresult.head += axisquat * (poseresultthing.pos * bone->restpose.scale);
     boneindex = bone->parent;
   }
@@ -258,335 +257,298 @@ glm::mat4 transtomatrix(const glm::vec3& pos, const glm::vec3& scale,
 }
 
 // renders modelgroup.
-void renderModelGroup(Modeltransform* modeltrans, std::string modelgroupname,
-                      bool isUI, float deltatime) {
+void renderModelGroup(Modeltransform* modeltrans,
+                      const std::vector<std::string>& modelgroupname, bool isUI,
+                      float deltatime) {
+  for (int i = 0; i < modeltrans->actions.size(); i++) {
+    uint32_t poseindex = modeltrans->actions[i].pose.posecode.front();
+
+    modeltrans->actions[i].frame +=
+        deltatime * 24 * modeltrans->actions[i].speed;
+    if ((float)AnimMap[poseindex].animstartend[0] ==
+        (float)AnimMap[poseindex].animstartend[1]) {
+      modeltrans->actions[i].frame = (float)AnimMap[poseindex].animstartend[0];
+    } else {
+      modeltrans->actions[i].actiondone =
+          (modeltrans->actions[i].frame >=
+           (float)AnimMap[poseindex].animstartend[1]);
+    }
+  }
   BoneResultmapVector.clear();
-  if (ModelGroupMap.contains(modelgroupname)) {
-    ModelGroupClass* modelgroup = &ModelGroupMap[modelgroupname];
-    if (modeltrans->visible) {
-      // code of animation frames.
-      for (int i = 0; i < modeltrans->actions.size(); i++) {
-        uint32_t poseindex = modeltrans->actions[i].pose.posecode.front();
+  for (const auto& namething : modelgroupname) {
+    if (ModelGroupMap.contains(namething)) {
+      ModelGroupClass* modelgroup = &ModelGroupMap[namething];
+      if (modeltrans->visible) {
+        // code of animation frames.
 
-        modeltrans->actions[i].frame +=
-            deltatime * 24 * modeltrans->actions[i].speed;
-        if ((float)AnimMap[poseindex].animstartend[0] ==
-            (float)AnimMap[poseindex].animstartend[1]) {
-          modeltrans->actions[i].frame =
-              (float)AnimMap[poseindex].animstartend[0];
+        glm::vec3 lookdir(0);
+
+        if (isUI) {
+          lookdir = Camera->lookat - Camera->pos;
         } else {
-          modeltrans->actions[i].actiondone =
-              (modeltrans->actions[i].frame >=
-               (float)AnimMap[poseindex].animstartend[1]);
+          lookdir.y = 1;
         }
-      }
 
-      glm::vec3 lookdir(0);
+        modelapplybones(modeltrans, modelgroup);
 
-      if (isUI) {
-        lookdir = Camera->lookat - Camera->pos;
-      } else {
-        lookdir.y = 1;
-      }
+        switch (Settings->graphicsmode) {
+          case OpenGL4:
+          case OpenGL3: {
+            GLuint shadertemp =
+                RendererGlobal->GLstuff->GLModels.begin()->second.shader;
 
-      if (modeltrans->modelvisibilityresult.empty()) {
-        for (auto const& visiblething : modelgroup->Models) {
-          modeltrans->modelvisibilityresult[visiblething] = true;
-        }
-      }
-      // if (!modeltrans->actions.empty()) {
-      //   for (auto const& action : modeltrans->actions) {
-      //     for (auto const& visiblething :
-      //          modelgroup->modelvisibility[action.pose.posecode[0]]) {
-      //       bool result =
-      //       modeltrans->modelvisibilityresult[visiblething.name]; for (auto
-      //       const& [key, val] : visiblething.value) {
-      //         if (key > action.frame) {
-      //           break;
-      //         } else {
-      //           result = val;
-      //         }
-      //       }
-      //       modeltrans->modelvisibilityresult[visiblething.name] = result;
-      //     }
-      //   }
-      // }
-      modelapplybones(modeltrans, modelgroup);
+            glUseProgram(shadertemp);
 
-      switch (Settings->graphicsmode) {
-        case OpenGL4:
-        case OpenGL3: {
-          GLuint shadertemp =
-              RendererGlobal->GLstuff->GLModels.begin()->second.shader;
+            glm::mat4 modelMatrix, UImatrix;
+            if (isUI) {
+              modelMatrix = Global->perspectivematrix *
+                            glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0),
+                                        glm::vec3(0, 0, 1));
+              UImatrix = transtomatrix(
+                  Camera->pos, glm::vec3(1),
+                  glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1)));
 
-          glUseProgram(shadertemp);
+              glUniform3f(glGetUniformLocation(shadertemp, "viewPos"), 0, 0, 0);
+            } else {
+              modelMatrix =
+                  Global->perspectivematrix *
+                  glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
 
-          glm::mat4 modelMatrix, UImatrix;
-          if (isUI) {
-            modelMatrix = Global->perspectivematrix *
-                          glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0),
-                                      glm::vec3(0, 0, 1));
-            UImatrix = transtomatrix(
-                Camera->pos, glm::vec3(1),
-                glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1)));
-
-            glUniform3f(glGetUniformLocation(shadertemp, "viewPos"), 0, 0, 0);
-          } else {
-            modelMatrix =
-                Global->perspectivematrix *
-                glm::lookAt(Camera->pos, Camera->lookat, glm::vec3(0, 0, 1));
-
-            glUniform3f(glGetUniformLocation(shadertemp, "viewPos"),
-                        Camera->pos.x, Camera->pos.y, Camera->pos.z);
-          }
-
-          glUniformMatrix4fv(glGetUniformLocation(shadertemp, "UIreversemodel"),
-                             1, GL_FALSE, glm::value_ptr(UImatrix));
-
-          glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1,
-                             GL_FALSE, glm::value_ptr(modelMatrix));
-
-          glUniform1f(glGetUniformLocation(shadertemp, "ambientStrength"),
-                      AmbientStrength);
-          glUniform3f(glGetUniformLocation(shadertemp, "ambientColor"),
-                      AmbientColor[0], AmbientColor[1], AmbientColor[2]);
-
-          glUniform1i(glGetUniformLocation(shadertemp, "IsUI"), isUI);
-
-          glUniform1i(glGetUniformLocation(shadertemp, "lightcnt"),
-                      Lights.size());
-
-          int cnt = 0;
-          for (auto& [index, light] : Lights) {
-            glUniform3f(glGetUniformLocation(
-                            shadertemp,
-                            ("lightPos[" + std::to_string(cnt) + "]").c_str()),
-                        light->position.x, light->position.y,
-                        light->position.z);
-            glUniform3f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("lightColor[" + std::to_string(cnt) + "]").c_str()),
-                light->color[0], light->color[1], light->color[2]);
-            glUniform1f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("specularStrength[" + std::to_string(cnt) + "]").c_str()),
-                light->specularStrength);
-            glUniform1f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("diffusionStrength[" + std::to_string(cnt) + "]").c_str()),
-                light->diffusionStrength);
-            cnt++;
-          }
-
-          if (modeltrans->Bonecodevec.empty()) {
-            for (const auto& [code, bone] : modelgroup->Bonemap) {
-              modeltrans->Bonecodevec.push_back(code);
+              glUniform3f(glGetUniformLocation(shadertemp, "viewPos"),
+                          Camera->pos.x, Camera->pos.y, Camera->pos.z);
             }
-          }
-
-          int actionsize = modeltrans->Bonecodevec.size();
-
-          glUniform1i(glGetUniformLocation(shadertemp, "actionsize"),
-                      actionsize);
-
-          for (int i = 0; i < actionsize; i++) {
-            ModelGroupClass::Bone* bone =
-                &modelgroup->Bonemap[modeltrans->Bonecodevec[i]];
-
-            glm::mat4 restmat = transtomatrix(
-                bone->restpose.pos, bone->restpose.scale, bone->restpose.rot);
-
-            BoneResult* boneresult =
-                &BoneResultmapVector[modeltrans->Bonecodevec[i]];
-
-            int index = i;
-
-            glUniform1ui(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("bonelist[" + std::to_string(index) + "]").c_str()),
-                modeltrans->Bonecodevec[i]);
-
-            glUniform1ui(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("parentlist[" + std::to_string(index) + "]").c_str()),
-                bone->parent);
-
-            glUniform1i(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("resultbonecheck[" + std::to_string(index) + "]").c_str()),
-                (boneresult->check) ? 1 : 0);
 
             glUniformMatrix4fv(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("restmat[" + std::to_string(index) + "]").c_str()),
-                1, GL_FALSE, glm::value_ptr(restmat));
+                glGetUniformLocation(shadertemp, "UIreversemodel"), 1, GL_FALSE,
+                glm::value_ptr(UImatrix));
 
-            glUniform3f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("bonehead[" + std::to_string(index) + "]").c_str()),
-                bone->head.x, bone->head.y, bone->head.z);
+            glUniformMatrix4fv(glGetUniformLocation(shadertemp, "model"), 1,
+                               GL_FALSE, glm::value_ptr(modelMatrix));
 
-            glUniform3f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("resultbonepos[" + std::to_string(index) + "]").c_str()),
-                boneresult->head.x, boneresult->head.y, boneresult->head.z);
+            glUniform1f(glGetUniformLocation(shadertemp, "ambientStrength"),
+                        AmbientStrength);
+            glUniform3f(glGetUniformLocation(shadertemp, "ambientColor"),
+                        AmbientColor[0], AmbientColor[1], AmbientColor[2]);
 
-            glUniform3f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("resultbonescale[" + std::to_string(index) + "]").c_str()),
-                boneresult->scale.x, boneresult->scale.y, boneresult->scale.z);
+            glUniform1i(glGetUniformLocation(shadertemp, "IsUI"), isUI);
 
-            glUniform4f(
-                glGetUniformLocation(
-                    shadertemp,
-                    ("resultbonequat[" + std::to_string(index) + "]").c_str()),
-                boneresult->rot.x, boneresult->rot.y, boneresult->rot.z,
-                boneresult->rot.w);
+            glUniform1i(glGetUniformLocation(shadertemp, "lightcnt"),
+                        Lights.size());
+
+            int cnt = 0;
+            for (auto& [index, light] : Lights) {
+              glUniform3f(
+                  glGetUniformLocation(
+                      shadertemp,
+                      ("lightPos[" + std::to_string(cnt) + "]").c_str()),
+                  light->position.x, light->position.y, light->position.z);
+              glUniform3f(
+                  glGetUniformLocation(
+                      shadertemp,
+                      ("lightColor[" + std::to_string(cnt) + "]").c_str()),
+                  light->color[0], light->color[1], light->color[2]);
+              glUniform1f(glGetUniformLocation(
+                              shadertemp,
+                              ("specularStrength[" + std::to_string(cnt) + "]")
+                                  .c_str()),
+                          light->specularStrength);
+              glUniform1f(glGetUniformLocation(
+                              shadertemp,
+                              ("diffusionStrength[" + std::to_string(cnt) + "]")
+                                  .c_str()),
+                          light->diffusionStrength);
+              cnt++;
+            }
+            std::vector<uint32_t> Bonecodevec;
+
+            for (const auto& [code, bone] : modelgroup->Bonemap) {
+              Bonecodevec.push_back(code);
+            }
+
+            int actionsize = Bonecodevec.size();
+
+            glUniform1i(glGetUniformLocation(shadertemp, "actionsize"),
+                        actionsize);
+
+            for (int i = 0; i < actionsize; i++) {
+              ModelGroupClass::Bone* bone =
+                  &modelgroup->Bonemap[Bonecodevec[i]];
+
+              glm::mat4 restmat = transtomatrix(
+                  bone->restpose.pos, bone->restpose.scale, bone->restpose.rot);
+
+              BoneResult* boneresult = &BoneResultmapVector[Bonecodevec[i]];
+
+              int index = i;
+
+              glUniform1ui(
+                  glGetUniformLocation(
+                      shadertemp,
+                      ("bonelist[" + std::to_string(index) + "]").c_str()),
+                  Bonecodevec[i]);
+
+              glUniform1i(glGetUniformLocation(
+                              shadertemp,
+                              ("resultbonecheck[" + std::to_string(index) + "]")
+                                  .c_str()),
+                          (boneresult->check) ? 1 : 0);
+
+              glUniformMatrix4fv(
+                  glGetUniformLocation(
+                      shadertemp,
+                      ("restmat[" + std::to_string(index) + "]").c_str()),
+                  1, GL_FALSE, glm::value_ptr(restmat));
+
+              glUniform3f(
+                  glGetUniformLocation(
+                      shadertemp,
+                      ("bonehead[" + std::to_string(index) + "]").c_str()),
+                  bone->head.x, bone->head.y, bone->head.z);
+
+              glUniform3f(
+                  glGetUniformLocation(
+                      shadertemp,
+                      ("resultbonepos[" + std::to_string(index) + "]").c_str()),
+                  boneresult->head.x, boneresult->head.y, boneresult->head.z);
+
+              glUniform3f(glGetUniformLocation(
+                              shadertemp,
+                              ("resultbonescale[" + std::to_string(index) + "]")
+                                  .c_str()),
+                          boneresult->scale.x, boneresult->scale.y,
+                          boneresult->scale.z);
+
+              glUniform4f(glGetUniformLocation(
+                              shadertemp,
+                              ("resultbonequat[" + std::to_string(index) + "]")
+                                  .c_str()),
+                          boneresult->rot.x, boneresult->rot.y,
+                          boneresult->rot.z, boneresult->rot.w);
+            }
+
+            for (const auto& modelname : modelgroup->Models) {
+              if (Global->Modelmap[modelname].points.empty()) continue;
+              uint32_t bonecode =
+                  Global->Modelmap[modelname].points.front().bone;
+
+              glm::mat4 transformmat = transtomatrix(
+                  modeltrans->position, modeltrans->size, modeltrans->rot);
+
+              glActiveTexture(GL_TEXTURE0);
+              glBindTexture(
+                  GL_TEXTURE_2D,
+                  RendererGlobal->GLstuff->GLModels[modelname].texture);
+              glUniform1i(glGetUniformLocation(shadertemp, "InputTexture"), 0);
+
+              glUniform1f(glGetUniformLocation(shadertemp, "lookdirx"),
+                          modeltrans->lookdir.x);
+
+              glUniformMatrix4fv(
+                  glGetUniformLocation(shadertemp, "transformmat"), 1, GL_FALSE,
+                  glm::value_ptr(transformmat));
+
+              glBindVertexArray(
+                  RendererGlobal->GLstuff->GLModels[modelname].VAOthing);
+
+              glDrawArrays(GL_TRIANGLES, 0,
+                           RendererGlobal->GLstuff->GLModels[modelname].size);
+            }
+            break;
           }
+          case OpenGL1: {  // opengl 1
+            for (int a = 0; a < modelgroup->Models.size(); a++) {
+              if (true) {
+                GlobalClass::Model* model =
+                    &Global->Modelmap[modelgroup->Models[a]];
 
-          for (const auto& modelname : modelgroup->Models) {
-            if (Global->Modelmap[modelname].points.empty() ||
-                !modeltrans->modelvisibilityresult[modelname])
-              continue;
-            uint32_t bonecode = Global->Modelmap[modelname].points.front().bone;
+                for (int j = 0; j < model->faces.size(); j++) {
+                  glEnable(GL_TEXTURE_2D);
+                  glBindTexture(
+                      GL_TEXTURE_2D,
+                      RendererGlobal->GLstuff->textures[model->texture]);
+                  int facesize = model->faces[j].point.size();
+                  if (facesize == 4) {
+                    glBegin(GL_QUADS);
+                  } else {
+                    glBegin(GL_TRIANGLES);
+                  }
+                  glm::vec3 tri[4];
 
-            glm::mat4 transformmat = transtomatrix(
-                modeltrans->position, modeltrans->size, modeltrans->rot);
+                  for (int k = facesize - 1; k >= 0; k--) {
+                    glm::vec3 pos = model->points[model->faces[j].point[k]].pos;
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D,
-                          RendererGlobal->GLstuff->GLModels[modelname].texture);
-            glUniform1i(glGetUniformLocation(shadertemp, "InputTexture"), 0);
+                    uint32_t bonecode =
+                        model->points[model->faces[j].point[k]].bone;
 
-            glUniform1f(glGetUniformLocation(shadertemp, "lookdirx"),
-                        modeltrans->lookdir.x);
+                    bonecode = model->points[model->faces[j].point[k]].bone;
 
-            glUniformMatrix4fv(glGetUniformLocation(shadertemp, "transformmat"),
-                               1, GL_FALSE, glm::value_ptr(transformmat));
+                    BoneResult* boneresult = &BoneResultmapVector[bonecode];
 
-            glBindVertexArray(
-                RendererGlobal->GLstuff->GLModels[modelname].VAOthing);
-
-            glDrawArrays(GL_TRIANGLES, 0,
-                         RendererGlobal->GLstuff->GLModels[modelname].size);
-          }
-          break;
-        }
-        case OpenGL1: {  // opengl 1
-          for (int a = 0; a < modelgroup->Models.size(); a++) {
-            if (modeltrans->modelvisibilityresult[modelgroup->Models[a]]) {
-              GlobalClass::Model* model =
-                  &Global->Modelmap[modelgroup->Models[a]];
-              // SDL_Log("%s %d", modelgroup->Models[a].c_str(),
-              //         model->faces.size());
-              for (int j = 0; j < model->faces.size(); j++) {
-                glEnable(GL_TEXTURE_2D);
-                glBindTexture(
-                    GL_TEXTURE_2D,
-                    RendererGlobal->GLstuff->textures[model->texture]);
-                int facesize = model->faces[j].point.size();
-                if (facesize == 4) {
-                  glBegin(GL_QUADS);
-                } else {
-                  glBegin(GL_TRIANGLES);
-                }
-                glm::vec3 tri[4];
-
-                for (int k = facesize - 1; k >= 0; k--) {
-                  glm::vec3 pos = model->points[model->faces[j].point[k]].pos;
-
-                  uint32_t bonecode =
-                      model->points[model->faces[j].point[k]].bone;
-
-                  bonecode = model->points[model->faces[j].point[k]].bone;
-
-                  BoneResult* boneresult = &BoneResultmapVector[bonecode];
-
-                  ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
-
-                  pos *= bone->restpose.scale;
-                  pos = bone->restpose.rot * pos;
-                  pos += bone->restpose.pos;
-
-                  pos -= bone->head;
-
-                  pos = boneresult->rot * pos;
-
-                  pos += boneresult->head;
-
-                  while (bonecode != uint32_t(-1)) {
                     ModelGroupClass::Bone* bone =
                         &modelgroup->Bonemap[bonecode];
-                    BoneResult* boneresult = &BoneResultmapVector[bonecode];
+
+                    pos *= bone->restpose.scale;
+                    pos = bone->restpose.rot * pos;
+                    pos += bone->restpose.pos;
+
                     pos -= bone->head;
 
+                    pos = boneresult->rot * pos;
                     pos *= boneresult->scale;
 
-                    pos += bone->head;
+                    pos += boneresult->head;
 
-                    bonecode = bone->parent;
-                    bone = &modelgroup->Bonemap[bonecode];
+                    pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
+                                         glm::vec3(0, 0, 1)) *
+                          pos;
+
+                    pos *= modeltrans->size;
+                    pos = modeltrans->rot * pos;
+
+                    // if (isUI) {
+                    //   pos.y *= -1;
+                    // }
+                    pos += modeltrans->position;
+                    tri[k] = pos;
                   }
 
-                  pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
-                                       glm::vec3(0, 0, 1)) *
-                        pos;
+                  glm::vec3 normal = glm::normalize(
+                      glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
 
-                  pos *= modeltrans->size;
-                  pos = modeltrans->rot * pos;
+                  float angle = (glm::dot(normal, lookdir) + 1.f) / 3.f + 0.25f;
+                  glColor3f(angle, angle, angle);
 
-                  // if (isUI) {
-                  //   pos.y *= -1;
-                  // }
-                  pos += modeltrans->position;
-                  tri[k] = pos;
+                  for (int k = facesize - 1; k >= 0; k--) {
+                    glTexCoord2f(model->faces[j].uv[k].x,
+                                 1 - model->faces[j].uv[k].y);
+                    glVertex3f(tri[k].x, tri[k].y, tri[k].z);
+                  }
+                  glEnd();
                 }
-
-                glm::vec3 normal = glm::normalize(
-                    glm::cross(tri[1] - tri[0], tri[2] - tri[0]));
-
-                float angle = (glm::dot(normal, lookdir) + 1.f) / 3.f + 0.25f;
-                glColor3f(angle, angle, angle);
-
-                for (int k = facesize - 1; k >= 0; k--) {
-                  glTexCoord2f(model->faces[j].uv[k].x,
-                               1 - model->faces[j].uv[k].y);
-                  glVertex3f(tri[k].x, tri[k].y, tri[k].z);
-                }
-                glEnd();
               }
             }
+            break;
           }
-          break;
+            // case Software: {  // software
+            //   for (int j = 0; j < model->faces.size(); j++) {
+            //     glm::vec3 vec[3];
+            //     glm::vec2 uv[3];
+            //     for (int k = 0; k < 3; k++) {
+            //       glm::vec3 pos = model->points[model->faces[j].point[k]];
+            //       pos.x *= Global->Models[i].size.x;
+            //       pos.y *= Global->Models[i].size.y;
+            //       pos.z *= Global->Models[i].size.z;
+            //       pos += modeltrans->position;
+            //       vec[k] = pos;
+            //       uv[k] = glm::vec2(
+            //           {model->faces[j].uv[k].x, 1 -
+            //           model->faces[j].uv[k].y});
+            //     }
+            //     DrawTri(model->texture, vec, uv, 1, 1);
+            //   }
+            //   break;
+            // }
         }
-          // case Software: {  // software
-          //   for (int j = 0; j < model->faces.size(); j++) {
-          //     glm::vec3 vec[3];
-          //     glm::vec2 uv[3];
-          //     for (int k = 0; k < 3; k++) {
-          //       glm::vec3 pos = model->points[model->faces[j].point[k]];
-          //       pos.x *= Global->Models[i].size.x;
-          //       pos.y *= Global->Models[i].size.y;
-          //       pos.z *= Global->Models[i].size.z;
-          //       pos += modeltrans->position;
-          //       vec[k] = pos;
-          //       uv[k] = glm::vec2(
-          //           {model->faces[j].uv[k].x, 1 - model->faces[j].uv[k].y});
-          //     }
-          //     DrawTri(model->texture, vec, uv, 1, 1);
-          //   }
-          //   break;
-          // }
       }
     }
   }

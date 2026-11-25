@@ -65,6 +65,8 @@ struct Entity {
   int State;
   // float Stateanimend = 0, Stateanim = 0;
 
+  unsigned char WeaponCount = 0;
+
   bool respawn = false, respawned = false;
   bool invincible = false;
   float deltatimelocal = 0;
