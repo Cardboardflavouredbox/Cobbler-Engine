@@ -200,7 +200,11 @@ BoneResult applyboneactions(const uint32_t& bonecode,
     boneresult.head += poseresultthing.scale * (bone->tail - bone->head) -
                        bone->tail + bone->head * 2.f;
     boneresult.head += axisquat * (poseresultthing.pos * bone->restpose.scale);
-    boneindex = bone->parent;
+
+    if (AnimMap[actions.front().actioncode[0]].links.contains(boneindex))
+      boneindex = AnimMap[actions.front().actioncode[0]].links[boneindex];
+    else
+      boneindex = bone->parent;
   }
   return boneresult;
 }

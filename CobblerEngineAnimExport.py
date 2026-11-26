@@ -1,6 +1,7 @@
 import bpy
 import os
 
+
 def actionset(action):
     for ob in bpy.data.objects:
         if not ob.animation_data:
@@ -8,6 +9,7 @@ def actionset(action):
 
         # Set the active action
         ob.animation_data.action = action
+
 
 def actionthing(action, filepath):
 
@@ -21,10 +23,24 @@ def actionthing(action, filepath):
         start_frame = action.frame_range[0]
         end_frame = action.frame_range[1]
 
-
-        f = open(dir+ "/" + action.name + ".anim", "w", encoding="utf-8")
+        f = open(dir + "/" + action.name + ".anim", "w", encoding="utf-8")
 
         f.write(f"A {action.name} {start_frame:.0f} {end_frame:.0f}\n")
+
+        selected_objects = bpy.data.objects
+
+        for obj in selected_objects:
+            if obj and obj.library is None:
+                if obj.override_library:
+                    if obj.type == "ARMATURE":
+                        bones = obj.data.bones
+                        for bone in bones:
+                            if (
+                                not bone.parent
+                                and obj.parent
+                                and obj.parent_type == "BONE"
+                            ):
+                                f.write(f"L {bone.name} {obj.parent_bone}\n")
 
         # Extract keyframe points for each F-Curve (e.g., location, rotation, scale channels)
 
@@ -49,9 +65,6 @@ def actionthing(action, filepath):
                         f.write(f" {frame_number:.0f}/{curve_value:f}")
                     f.write(f"\n")
         f.close()
-
-
-
 
 
 def write_some_data(context, filepath):
