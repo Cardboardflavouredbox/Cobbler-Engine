@@ -893,13 +893,6 @@ void loadAnim(const std::filesystem::directory_entry& entry) {
       AnimMap[indexthing].animstartend[0] = animstart;
       AnimMap[indexthing].animstartend[1] = animend;
       poseindex = indexthing;
-    } else if (strcmp(lineHeader, "L") == 0) {  // Links.
-      char name[64], name2[64];
-      fscanf(file, "%s %s\n", name, name2);
-      uint32_t boneindex = getboneindex(name);
-      uint32_t boneindex2 = getboneindex(name2);
-
-      AnimMap[poseindex].links[boneindex] = boneindex2;
     } else if (strcmp(lineHeader, "FC") == 0) {  // Pose value Curves.
       char name[64], thing[64];
       int index;

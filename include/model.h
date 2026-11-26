@@ -55,7 +55,6 @@ struct ModelAnim {
   // bonecode
   std::unordered_map<uint32_t, PosesStruct> Poses;
   std::array<uint32_t, 2> animstartend;
-  std::unordered_map<uint32_t, uint32_t> links;
 };
 
 // animcode
