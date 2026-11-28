@@ -487,11 +487,11 @@ void renderModelGroup(Modeltransform* modeltrans,
                     ModelGroupClass::Bone* bone =
                         &modelgroup->Bonemap[bonecode];
 
+                    pos -= bone->head;
+
                     pos *= bone->restpose.scale;
                     pos = bone->restpose.rot * pos;
                     pos += bone->restpose.pos;
-
-                    pos -= bone->head;
 
                     pos = boneresult->rot * pos;
                     pos *= boneresult->scale;

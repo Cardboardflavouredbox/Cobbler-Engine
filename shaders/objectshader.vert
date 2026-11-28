@@ -68,10 +68,9 @@ void main() {
     vec4 resultcheck = result;
 
     NormalResult = aNormal;
+    result -= vec4(bonehead[boneindexresult], 0.0);
 
     result = restmat[boneindexresult] * result;
-
-    result -= vec4(bonehead[boneindexresult], 0.0);
 
     // result = resultbonescale[index + i * actionsize] * result;
 

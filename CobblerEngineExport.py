@@ -1,4 +1,5 @@
 import bpy
+from mathutils import Quaternion
 
 
 def actionset(action):
@@ -37,9 +38,9 @@ def write_some_data(context, filepath):
             if obj.override_library:
                 if obj.type == "ARMATURE":
                     bones = obj.data.bones
-                    global_quat = matrix_world.to_quaternion()
-                    pos = matrix_world.to_translation()
+                    pos = obj.location
                     for bone in bones:
+                        global_quat = (1, 0, 0, 0)
                         p_bone = obj.pose.bones.get(bone.name)
                         head = matrix_world @ bone.head_local
                         tail = matrix_world @ bone.tail_local
@@ -68,9 +69,9 @@ def write_some_data(context, filepath):
             else:
                 if obj.type == "ARMATURE":
                     bones = obj.data.bones
-                    global_quat = matrix_world.to_quaternion()
-                    pos = matrix_world.to_translation()
+                    pos = obj.location
                     for bone in bones:
+                        global_quat = (1, 0, 0, 0)
                         p_bone = obj.pose.bones.get(bone.name)
                         head = matrix_world @ bone.head_local
                         tail = matrix_world @ bone.tail_local
