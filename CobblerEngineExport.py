@@ -28,12 +28,10 @@ def write_some_data(context, filepath):
             bpy.context.view_layer.update()
 
     bpy.context.view_layer.update()
-    depsgraph = bpy.context.evaluated_depsgraph_get()
 
     for obj in selected_objects:
         if obj and obj.library is None:
-            eval_obj = obj.evaluated_get(depsgraph)
-            matrix_world = eval_obj.matrix_world
+            matrix_world = obj.matrix_world
             if obj.override_library:
                 if obj.type == "ARMATURE":
                     bones = obj.data.bones
@@ -41,8 +39,8 @@ def write_some_data(context, filepath):
                     for bone in bones:
                         global_quat = (1, 0, 0, 0)
                         p_bone = obj.pose.bones.get(bone.name)
-                        head = matrix_world @ p_bone.head
-                        tail = matrix_world @ p_bone.tail
+                        head = matrix_world @ bone.head_local
+                        tail = matrix_world @ bone.tail_local
                         parentname = "null"
                         if bone.parent:
                             parentname = bone.parent.name
@@ -72,8 +70,8 @@ def write_some_data(context, filepath):
                     for bone in bones:
                         global_quat = (1, 0, 0, 0)
                         p_bone = obj.pose.bones.get(bone.name)
-                        head = matrix_world @ p_bone.head
-                        tail = matrix_world @ p_bone.tail
+                        head = matrix_world @ bone.head_local
+                        tail = matrix_world @ bone.tail_local
                         parentname = "null"
                         if bone.parent:
                             parentname = bone.parent.name
@@ -96,9 +94,7 @@ def write_some_data(context, filepath):
                         f.write(
                             f"SB {bone.name} {roll_radians:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n"
                         )
-                elif obj.type == "MESH":
-                    eval_mesh = eval_obj.to_mesh()
-
+                elif obj.type == "MESH" and not obj.get("Exclude"):
                     active_uv_layer = obj.data.uv_layers.active.data
 
                     vgroup_names = {g.index: g.name for g in obj.vertex_groups}
@@ -111,7 +107,7 @@ def write_some_data(context, filepath):
                                 parentname = constraint.subtarget
                                 f.write(f"{parentname}\n")
 
-                        for vert in eval_mesh.vertices:
+                        for vert in obj.data.vertices:
                             world_coord = matrix_world @ vert.co
                             f.write(
                                 f"HP {world_coord[0]:f} {world_coord[1]:f} {world_coord[2]:f}"
@@ -131,7 +127,7 @@ def write_some_data(context, filepath):
                                     if n.type == "TEX_IMAGE":
                                         f.write(f"T {n.image.name}\n")
 
-                        for vert in eval_mesh.vertices:
+                        for vert in obj.data.vertices:
                             # Convert local coordinate to world coordinate
                             world_coord = matrix_world @ vert.co
 
@@ -162,7 +158,6 @@ def write_some_data(context, filepath):
                                 uv_loop = active_uv_layer[loop_idx]
                                 f.write(f"/{uv_loop.uv[0]:f} {uv_loop.uv[1]:f}")
                             f.write(f"\n")
-                    eval_obj.to_mesh_clear()
     f.close()
 
     return {"FINISHED"}
