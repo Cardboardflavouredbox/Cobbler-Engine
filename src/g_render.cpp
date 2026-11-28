@@ -137,31 +137,17 @@ void ModelGroupsethitboxes(Entity* entity) {
           pos -= bone.head;
 
           pos = boneresult->rot * pos;
+          pos *= boneresult->scale;
 
           pos += boneresult->head;
-
-          uint32_t bonecode = index;
-          while (bonecode != uint32_t(-1)) {
-            ModelGroupClass::Bone* bone = &modelgroup->Bonemap[bonecode];
-            BoneResult* boneresult = &BoneResultmapVector[bonecode];
-            pos -= bone->head;
-
-            pos *= boneresult->scale;
-
-            pos += bone->head;
-
-            bonecode = bone->parent;
-            bone = &modelgroup->Bonemap[bonecode];
-          }
 
           pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
                                glm::vec3(0, 0, 1)) *
                 pos;
 
+          pos *= modeltrans->size;
           pos = modeltrans->rot * pos;
-          pos.x *= modeltrans->size.x;
-          pos.y *= modeltrans->size.y;
-          pos.z *= modeltrans->size.z;
+
           pos += modeltrans->position;
           bone.bonehitbox.processedpoints.push_back(pos);
         }
@@ -174,6 +160,44 @@ void ModelGroupsethitboxes(Entity* entity) {
               glVertex3f(pos.x, pos.y, pos.z);
             }
             glEnd();
+          }
+          if (bone.parent != uint32_t(-1)) {
+            glDisable(GL_DEPTH_TEST);
+            glBegin(GL_LINES);
+
+            BoneResult* boneresult = &BoneResultmapVector[index];
+            glColor4f(1, 1, 1, 1);
+            glm::vec3 pos = boneresult->head;
+
+            pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
+                                 glm::vec3(0, 0, 1)) *
+                  pos;
+
+            pos = modeltrans->rot * pos;
+            pos.x *= modeltrans->size.x;
+            pos.y *= modeltrans->size.y;
+            pos.z *= modeltrans->size.z;
+            pos += modeltrans->position;
+
+            glVertex3f(pos.x, pos.y, pos.z);
+            boneresult = &BoneResultmapVector[bone.parent];
+
+            pos = boneresult->head;
+
+            pos = glm::angleAxis(glm::radians(modeltrans->lookdir.x),
+                                 glm::vec3(0, 0, 1)) *
+                  pos;
+
+            pos = modeltrans->rot * pos;
+            pos.x *= modeltrans->size.x;
+            pos.y *= modeltrans->size.y;
+            pos.z *= modeltrans->size.z;
+            pos += modeltrans->position;
+
+            glVertex3f(pos.x, pos.y, pos.z);
+
+            glEnd();
+            glEnable(GL_DEPTH_TEST);
           }
         }
       }

@@ -957,26 +957,21 @@ bool loadCBM(const std::filesystem::directory_entry& entry) {
     if (strcmp(lineHeader, "SB") == 0) {  // Static(?) Bone.
       char name[64], parent[64];
       float roll;
-      glm::vec3 xaxis, yaxis, zaxis;
       glm::vec3 head, tail;
       ModelGroupClass::Bone::Pose temppose;
 
-      int what = fscanf(
-          file,
-          "%s %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f %f/%f %f "
-          "%f/%f %f %f/%f %f %f %f %s",
-          name, &roll, &xaxis[0], &xaxis[1], &xaxis[2], &yaxis[0], &yaxis[1],
-          &yaxis[2], &zaxis[0], &zaxis[1], &zaxis[2], &head[0], &head[1],
-          &head[2], &tail[0], &tail[1], &tail[2], &temppose.pos[0],
-          &temppose.pos[1], &temppose.pos[2], &temppose.scale[0],
-          &temppose.scale[1], &temppose.scale[2], &temppose.rot[3],
-          &temppose.rot[0], &temppose.rot[1], &temppose.rot[2], parent);
+      int what =
+          fscanf(file,
+                 "%s %f/%f %f %f/%f %f %f/%f %f "
+                 "%f/%f %f %f/%f %f %f %f %s",
+                 name, &roll, &head[0], &head[1], &head[2], &tail[0], &tail[1],
+                 &tail[2], &temppose.pos[0], &temppose.pos[1], &temppose.pos[2],
+                 &temppose.scale[0], &temppose.scale[1], &temppose.scale[2],
+                 &temppose.rot[3], &temppose.rot[0], &temppose.rot[1],
+                 &temppose.rot[2], parent);
       uint32_t boneindex = getboneindex(name);
 
       modelgroup.Bonemap[boneindex].parent = getboneindex(parent);
-      modelgroup.Bonemap[boneindex].xaxis = xaxis;
-      modelgroup.Bonemap[boneindex].yaxis = yaxis;
-      modelgroup.Bonemap[boneindex].zaxis = zaxis;
       modelgroup.Bonemap[boneindex].head = head;
       modelgroup.Bonemap[boneindex].tail = tail;
       modelgroup.Bonemap[boneindex].restpose = temppose;

@@ -27,12 +27,18 @@ def write_some_data(context, filepath):
                 bone.scale = (1.0, 1.0, 1.0)
                 obj.data.pose_position = "REST"
 
+    bpy.context.view_layer.update()
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+
     for obj in selected_objects:
         if obj and obj.library is None:
+            eval_obj = obj.evaluated_get(depsgraph)
+            matrix_world = eval_obj.matrix_world
             if obj.override_library:
                 if obj.type == "ARMATURE":
                     bones = obj.data.bones
-                    matrix_world = obj.matrix_world
+                    global_quat = matrix_world.to_quaternion()
+                    pos = matrix_world.to_translation()
                     for bone in bones:
                         p_bone = obj.pose.bones.get(bone.name)
                         head = matrix_world @ bone.head_local
@@ -46,21 +52,9 @@ def write_some_data(context, filepath):
                             for constraint in p_bone.constraints:
                                 parentname = constraint.subtarget
 
-                        z_axis = bone.z_axis
-
-                        global_quat = matrix_world.to_quaternion()
-
-                        pos = matrix_world.to_translation()
-
                         axis, roll_radians = p_bone.bone.AxisRollFromMatrix(
                             p_bone.matrix.to_3x3()
                         )
-
-                        rot_mat = p_bone.bone.matrix_local.to_3x3()
-
-                        x_axis = rot_mat[0]
-                        y_axis = rot_mat[1]
-                        z_axis = rot_mat[2]
 
                         scale = obj.scale.copy()
 
@@ -69,12 +63,13 @@ def write_some_data(context, filepath):
                                 scale[i] *= obj.parent.scale[i]
 
                         f.write(
-                            f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n"
+                            f"SB {bone.name} {roll_radians:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n"
                         )
             else:
                 if obj.type == "ARMATURE":
                     bones = obj.data.bones
-                    matrix_world = obj.matrix_world
+                    global_quat = matrix_world.to_quaternion()
+                    pos = matrix_world.to_translation()
                     for bone in bones:
                         p_bone = obj.pose.bones.get(bone.name)
                         head = matrix_world @ bone.head_local
@@ -88,21 +83,9 @@ def write_some_data(context, filepath):
                             for constraint in p_bone.constraints:
                                 parentname = constraint.subtarget
 
-                        z_axis = bone.z_axis
-
-                        global_quat = matrix_world.to_quaternion()
-
-                        pos = matrix_world.to_translation()
-
                         axis, roll_radians = p_bone.bone.AxisRollFromMatrix(
                             p_bone.matrix.to_3x3()
                         )
-
-                        rot_mat = p_bone.bone.matrix_local.to_3x3()
-
-                        x_axis = rot_mat[0]
-                        y_axis = rot_mat[1]
-                        z_axis = rot_mat[2]
 
                         scale = obj.scale.copy()
 
@@ -111,11 +94,10 @@ def write_some_data(context, filepath):
                                 scale[i] *= obj.parent.scale[i]
 
                         f.write(
-                            f"SB {bone.name} {roll_radians:f}/{x_axis[0]:f} {x_axis[1]:f} {x_axis[2]:f}/{y_axis[0]:f} {y_axis[1]:f} {y_axis[2]:f}/{z_axis[0]:f} {z_axis[1]:f} {z_axis[2]:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n"
+                            f"SB {bone.name} {roll_radians:f}/{head[0]:f} {head[1]:f} {head[2]:f}/{tail[0]:f} {tail[1]:f} {tail[2]:f}/{pos[0]:f} {pos[1]:f} {pos[2]:f}/{scale[0]:f} {scale[1]:f} {scale[2]:f}/{global_quat[0]:f} {global_quat[1]:f} {global_quat[2]:f} {global_quat[3]:f} {parentname}\n"
                         )
                 elif obj.type == "MESH":
                     # Get the global transformation matrix
-                    matrix_world = obj.matrix_world
 
                     active_uv_layer = obj.data.uv_layers.active.data
 
